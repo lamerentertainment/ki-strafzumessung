@@ -1,0 +1,37 @@
+{% extends './base.html' %}
+
+{% block body %}
+  <h1>{{ object.fall_nr }}</h1>
+  <p><strong>Gericht:</strong> {{ object.gericht }}</p>
+  <p><strong>Urteilsdatum:</strong> {{ object.urteilsdatum }}</p>
+  <p><strong>Kanton:</strong> {{ object.kanton }}</p>
+  <p><strong>Mengemaessig:</strong> {{ object.mengemaessig }}</p>
+  <p><strong>Bandenmaessig:</strong> {{ object.bandenmaessig }}</p>
+  <p><strong>Gewerbsmaessig:</strong> {{ object.gewerbsmaessig }}</p>
+  <p><strong>Anstaltentreffen:</strong> {{ object.anstaltentreffen }}</p>
+  <p><strong>Mehrfach:</strong> {{ object.mehrfach }}</p>
+  <p><strong>Beschaffungskriminalitaet:</strong> {{ object.beschaffungskriminalitaet }}</p>
+  <p><strong>Freiheitsstrafe in Monaten:</strong> {{ object.freiheitsstrafe_in_monaten }}</p>
+  <p><strong>Vollzug:</strong> {{ object.get_vollzug_display }}</p>
+  <p><strong>Nebenverurteilungsscore:</strong> {{ object.nebenverurteilungsscore }}</p>
+  <p><strong>Verfahrensart:</strong> {{ object.get_verfahrensart_display }}</p>
+  <p><strong>Geschlecht:</strong> {{ object.get_geschlecht_display }}</p>
+  <p><strong>Nationalitaet:</strong> {{ object.get_nationalitaet_display }}</p>
+  <p><strong>Betm:</strong>
+    <ul>
+      {% for betm_mittel in object.betm.all %}
+        <li>{{ betm_mittel.art }}, {{ betm_mittel.menge_in_g }}g,
+        {% if betm_mittel.rein %}
+        rein
+        {% else %}
+        gemisch
+        {% endif %}</li>
+      {% endfor %}
+    </ul>
+    </p>
+  <p><strong>Rolle:</strong> {{ object.rolle }}</p>
+  <p><strong>Deliktsertrag:</strong> {{ object.deliktsertrag }}</p>
+  <p><strong>Deliktsdauer in Monaten:</strong> {{ object.deliktsdauer_in_monaten }}</p>
+  <p><strong>Vorbestraft:</strong> {{ object.vorbestraft }}</p>
+  <p><strong>Vorbestraft einschlaegig:</strong> {{ object.vorbestraft_einschlaegig }}</p>
+{% endblock %}

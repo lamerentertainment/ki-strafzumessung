@@ -1,0 +1,51 @@
+{% extends './base.html' %}
+{% load static %}
+
+{% block body %}
+    <section id="datenbank" class="row">
+        <h1>Urteile in der Datenbank ({{ urteile|length }})</h1>
+
+        <section id="buttons" class="d-flex mb-1">
+            <a class="btn btn-outline-primary" href="{% url 'urteil_erstellen' %}">Neues Urteil aufnehmen</a>
+            <a class="btn btn-outline-primary" href="{% url 'kimodel_reset' %}">Basierend auf diesen Daten die
+                KI-Modelle
+                neu bilden</a>
+        </section>
+
+        <section id="datenbank-table" class="rounded border border-2" style="overflow: auto; height: 400px;">
+            <table class="table table-sm">
+                <thead>
+                {% include 'database/includes/row_head.html' %}
+                </thead>
+                <tbody>
+                {% for urteil in urteile %}
+                    {% include 'database/includes/row_urteil.html' %}
+                {% empty %}
+                    <p>Es befinden sich offensichtlich keine Urteile in der Datenbank</p>
+                {% endfor %}
+                </tbody>
+            </table>
+            <p>Es befinden sich insgesamt {{ urteile|length }} Urteile in der Datenbank</p>
+        </section>
+
+    </section>
+    
+    <section id="darstellungen">
+        <h1 class="matplotlib">Urteilsdatenbank in grafischen Darstellungen</h1>
+        <div class="rounded border border-2">
+            <div class="row">
+                <div class="col-xl-6"><img src="{{ vollzug_scatterplot_1000000.file.url }}" style="max-width: 100%">
+                </div>
+                <div class="col-xl-6"><img src="{{ vollzug_scatterplot_200000.file.url }}" style="max-width: 100%">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xl-6"><img src="{{ hauptdelikt_scatterplot_1000000.file.url }}" style="max-width: 100%">
+                </div>
+                <div class="col-xl-6"><img src="{{ hauptdelikt_scatterplot_200000.file.url }}" style="max-width: 100%">
+                </div>
+            </div>
+        </div>
+    </section>
+
+{% endblock body %}

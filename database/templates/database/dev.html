@@ -1,0 +1,245 @@
+{% extends './base.html' %}
+
+{% block body %}
+    <section id="reload-button" class="row mb-3">
+        <div class="col">
+        <a type="button" class="btn btn-primary" href="{% url 'dev_model_neu_kalibrieren' %}">KI-Modelle neu
+            kalibrieren</a>
+        </div>
+    </section>
+    <h1>Eckwerte der verwendeten KI-Modelle</h1>
+    <section id="strafmass-random-forest-model-val-fts-specs" class="my-3">
+        <h3> Random Forest Regressor Modell (nur valide features) zur Vorhersage des Strafmass</h3>
+        <section id="model-info-rf" class="mb-3">
+            Das KI-Modell wurde am {{ val_rf_kimodel.last_updated }} zuletzt aktualisiert. Es ist
+            unter {{ val_rf_kimodel.name }} abgespeichert
+            und hat den URL Pfad {{ val_rf_kimodel.file.url }}.
+        </section>
+        <div class="row">
+            <section id="feature-importance-rf-regressor" class="col-4 mb-3">
+                <h4> Kriterienwichtigkeit </h4>
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Wichtigkeit</th>
+                        <th>Merkmal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for tuple in val_rf_kimodel.ft_importance_list_merged %}
+                        <tr>
+                            <td>{{ tuple.0|floatformat }} %</td>
+                            <td>{{ tuple.1|capfirst }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+            </section>
+            <section id="prognoseleistung-rf-regressor" class="col-6 mb-3">
+                <h4> Werte der Prognoseleistung</h4>
+                <p>
+                    <span>Durchschnittlicher Fehler der Prognose:</span>
+                    {{ val_rf_kimodel.prognoseleistung_dict.durchschnittlicher_fehler }} Monate
+                    (Eine Prognose basierend auf diesem KI-Modell liegt
+                    durchschnittlich {{ val_rf_kimodel.prognoseleistung_dict.durchschnittlicher_fehler }} Monate daneben.
+                    Die
+                    Standardabweichung
+                    beträgt {{ val_rf_kimodel.prognoseleistung_dict.standardabweichung }}.)
+                </p>
+                <p>
+                    <span>Beste Prognoseleistung:</span>
+                    {{ val_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung }} Monate
+                    (Die beste Prognoseleistung dieses KI-Modells
+                    lag {{ val_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung }}
+                    Monate neben der effektiv ausgefällten Strafe. Dies war beim Urteil
+                    {{ val_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung_urteil }} der Fall)
+                </p>
+                <p>
+                    <span>Schlechteste Prognoseleistung:</span>
+                    {{ val_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung }} Monate
+                    (Die schlechteste Prognoseleistung dieses KI-Modells
+                    lag {{ val_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung }}
+                    Monate neben der effektiv ausgefällten Strafe. Dies war beim Urteil
+                    {{ val_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung_urteil }} der Fall)
+                </p>
+                </p>
+                <p>
+                    <span>Standardabweichung String:</span>
+                    {{ val_rf_kimodel.prognoseleistung_dict.standardabweichung_string }}
+                </p>
+            </section>
+        </div>
+
+        <div class="row introspection-plot-section">
+            <section id="feature-importance-rf-regressor" class="col-4 mb-3">
+                <h4> Lesehinweis </h4>
+                {% autoescape off %}
+                <div>{{ introspection_plot.lesehinweis }}</div>
+                {% endautoescape %}
+            </section>
+            <section class="col-6 mb-3 erklaerungsstring">
+                <h4>Prognose-Plot</h4>
+                <img src="{{ introspection_plot.file.url }}" style="max-width: 100%">
+            </section>
+        </div>
+
+    </section>
+    <section id="vollzug-random-forest-model-val-fts-specs" class="my-3">
+        <h3> Random Forest Classifier Modell (nur valide features) zur Vorhersage des Vollzugs</h3>
+        <section id="model-info-rf-clf" class="mb-3">
+            Das KI-Modell wurde am {{ val_rf_clf_kimodel.last_updated }} zuletzt aktualisiert. Es ist
+            unter {{ val_rf_clf_kimodel.name }} abgespeichert
+            und hat den URL Pfad {{ val_rf_clf_kimodel.file.url }}.
+        </section>
+        <div class="row">
+            <section id="feature-importance-rf-clf-regressor" class="col-4 mb-3">
+                <h4> Kriterienwichtigkeit </h4>
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Wichtigkeit</th>
+                        <th>Merkmal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for tuple in val_rf_clf_kimodel.ft_importance_list_merged %}
+                        <tr>
+                            <td>{{ tuple.0|floatformat }} %</td>
+                            <td>{{ tuple.1|capfirst }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+            </section>
+            <section id="prognoseleistung-rf-regressor" class="col-6 mb-3">
+                <h4> Die Prognoseleistung wird beim Classifier (noch) nicht erhoben </h4>
+            </section>
+
+        </div>
+    </section>
+
+
+    <h1>Strafmasskriterien Evaluation</h1>
+    <section id="random-forest-model-all-fts-specs" class="my-3">
+        <h3> Random Forest Modell (alle features)</h3>
+        <section id="model-info-rf" class="mb-3">
+            Das KI-Modell wurde am {{ all_rf_kimodel.last_updated }} zuletzt aktualisiert. Es ist
+            unter {{ all_rf_kimodel.name }} abgespeichert
+            und hat den URL Pfad {{ all_rf_kimodel.file.url }}.
+        </section>
+        <div class="row">
+            <section id="feature-importance-rf-regressor" class="col-4 mb-3">
+                <h4> Kriterienwichtigkeit </h4>
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Wichtigkeit</th>
+                        <th>Merkmal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for tuple in all_rf_kimodel.ft_importance_list_merged %}
+                        <tr>
+                            <td>{{ tuple.0|floatformat }} %</td>
+                            <td>{{ tuple.1|capfirst }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+            </section>
+            <section id="prognoseleistung-rf-regressor" class="col-6 mb-3">
+                <h4> Werte der Prognoseleistung</h4>
+                <p>
+                    <span>Durchschnittlicher Fehler der Prognose:</span>
+                    {{ all_rf_kimodel.prognoseleistung_dict.durchschnittlicher_fehler }} Monate
+                    (Eine Prognose basierend auf diesem KI-Modell liegt
+                    durchschnittlich {{ all_rf_kimodel.prognoseleistung_dict.durchschnittlicher_fehler }} Monate daneben.
+                    Die
+                    Standardabweichung
+                    beträgt {{ all_rf_kimodel.prognoseleistung_dict.standardabweichung }}.)
+                </p>
+                <p>
+                    <span>Beste Prognoseleistung:</span>
+                    {{ all_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung }} Monate
+                    (Die beste Prognoseleistung dieses KI-Modells
+                    lag {{ all_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung }}
+                    Monate neben der effektiv ausgefällten Strafe.)
+                </p>
+                <p>
+                    <span>Schlechteste Prognoseleistung:</span>
+                    {{ all_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung }} Monate
+                    (Die schlechteste Prognoseleistung dieses KI-Modells
+                    lag {{ all_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung }}
+                    Monate neben der effektiv ausgefällten Strafe.)
+                </p>
+                <p>
+                    <span>Standardabweichung String:</span>
+                    {{ all_rf_kimodel.prognoseleistung_dict.standardabweichung_string }}
+                </p>
+            </section>
+        </div>
+    </section>
+    <section id="linear-regression-model-specs" class="my-3">
+        <h3> Linear Regression Modell (alle features)</h3>
+        <section id="model-info-lr" class="mb-2">
+            Das KI-Modell wurde am {{ lr_kimodel.last_updated }} zuletzt aktualisiert. Es ist
+            unter {{ lr_kimodel.name }} abgespeichert
+            und hat den URL Pfad {{ lr_kimodel.file.url }}.
+        </section>
+        <div class="row">
+            <section id="feature-importance-lr-regressor" class="col-6 mb-3">
+                <h4>Kriterienwichtigkeit</h4>
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Wichtigkeit</th>
+                        <th>Merkmal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for row in koeff_liste %}
+                    <tr>
+                        <td>{{ row.0|floatformat }}</td>
+                        <td>{{ row.1 }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+            <section id="prognoseleistung-lr-regressor" class="col mb-3">
+                <h4>Werte der Prognoseleistung</h4>
+                <p>
+                    <span>Durchschnittlicher Fehler der Prognose:</span>
+                    {{ lr_kimodel.prognoseleistung_dict.durchschnittlicher_fehler }} Monate
+                    (Eine Prognose basierend auf diesem KI-Modell liegt
+                    durchschnittlich {{ lr_kimodel.prognoseleistung_dict.durchschnittlicher_fehler }} Monate daneben.
+                    Die
+                    Standardabweichung
+                    beträgt {{ lr_kimodel.prognoseleistung_dict.standardabweichung }}.)
+                </p>
+                <p>
+                    <span>Beste Prognoseleistung:</span>
+                    {{ lr_kimodel.prognoseleistung_dict.beste_prognoseleistung }} Monate
+                    (Die beste Prognoseleistung dieses KI-Modells
+                    lag {{ lr_kimodel.prognoseleistung_dict.beste_prognoseleistung }}
+                    Monate neben der effektiv ausgefällten Strafe.)
+                </p>
+                <p>
+                    <span>Schlechteste Prognoseleistung:</span>
+                    {{ lr_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung }} Monate
+                    (Die schlechteste Prognoseleistung dieses KI-Modells
+                    lag {{ lr_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung }}
+                    Monate neben der effektiv ausgefällten Strafe.)
+                </p>
+                </p>
+                <p>
+                    <span>Standardabweichung String:</span>
+                    {{ lr_kimodel.prognoseleistung_dict.standardabweichung_string }}
+                </p>
+            </section>
+        </div>
+    </section>
+{% endblock body %}

@@ -1,0 +1,142 @@
+{% extends './base.html' %}
+{% load hervorhebung %}
+
+{% block body %}
+    <div class="row">
+        <h1>Informationen über die verwendeten KI-Modelle</h1>
+
+        <div id="verwendete-modelle">
+            <h2>Verwendete KI-Modelle</h2>
+            <p>Für die Prognose der <b>Höhe des Strafmass</b> wird der
+                <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html">RandomForestRegressor</a>,
+                für die Prognose der <b>Vollzugsform</b> wird der
+                <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">RandomForestClassifier</a>
+                und für die <b>Eruierung der Präjudizen</b> der
+                <a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html#sklearn.neighbors.KNeighborsRegressor">KNeighborsRegressor</a>
+                der frei verfügbaren Python-Programmbibliothek <a href="https://scikit-learn.org/stable/index.html">scikit-learn</a>
+                verwendet.</p>
+            <p>Eine Erklärung der Funktionsweise der genannten und hier verwendeten KI-Systeme finde sich <a href="{% url 'text' %}">hier.</a></p>
+        </div>
+
+        <div id="prognosegenauigkeit">
+            <h2>Prognosegenauigkeit</h2>
+            <p>Das KI-Modell, welches lediglich mit legitimen Strafzumessungskriterien darauf trainiert wurde, basierend
+                auf bekannte Sachverhaltseckwerte (Deliktsumme, Anzahl Schuldsprüche etc.) das Strafmass hervorzusagen,
+                lag bei der Prognose durchschnittlich um
+                <b>
+                    {{ val_rf_kimodel.prognoseleistung_dict.durchschnittlicher_fehler }} Monate
+                </b>
+                daneben. 
+                Die Standardabweichung beträgt {{ val_rf_kimodel.prognoseleistung_dict.standardabweichung }}.
+                Die beste Prognoseleistung dieses KI-Modells
+                    lag {{ val_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung }}
+                    Monate neben der effektiv ausgefällten Strafe. Dies war beim Urteil
+                    {{ val_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung_urteil }} der Fall. 
+                Die schlechteste Prognoseleistung dieses KI-Modells
+                    lag {{ val_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung }}
+                    Monate neben der effektiv ausgefällten Strafe. Dies war beim Urteil
+                    {{ val_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung_urteil }} der Fall.</p>
+            <p>Die Prognoseleistung/Fehlerquote des KI-Modells, welches die Vollzugsart (bedingt, teilbedingt, unbedingt) prognostiziert, wird nicht
+                erhoben.</p>
+        </div>
+
+        <h1>Evaluation der Rechtsprechung</h1>
+        <div id="merkmalswichtigkeit" class="row">
+            <h2>Wichtigkeit der verwendeten Sachverhaltsmerkmale</h2>
+            <h3>bei Bekanntgabe lediglich zulässiger Strafzumessungskrieterien</h3>
+
+            <div class="col-6">
+                <p>Folgende Prognosemerkmale hält das verwendete KI-Modell für die Vorhersage des <b>Strafmasses</b> in
+                    angegebenem Prozentsatz für bedeutend:</p>
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Wichtigkeit</th>
+                        <th>Merkmal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for tuple in val_rf_kimodel.ft_importance_list_merged %}
+                        <tr>
+                            <td>{{ tuple.0|floatformat }} %</td>
+                            <td>{{ tuple.1|capfirst }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="col-6">
+                <p>Folgende Prognosemerkmale hält das verwendete KI-Modell für die Vorhersage der <b>Vollzugsform</b> in
+                    angegebenem Prozentsatz für bedeutend:</p>
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Wichtigkeit</th>
+                        <th>Merkmal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for tuple in val_rf_clf_kimodel.ft_importance_list_merged %}
+                        <tr>
+                            <td>{{ tuple.0|floatformat }} %</td>
+                            <td>{{ tuple.1|capfirst }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="evaluation-illegitimer-strafzumessungsfaktoren" class="row">
+                <h3>bei Bekanntgabe unzulässiger Strafzumessungskriterien</h3>
+                <p>Werden dem KI-Modell beim Training Sachverhaltsgrundlagen bekanntgegeben, die keine legitimen Strafzumessungskriterien 
+                darstellen (Geschlecht, Nationalität, zuständiges Gericht), so schätzt es deren
+                relative Wichtigkeit bei der Strafmassbildung wie folgt ein:</p>
+
+                <div>
+                    <table class="table table-sm">
+                        <thead>
+                        <tr>
+                            <th>Wichtigkeit</th>
+                            <th>Merkmal</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for tuple in all_rf_kimodel.ft_importance_list_merged %}
+                            <tr>
+                                <td>{{ tuple.0|floatformat }} %</td>
+                                <td>{{ tuple.1|illegitim_hervorheben }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+
+            </div>
+        </div>
+
+        <div id="introspection-plot" class="row">
+        <h2>Prognosediagramm</h2>
+
+        <section class="col-6 mb-3">
+            <img src="{{ introspection_plot.file.url }}" style="max-width: 100%">
+        </section>
+
+        <section id="feature-importance-rf-regressor" class="col-4 mb-3">
+            <h4> Lesehinweis </h4>
+            {% autoescape off %}
+            <div>{{ introspection_plot.lesehinweis }}</div>
+            {% endautoescape %}
+        </section>
+
+    </div>
+
+    </div>
+
+
+
+
+
+{% endblock body %}

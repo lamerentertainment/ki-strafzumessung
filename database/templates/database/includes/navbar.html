@@ -1,0 +1,54 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">KI-Strafzumessung</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPunkte"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="menuPunkte">
+            <ul class="navbar-nav mr-auto">
+
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Sanktionsprognose <br>
+                      und Präjudizen
+                  </a>
+                  <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <li><a class="dropdown-item" href="{% url 'prognose' %}">bei Vermögensdelikt</a></li>
+                    <li><a class="dropdown-item disabled" href="">bei Betm-Delikt</a></li>
+                  </ul>
+                </li>
+
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Datenbanken
+                  </a>
+                  <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <li><a class="dropdown-item" href="{% url 'database' %}">Datenbank der Vermögensdelikte</a></li>
+                    <li><a class="dropdown-item" href="{% url 'betmdatabase' %}">Datenbank der Betm-Delikte</a></li>
+                  </ul>
+                </li>
+
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    KI-Modelle <br>
+                      Evaluation
+                  </a>
+                  <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <li><a class="dropdown-item" href="{% url 'kimodel_evaluation' %}">betr. Vermögensdelikte</a></li>
+                    <li><a class="dropdown-item disabled" href="">Datenbank der Betm-Delikte</a></li>
+                  </ul>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'text' %}">
+                        Wie es <br>
+                        funktioniert
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+</nav>

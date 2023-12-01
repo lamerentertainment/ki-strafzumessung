@@ -1,0 +1,113 @@
+<form method="post" action="{% url 'urteil_erstellen' %}">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <tr class="non-field-errors">
+          <dt>
+              {% for err in form.non_field_errors %}
+              <p class="form-error">{{ err }}</p>
+              {% endfor %}
+          </dt>
+      </tr>
+    {% endif %}
+    <tr>
+        <td>
+            <div class="fieldWrapper">
+            {{ form.fall_nr.errors }}
+            Fall-Nr.{{ form.fall_nr }}<br>
+            {{ form.url_link.errors }}
+            URL: {{ form.url_link }}
+            </div>
+        </td>
+        <td>
+            <div class="fieldWrapper">
+            {{ form.gericht.errors }}
+            {{ form.gericht }}
+            </div>
+        </td>
+        <td>
+            <div class="fieldWrapper">
+            {{ form.urteilsdatum.errors }}
+            {{ form.urteilsdatum }}
+            </div>
+        </td>
+        <td>
+            <div class="fieldWrapper">
+            {{ form.geschlecht.errors }}
+            {{ form.geschlecht }}
+            </div>
+        </td>
+        <td>
+            <div class="fieldWrapper">
+            {{ form.nationalitaet.errors }}
+            {{ form.nationalitaet }}
+            </div>
+        </td>
+        <td>
+            <div class="fieldWrapper">
+            {{ form.hauptdelikt.errors }}
+            {{ form.hauptdelikt }}
+            </div>
+        </td>
+        <td class="text-center">
+            <div class="fieldWrapper">
+            {{ form.mehrfach.errors }}
+            {{ form.mehrfach }}
+            </div>
+        </td>
+        <td class="text-center">
+            <div class="fieldWrapper">
+            {{ form.gewerbsmaessig.errors }}
+            {{ form.gewerbsmaessig }}
+            </div>
+        </td>
+        <td class="text-center">
+            <div class="fieldWrapper">
+            {{ form.bandenmaessig.errors }}
+            {{ form.bandenmaessig }}
+            </div>
+        </td>
+        <td>
+            <div class="fieldWrapper">
+            {{ form.deliktssumme.errors }}
+            {{ form.deliktssumme }}
+            </div>
+        </td>
+        <td>
+            <div class="fieldWrapper">
+            {{ form.nebenverurteilungsscore.errors }}
+            {{ form.nebenverurteilungsscore }}
+            </div>
+        </td>
+        <td class="text-center">
+            <div class="fieldWrapper">
+            {{ form.vorbestraft.errors }}
+            {{ form.vorbestraft }}
+            </div>
+        </td>
+        <td class="text-center">
+            <div class="fieldWrapper">
+            {{ form.vorbestraft_einschlaegig.errors }}
+            {{ form.vorbestraft_einschlaegig }}
+            </div>
+        </td>
+        <td>
+            <div class="fieldWrapper">
+            {{ form.freiheitsstrafe_in_monaten.errors }}
+            {{ form.freiheitsstrafe_in_monaten }}
+            </div>
+        </td>
+        <td>
+            <div class="fieldWrapper">
+            {{ form.vollzug.errors }}
+            {{ form.vollzug }}
+            </div>
+        </td>
+        <td><input type="submit" value="erstellen"></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>
+        <input type="submit" value="erstellen">
+        </td>
+    </tr>
+</form>

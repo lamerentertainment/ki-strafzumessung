@@ -1,0 +1,14 @@
+{% extends './base.html' %}
+
+{% block body %}
+<table class="table table-sm">
+    {% include 'database/includes/row_head.html' %}
+    {% include 'database/includes/row_form.html' %}
+    {% for urteil in urteile %}
+       {% include 'database/includes/row_urteil.html' %}
+    {% empty %}
+    <p>Es befinden sich offensichtlich keine weiteren Urteile in der Datenbank</p>
+    {% endfor %}
+</table>
+<a href="{% url 'database' %}">Abbrechen</a>
+{% endblock body %}

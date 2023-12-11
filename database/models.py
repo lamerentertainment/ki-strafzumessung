@@ -89,9 +89,19 @@ class Urteil(models.Model):
     vorbestraft_einschlaegig = models.BooleanField(default=False,
                                                    verbose_name="einschlägig vorbestraft",
                                                    help_text="Ob die verurteilte Person einschlägig vorbestraft ist.")
+    HAUPTSANKTION = (
+        ('0', 'Freiheitsstrafe'),
+        ('1', 'Geldstrafe'),
+        ('2', 'Busse')
+    )
+    hauptsanktion = models.CharField(max_length=1,
+                                     choices=HAUPTSANKTION,
+                                     default='0')
     freiheitsstrafe_in_monaten = models.IntegerField(default=12,
-                                                     help_text="Die Dauer der angesprochenen Freiheitsstrafe in "
+                                                     help_text="Die Dauer der ausgesprochenen Freiheitsstrafe in "
                                                                "Monaten.")
+    anzahl_tagessaetze = models.IntegerField(default=0,
+                                             help_text="Die Zahl der ausgesprochenen Tagessätze der Geldstrafe")
     VOLLZUG = (
         ('0', 'bedingt'),
         ('1', 'teilbedingt'),

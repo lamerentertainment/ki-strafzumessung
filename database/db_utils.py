@@ -71,7 +71,14 @@ def kategorie_scatterplot_erstellen(model=Urteil,
                                     kategorie_feld='vollzug',
                                     titel='Deliktssumme/Strafmass-Gegenüberstellung',
                                     xlim=1000000):
-    df = model.pandas.return_as_df('deliktssumme', 'freiheitsstrafe_in_monaten', 'vorbestraft_einschlaegig', kategorie_feld)
+    df = model.pandas.return_as_df(
+        "deliktssumme",
+        "freiheitsstrafe_in_monaten",
+        "vorbestraft_einschlaegig",
+        "hauptsanktion",
+        "anzahl_tagessaetze",
+        kategorie_feld,
+    )
     if kategorie_feld == 'nationalitaet':
         df['nationalitaet'].replace({'0': 'Schweizerin/Schweizer',
                                      '1': 'Ausländerin/Ausländer',
@@ -95,11 +102,20 @@ def kategorie_scatterplot_erstellen(model=Urteil,
     fig, ax = plt.subplots(figsize=(10, 5))
 
     for kategorie, marker in zip(kat_dict.keys(), markers[:len(kat_dict.keys())]):
+
+        # Wenn Freiheitstrafe in Monaten 0 ist, soll als y Wert die Anzahl Tagessätze / 30 zurückgegeben werden
+        y_values = np.where(
+            kat_dict[kategorie]["freiheitsstrafe_in_monaten"] == 0,
+            kat_dict[kategorie]["anzahl_tagessaetze"],
+            kat_dict[kategorie]["freiheitsstrafe_in_monaten"],
+        )
+
         ax.scatter(x=kat_dict[kategorie]['deliktssumme'],
-                   y=kat_dict[kategorie]['freiheitsstrafe_in_monaten'],
+                   y=y_values,
                    #c=['red' if row else 'blue' for row in kat_dict[kategorie]['vorbestraft_einschlaegig']],
                    marker=marker,
                    label=kategorie)
+
     if kategorie_feld == 'vollzug':
         ax.hlines([24, 36], -10000, xlim, linestyles='dashed')
     ax.set_xlabel('Deliktssumme in Fr.')

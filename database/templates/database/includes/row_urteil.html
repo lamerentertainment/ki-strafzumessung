@@ -75,7 +75,22 @@
             </svg>
         {% endif %}
     </td>
-    <td>{{ urteil.freiheitsstrafe_in_monaten }}</td>
+
+    {# Spalte Hauptsanktion #}
+    {% if urteil.hauptsanktion == "0" %}
+        <td>Freiheitsstrafe</td>
+    {% elif urteil.hauptsanktion == "1" %}
+        <td>Geldstrafe</td>
+    {% endif %}
+
+    {# Spalte Sanktion #}
+    {% if urteil.hauptsanktion == "0" %}
+        <td>{{ urteil.freiheitsstrafe_in_monaten }} Monate</td>
+    {% elif urteil.hauptsanktion == "1" %}
+        <td>{{ urteil.anzahl_tagessaetze }} Tagessätze</td>
+    {% endif %}
+
+    {# Spalte Vollzugsform #}
     <td>
         {% if urteil.vollzug == '0' %}
             bedingt

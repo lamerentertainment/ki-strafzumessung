@@ -92,8 +92,20 @@
         </td>
         <td>
             <div class="fieldWrapper">
+            {{ form.hauptsanktion.errors }}
+            {{ form.hauptsanktion }}
+            </div>
+        </td>
+        <td>
+            <div class="fieldWrapper">
             {{ form.freiheitsstrafe_in_monaten.errors }}
             {{ form.freiheitsstrafe_in_monaten }}
+            </div>
+        </td>
+        <td>
+            <div class="fieldWrapper">
+            {{ form.anzahl_tagessaetze.errors }}
+            {{ form.anzahl_tagessaetze }}
             </div>
         </td>
         <td>

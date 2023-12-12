@@ -95,7 +95,6 @@ def kategorie_scatterplot_erstellen(model=Urteil,
     fig, ax = plt.subplots(figsize=(10, 5))
 
     for kategorie, marker in zip(kat_dict.keys(), markers[:len(kat_dict.keys())]):
-        print(['red' if row else 'blue' for row in kat_dict[kategorie]['vorbestraft_einschlaegig']])
         ax.scatter(x=kat_dict[kategorie]['deliktssumme'],
                    y=kat_dict[kategorie]['freiheitsstrafe_in_monaten'],
                    #c=['red' if row else 'blue' for row in kat_dict[kategorie]['vorbestraft_einschlaegig']],

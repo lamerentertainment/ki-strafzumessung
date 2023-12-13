@@ -10,7 +10,8 @@ urlpatterns = [
     path('urteil/update/<int:pk>/', views.UrteilUpdateView.as_view(), name='urteil_update'),
     path('model', views.kimodel_evaluation, name='kimodel_evaluation'),
     path('database', views.database, name='database'),
-    path('model/reset', views.kimodel_reset, name='kimodel_reset'),
+    # alte Methode
+    # path('model/reset', views.kimodel_reset, name='kimodel_reset'),
     path('dev', views.dev, name='dev'),
     path('model_neu_kalibrieren', views.dev_model_neu_kalibrieren, name='dev_model_neu_kalibrieren'),
     path('csv_neu_speichern', views.csv_erstellen, name='csv_neu_speichern'),

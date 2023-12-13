@@ -40,7 +40,7 @@ def onehotx_und_y_erstellen(dbmodel,
         categorial_ft_dbfields = ['hauptdelikt', 'geschlecht', 'nationalitaet', 'gericht', 'mehrfach',
                                   'gewerbsmaessig', 'vorbestraft', 'vorbestraft_einschlaegig', ]
 
-    #Queryset aller Urteile holen, weilche in_ki_modell True haben
+    #Queryset aller Urteile holen, welche in_ki_modell True haben
     alle_zu_beruecksichtigenden_urteile = dbmodel.objects.filter(in_ki_modell=True)
 
     # Datenframe erstellen
@@ -68,7 +68,11 @@ def onehotx_und_y_erstellen(dbmodel,
     x = pd.concat([df_categorical_1hot, df[numerical_ft_dbfields]], axis=1)
 
     # y erstellen
-    y = df[target_dbfields].values.ravel()
+    if target_dbfields == ['freiheitsstrafe_in_monaten']:
+        # wenn freiheitsstrafe in monaten 0 ist, sollte der wert anzahl_tagessaetze / 30 als zielwert genommen werden
+        y = (df['anzahl_tagessaetze']/30).where(df['freiheitsstrafe_in_monaten'] == 0, df['freiheitsstrafe_in_monaten']).values.ravel()
+    else:
+        y = df[target_dbfields].values.ravel()
 
     if return_encoder:
         return x, y, encoder

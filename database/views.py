@@ -238,6 +238,7 @@ def csv_erstellen(request):
     return redirect('dev')
 
 
+@login_required
 def dev(request):
     # kimodelle mit nur validen features laden
     val_rf_kimodel = KIModelPickleFile.objects.get(name='rf_regr_val')

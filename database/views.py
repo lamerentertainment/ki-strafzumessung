@@ -244,6 +244,10 @@ def dev(request):
     val_rf_kimodel = KIModelPickleFile.objects.get(name='rf_regr_val')
     val_rf_clf_kimodel = KIModelPickleFile.objects.get(name='rf_clf_val')
 
+    # Urteile  mit bester und schlechtester Prognoseleistung laden, um im template darauf verlinken zu können
+    konformes_urteil = Urteil.objects.get(fall_nr=val_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung_urteil)
+    unkonformes_urteil = Urteil.objects.get(fall_nr=val_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung_urteil)
+
     # kimodelle mit allen features laden
     all_rf_kimodel = KIModelPickleFile.objects.get(name='rf_regr_all')
     lr_kimodel = KIModelPickleFile.objects.get(name='lr_regr_all')
@@ -257,7 +261,10 @@ def dev(request):
                'all_rf_kimodel': all_rf_kimodel,
                'lr_kimodel': lr_kimodel,
                'koeff_liste': koeffizientenliste,
-               'introspection_plot': introspection_plot}
+               'introspection_plot': introspection_plot,
+               'unkonformes_urteil': unkonformes_urteil,
+               'konformes_urteil': konformes_urteil,
+               }
     return render(request, 'database/dev.html', context)
 
 

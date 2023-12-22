@@ -27,3 +27,6 @@ DATABASES = {
 
 # hinzugefügt für whitenoise
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# CSRF-Protection
+CSRF_TRUSTED_ORIGINS = ["https://applikuapp.com", "https://www.applikuapp.com", "https://strafzumessung.ch", "https://www.strafzumessung.ch"]

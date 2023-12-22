@@ -106,7 +106,7 @@ def kategorie_scatterplot_erstellen(model=Urteil,
         # Wenn Freiheitstrafe in Monaten 0 ist, soll als y Wert die Anzahl Tagessätze / 30 zurückgegeben werden
         y_values = np.where(
             kat_dict[kategorie]["freiheitsstrafe_in_monaten"] == 0,
-            kat_dict[kategorie]["anzahl_tagessaetze"],
+            (kat_dict[kategorie]["anzahl_tagessaetze"]/30),
             kat_dict[kategorie]["freiheitsstrafe_in_monaten"],
         )
 

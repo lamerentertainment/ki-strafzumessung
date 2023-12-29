@@ -85,7 +85,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'kizumessung',
-        'USER': 'postgres',
+        'USER': 'djangouser',
         'PASSWORD': 'dummy_pw',
         'HOST': 'localhost',
         'PORT': '5432',

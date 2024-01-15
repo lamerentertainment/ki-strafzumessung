@@ -11,16 +11,21 @@ from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import LeaveOneOut
 from .models import Urteil, KIModelPickleFile, DiagrammSVG
-from .aws_helpers import kimodell_von_pickle_file_aus_aws_bucket_laden, ki_modell_als_pickle_file_speichern
+from .aws_helpers import (
+    kimodell_von_pickle_file_aus_aws_bucket_laden,
+    ki_modell_als_pickle_file_speichern,
+)
 from django.core.files.base import ContentFile
 
 
-def onehotx_und_y_erstellen(dbmodel,
-                            categorial_ft_dbfields=None,
-                            numerical_ft_dbfields=None,
-                            target_dbfields=None,
-                            return_encoder=False,
-                            csv_erstellen=False):
+def onehotx_und_y_erstellen(
+    dbmodel,
+    categorial_ft_dbfields=None,
+    numerical_ft_dbfields=None,
+    target_dbfields=None,
+    return_encoder=False,
+    csv_erstellen=False,
+):
     """
     :param return_encoder: gibt encoder zurück, um diesen bei einem ki-modell abzuspeichern
     :param dbmodel: ein Django Datenbank-Urteilsmodel
@@ -33,14 +38,26 @@ def onehotx_und_y_erstellen(dbmodel,
 
     # Mutable Default Parameter Werte definieren
     if target_dbfields is None:
-        target_dbfields = ['freiheitsstrafe_in_monaten']
+        target_dbfields = ["freiheitsstrafe_in_monaten"]
     if numerical_ft_dbfields is None:
-        numerical_ft_dbfields = ['deliktssumme', 'nebenverurteilungsscore', 'urteilsjahr']
+        numerical_ft_dbfields = [
+            "deliktssumme",
+            "nebenverurteilungsscore",
+            "urteilsjahr",
+        ]
     if categorial_ft_dbfields is None:
-        categorial_ft_dbfields = ['hauptdelikt', 'geschlecht', 'nationalitaet', 'gericht', 'mehrfach',
-                                  'gewerbsmaessig', 'vorbestraft', 'vorbestraft_einschlaegig', ]
+        categorial_ft_dbfields = [
+            "hauptdelikt",
+            "geschlecht",
+            "nationalitaet",
+            "gericht",
+            "mehrfach",
+            "gewerbsmaessig",
+            "vorbestraft",
+            "vorbestraft_einschlaegig",
+        ]
 
-    #Queryset aller Urteile holen, welche in_ki_modell True haben
+    # Queryset aller Urteile holen, welche in_ki_modell True haben
     alle_zu_beruecksichtigenden_urteile = dbmodel.objects.filter(in_ki_modell=True)
 
     # Datenframe erstellen
@@ -50,27 +67,35 @@ def onehotx_und_y_erstellen(dbmodel,
     df = vermoegensstrafrechts_urteile_codes_aufloesen(df)
 
     if csv_erstellen:
-        df.to_csv('notebooks/urteile.csv')
+        df.to_csv("notebooks/urteile.csv")
 
     # Urteilsdatum in Urteilsjahr konvertieren
-    df['urteilsdatum'] = pd.to_datetime(df['urteilsdatum'])
-    df['urteilsdatum'] = df['urteilsdatum'].map(lambda a: a.year)
-    df.rename(columns={'urteilsdatum': 'urteilsjahr'}, inplace=True)
+    df["urteilsdatum"] = pd.to_datetime(df["urteilsdatum"])
+    df["urteilsdatum"] = df["urteilsdatum"].map(lambda a: a.year)
+    df.rename(columns={"urteilsdatum": "urteilsjahr"}, inplace=True)
 
     # 1hot encoding der kategorialen variablen
     encoder = OneHotEncoder(sparse=False)
     encoder.fit(df[categorial_ft_dbfields])
     categorical_1hot = encoder.transform(df[categorial_ft_dbfields])
     encoder_categorical_ft_names = encoder.get_feature_names_out(categorial_ft_dbfields)
-    df_categorical_1hot = pd.DataFrame(categorical_1hot, columns=encoder_categorical_ft_names)
+    df_categorical_1hot = pd.DataFrame(
+        categorical_1hot, columns=encoder_categorical_ft_names
+    )
 
     # df der 1hot-kodierten features mit df der numerischen features zusammenfügen
     x = pd.concat([df_categorical_1hot, df[numerical_ft_dbfields]], axis=1)
 
     # y erstellen
-    if target_dbfields == ['freiheitsstrafe_in_monaten']:
+    if target_dbfields == ["freiheitsstrafe_in_monaten"]:
         # wenn freiheitsstrafe in monaten 0 ist, sollte der wert anzahl_tagessaetze / 30 als zielwert genommen werden
-        y = (df['anzahl_tagessaetze']/30).where(df['freiheitsstrafe_in_monaten'] == 0, df['freiheitsstrafe_in_monaten']).values.ravel()
+        y = (
+            (df["anzahl_tagessaetze"] / 30)
+            .where(
+                df["freiheitsstrafe_in_monaten"] == 0, df["freiheitsstrafe_in_monaten"]
+            )
+            .values.ravel()
+        )
     else:
         y = df[target_dbfields].values.ravel()
 
@@ -82,26 +107,34 @@ def onehotx_und_y_erstellen(dbmodel,
 
 def vermoegensstrafrechts_urteile_codes_aufloesen(dataframe):
     # kodiert abgespeicherte Variablen paraphrasieren
-    if 'geschlecht' in dataframe.columns:
-        dataframe['geschlecht'].replace({'0': 'männlich',
-                                         '1': 'weiblich'}, inplace=True)
-    if 'nationalitaet' in dataframe.columns:
-        dataframe['nationalitaet'].replace({'0': 'Schweizerin/Schweizer',
-                                            '1': 'Ausländerin/Ausländer',
-                                            '2': 'unbekannt'}, inplace=True)
-    if 'vollzug' in dataframe.columns:
-        dataframe['vollzug'].replace({'0': 'bedingt',
-                                      '1': 'teilbedingt',
-                                      '2': 'unbedingt'})
+    if "geschlecht" in dataframe.columns:
+        dataframe["geschlecht"].replace(
+            {"0": "männlich", "1": "weiblich"}, inplace=True
+        )
+    if "nationalitaet" in dataframe.columns:
+        dataframe["nationalitaet"].replace(
+            {
+                "0": "Schweizerin/Schweizer",
+                "1": "Ausländerin/Ausländer",
+                "2": "unbekannt",
+            },
+            inplace=True,
+        )
+    if "vollzug" in dataframe.columns:
+        dataframe["vollzug"].replace(
+            {"0": "bedingt", "1": "teilbedingt", "2": "unbedingt"}
+        )
     return dataframe
 
 
 def random_forest_regressor_erstellen(x, y):
-    random_forest_regressor = RandomForestRegressor(random_state=42,
-                                                    max_depth=110,
-                                                    min_samples_split = 2,
-                                                    min_samples_leaf= 4,
-                                                    n_estimators=10)
+    random_forest_regressor = RandomForestRegressor(
+        random_state=42,
+        max_depth=110,
+        min_samples_split=2,
+        min_samples_leaf=4,
+        n_estimators=10,
+    )
     random_forest_regressor.fit(x, y)
     return random_forest_regressor
 
@@ -204,7 +237,11 @@ def sortierte_features_importance_list_erstellen(
 
 
 def sortierte_koeff_list_erstellen(instanziiertes_lr_kimodel):
-    coeff_features_list = list(zip(instanziiertes_lr_kimodel.coef_, instanziiertes_lr_kimodel.feature_names_in_))
+    coeff_features_list = list(
+        zip(
+            instanziiertes_lr_kimodel.coef_, instanziiertes_lr_kimodel.feature_names_in_
+        )
+    )
     koeff_liste = sorted(coeff_features_list, key=lambda tup: tup[0])
     return koeff_liste
 
@@ -221,26 +258,48 @@ def prognoseleistung_dict_ausgeben(instanziertes_kimodel, x, y):
         tatsächliches_strafmass = y[test]
         differenz = abs(vorhersage[0] - tatsächliches_strafmass)
         liste_der_abweichungen.append(differenz)
-        if beste_prognoseleistung_index is None or differenz < liste_der_abweichungen[beste_prognoseleistung_index]:
-            beste_prognoseleistung_index = len(liste_der_abweichungen) - 1  # store new index
-        if schlechteste_prognoseleistung_index is None or differenz > liste_der_abweichungen[schlechteste_prognoseleistung_index]:
+        if (
+            beste_prognoseleistung_index is None
+            or differenz < liste_der_abweichungen[beste_prognoseleistung_index]
+        ):
+            beste_prognoseleistung_index = (
+                len(liste_der_abweichungen) - 1
+            )  # store new index
+        if (
+            schlechteste_prognoseleistung_index is None
+            or differenz > liste_der_abweichungen[schlechteste_prognoseleistung_index]
+        ):
             schlechteste_prognoseleistung_index = len(liste_der_abweichungen) - 1
     durchschnittlicher_fehler = np.mean(liste_der_abweichungen)
     standardabweichung = np.std(liste_der_abweichungen)
-    prognoseleistung_dict['durchschnittlicher_fehler'] = round(durchschnittlicher_fehler, 2)
-    prognoseleistung_dict['standardabweichung'] = round(standardabweichung, 2)
-    prognoseleistung_dict['beste_prognoseleistung'] = round(np.min(liste_der_abweichungen), 2)
-    prognoseleistung_dict['beste_prognoseleistung_index'] = beste_prognoseleistung_index  # store index
-    prognoseleistung_dict['schlechteste_prognoseleistung'] = round(np.max(liste_der_abweichungen), 2)
-    prognoseleistung_dict['schlechteste_prognoseleistung_index'] = schlechteste_prognoseleistung_index  # store index
+    prognoseleistung_dict["durchschnittlicher_fehler"] = round(
+        durchschnittlicher_fehler, 2
+    )
+    prognoseleistung_dict["standardabweichung"] = round(standardabweichung, 2)
+    prognoseleistung_dict["beste_prognoseleistung"] = round(
+        np.min(liste_der_abweichungen), 2
+    )
+    prognoseleistung_dict[
+        "beste_prognoseleistung_index"
+    ] = beste_prognoseleistung_index  # store index
+    prognoseleistung_dict["schlechteste_prognoseleistung"] = round(
+        np.max(liste_der_abweichungen), 2
+    )
+    prognoseleistung_dict[
+        "schlechteste_prognoseleistung_index"
+    ] = schlechteste_prognoseleistung_index  # store index
 
     for differenz in liste_der_abweichungen:
-        if differenz < durchschnittlicher_fehler - standardabweichung or differenz > durchschnittlicher_fehler + standardabweichung:
+        if (
+            differenz < durchschnittlicher_fehler - standardabweichung
+            or differenz > durchschnittlicher_fehler + standardabweichung
+        ):
             index = liste_der_abweichungen.index(differenz)
-            liste_der_abweichungen[index] = 'ausserhalb'
-    ausserhalb_standardabweichung = liste_der_abweichungen.count('ausserhalb')
+            liste_der_abweichungen[index] = "ausserhalb"
+    ausserhalb_standardabweichung = liste_der_abweichungen.count("ausserhalb")
     prognoseleistung_dict[
-        'standardabweichung_string'] = f'{round((len(liste_der_abweichungen) - ausserhalb_standardabweichung) / len(liste_der_abweichungen) * 100, 2)}% aller Prognosen weisen einen Fehler zwischen {round(durchschnittlicher_fehler - standardabweichung, 2)} und {round(durchschnittlicher_fehler + standardabweichung, 2)} Monaten auf'
+        "standardabweichung_string"
+    ] = f"{round((len(liste_der_abweichungen) - ausserhalb_standardabweichung) / len(liste_der_abweichungen) * 100, 2)}% aller Prognosen weisen einen Fehler zwischen {round(durchschnittlicher_fehler - standardabweichung, 2)} und {round(durchschnittlicher_fehler + standardabweichung, 2)} Monaten auf"
 
     return prognoseleistung_dict
 
@@ -264,13 +323,18 @@ def kimodelle_neu_kalibrieren_und_abspeichern():
 
     # random forest REGRESSOR mit ausschliesslich validen features
     random_forest_regressor_val_fts = random_forest_regressor_erstellen(x_val, y)
-    prognoseleistung_dict = prognoseleistung_dict_ausgeben(random_forest_regressor_val_fts, x_val, y)
+    prognoseleistung_dict = prognoseleistung_dict_ausgeben(
+        random_forest_regressor_val_fts, x_val, y
+    )
 
-    #urteils df generieren, um mit erzieltem index bestes und schlechtes hervorgesagtes Urteil zu finden
+    # urteils df generieren, um mit erzieltem index bestes und schlechtes hervorgesagtes Urteil zu finden
     df = pd.DataFrame.from_records(Urteil.objects.all().values())
-    prognoseleistung_dict['beste_prognoseleistung_urteil'] = df.loc[prognoseleistung_dict['beste_prognoseleistung_index']].fall_nr
-    prognoseleistung_dict['schlechteste_prognoseleistung_urteil'] = df.loc[prognoseleistung_dict['schlechteste_prognoseleistung_index']].fall_nr
-
+    prognoseleistung_dict["beste_prognoseleistung_urteil"] = df.loc[
+        prognoseleistung_dict["beste_prognoseleistung_index"]
+    ].fall_nr
+    prognoseleistung_dict["schlechteste_prognoseleistung_urteil"] = df.loc[
+        prognoseleistung_dict["schlechteste_prognoseleistung_index"]
+    ].fall_nr
 
     (
         list_of_zipped_importance_feature_tuples,
@@ -279,26 +343,28 @@ def kimodelle_neu_kalibrieren_und_abspeichern():
         random_forest_regressor_val_fts, categorial_ft_dbfields=categorial_ft_dbfields
     )
     # kimodell als pickle file speichern
-    ki_modell_als_pickle_file_speichern(instanziertes_kimodel=random_forest_regressor_val_fts,
-                                        name='rf_regr_val',
-                                        filename='random_forest_regressor_val_fts.pkl',
-                                        prognoseleistung_dict=prognoseleistung_dict,
-                                        ft_importance_list=list_of_zipped_importance_feature_tuples,
-                                        ft_importance_list_merged=zusammenfassende_list_of_zipped_importance_features_tuples)
+    ki_modell_als_pickle_file_speichern(
+        instanziertes_kimodel=random_forest_regressor_val_fts,
+        name="rf_regr_val",
+        filename="random_forest_regressor_val_fts.pkl",
+        prognoseleistung_dict=prognoseleistung_dict,
+        ft_importance_list=list_of_zipped_importance_feature_tuples,
+        ft_importance_list_merged=zusammenfassende_list_of_zipped_importance_features_tuples,
+    )
 
     # bei validem regressor noch den onehotencoder für späteren transform der eingeabwerte abspeichern
-    kimodell = KIModelPickleFile.objects.get(name='rf_regr_val')
+    kimodell = KIModelPickleFile.objects.get(name="rf_regr_val")
     content = pickle.dumps(onehot_encoder_val)
     content_file = ContentFile(content)
-    kimodell.encoder.save('one_hot_encoder_fuer_rf_regr_val.pkl', content_file)
+    kimodell.encoder.save("one_hot_encoder_fuer_rf_regr_val.pkl", content_file)
     content_file.close()
 
     # random forest CLASSIFIER mit ausschliesslich validen features, vollzugsart als zielvariable
-    y = Urteil.pandas.return_y_zielwerte(zielwert='vollzug')
+    y = Urteil.pandas.return_y_zielwerte(zielwert="vollzug")
     random_forest_classifier_val_fts = RandomForestClassifier()
     random_forest_classifier_val_fts.fit(x_val, y)
     # leeres prognoseleistung dict, weil dies nicht für classifier geht
-    prognoseleistung_dict = {'content': 'empty'}
+    prognoseleistung_dict = {"content": "empty"}
     # merkmalwchtigkeitslisten erstellen
     (
         list_of_zipped_importance_feature_tuples,
@@ -307,66 +373,98 @@ def kimodelle_neu_kalibrieren_und_abspeichern():
         random_forest_classifier_val_fts, categorial_ft_dbfields=categorial_ft_dbfields
     )
     # kimodell als pickle file speichern
-    ki_modell_als_pickle_file_speichern(instanziertes_kimodel=random_forest_classifier_val_fts,
-                                        name='rf_clf_val',
-                                        filename='random_forest_classifier_val_fts.pkl',
-                                        prognoseleistung_dict=prognoseleistung_dict,
-                                        ft_importance_list=list_of_zipped_importance_feature_tuples,
-                                        ft_importance_list_merged=zusammenfassende_list_of_zipped_importance_features_tuples)
+    ki_modell_als_pickle_file_speichern(
+        instanziertes_kimodel=random_forest_classifier_val_fts,
+        name="rf_clf_val",
+        filename="random_forest_classifier_val_fts.pkl",
+        prognoseleistung_dict=prognoseleistung_dict,
+        ft_importance_list=list_of_zipped_importance_feature_tuples,
+        ft_importance_list_merged=zusammenfassende_list_of_zipped_importance_features_tuples,
+    )
 
     # alle features verwenden
     x, y = onehotx_und_y_erstellen(Urteil)
 
     # random forest REGRESSOR mit allen features
     random_forest_regressor_all_fts = random_forest_regressor_erstellen(x, y)
-    prognoseleistung_dict = prognoseleistung_dict_ausgeben(random_forest_regressor_all_fts, x, y)
-    list_of_zipped_importance_feature_tuples, zusammenfassende_list_of_zipped_importance_features_tuples \
-        = sortierte_features_importance_list_erstellen(random_forest_regressor_all_fts)
+    prognoseleistung_dict = prognoseleistung_dict_ausgeben(
+        random_forest_regressor_all_fts, x, y
+    )
+    (
+        list_of_zipped_importance_feature_tuples,
+        zusammenfassende_list_of_zipped_importance_features_tuples,
+    ) = sortierte_features_importance_list_erstellen(random_forest_regressor_all_fts)
     # kimodell als pickle file speichern
-    ki_modell_als_pickle_file_speichern(instanziertes_kimodel=random_forest_regressor_all_fts,
-                                        name='rf_regr_all',
-                                        filename='random_forest_regressor_all_fts.pkl',
-                                        prognoseleistung_dict=prognoseleistung_dict,
-                                        ft_importance_list=list_of_zipped_importance_feature_tuples,
-                                        ft_importance_list_merged=zusammenfassende_list_of_zipped_importance_features_tuples)
+    ki_modell_als_pickle_file_speichern(
+        instanziertes_kimodel=random_forest_regressor_all_fts,
+        name="rf_regr_all",
+        filename="random_forest_regressor_all_fts.pkl",
+        prognoseleistung_dict=prognoseleistung_dict,
+        ft_importance_list=list_of_zipped_importance_feature_tuples,
+        ft_importance_list_merged=zusammenfassende_list_of_zipped_importance_features_tuples,
+    )
 
     # LINEAR regression REGRESSOR
     linear_regression_regressor_all_fts = linear_regression_regressor_erstellen(x, y)
-    prognoseleistung_dict = prognoseleistung_dict_ausgeben(linear_regression_regressor_all_fts, x, y)
-    ki_modell_als_pickle_file_speichern(instanziertes_kimodel=linear_regression_regressor_all_fts,
-                                        name='lr_regr_all',
-                                        filename='linear_regression_regressor_all_fts.pkl',
-                                        prognoseleistung_dict=prognoseleistung_dict)
+    prognoseleistung_dict = prognoseleistung_dict_ausgeben(
+        linear_regression_regressor_all_fts, x, y
+    )
+    ki_modell_als_pickle_file_speichern(
+        instanziertes_kimodel=linear_regression_regressor_all_fts,
+        name="lr_regr_all",
+        filename="linear_regression_regressor_all_fts.pkl",
+        prognoseleistung_dict=prognoseleistung_dict,
+    )
 
 
 # ALTE FUNKTIONEN
 def y_und_x_erstellen_fuer_classifier(urteil_model, zielwert):
     """nimmt das Urteilsmodel als Parameter und gibt die zielwerte y und X für ai-model-fitting zurück:
     y_zielwerte ist eine Liste mit der Anzahl Freiheitsstrafe als Elemente
-    X_urteilsmerkmale ist ein pandas dataframe mit Urteilsmerkmalen Verfahrensart, Geschlecht etc. als Columns"""
+    X_urteilsmerkmale ist ein pandas dataframe mit Urteilsmerkmalen Verfahrensart, Geschlecht etc. als Columns
+    """
     urteil_queryset = urteil_model.objects.all()
 
-    print('hallo?')
+    print("hallo?")
     y_zielwerte = [urteil.vollzug for urteil in urteil_queryset]
     # transformation in string kategorie
     for i in range(len(y_zielwerte)):
-        if y_zielwerte[i] == '0':
+        if y_zielwerte[i] == "0":
             y_zielwerte[i] = 0
-        elif y_zielwerte[i] == '1':
+        elif y_zielwerte[i] == "1":
             y_zielwerte[i] = 1
-        elif y_zielwerte[i] == '2':
+        elif y_zielwerte[i] == "2":
             y_zielwerte[i] = 2
 
-    liste_mit_urteilslisten = [[urteil.geschlecht, urteil.hauptdelikt, urteil.mehrfach,
-                                urteil.gewerbsmaessig, urteil.bandenmaessig, urteil.deliktssumme,
-                                urteil.nebenverurteilungsscore, urteil.vorbestraft, urteil.vorbestraft_einschlaegig]
-                               for urteil in Urteil.objects.all()]
+    liste_mit_urteilslisten = [
+        [
+            urteil.geschlecht,
+            urteil.hauptdelikt,
+            urteil.mehrfach,
+            urteil.gewerbsmaessig,
+            urteil.bandenmaessig,
+            urteil.deliktssumme,
+            urteil.nebenverurteilungsscore,
+            urteil.vorbestraft,
+            urteil.vorbestraft_einschlaegig,
+        ]
+        for urteil in Urteil.objects.all()
+    ]
 
-    x_werte = pd.DataFrame(np.array(liste_mit_urteilslisten),
-                           columns=['Geschlecht', 'Hauptdelikt', 'mehrfach', 'gewerbsmaessig',
-                                    'bandenmaessig',
-                                    'Deliktssumme', 'Nebenverurteilungsscore', 'vorbestraft',
-                                    'einschlaegig vorbestraft'])
+    x_werte = pd.DataFrame(
+        np.array(liste_mit_urteilslisten),
+        columns=[
+            "Geschlecht",
+            "Hauptdelikt",
+            "mehrfach",
+            "gewerbsmaessig",
+            "bandenmaessig",
+            "Deliktssumme",
+            "Nebenverurteilungsscore",
+            "vorbestraft",
+            "einschlaegig vorbestraft",
+        ],
+    )
 
     return y_zielwerte, x_werte
 
@@ -374,36 +472,56 @@ def y_und_x_erstellen_fuer_classifier(urteil_model, zielwert):
 def y_und_x_erstellen(urteil_model, zielwert):
     """nimmt das Urteilsmodel als Parameter und gibt die zielwerte y und X für ai-model-fitting zurück:
     y_zielwerte ist eine Liste mit der Anzahl Freiheitsstrafe als Elemente
-    X_urteilsmerkmale ist ein pandas dataframe mit Urteilsmerkmalen Verfahrensart, Geschlecht etc. als Columns"""
+    X_urteilsmerkmale ist ein pandas dataframe mit Urteilsmerkmalen Verfahrensart, Geschlecht etc. als Columns
+    """
     urteil_queryset = urteil_model.objects.all()
 
-    if zielwert == 'hoehe_strafe' or 'knn':
+    if zielwert == "hoehe_strafe" or "knn":
         y_zielwerte = [urteil.freiheitsstrafe_in_monaten for urteil in urteil_queryset]
-        print('y-zielwerte hoehe_strafe angewählt')
-    elif zielwert == 'vollzug':
-        print('hallo?')
+        print("y-zielwerte hoehe_strafe angewählt")
+    elif zielwert == "vollzug":
+        print("hallo?")
         y_zielwerte = [urteil.vollzug for urteil in urteil_queryset]
         # transformation in string kategorie
         for i in range(len(y_zielwerte)):
-            if y_zielwerte[i] == '0':
+            if y_zielwerte[i] == "0":
                 y_zielwerte[i] = 0
-            elif y_zielwerte[i] == '1':
+            elif y_zielwerte[i] == "1":
                 y_zielwerte[i] = 1
-            elif y_zielwerte[i] == '2':
+            elif y_zielwerte[i] == "2":
                 y_zielwerte[i] = 2
 
     print(y_zielwerte)
 
-    liste_mit_urteilslisten = [[urteil.geschlecht, urteil.hauptdelikt, urteil.mehrfach,
-                                urteil.gewerbsmaessig, urteil.bandenmaessig, urteil.deliktssumme,
-                                urteil.nebenverurteilungsscore, urteil.vorbestraft, urteil.vorbestraft_einschlaegig]
-                               for urteil in Urteil.objects.all()]
+    liste_mit_urteilslisten = [
+        [
+            urteil.geschlecht,
+            urteil.hauptdelikt,
+            urteil.mehrfach,
+            urteil.gewerbsmaessig,
+            urteil.bandenmaessig,
+            urteil.deliktssumme,
+            urteil.nebenverurteilungsscore,
+            urteil.vorbestraft,
+            urteil.vorbestraft_einschlaegig,
+        ]
+        for urteil in Urteil.objects.all()
+    ]
 
-    x_werte = pd.DataFrame(np.array(liste_mit_urteilslisten),
-                           columns=['Geschlecht', 'Hauptdelikt', 'mehrfach', 'gewerbsmaessig',
-                                    'bandenmaessig',
-                                    'Deliktssumme', 'Nebenverurteilungsscore', 'vorbestraft',
-                                    'einschlaegig vorbestraft'])
+    x_werte = pd.DataFrame(
+        np.array(liste_mit_urteilslisten),
+        columns=[
+            "Geschlecht",
+            "Hauptdelikt",
+            "mehrfach",
+            "gewerbsmaessig",
+            "bandenmaessig",
+            "Deliktssumme",
+            "Nebenverurteilungsscore",
+            "vorbestraft",
+            "einschlaegig vorbestraft",
+        ],
+    )
 
     return y_zielwerte, x_werte
 
@@ -413,47 +531,71 @@ def preprocessing_x(pd_df_x):
     """nimmt ein pandas-df als argument und gibt eine preprocessed-pandas-df (boolean-Werte zu 0/1; one-hot-encoder für
     hauptdelikt zurück"""
     # one-hot-encode hauptdelikt
-    pd_df_x['Hauptdelikt.Betrug'] = [1 if eintrag == 'Betrug' else 0 for eintrag in pd_df_x['Hauptdelikt']]
-    pd_df_x['Hauptdelikt.DVA'] = [1 if eintrag == 'betr. Missbrauch DVA' else 0 for eintrag in pd_df_x['Hauptdelikt']]
-    pd_df_x['Hauptdelikt.Veruntreuung'] = [1 if eintrag == 'Veruntreuung' else 0 for eintrag in pd_df_x['Hauptdelikt']]
-    pd_df_x['Hauptdelikt.ungGB'] = [1 if eintrag == 'ung. Geschäftsbesorgung' else 0 for eintrag in
-                                    pd_df_x['Hauptdelikt']]
-    pd_df_x['Hauptdelikt.Diebstahl'] = [1 if eintrag == 'Diebstahl' else 0 for eintrag in
-                                        pd_df_x['Hauptdelikt']]
-    pd_df_x['Hauptdelikt.SachB'] = [1 if eintrag == 'Sachbeschädigung' else 0 for eintrag in
-                                    pd_df_x['Hauptdelikt']]
-    pd_df_x = pd_df_x.drop('Hauptdelikt', axis=1)
+    pd_df_x["Hauptdelikt.Betrug"] = [
+        1 if eintrag == "Betrug" else 0 for eintrag in pd_df_x["Hauptdelikt"]
+    ]
+    pd_df_x["Hauptdelikt.DVA"] = [
+        1 if eintrag == "betr. Missbrauch DVA" else 0
+        for eintrag in pd_df_x["Hauptdelikt"]
+    ]
+    pd_df_x["Hauptdelikt.Veruntreuung"] = [
+        1 if eintrag == "Veruntreuung" else 0 for eintrag in pd_df_x["Hauptdelikt"]
+    ]
+    pd_df_x["Hauptdelikt.ungGB"] = [
+        1 if eintrag == "ung. Geschäftsbesorgung" else 0
+        for eintrag in pd_df_x["Hauptdelikt"]
+    ]
+    pd_df_x["Hauptdelikt.Diebstahl"] = [
+        1 if eintrag == "Diebstahl" else 0 for eintrag in pd_df_x["Hauptdelikt"]
+    ]
+    pd_df_x["Hauptdelikt.SachB"] = [
+        1 if eintrag == "Sachbeschädigung" else 0 for eintrag in pd_df_x["Hauptdelikt"]
+    ]
+    pd_df_x = pd_df_x.drop("Hauptdelikt", axis=1)
 
     # boolean auf 0/1
-    pd_df_x['mehrfach'] = [1 if eintrag == 'True' else 0 for eintrag in pd_df_x['mehrfach']]
-    pd_df_x['gewerbsmaessig'] = [1 if eintrag == 'True' else 0 for eintrag in pd_df_x['gewerbsmaessig']]
-    pd_df_x['bandenmaessig'] = [1 if eintrag == 'True' else 0 for eintrag in pd_df_x['bandenmaessig']]
-    pd_df_x['vorbestraft'] = [1 if eintrag == 'True' else 0 for eintrag in pd_df_x['vorbestraft']]
-    pd_df_x['einschlaegig vorbestraft'] = [1 if eintrag == 'True' else 0 for eintrag in
-                                           pd_df_x['einschlaegig vorbestraft']]
+    pd_df_x["mehrfach"] = [
+        1 if eintrag == "True" else 0 for eintrag in pd_df_x["mehrfach"]
+    ]
+    pd_df_x["gewerbsmaessig"] = [
+        1 if eintrag == "True" else 0 for eintrag in pd_df_x["gewerbsmaessig"]
+    ]
+    pd_df_x["bandenmaessig"] = [
+        1 if eintrag == "True" else 0 for eintrag in pd_df_x["bandenmaessig"]
+    ]
+    pd_df_x["vorbestraft"] = [
+        1 if eintrag == "True" else 0 for eintrag in pd_df_x["vorbestraft"]
+    ]
+    pd_df_x["einschlaegig vorbestraft"] = [
+        1 if eintrag == "True" else 0 for eintrag in pd_df_x["einschlaegig vorbestraft"]
+    ]
 
     return pd_df_x
 
 
-def ai_model_als_pickle_file_ablegen(urteil_model=Urteil, zielwert='hoehe_strafe'):
-    if zielwert == 'hoehe_strafe':
-        y, x = y_und_x_erstellen(urteil_model=Urteil, zielwert='hoehe_strafe')
+def ai_model_als_pickle_file_ablegen(urteil_model=Urteil, zielwert="hoehe_strafe"):
+    if zielwert == "hoehe_strafe":
+        y, x = y_und_x_erstellen(urteil_model=Urteil, zielwert="hoehe_strafe")
         x = preprocessing_x(x)
 
         # Train a Decision Tree Regressor
-        model = RandomForestRegressor(random_state=42,
-                                      max_depth=110,
-                                      min_samples_split=2,
-                                      min_samples_leaf=4,
-                                      n_estimators=10)
+        model = RandomForestRegressor(
+            random_state=42,
+            max_depth=110,
+            min_samples_split=2,
+            min_samples_leaf=4,
+            n_estimators=10,
+        )
         model.fit(x, y)
 
         # Save the model as a pkl file
-        filename = 'database/ai-model/model.pkl'
-        pickle.dump(model, open(filename, 'wb'))
+        filename = "database/ai-model/model.pkl"
+        pickle.dump(model, open(filename, "wb"))
 
-    elif zielwert == 'vollzug':
-        y, x = y_und_x_erstellen_fuer_classifier(urteil_model=Urteil, zielwert='vollzug')
+    elif zielwert == "vollzug":
+        y, x = y_und_x_erstellen_fuer_classifier(
+            urteil_model=Urteil, zielwert="vollzug"
+        )
         print(y)
         x = preprocessing_x(x)
 
@@ -462,11 +604,11 @@ def ai_model_als_pickle_file_ablegen(urteil_model=Urteil, zielwert='hoehe_strafe
         model.fit(x, y)
 
         # Save the model as a pkl file
-        filename = 'database/ai-model/model2.pkl'
-        pickle.dump(model, open(filename, 'wb'))
+        filename = "database/ai-model/model2.pkl"
+        pickle.dump(model, open(filename, "wb"))
 
-    elif zielwert == 'knn':
-        y, x = y_und_x_erstellen(urteil_model=Urteil, zielwert='knn')
+    elif zielwert == "knn":
+        y, x = y_und_x_erstellen(urteil_model=Urteil, zielwert="knn")
         x = preprocessing_x(x)
 
         # Train a knn Regressor
@@ -474,62 +616,89 @@ def ai_model_als_pickle_file_ablegen(urteil_model=Urteil, zielwert='hoehe_strafe
         model.fit(x, y)
 
         # Save the model as a pkl file
-        filename = 'database/ai-model/knn.pkl'
-        pickle.dump(model, open(filename, 'wb'))
+        filename = "database/ai-model/knn.pkl"
+        pickle.dump(model, open(filename, "wb"))
 
 
 def formulareingaben_in_abfragesample_konvertieren(cleaned_data_dict):
     """nimmt die Formulareingaben, erstellt davon ein pandas dataframe und macht das preprocessing, um ein
     estimate abfragesample zu generieren"""
-    cat_fts = ['hauptdelikt', 'mehrfach', 'gewerbsmaessig', 'bandenmaessig', 'vorbestraft', 'vorbestraft_einschlaegig']
-    num_fts = ['deliktssumme', 'nebenverurteilungsscore']
+    cat_fts = [
+        "hauptdelikt",
+        "mehrfach",
+        "gewerbsmaessig",
+        "bandenmaessig",
+        "vorbestraft",
+        "vorbestraft_einschlaegig",
+    ]
+    num_fts = ["deliktssumme", "nebenverurteilungsscore"]
 
-    hauptdelikt = cleaned_data_dict['hauptdelikt']
-    mehrfach = cleaned_data_dict['mehrfach']
-    gewerbsmaessig = cleaned_data_dict['gewerbsmaessig']
-    bandenmaessig = cleaned_data_dict['bandenmaessig']
-    deliktssumme = cleaned_data_dict['deliktssumme']
-    nebenverurteilungsscore = cleaned_data_dict['nebenverurteilungsscore']
-    vorbestraft = cleaned_data_dict['vorbestraft']
-    vorbestraft_einschlaegig = cleaned_data_dict['vorbestraft_einschlaegig']
+    hauptdelikt = cleaned_data_dict["hauptdelikt"]
+    mehrfach = cleaned_data_dict["mehrfach"]
+    gewerbsmaessig = cleaned_data_dict["gewerbsmaessig"]
+    bandenmaessig = cleaned_data_dict["bandenmaessig"]
+    deliktssumme = cleaned_data_dict["deliktssumme"]
+    nebenverurteilungsscore = cleaned_data_dict["nebenverurteilungsscore"]
+    vorbestraft = cleaned_data_dict["vorbestraft"]
+    vorbestraft_einschlaegig = cleaned_data_dict["vorbestraft_einschlaegig"]
 
-    liste_mit_urteilsmerkmalen = [hauptdelikt, mehrfach, gewerbsmaessig, bandenmaessig,
-                                  deliktssumme, nebenverurteilungsscore,
-                                  vorbestraft, vorbestraft_einschlaegig]
+    liste_mit_urteilsmerkmalen = [
+        hauptdelikt,
+        mehrfach,
+        gewerbsmaessig,
+        bandenmaessig,
+        deliktssumme,
+        nebenverurteilungsscore,
+        vorbestraft,
+        vorbestraft_einschlaegig,
+    ]
 
-    urteilsmerkmale_als_pandas_df = pd.DataFrame([liste_mit_urteilsmerkmalen],
-                                                 columns=['hauptdelikt',
-                                                          'mehrfach',
-                                                          'gewerbsmaessig',
-                                                          'bandenmaessig',
-                                                          'deliktssumme',
-                                                          'nebenverurteilungsscore',
-                                                          'vorbestraft',
-                                                          'vorbestraft_einschlaegig']
-                                                 )
-    urteilsmerkmale_als_pandas_df = vermoegensstrafrechts_urteile_codes_aufloesen(urteilsmerkmale_als_pandas_df)
-    encoder = kimodell_von_pickle_file_aus_aws_bucket_laden('encoders/one_hot_encoder_fuer_rf_regr_val.pkl')
+    urteilsmerkmale_als_pandas_df = pd.DataFrame(
+        [liste_mit_urteilsmerkmalen],
+        columns=[
+            "hauptdelikt",
+            "mehrfach",
+            "gewerbsmaessig",
+            "bandenmaessig",
+            "deliktssumme",
+            "nebenverurteilungsscore",
+            "vorbestraft",
+            "vorbestraft_einschlaegig",
+        ],
+    )
+    urteilsmerkmale_als_pandas_df = vermoegensstrafrechts_urteile_codes_aufloesen(
+        urteilsmerkmale_als_pandas_df
+    )
+    encoder = kimodell_von_pickle_file_aus_aws_bucket_laden(
+        "encoders/one_hot_encoder_fuer_rf_regr_val.pkl"
+    )
     cat_fts_onehot = encoder.transform(urteilsmerkmale_als_pandas_df[cat_fts])
     enc_cat_fts_names = encoder.get_feature_names_out(cat_fts)
     df_cat_fts = pd.DataFrame(cat_fts_onehot, columns=enc_cat_fts_names)
-    urteilsmerkmale_df_preprocessed = pd.concat([df_cat_fts, urteilsmerkmale_als_pandas_df[num_fts]], axis=1)
+    urteilsmerkmale_df_preprocessed = pd.concat(
+        [df_cat_fts, urteilsmerkmale_als_pandas_df[num_fts]], axis=1
+    )
     return urteilsmerkmale_df_preprocessed
 
 
 def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich=1.2):
     """nimmt als Input ein Pandas DF der merkmale und der zielwerte"""
-    cat_ohe_step = ('ohe', OneHotEncoder(drop='if_binary'))
+    cat_ohe_step = ("ohe", OneHotEncoder(drop="if_binary"))
     cat_steps = [cat_ohe_step]
     cat_pipe = Pipeline(cat_steps)
-    cat_features = ['gewerbsmaessig', 'hauptdelikt', 'vorbestraft_einschlaegig', 'vorbestraft']
+    cat_features = [
+        "gewerbsmaessig",
+        "hauptdelikt",
+        "vorbestraft_einschlaegig",
+        "vorbestraft",
+    ]
 
-    num_mm_step = ('mm', StandardScaler())
+    num_mm_step = ("mm", StandardScaler())
     num_steps = [num_mm_step]
     num_pipe = Pipeline(num_steps)
-    num_features = ['deliktssumme', 'nebenverurteilungsscore']
+    num_features = ["deliktssumme", "nebenverurteilungsscore"]
 
-    transformers = [('cat', cat_pipe, cat_features),
-                    ('num', num_pipe, num_features)]
+    transformers = [("cat", cat_pipe, cat_features), ("num", num_pipe, num_features)]
     ct = ColumnTransformer(transformers=transformers)
 
     x_transformed = ct.fit_transform(train_X_df)
@@ -537,49 +706,74 @@ def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich
     x_transformed = pd.DataFrame(x_transformed, columns=feature_names)
 
     # aktuelle gewichte aus dem validen rf kimodell laden
-    ft_importances_list = KIModelPickleFile.objects.get(name='rf_regr_val').ft_importance_list_merged
+    ft_importances_list = KIModelPickleFile.objects.get(
+        name="rf_regr_val"
+    ).ft_importance_list_merged
 
     x_transformed_gewichtet = x_transformed.copy()
     for imp_ft_tuple in ft_importances_list:
         # beim feature Deliktssumme soll zusätzlich ein Ausgleich der unterschiedlichen Skalenweiten erfolgen
-        if imp_ft_tuple[1] == 'deliktssumme':
-            x_transformed_gewichtet['num__deliktssumme'] = imp_ft_tuple[0] * x_transformed_gewichtet[
-                'num__deliktssumme'] * skalenausgleich
+        if imp_ft_tuple[1] == "deliktssumme":
+            x_transformed_gewichtet["num__deliktssumme"] = (
+                imp_ft_tuple[0]
+                * x_transformed_gewichtet["num__deliktssumme"]
+                * skalenausgleich
+            )
         # beim feature einschlägig vorbestraft muss vorerst das gewicht angepasst werden, ansonsten das Gewicht für vorbestraft (das im Namen einschlaegig_vorbestraft enthalten ist) hier "verbraucht" wird
-        if imp_ft_tuple[1] == 'einschlaegig_vorbestraft':
-            x_transformed_gewichtet['cat__vorbestraft_einschlaegig_True'] = imp_ft_tuple[0] * x_transformed_gewichtet[
-                'cat__vorbestraft_einschlaegig_True']
+        if imp_ft_tuple[1] == "einschlaegig_vorbestraft":
+            x_transformed_gewichtet["cat__vorbestraft_einschlaegig_True"] = (
+                imp_ft_tuple[0]
+                * x_transformed_gewichtet["cat__vorbestraft_einschlaegig_True"]
+            )
         # wo feature name in spaltenname der ft_importances_list enthalten ist, soll die importance multipliziert werden
         for column_name in x_transformed_gewichtet.columns:
             if imp_ft_tuple[1] in column_name:
-                x_transformed_gewichtet[column_name] = imp_ft_tuple[0] * x_transformed_gewichtet[column_name]
+                x_transformed_gewichtet[column_name] = (
+                    imp_ft_tuple[0] * x_transformed_gewichtet[column_name]
+                )
 
     knn = KNeighborsRegressor()
     knn.fit(x_transformed_gewichtet, train_y_df)
     urteil_features_df = urteil_features_series.to_frame().transpose()
-    urteil_features_df.columns = ['gewerbsmaessig', 'hauptdelikt',
-                                  'vorbestraft_einschlaegig', 'vorbestraft', 'deliktssumme', 'nebenverurteilungsscore']
+    urteil_features_df.columns = [
+        "gewerbsmaessig",
+        "hauptdelikt",
+        "vorbestraft_einschlaegig",
+        "vorbestraft",
+        "deliktssumme",
+        "nebenverurteilungsscore",
+    ]
     urteil_features_transformed = ct.transform(urteil_features_df)
     feature_names = ct.get_feature_names_out()
-    urteil_features_transformed_df = pd.DataFrame(urteil_features_transformed, columns=feature_names)
+    urteil_features_transformed_df = pd.DataFrame(
+        urteil_features_transformed, columns=feature_names
+    )
     urteil_features_transformed_df_gewichtet = urteil_features_transformed_df.copy()
     for imp_ft_tuple in ft_importances_list:
         # beim feature Deliktssumme soll zusätzlich ein Ausgleich der unterschiedlichen Skalenweiten erfolgen
-        if imp_ft_tuple[1] == 'deliktssumme':
-            urteil_features_transformed_df_gewichtet['num__deliktssumme'] = imp_ft_tuple[0] * \
-                                                                                             urteil_features_transformed_df_gewichtet[
-                                                                                                 'num__deliktssumme'] * skalenausgleich
+        if imp_ft_tuple[1] == "deliktssumme":
+            urteil_features_transformed_df_gewichtet["num__deliktssumme"] = (
+                imp_ft_tuple[0]
+                * urteil_features_transformed_df_gewichtet["num__deliktssumme"]
+                * skalenausgleich
+            )
         # beim feature einschlägig vorbestraft muss vorerst das gewicht angepasst werden, ansonsten das Gewicht für vorbestraft (das im Namen einschlaegig_vorbestraft enthalten ist) hier "verbraucht" wird
-        if imp_ft_tuple[1] == 'einschlaegig_vorbestraft':
-            urteil_features_transformed_df_gewichtet['cat__vorbestraft_einschlaegig_True'] = imp_ft_tuple[0] * \
-                                                                                             urteil_features_transformed_df_gewichtet[
-                                                                                                 'cat__vorbestraft_einschlaegig_True']
+        if imp_ft_tuple[1] == "einschlaegig_vorbestraft":
+            urteil_features_transformed_df_gewichtet[
+                "cat__vorbestraft_einschlaegig_True"
+            ] = (
+                imp_ft_tuple[0]
+                * urteil_features_transformed_df_gewichtet[
+                    "cat__vorbestraft_einschlaegig_True"
+                ]
+            )
         # wo feature name in spaltenname der ft_importances_list enthalten ist, soll die importance multipliziert werden
         for column_name in urteil_features_transformed_df_gewichtet.columns:
             if imp_ft_tuple[1] in column_name:
-                urteil_features_transformed_df_gewichtet[column_name] = imp_ft_tuple[0] * \
-                                                                        urteil_features_transformed_df_gewichtet[
-                                                                            column_name]
+                urteil_features_transformed_df_gewichtet[column_name] = (
+                    imp_ft_tuple[0]
+                    * urteil_features_transformed_df_gewichtet[column_name]
+                )
 
     differences, indexes = knn.kneighbors(urteil_features_transformed_df_gewichtet)
     knn_prediction = knn.predict(urteil_features_transformed_df_gewichtet)[0][0]
@@ -590,8 +784,9 @@ def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich
     return nachbar_pk, nachbar_pk2, knn_prediction
 
 
-def introspection_plot_und_lesehinweis_ausgeben(db_model=Urteil, xlim=1000000, titel='Prognose',
-                                                cleaned_data_dict=None):
+def introspection_plot_und_lesehinweis_ausgeben(
+    db_model=Urteil, xlim=1000000, titel="Prognose", cleaned_data_dict=None
+):
     def qs_to_df(db_model=Urteil):
         qs = db_model.objects.all()
         q = qs.values()
@@ -601,21 +796,46 @@ def introspection_plot_und_lesehinweis_ausgeben(db_model=Urteil, xlim=1000000, t
     urteile_df = qs_to_df(db_model)
 
     fig, ax = plt.subplots(figsize=(10, 5))
-    ax.scatter(data=urteile_df[urteile_df['hauptdelikt'] == 'Betrug'], x='deliktssumme',
-               y='freiheitsstrafe_in_monaten', label='Urteile Betrug', alpha=0.3)
-    ax.scatter(data=urteile_df[urteile_df['hauptdelikt'] == 'Veruntreuung'], x='deliktssumme',
-               y='freiheitsstrafe_in_monaten', label='Urteile Veruntreuung', alpha=0.3)
-    ax.scatter(data=urteile_df[urteile_df['hauptdelikt'] == 'ung. Geschäftsbesorgung'], x='deliktssumme',
-               y='freiheitsstrafe_in_monaten', label='Urteile ung. Geschäftsbesorgung', alpha=0.3)
-    ax.scatter(data=urteile_df[urteile_df['hauptdelikt'] == 'betr. Missbrauch DVA'], x='deliktssumme',
-               y='freiheitsstrafe_in_monaten', label='Urteile betr. Missbrauch DVA', alpha=0.3)
-    ax.scatter(data=urteile_df[urteile_df['hauptdelikt'] == 'Diebstahl'], x='deliktssumme',
-               y='freiheitsstrafe_in_monaten', label='Diebstahl', alpha=0.3)
+    ax.scatter(
+        data=urteile_df[urteile_df["hauptdelikt"] == "Betrug"],
+        x="deliktssumme",
+        y="freiheitsstrafe_in_monaten",
+        label="Urteile Betrug",
+        alpha=0.3,
+    )
+    ax.scatter(
+        data=urteile_df[urteile_df["hauptdelikt"] == "Veruntreuung"],
+        x="deliktssumme",
+        y="freiheitsstrafe_in_monaten",
+        label="Urteile Veruntreuung",
+        alpha=0.3,
+    )
+    ax.scatter(
+        data=urteile_df[urteile_df["hauptdelikt"] == "ung. Geschäftsbesorgung"],
+        x="deliktssumme",
+        y="freiheitsstrafe_in_monaten",
+        label="Urteile ung. Geschäftsbesorgung",
+        alpha=0.3,
+    )
+    ax.scatter(
+        data=urteile_df[urteile_df["hauptdelikt"] == "betr. Missbrauch DVA"],
+        x="deliktssumme",
+        y="freiheitsstrafe_in_monaten",
+        label="Urteile betr. Missbrauch DVA",
+        alpha=0.3,
+    )
+    ax.scatter(
+        data=urteile_df[urteile_df["hauptdelikt"] == "Diebstahl"],
+        x="deliktssumme",
+        y="freiheitsstrafe_in_monaten",
+        label="Diebstahl",
+        alpha=0.3,
+    )
 
-    ax.set_xlabel('Deliktssumme in Fr.')
+    ax.set_xlabel("Deliktssumme in Fr.")
     ax.set_xlim([-10000, xlim])
     ax.set_xticks(np.arange(0, xlim, (xlim / 10)))
-    ax.set_ylabel('(prognostiziertes) Strafmass in Monaten')
+    ax.set_ylabel("(prognostiziertes) Strafmass in Monaten")
     ax.set_title(titel)
 
     if cleaned_data_dict is None:
@@ -628,85 +848,131 @@ def introspection_plot_und_lesehinweis_ausgeben(db_model=Urteil, xlim=1000000, t
         vorbestraft_einschlaegig = False
 
     else:
-        geschlecht = cleaned_data_dict['geschlecht']
-        mehrfach = cleaned_data_dict['mehrfach']
-        gewerbsmaessig = cleaned_data_dict['gewerbsmaessig']
-        bandenmaessig = cleaned_data_dict['bandenmaessig']
-        nebenverurteilungsscore = cleaned_data_dict['nebenverurteilungsscore']
-        vorbestraft = cleaned_data_dict['vorbestraft']
-        vorbestraft_einschlaegig = cleaned_data_dict['vorbestraft_einschlaegig']
+        geschlecht = cleaned_data_dict["geschlecht"]
+        mehrfach = cleaned_data_dict["mehrfach"]
+        gewerbsmaessig = cleaned_data_dict["gewerbsmaessig"]
+        bandenmaessig = cleaned_data_dict["bandenmaessig"]
+        nebenverurteilungsscore = cleaned_data_dict["nebenverurteilungsscore"]
+        vorbestraft = cleaned_data_dict["vorbestraft"]
+        vorbestraft_einschlaegig = cleaned_data_dict["vorbestraft_einschlaegig"]
 
-    strafmass_model = pickle.load(
-        open("database/ai-model/model.pkl", 'rb'))
+    strafmass_model = pickle.load(open("database/ai-model/model.pkl", "rb"))
 
-    def prognosen_generator(hauptdelikt='Betrug'):
+    def prognosen_generator(hauptdelikt="Betrug"):
         prognosen = []
         for deliktssumme in np.arange(1, stop=xlim, step=xlim / 50):
-            liste_mit_urteilsmerkmalen = [geschlecht, hauptdelikt, mehrfach, gewerbsmaessig, bandenmaessig,
-                                          deliktssumme, nebenverurteilungsscore, vorbestraft, vorbestraft_einschlaegig]
-            urteilsmerkmale_als_pandas_df = pd.DataFrame(np.array([liste_mit_urteilsmerkmalen]),
-                                                         columns=['Geschlecht', 'Hauptdelikt', 'mehrfach',
-                                                                  'gewerbsmaessig', 'bandenmaessig',
-                                                                  'Deliktssumme', 'Nebenverurteilungsscore',
-                                                                  'vorbestraft',
-                                                                  'einschlaegig vorbestraft']
-                                                         )
-            urteilsmerkmale_df_preprocessed = preprocessing_x(urteilsmerkmale_als_pandas_df)
-            vorhersage_strafmass = strafmass_model.predict(urteilsmerkmale_df_preprocessed)
+            liste_mit_urteilsmerkmalen = [
+                geschlecht,
+                hauptdelikt,
+                mehrfach,
+                gewerbsmaessig,
+                bandenmaessig,
+                deliktssumme,
+                nebenverurteilungsscore,
+                vorbestraft,
+                vorbestraft_einschlaegig,
+            ]
+            urteilsmerkmale_als_pandas_df = pd.DataFrame(
+                np.array([liste_mit_urteilsmerkmalen]),
+                columns=[
+                    "Geschlecht",
+                    "Hauptdelikt",
+                    "mehrfach",
+                    "gewerbsmaessig",
+                    "bandenmaessig",
+                    "Deliktssumme",
+                    "Nebenverurteilungsscore",
+                    "vorbestraft",
+                    "einschlaegig vorbestraft",
+                ],
+            )
+            urteilsmerkmale_df_preprocessed = preprocessing_x(
+                urteilsmerkmale_als_pandas_df
+            )
+            vorhersage_strafmass = strafmass_model.predict(
+                urteilsmerkmale_df_preprocessed
+            )
             prognosen.append(vorhersage_strafmass)
         return prognosen
 
-    def lesehinweis_generator(mehrfach=mehrfach,
-                              gewerbsmaessig=gewerbsmaessig,
-                              bandenmaessig=bandenmaessig,
-                              nebenverurteilungsscore=nebenverurteilungsscore,
-                              vorbestraft=vorbestraft,
-                              vorbestraft_einschlaegig=vorbestraft_einschlaegig):
-        html_string = f'<p>Der Liniengraph bzw. Prognose-Plot bildet die Prognose bei unterschiedlichen Deliktssummen ab, wenn die übrigen ' \
-                      f'Sachverhaltsmerkmale – ceteribus paribus – wie folgt bestehen bleiben: </p>' \
-                      f'<li>mehrfache Tatbegehung: ' \
-                      f'{"zutreffend" if mehrfach is True else "nicht zutreffend"}, </li>' \
-                      f'<li>gewerbsmässige Tatbegehung: ' \
-                      f'{"zutreffend" if gewerbsmaessig is True else "nicht zutreffend"}, </li>' \
-                      f'<li>bandenmässige Tatbegehung: ' \
-                      f'{"zutreffend" if bandenmaessig is True else "nicht zutreffend"}, </li>' \
-                      f'<li>Nebenverurteilungsscore: ' \
-                      f'{str(nebenverurteilungsscore)}, </li>' \
-                      f'<li>Vorbestraft: ' \
-                      f'{"zutreffend" if vorbestraft is True else "nicht zutreffend"}, </li>' \
-                      f'<li>Einschlägig vorbestraft: ' \
-                      f'{"zutreffend" if vorbestraft_einschlaegig is True else "nicht zutreffend"} </li></ul>'
+    def lesehinweis_generator(
+        mehrfach=mehrfach,
+        gewerbsmaessig=gewerbsmaessig,
+        bandenmaessig=bandenmaessig,
+        nebenverurteilungsscore=nebenverurteilungsscore,
+        vorbestraft=vorbestraft,
+        vorbestraft_einschlaegig=vorbestraft_einschlaegig,
+    ):
+        html_string = (
+            f"<p>Der Liniengraph bzw. Prognose-Plot bildet die Prognose bei unterschiedlichen Deliktssummen ab, wenn die übrigen "
+            f"Sachverhaltsmerkmale – ceteribus paribus – wie folgt bestehen bleiben: </p>"
+            f"<li>mehrfache Tatbegehung: "
+            f'{"zutreffend" if mehrfach is True else "nicht zutreffend"}, </li>'
+            f"<li>gewerbsmässige Tatbegehung: "
+            f'{"zutreffend" if gewerbsmaessig is True else "nicht zutreffend"}, </li>'
+            f"<li>bandenmässige Tatbegehung: "
+            f'{"zutreffend" if bandenmaessig is True else "nicht zutreffend"}, </li>'
+            f"<li>Nebenverurteilungsscore: "
+            f"{str(nebenverurteilungsscore)}, </li>"
+            f"<li>Vorbestraft: "
+            f'{"zutreffend" if vorbestraft is True else "nicht zutreffend"}, </li>'
+            f"<li>Einschlägig vorbestraft: "
+            f'{"zutreffend" if vorbestraft_einschlaegig is True else "nicht zutreffend"} </li></ul>'
+        )
         return html_string
 
-    lesehinweis = lesehinweis_generator(mehrfach=mehrfach,
-                                        gewerbsmaessig=gewerbsmaessig,
-                                        bandenmaessig=bandenmaessig,
-                                        nebenverurteilungsscore=nebenverurteilungsscore,
-                                        vorbestraft=vorbestraft,
-                                        vorbestraft_einschlaegig=vorbestraft_einschlaegig)
+    lesehinweis = lesehinweis_generator(
+        mehrfach=mehrfach,
+        gewerbsmaessig=gewerbsmaessig,
+        bandenmaessig=bandenmaessig,
+        nebenverurteilungsscore=nebenverurteilungsscore,
+        vorbestraft=vorbestraft,
+        vorbestraft_einschlaegig=vorbestraft_einschlaegig,
+    )
 
-    prognosen_betrugsdelikt = prognosen_generator(hauptdelikt='Betrug')
-    prognosen_veruntreuungsdelikt = prognosen_generator(hauptdelikt='Veruntreuung')
-    prognosen_gbdelikt = prognosen_generator(hauptdelikt='ung. Geschäftsbesorgung')
-    prognosen_dva = prognosen_generator(hauptdelikt='betr. Missbrauch DVA')
-    prognosen_diebstahl = prognosen_generator(hauptdelikt='Diebstahl')
-    ax.plot(np.arange(1, stop=xlim, step=xlim / 50), prognosen_betrugsdelikt, label='Prognose Betrug')
-    ax.plot(np.arange(1, stop=xlim, step=xlim / 50), prognosen_veruntreuungsdelikt, label='Prognose Veruntreuung')
-    ax.plot(np.arange(1, stop=xlim, step=xlim / 50), prognosen_gbdelikt, label='Prognose ung. Geschäftsbesorgung')
-    ax.plot(np.arange(1, stop=xlim, step=xlim / 50), prognosen_dva, label='Prognosen betr. Missbrauch DVA')
-    ax.plot(np.arange(1, stop=xlim, step=xlim / 50), prognosen_diebstahl, label='Prognosen Diebstahl')
-    ax.legend(loc='best')
+    prognosen_betrugsdelikt = prognosen_generator(hauptdelikt="Betrug")
+    prognosen_veruntreuungsdelikt = prognosen_generator(hauptdelikt="Veruntreuung")
+    prognosen_gbdelikt = prognosen_generator(hauptdelikt="ung. Geschäftsbesorgung")
+    prognosen_dva = prognosen_generator(hauptdelikt="betr. Missbrauch DVA")
+    prognosen_diebstahl = prognosen_generator(hauptdelikt="Diebstahl")
+    ax.plot(
+        np.arange(1, stop=xlim, step=xlim / 50),
+        prognosen_betrugsdelikt,
+        label="Prognose Betrug",
+    )
+    ax.plot(
+        np.arange(1, stop=xlim, step=xlim / 50),
+        prognosen_veruntreuungsdelikt,
+        label="Prognose Veruntreuung",
+    )
+    ax.plot(
+        np.arange(1, stop=xlim, step=xlim / 50),
+        prognosen_gbdelikt,
+        label="Prognose ung. Geschäftsbesorgung",
+    )
+    ax.plot(
+        np.arange(1, stop=xlim, step=xlim / 50),
+        prognosen_dva,
+        label="Prognosen betr. Missbrauch DVA",
+    )
+    ax.plot(
+        np.arange(1, stop=xlim, step=xlim / 50),
+        prognosen_diebstahl,
+        label="Prognosen Diebstahl",
+    )
+    ax.legend(loc="best")
 
     imgdata = StringIO()
-    fig.savefig(imgdata, format='svg')
+    fig.savefig(imgdata, format="svg")
     imgdata.seek(0)
 
     data = imgdata.getvalue()
     return data, lesehinweis
 
 
-def introspection_plot_und_lesehinweis_abspeichern(db_model=Urteil, xlim=1000000, titel='Prognose',
-                                                   cleaned_data_dict=None):
+def introspection_plot_und_lesehinweis_abspeichern(
+    db_model=Urteil, xlim=1000000, titel="Prognose", cleaned_data_dict=None
+):
     def qs_to_df(db_model=Urteil):
         qs = db_model.objects.all()
         q = qs.values()
@@ -716,21 +982,31 @@ def introspection_plot_und_lesehinweis_abspeichern(db_model=Urteil, xlim=1000000
     urteile_df = qs_to_df(db_model)
 
     fig, ax = plt.subplots(figsize=(10, 5))
-    ax.scatter(data=urteile_df[urteile_df['hauptdelikt'] == 'Betrug'], x='deliktssumme',
-               y='freiheitsstrafe_in_monaten', label='Urteile Betrug', alpha=0.3)
+    ax.scatter(
+        data=urteile_df[urteile_df["hauptdelikt"] == "Betrug"],
+        x="deliktssumme",
+        y="freiheitsstrafe_in_monaten",
+        label="Urteile Betrug",
+        alpha=0.3,
+    )
     # ax.scatter(data=urteile_df[urteile_df['hauptdelikt'] == 'Veruntreuung'], x='deliktssumme',
     #            y='freiheitsstrafe_in_monaten', label='Urteile Veruntreuung', alpha=0.3)
     # ax.scatter(data=urteile_df[urteile_df['hauptdelikt'] == 'ung. Geschäftsbesorgung'], x='deliktssumme',
     #            y='freiheitsstrafe_in_monaten', label='Urteile ung. Geschäftsbesorgung', alpha=0.3)
     # ax.scatter(data=urteile_df[urteile_df['hauptdelikt'] == 'betr. Missbrauch DVA'], x='deliktssumme',
     #            y='freiheitsstrafe_in_monaten', label='Urteile betr. Missbrauch DVA', alpha=0.3)
-    ax.scatter(data=urteile_df[urteile_df['hauptdelikt'] == 'Diebstahl'], x='deliktssumme',
-               y='freiheitsstrafe_in_monaten', label='Diebstahl', alpha=0.3)
+    ax.scatter(
+        data=urteile_df[urteile_df["hauptdelikt"] == "Diebstahl"],
+        x="deliktssumme",
+        y="freiheitsstrafe_in_monaten",
+        label="Diebstahl",
+        alpha=0.3,
+    )
 
-    ax.set_xlabel('Deliktssumme in Fr.')
+    ax.set_xlabel("Deliktssumme in Fr.")
     ax.set_xlim([-10000, xlim])
     ax.set_xticks(np.arange(0, xlim, (xlim / 10)))
-    ax.set_ylabel('Strafmass in Monaten')
+    ax.set_ylabel("Strafmass in Monaten")
     ax.set_title(titel)
 
     if cleaned_data_dict is None:
@@ -743,35 +1019,42 @@ def introspection_plot_und_lesehinweis_abspeichern(db_model=Urteil, xlim=1000000
         vorbestraft_einschlaegig = False
 
     else:
-        geschlecht = cleaned_data_dict['geschlecht']
-        mehrfach = cleaned_data_dict['mehrfach']
-        gewerbsmaessig = cleaned_data_dict['gewerbsmaessig']
-        bandenmaessig = cleaned_data_dict['bandenmaessig']
-        nebenverurteilungsscore = cleaned_data_dict['nebenverurteilungsscore']
-        vorbestraft = cleaned_data_dict['vorbestraft']
-        vorbestraft_einschlaegig = cleaned_data_dict['vorbestraft_einschlaegig']
+        geschlecht = cleaned_data_dict["geschlecht"]
+        mehrfach = cleaned_data_dict["mehrfach"]
+        gewerbsmaessig = cleaned_data_dict["gewerbsmaessig"]
+        bandenmaessig = cleaned_data_dict["bandenmaessig"]
+        nebenverurteilungsscore = cleaned_data_dict["nebenverurteilungsscore"]
+        vorbestraft = cleaned_data_dict["vorbestraft"]
+        vorbestraft_einschlaegig = cleaned_data_dict["vorbestraft_einschlaegig"]
 
-    strafmass_model = kimodell_von_pickle_file_aus_aws_bucket_laden('pickles/random_forest_regressor_val_fts.pkl')
+    strafmass_model = kimodell_von_pickle_file_aus_aws_bucket_laden(
+        "pickles/random_forest_regressor_val_fts.pkl"
+    )
 
     step = xlim / 25
 
-    def prognosen_generator(hauptdelikt='Betrug', nebenverurteilungsscore=0):
+    def prognosen_generator(hauptdelikt="Betrug", nebenverurteilungsscore=0):
         prognosen = []
         for deliktssumme in np.arange(1, stop=xlim, step=step):
-            fts_dict = {'geschlecht': geschlecht,
-                        'mehrfach': mehrfach,
-                        'gewerbsmaessig': gewerbsmaessig,
-                        'bandenmaessig': bandenmaessig,
-                        'deliktssumme': deliktssumme,
-                        'nebenverurteilungsscore': nebenverurteilungsscore,
-                        'vorbestraft': vorbestraft,
-                        'vorbestraft_einschlaegig': vorbestraft_einschlaegig,
-                        'hauptdelikt': hauptdelikt}
-            urteilsmerkmale_als_pandas_df_ohe = formulareingaben_in_abfragesample_konvertieren(fts_dict)
-            vorhersage_strafmass = strafmass_model.predict(urteilsmerkmale_als_pandas_df_ohe)
+            fts_dict = {
+                "geschlecht": geschlecht,
+                "mehrfach": mehrfach,
+                "gewerbsmaessig": gewerbsmaessig,
+                "bandenmaessig": bandenmaessig,
+                "deliktssumme": deliktssumme,
+                "nebenverurteilungsscore": nebenverurteilungsscore,
+                "vorbestraft": vorbestraft,
+                "vorbestraft_einschlaegig": vorbestraft_einschlaegig,
+                "hauptdelikt": hauptdelikt,
+            }
+            urteilsmerkmale_als_pandas_df_ohe = (
+                formulareingaben_in_abfragesample_konvertieren(fts_dict)
+            )
+            vorhersage_strafmass = strafmass_model.predict(
+                urteilsmerkmale_als_pandas_df_ohe
+            )
             prognosen.append(vorhersage_strafmass)
         return prognosen
-
 
     def lesehinweis_generator(
         mehrfach=mehrfach,
@@ -798,7 +1081,7 @@ def introspection_plot_und_lesehinweis_abspeichern(db_model=Urteil, xlim=1000000
             f"<li>Einschlägig vorbestraft: "
             f'{"zutreffend" if vorbestraft_einschlaegig is True else "nicht zutreffend"} </li></ul>'
         )
-    
+
         return html_string
 
     lesehinweis = lesehinweis_generator(
@@ -810,27 +1093,46 @@ def introspection_plot_und_lesehinweis_abspeichern(db_model=Urteil, xlim=1000000
         vorbestraft_einschlaegig=vorbestraft_einschlaegig,
     )
 
-    prognosen_betrugsdelikt = prognosen_generator(hauptdelikt='Betrug')
-    prognosen_betrugsdelikt_6 = prognosen_generator(hauptdelikt='Betrug', nebenverurteilungsscore=6)
+    prognosen_betrugsdelikt = prognosen_generator(hauptdelikt="Betrug")
+    prognosen_betrugsdelikt_6 = prognosen_generator(
+        hauptdelikt="Betrug", nebenverurteilungsscore=6
+    )
     # prognosen_veruntreuungsdelikt = prognosen_generator(hauptdelikt='Veruntreuung')
     # prognosen_gbdelikt = prognosen_generator(hauptdelikt='ung. Geschäftsbesorgung')
     # prognosen_dva = prognosen_generator(hauptdelikt='betr. Missbrauch DVA')
-    prognosen_diebstahl = prognosen_generator(hauptdelikt='Diebstahl')
-    prognosen_diebstahl_6 = prognosen_generator(hauptdelikt='Diebstahl', nebenverurteilungsscore=6)
-    ax.plot(np.arange(1, stop=xlim, step=step), prognosen_betrugsdelikt, label='Prognose Betrug')
-    ax.plot(np.arange(1, stop=xlim, step=step), prognosen_betrugsdelikt_6, label='Prognose Betrug (NVS 6)')
+    prognosen_diebstahl = prognosen_generator(hauptdelikt="Diebstahl")
+    prognosen_diebstahl_6 = prognosen_generator(
+        hauptdelikt="Diebstahl", nebenverurteilungsscore=6
+    )
+    ax.plot(
+        np.arange(1, stop=xlim, step=step),
+        prognosen_betrugsdelikt,
+        label="Prognose Betrug",
+    )
+    ax.plot(
+        np.arange(1, stop=xlim, step=step),
+        prognosen_betrugsdelikt_6,
+        label="Prognose Betrug (NVS 6)",
+    )
     # ax.plot(np.arange(1, stop=xlim, step=xlim/50), prognosen_veruntreuungsdelikt, label='Prognose Veruntreuung')
     # ax.plot(np.arange(1, stop=xlim, step=xlim/50), prognosen_gbdelikt, label='Prognose ung. Geschäftsbesorgung')
     # ax.plot(np.arange(1, stop=xlim, step=xlim/50), prognosen_dva, label='Prognosen betr. Missbrauch DVA')
-    ax.plot(np.arange(1, stop=xlim, step=step), prognosen_diebstahl, label='Prognosen Diebstahl')
-    ax.plot(np.arange(1, stop=xlim, step=step), prognosen_diebstahl_6, label='Prognosen Diebstahl (NVS 6)')
-    ax.legend(loc='best')
+    ax.plot(
+        np.arange(1, stop=xlim, step=step),
+        prognosen_diebstahl,
+        label="Prognosen Diebstahl",
+    )
+    ax.plot(
+        np.arange(1, stop=xlim, step=step),
+        prognosen_diebstahl_6,
+        label="Prognosen Diebstahl (NVS 6)",
+    )
+    ax.legend(loc="best")
 
     imgdata = BytesIO()
-    fig.savefig(imgdata, format='svg')
+    fig.savefig(imgdata, format="svg")
     content_file = ContentFile(imgdata.getvalue())
-    obj, created = DiagrammSVG.objects.get_or_create(name=f'introspection_plot')
-    obj.file.save(f'introspection_plot.svg', content_file)
+    obj, created = DiagrammSVG.objects.get_or_create(name=f"introspection_plot")
+    obj.file.save(f"introspection_plot.svg", content_file)
     obj.lesehinweis = lesehinweis
     obj.save()
-

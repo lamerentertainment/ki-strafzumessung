@@ -164,6 +164,10 @@ def prognose(request):
             vollzugs_model = kimodell_von_pickle_file_aus_aws_bucket_laden('pickles/random_forest_classifier_val_fts.pkl')
             vorhersage_vollzug = vollzugs_model.predict(sample_pandas_dataframe)
 
+            # give prediction response Sanktionsart
+            sanktionsart_model = kimodell_von_pickle_file_aus_aws_bucket_laden('pickles/rf_classifier_fuer_sanktionsart_val_fts.pkl')
+            vorhersage_sanktionsart = sanktionsart_model.predict(sample_pandas_dataframe)
+
             vollzugsstring = 'empty'
 
             if vorhersage_vollzug[0] == '0':
@@ -172,6 +176,15 @@ def prognose(request):
                 vollzugsstring = 'teilbedingte'
             elif vorhersage_vollzug[0] == '2':
                 vollzugsstring = 'unbedingte'
+
+            string_sanktionsart = 'empty'
+
+            if vorhersage_sanktionsart[0] == '0':
+                string_sanktionsart = 'Freiheitsstrafe'
+            elif vorhersage_sanktionsart[0] == '1':
+                string_sanktionsart = 'Geldstrafe'
+            elif vorhersage_sanktionsart[0] == '2':
+                string_sanktionsart = 'Busse'
 
             # knn model errechnen
             x_train_df = Urteil.pandas.return_as_df('deliktssumme',
@@ -220,6 +233,7 @@ def prognose(request):
             return render(request, 'database/prognose.html', {'form': form,
                                                               'vorhersage_strafmass': vorhersage_strafmass[0],
                                                               'vorhersage_vollzug': vollzugsstring,
+                                                              'vorhersage_sanktionsart': string_sanktionsart,
                                                               'knn_prediction': knn_prediction,
                                                               'nachbar': nachbar,
                                                               'nachbar2': nachbar2
@@ -244,9 +258,9 @@ def dev(request):
     val_rf_kimodel = KIModelPickleFile.objects.get(name='rf_regr_val')
     val_rf_clf_kimodel = KIModelPickleFile.objects.get(name='rf_clf_val')
 
-    # Urteile  mit bester und schlechtester Prognoseleistung laden, um im template darauf verlinken zu können
-    konformes_urteil = Urteil.objects.get(fall_nr=val_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung_urteil)
-    unkonformes_urteil = Urteil.objects.get(fall_nr=val_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung_urteil)
+    # Urteile mit bester und schlechtester Prognoseleistung laden, um im template darauf verlinken zu können
+    # konformes_urteil = Urteil.objects.get(fall_nr=val_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung_urteil)
+    # unkonformes_urteil = Urteil.objects.get(fall_nr=val_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung_urteil)
 
     # kimodelle mit allen features laden
     all_rf_kimodel = KIModelPickleFile.objects.get(name='rf_regr_all')
@@ -262,8 +276,8 @@ def dev(request):
                'lr_kimodel': lr_kimodel,
                'koeff_liste': koeffizientenliste,
                'introspection_plot': introspection_plot,
-               'unkonformes_urteil': unkonformes_urteil,
-               'konformes_urteil': konformes_urteil,
+               # 'unkonformes_urteil': unkonformes_urteil,
+               # 'konformes_urteil': konformes_urteil,
                }
     return render(request, 'database/dev.html', context)
 

@@ -48,7 +48,7 @@
                 nicht mit entsprechenden Urteilen trainiert worden ist, ist es nicht in der Lage, eine zuverlässige Strafmassprognose
                 abzugeben</p>
             {% else %}
-                <p> Das KI-Modell sagt eine <b>{{ vorhersage_vollzug }}</b> Freiheitsstrafe <b>
+                <p> Das KI-Modell sagt eine <b>{{ vorhersage_vollzug }}</b> {{ vorhersage_sanktionsart }} <b>
                     {{ vorhersage_strafmass|prognosebereich_angeben }}</b>
                     Monaten voraus</p>
             {% endif %}

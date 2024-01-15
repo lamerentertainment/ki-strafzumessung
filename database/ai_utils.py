@@ -359,7 +359,7 @@ def kimodelle_neu_kalibrieren_und_abspeichern():
     kimodell.encoder.save("one_hot_encoder_fuer_rf_regr_val.pkl", content_file)
     content_file.close()
 
-    # random forest CLASSIFIER mit ausschliesslich validen features, vollzugsart als zielvariable
+    # random forest CLASSIFIER mit ausschliesslich validen features, VOLLZUGSART als zielvariable
     y = Urteil.pandas.return_y_zielwerte(zielwert="vollzug")
     random_forest_classifier_val_fts = RandomForestClassifier()
     random_forest_classifier_val_fts.fit(x_val, y)
@@ -377,6 +377,29 @@ def kimodelle_neu_kalibrieren_und_abspeichern():
         instanziertes_kimodel=random_forest_classifier_val_fts,
         name="rf_clf_val",
         filename="random_forest_classifier_val_fts.pkl",
+        prognoseleistung_dict=prognoseleistung_dict,
+        ft_importance_list=list_of_zipped_importance_feature_tuples,
+        ft_importance_list_merged=zusammenfassende_list_of_zipped_importance_features_tuples,
+    )
+
+    # random forest CLASSIFIER mit ausschliesslich validen features, SANKTIONSART als zielvariable
+    y = Urteil.pandas.return_y_zielwerte(zielwert="hauptsanktion")
+    rf_classifier_fuer_sanktionsart_val_fts = RandomForestClassifier()
+    rf_classifier_fuer_sanktionsart_val_fts.fit(x_val, y)
+    # leeres prognoseleistung dict, weil dies nicht für classifier geht
+    prognoseleistung_dict = {"content": "empty"}
+    # merkmalwchtigkeitslisten erstellen
+    (
+        list_of_zipped_importance_feature_tuples,
+        zusammenfassende_list_of_zipped_importance_features_tuples,
+    ) = sortierte_features_importance_list_erstellen(
+        rf_classifier_fuer_sanktionsart_val_fts, categorial_ft_dbfields=categorial_ft_dbfields
+    )
+    # kimodell als pickle file speichern
+    ki_modell_als_pickle_file_speichern(
+        instanziertes_kimodel=rf_classifier_fuer_sanktionsart_val_fts,
+        name="rf_clf_sanktionsart_val",
+        filename="rf_classifier_fuer_sanktionsart_val_fts.pkl",
         prognoseleistung_dict=prognoseleistung_dict,
         ft_importance_list=list_of_zipped_importance_feature_tuples,
         ft_importance_list_merged=zusammenfassende_list_of_zipped_importance_features_tuples,

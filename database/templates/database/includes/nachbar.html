@@ -62,14 +62,25 @@
                         <p>
                             Sanktion:
                             <b>
-                                {% if nachbar.vollzug == '0' %}
-                                bedingte
-                            {% elif nachbar.vollzug == '1' %}
-                                teilbedingte
-                            {% elif nachbar.vollzug == '2' %}
-                                unbedingte
-                            {% endif %}
-                                Freiheitsstrafe von {{ nachbar.freiheitsstrafe_in_monaten }} Monaten.
+                                {% if nachbar.hauptsanktion == '0' %}
+                                    {% if nachbar.vollzug == '0' %}
+                                    bedingte
+                                    {% elif nachbar.vollzug == '1' %}
+                                    teilbedingte
+                                    {% elif nachbar.vollzug == '2' %}
+                                    unbedingte
+                                    {% endif %}
+                                    Freiheitsstrafe von {{ nachbar.freiheitsstrafe_in_monaten }} Monaten.
+                                {% elif nachbbar.hauptsanktion == '1' %}
+                                    {% if nachbar.vollzug == '0' %}
+                                    bedingte
+                                    {% elif nachbar.vollzug == '1' %}
+                                    teilbedingte
+                                    {% elif nachbar.vollzug == '2' %}
+                                    unbedingte
+                                    {% endif %}
+                                    Geldstrafe von {{ nachbar.anzahl_tagessaetze }} Tagessätzen.
+                                {% endif %}
                             </b>
                         </p>
                     </td>

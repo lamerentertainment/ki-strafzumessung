@@ -23,7 +23,7 @@ def prognosebereich_angeben(prognose_float):
     elif erste_ziffer_nach_dem_komma(prognose_float) in [3, 4, 5, 6, 7]:
         return f'zwischen {str(math.floor(prognose_float-1))} und {str(math.ceil(prognose_float+1))}'
 
-    elif erste_ziffer_nach_dem_komma(prognose_float) is 0:
+    elif erste_ziffer_nach_dem_komma(prognose_float) == 0:
         return f'zwischen {str(math.floor(prognose_float)-1.5)} und {str(math.ceil(prognose_float)+1.5)}'
 
     elif erste_ziffer_nach_dem_komma(prognose_float) in [8, 9]:
@@ -49,7 +49,7 @@ def prognosebereich_angeben_fuer_geldstrafe(prognose_float):
     elif erste_ziffer_nach_dem_komma(prognose_float) in [3, 4, 5, 6, 7]:
         return f'zwischen {str(math.floor(prognose_float-1)*30)} und {str(math.ceil(prognose_float+1)*30)}'
 
-    elif erste_ziffer_nach_dem_komma(prognose_float) is 0:
+    elif erste_ziffer_nach_dem_komma(prognose_float) == 0:
         return f'zwischen {str(math.floor(prognose_float)-1.5*30)} und {str(math.ceil(prognose_float)+1.5*30)}'
 
     elif erste_ziffer_nach_dem_komma(prognose_float) in [8, 9]:

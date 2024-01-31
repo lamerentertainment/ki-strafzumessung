@@ -47,7 +47,7 @@
                 <p>Sie haben die Werte eines Bagatelldelikts (Deliktssumme < Fr. 5'000.--) abgefragt. Da das KI-Modell
                 nicht mit entsprechenden Urteilen trainiert worden ist, ist es nicht in der Lage, eine zuverlässige Strafmassprognose
                 abzugeben</p>
-            {% if vorhersage_sanktionsart == "Geldstrafe" %}
+            {% elif vorhersage_sanktionsart == "Geldstrafe" %}
                 <p> Das KI-Modell sagt eine <b>{{ vorhersage_vollzug }}</b> {{ vorhersage_sanktionsart }} <b>
                     {{ vorhersage_strafmass|prognosebereich_angeben_fuer_geldstrafe }}</b>
                     Tagessätzen voraus</p>

@@ -1,0 +1,78 @@
+{% extends "./base.html" %}
+{% load prognoseformatierung %}
+
+{% block body %}
+
+        <h1>Strafprognose bei Betäubungsmittel vornehmen und Präjudizien anzeigen</h1>
+        <p>Die Prognose erfolgt auf Grundlage des folgendem <a href="{% url 'database' %}">Datensatzes</a> und der darauf
+            aufbauendem <a href="{% url 'kimodel_evaluation' %}">KI-Modelle</a>. 
+            Die Funktionsweise der KI-Modelle wird <a href="{% url 'text' %}">hier</a> erklärt.</p>
+
+        <div class="col-4">
+            <form action="" method="post">
+                    {% csrf_token %}
+                    <table class="table">
+                        {% for field in form %}
+                            <tr class="fieldWrapper">
+                                <td>
+                                    {{ field.errors }}
+                                    {{ field.label_tag }}
+                                </td>
+                                <td>
+                                    {{ field }}
+                                </td>
+                                <td>
+                                    {% if field.help_text %}
+                                        <div data-bs-toggle="tooltip" data-bs-placement="right"
+                                             title="{{ field.help_text|safe }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                 fill="currentColor"
+                                                 class="bi bi-info-square" viewBox="0 0 16 16">
+                                                <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
+                                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                                            </svg>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                    <input type="submit" class="btn btn-primary" value="Strafmass und Vollzugsform prognostizieren">
+                </form>
+        </div>
+
+        {% if form.is_valid %}
+        <div>
+            <h1>Vorhersage</h1>
+            {% if form.cleaned_data.deliktssumme < 5000 %}
+                <p>Sie haben die Werte eines Bagatelldelikts (Deliktssumme < Fr. 5'000.--) abgefragt. Da das KI-Modell
+                nicht mit entsprechenden Urteilen trainiert worden ist, ist es nicht in der Lage, eine zuverlässige Strafmassprognose
+                abzugeben</p>
+            {% elif vorhersage_sanktionsart == "Geldstrafe" %}
+                <p> Das KI-Modell sagt eine <b>{{ vorhersage_vollzug }}</b> {{ vorhersage_sanktionsart }} <b>
+                    {{ vorhersage_strafmass|prognosebereich_angeben_fuer_geldstrafe }}</b>
+                    Tagessätzen voraus</p>
+            
+            {% else %}
+                <p> Das KI-Modell sagt eine <b>{{ vorhersage_vollzug }}</b> {{ vorhersage_sanktionsart }} <b>
+                    {{ vorhersage_strafmass|prognosebereich_angeben }}</b>
+                    Monaten voraus</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if form.is_valid %}
+        <div>
+            <h1>Vergleichbare Präjudizien</h1>
+                {% comment %}
+                <p>knn_prediction: {{ knn_prediction }} Monate</p>
+                {% endcomment %}
+            <div class="row">
+                <div class="col">{% include "database/includes/nachbar.html" with nachbar=nachbar %}</div>
+                <div class="col">{% include "database/includes/nachbar.html" with nachbar=nachbar2 %}</div>
+            </div>
+        </div>
+        {% endif %}
+
+
+{% endblock %}

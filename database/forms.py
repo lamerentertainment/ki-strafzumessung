@@ -1,5 +1,5 @@
 from django.forms import ModelForm
-from .models import Urteil
+from .models import Urteil, BetmUrteil
 
 
 class UrteilModelForm(ModelForm):
@@ -13,6 +13,17 @@ class UrteilsEckpunkteAbfrageFormular(ModelForm):
         model = Urteil
         fields = ['hauptdelikt', 'deliktssumme', 'nebenverurteilungsscore', 'mehrfach', 'gewerbsmaessig',
                   'bandenmaessig', 'vorbestraft', 'vorbestraft_einschlaegig']
+
+
+class BetmUrteilsEckpunkteAbfrageFormular(ModelForm):
+    class Meta:
+        model = BetmUrteil
+        fields = ['mengenmaessig',
+                  'bandenmaessig',
+                  'gewerbsmaessig',
+                  'anstaltentreffen',
+                  'mehrfach',
+                  'beschaffungskriminalität']
 
 
 class CeteribusParibusFormular(ModelForm):

@@ -1,5 +1,5 @@
-from django.db import models
 import pandas as pd
+from django.db import models
 
 
 class DataFrameExporter(models.Manager):
@@ -148,12 +148,16 @@ class BetmUrteil(models.Model):
         help_text="Das Datum, an welchem das Gericht das Urteil gefällt hat.",
     )
     kanton = models.ForeignKey("Kanton", on_delete=models.CASCADE)
-    mengemaessig = models.BooleanField(default=True)
-    bandenmaessig = models.BooleanField(default=False)
-    gewerbsmaessig = models.BooleanField(default=False)
-    anstaltentreffen = models.BooleanField(default=False)
+    mengemaessig = models.BooleanField(default=True, help_text='Verurteilung nach Art. 19 Abs. 2 lit. a BetmG')
+    bandenmaessig = models.BooleanField(default=False, help_text='Verurteilung nach Art. 19 Abs. 2 lit. b BetmG')
+    gewerbsmaessig = models.BooleanField(default=False, help_text='Verurteilung nach Art. 19 Abs. 2 lit. c BetmG')
+    anstaltentreffen = models.BooleanField(default=False, help_text='zur ganzen oder einen gewissen Menge Betm wurden'
+                                                                    'lediglich Anstalten getroffen')
     mehrfach = models.BooleanField(default=False)
-    beschaffungskriminalitaet = models.BooleanField(default=False)
+    beschaffungskriminalitaet = models.BooleanField(default=False, help_text="Dem Täter wird in der Begründung ein "
+                                                                             "Suchtdruck attestiert. Die Anwendung des "
+                                                                             "Privilegierungsgrunds in Art. 19 Abs. 3 "
+                                                                             "lit. b BetmG ist nicht erforderlich.")
     HAUPTSANKTION = (("0", "Freiheitsstrafe"), ("1", "Geldstrafe"), ("2", "Busse"))
     hauptsanktion = models.CharField(max_length=1, choices=HAUPTSANKTION, default="0")
     freiheitsstrafe_in_monaten = models.IntegerField(

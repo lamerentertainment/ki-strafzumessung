@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.generic import ListView, DetailView
 from .models import Urteil, BetmUrteil, KIModelPickleFile, DiagrammSVG
-from .forms import UrteilModelForm, UrteilsEckpunkteAbfrageFormular, CeteribusParibusFormular
+from .forms import UrteilModelForm, UrteilsEckpunkteAbfrageFormular, CeteribusParibusFormular, BetmUrteilsEckpunkteAbfrageFormular
 from django.views import generic
 from django.urls import reverse_lazy
 from .ai_utils import formulareingaben_in_abfragesample_konvertieren, y_und_x_erstellen, preprocessing_x, \
@@ -244,6 +244,106 @@ def prognose(request):
         form = UrteilsEckpunkteAbfrageFormular()
 
     return render(request, 'database/prognose.html', {'form': form})
+
+
+def prognose_betm(request):
+    # if this is a POST request we need to process the form data
+    if request.method == 'POST':
+        # create a form instance and populate it with data from the request:
+        form = UrteilsEckpunkteAbfrageFormular(request.POST)
+        # check whether it's valid:
+        if form.is_valid():
+            # process the data in form.cleaned_data as required
+            sample_pandas_dataframe = formulareingaben_in_abfragesample_konvertieren(form.cleaned_data)
+
+            # give prediction response Strafmass
+            strafmass_model = kimodell_von_pickle_file_aus_aws_bucket_laden('pickles/random_forest_regressor_val_fts.pkl')
+            vorhersage_strafmass = strafmass_model.predict(sample_pandas_dataframe)
+
+            # give prediction response Vollzug
+            vollzugs_model = kimodell_von_pickle_file_aus_aws_bucket_laden('pickles/random_forest_classifier_val_fts.pkl')
+            vorhersage_vollzug = vollzugs_model.predict(sample_pandas_dataframe)
+
+            # give prediction response Sanktionsart
+            sanktionsart_model = kimodell_von_pickle_file_aus_aws_bucket_laden('pickles/rf_classifier_fuer_sanktionsart_val_fts.pkl')
+            vorhersage_sanktionsart = sanktionsart_model.predict(sample_pandas_dataframe)
+
+            vollzugsstring = 'empty'
+
+            if vorhersage_vollzug[0] == '0':
+                vollzugsstring = 'bedingte'
+            elif vorhersage_vollzug[0] == '1':
+                vollzugsstring = 'teilbedingte'
+            elif vorhersage_vollzug[0] == '2':
+                vollzugsstring = 'unbedingte'
+
+            string_sanktionsart = 'empty'
+
+            if vorhersage_sanktionsart[0] == '0':
+                string_sanktionsart = 'Freiheitsstrafe'
+            elif vorhersage_sanktionsart[0] == '1':
+                string_sanktionsart = 'Geldstrafe'
+            elif vorhersage_sanktionsart[0] == '2':
+                string_sanktionsart = 'Busse'
+
+            # knn model errechnen
+            x_train_df = Urteil.pandas.return_as_df('deliktssumme',
+                                                    'nebenverurteilungsscore',
+                                                    'gewerbsmaessig',
+                                                    'vorbestraft',
+                                                    'vorbestraft_einschlaegig',
+                                                    'hauptdelikt')
+            y_train_df = Urteil.pandas.return_y_zielwerte()
+
+            deliktssumme = form.cleaned_data['deliktssumme']
+            nebenverurteilungsscore = form.cleaned_data['nebenverurteilungsscore']
+            hauptdelikt = form.cleaned_data['hauptdelikt']
+            gewerbsmaessig = form.cleaned_data['gewerbsmaessig']
+            vorbestraft = form.cleaned_data['vorbestraft']
+            vorbestraft_einschlaegig = form.cleaned_data['vorbestraft_einschlaegig']
+
+            urteil_features_list = [gewerbsmaessig,
+                                    hauptdelikt,
+                                    vorbestraft_einschlaegig,
+                                    vorbestraft,
+                                    deliktssumme,
+                                    nebenverurteilungsscore]
+            urteil_features_series = pd.Series(urteil_features_list)
+
+            nachbar_pk, nachbar_pk2, knn_prediction = knn_pipeline(x_train_df, y_train_df, urteil_features_series)
+
+            nachbar = Urteil.objects.get(pk=nachbar_pk)
+            nachbar2 = Urteil.objects.get(pk=nachbar_pk2)
+
+            # differenzen von eingabe und nachbarn berechnen, evt. mal auslagern
+            def differenzengenerator(nachbarobjekt, formobjekt):
+                """legt im Nachbarobjekt die Differenzen zu den Formulareingaben als Attribute ab"""
+                nachbarobjekt.ds_diff = nachbarobjekt.deliktssumme - form.cleaned_data['deliktssumme']
+                nachbarobjekt.nvs_diff = nachbarobjekt.nebenverurteilungsscore - form.cleaned_data['nebenverurteilungsscore']
+                nachbarobjekt.entsprechung_hauptdelikt = True if nachbarobjekt.hauptdelikt == form.cleaned_data['hauptdelikt'] else False
+                nachbarobjekt.entsprechung_gewerbsmaessig = True if nachbarobjekt.gewerbsmaessig == form.cleaned_data['gewerbsmaessig'] else False
+                nachbarobjekt.entsprechung_vorbestraft_einschlaegig = \
+                    True if nachbarobjekt.vorbestraft_einschlaegig == form.cleaned_data['vorbestraft_einschlaegig'] \
+                    else False
+                return nachbarobjekt
+
+            nachbar = differenzengenerator(nachbar, form)
+            nachbar2 = differenzengenerator(nachbar2, form)
+
+            return render(request, 'database/prognose.html', {'form': form,
+                                                              'vorhersage_strafmass': vorhersage_strafmass[0],
+                                                              'vorhersage_vollzug': vollzugsstring,
+                                                              'vorhersage_sanktionsart': string_sanktionsart,
+                                                              'knn_prediction': knn_prediction,
+                                                              'nachbar': nachbar,
+                                                              'nachbar2': nachbar2
+                                                              })
+
+    # if a GET (or any other method) we'll create a blank form
+    else:
+        form = BetmUrteilsEckpunkteAbfrageFormular()
+
+    return render(request, 'database/prognose_betm.html', {'form': form})
 
 
 def csv_erstellen(request):

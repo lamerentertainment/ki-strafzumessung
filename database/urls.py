@@ -6,6 +6,7 @@ from . import views
 
 urlpatterns = [
     path('', views.prognose, name='prognose'),
+    path('prognose_betm', views.prognose_betm, name='prognose_betm'),
     path('urteil/erstellen', views.UrteilErstellenView.as_view(), name='urteil_erstellen'),
     path('urteil/update/<int:pk>/', views.UrteilUpdateView.as_view(), name='urteil_update'),
     path('model', views.kimodel_evaluation, name='kimodel_evaluation'),

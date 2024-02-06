@@ -18,12 +18,20 @@ class UrteilsEckpunkteAbfrageFormular(ModelForm):
 class BetmUrteilsEckpunkteAbfrageFormular(ModelForm):
     class Meta:
         model = BetmUrteil
-        fields = ['mengenmaessig',
+        fields = ['mengemaessig',
                   'bandenmaessig',
                   'gewerbsmaessig',
                   'anstaltentreffen',
                   'mehrfach',
-                  'beschaffungskriminalität']
+                  'beschaffungskriminalitaet',
+                  'nebenverurteilungsscore',
+                  'betm',
+                  'rolle',
+                  'deliktsertrag',
+                  'deliktsdauer_in_monaten',
+                  'vorbestraft',
+                  'vorbestraft_einschlaegig',
+                  ]
 
 
 class CeteribusParibusFormular(ModelForm):

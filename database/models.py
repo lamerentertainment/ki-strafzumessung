@@ -148,16 +148,28 @@ class BetmUrteil(models.Model):
         help_text="Das Datum, an welchem das Gericht das Urteil gefällt hat.",
     )
     kanton = models.ForeignKey("Kanton", on_delete=models.CASCADE)
-    mengemaessig = models.BooleanField(default=True, help_text='Verurteilung nach Art. 19 Abs. 2 lit. a BetmG')
-    bandenmaessig = models.BooleanField(default=False, help_text='Verurteilung nach Art. 19 Abs. 2 lit. b BetmG')
-    gewerbsmaessig = models.BooleanField(default=False, help_text='Verurteilung nach Art. 19 Abs. 2 lit. c BetmG')
-    anstaltentreffen = models.BooleanField(default=False, help_text='zur ganzen oder einen gewissen Menge Betm wurden'
-                                                                    'lediglich Anstalten getroffen')
+    mengenmaessig = models.BooleanField(
+        default=True, help_text="Verurteilung nach Art. 19 Abs. 2 lit. a BetmG"
+    )
+    bandenmaessig = models.BooleanField(
+        default=False, help_text="Verurteilung nach Art. 19 Abs. 2 lit. b BetmG"
+    )
+    gewerbsmaessig = models.BooleanField(
+        default=False, help_text="Verurteilung nach Art. 19 Abs. 2 lit. c BetmG"
+    )
+    anstaltentreffen = models.BooleanField(
+        default=False,
+        help_text="zur ganzen oder einen gewissen Menge Betm wurden"
+        "lediglich Anstalten getroffen",
+    )
     mehrfach = models.BooleanField(default=False)
-    beschaffungskriminalitaet = models.BooleanField(default=False, help_text="Dem Täter wird in der Begründung ein "
-                                                                             "Suchtdruck attestiert. Die Anwendung des "
-                                                                             "Privilegierungsgrunds in Art. 19 Abs. 3 "
-                                                                             "lit. b BetmG ist nicht erforderlich.")
+    beschaffungskriminalitaet = models.BooleanField(
+        default=False,
+        help_text="Dem Täter wird in der Begründung ein "
+        "Suchtdruck attestiert. Die Anwendung des "
+        "Privilegierungsgrunds in Art. 19 Abs. 3 "
+        "lit. b BetmG ist nicht erforderlich.",
+    )
     HAUPTSANKTION = (("0", "Freiheitsstrafe"), ("1", "Geldstrafe"), ("2", "Busse"))
     hauptsanktion = models.CharField(max_length=1, choices=HAUPTSANKTION, default="0")
     freiheitsstrafe_in_monaten = models.IntegerField(
@@ -201,6 +213,7 @@ class BetmUrteil(models.Model):
         verbose_name="einschlägig vorbestraft",
         help_text="Ob die verurteilte Person einschlägig vorbestraft ist.",
     )
+    in_ki_modell = models.BooleanField(default=True)
 
     def __str__(self):
         return f"{self.fall_nr} vom {self.urteilsdatum}"

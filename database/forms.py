@@ -25,7 +25,7 @@ class UrteilsEckpunkteAbfrageFormular(ModelForm):
 
 
 class BetmUrteilsEckpunkteAbfrageFormular(forms.Form):
-    mengemaessig = forms.BooleanField(initial=True, help_text='Verurteilung nach Art. 19 Abs. 2 lit. a BetmG')
+    mengenmaessig = forms.BooleanField(initial=True, help_text='Verurteilung nach Art. 19 Abs. 2 lit. a BetmG')
     bandenmaessig = forms.BooleanField(help_text='Verurteilung nach Art. 19 Abs. 2 lit. b BetmG')
     gewerbsmaessig = forms.BooleanField(help_text='Verurteilung nach Art. 19 Abs. 2 lit. c BetmG')
     anstaltentreffen = forms.BooleanField(help_text='zur ganzen oder einen gewissen Menge Betm wurden lediglich Anstalten getroffen')

@@ -509,8 +509,8 @@ def dev_model_neu_kalibrieren(request):
 
 @login_required
 def dev_betm(request):
-
-    context = {}
+    df_betm_urteil = BetmUrteil.pandas.return_as_df("fall_nr")
+    context = {df_betm_urteil: df_betm_urteil.to_html()}
     return render(request, "database/dev_betm.html", context=context)
 
 

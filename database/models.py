@@ -128,6 +128,11 @@ class Urteil(models.Model):
 
 
 class BetmUrteil(models.Model):
+    # Managers
+    objects = models.Manager()
+    pandas = DataFrameExporter()
+
+    # Datenfelder
     fall_nr = models.CharField(
         max_length=15,
         unique=True,

@@ -14,6 +14,7 @@ urlpatterns = [
     # alte Methode
     # path('model/reset', views.kimodel_reset, name='kimodel_reset'),
     path('dev', views.dev, name='dev'),
+    path('dev_betm', views.dev_betm, name='dev_betm'),
     path('model_neu_kalibrieren', views.dev_model_neu_kalibrieren, name='dev_model_neu_kalibrieren'),
     path('csv_neu_speichern', views.csv_erstellen, name='csv_neu_speichern'),
     path('text', views.text, name='text'),

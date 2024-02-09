@@ -47,6 +47,14 @@
                         funktioniert
                     </a>
                 </li>
+                
+                {% if request.user.is_superuser == True %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'dev' %}">
+                        Dev-Vermögensstrafrecht
+                    </a>
+                </li>
+                {% endif %}
 
             </ul>
         </div>

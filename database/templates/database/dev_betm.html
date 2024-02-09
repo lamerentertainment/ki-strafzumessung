@@ -1,0 +1,18 @@
+{% extends './base.html' %}
+
+{% block body %}
+    <section id="reload-button" class="row mb-3">
+        <div class="col">
+        <a type="button" class="btn btn-primary" href="{% url 'dev_model_neu_kalibrieren' %}">KI-Modelle neu
+            kalibrieren</a>
+        </div>
+    </section>
+    
+    <h1>Debug Output</h1>
+    <section id="debug" class="my-3">
+        
+
+    </section>
+
+    
+{% endblock body %}

@@ -507,7 +507,14 @@ def dev_model_neu_kalibrieren(request):
     return redirect("dev")
 
 
-#
+@login_required
+def dev_betm(request):
+
+    context = {}
+    return render(request, "database/dev_betm.html", context=context)
+
+
+# Science Views
 def text(request):
     context = {}
     return render(request, "database/text.html", context)

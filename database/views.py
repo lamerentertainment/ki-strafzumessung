@@ -19,16 +19,12 @@ from .ai_utils import (
     preprocessing_x,
     knn_pipeline,
     introspection_plot_und_lesehinweis_ausgeben,
-    onehotx_und_y_erstellen,
-    sortierte_features_importance_list_erstellen,
     kimodelle_neu_kalibrieren_und_abspeichern,
     sortierte_koeff_list_erstellen,
     vermoegensstrafrechts_urteile_codes_aufloesen,
     introspection_plot_und_lesehinweis_abspeichern,
 )
 from .db_utils import (
-    deliktssumme_strafhoehe_png_scatterplot_erstellen,
-    seaborn_statistik_erstellen,
     kategorie_scatterplot_erstellen,
 )
 from .aws_helpers import kimodell_von_pickle_file_aus_aws_bucket_laden
@@ -468,12 +464,7 @@ def prognose_betm(request):
     return render(request, "database/prognose_betm.html", {"form": form})
 
 
-def csv_erstellen(request):
-    csv_in_notebooks_speichern(Urteil)
-    messages.success(request, "neues csv-file in notebooks abgespeichert")
-    return redirect("dev")
-
-
+# Dev views
 @login_required
 def dev(request):
     # kimodelle mit nur validen features laden
@@ -516,6 +507,7 @@ def dev_model_neu_kalibrieren(request):
     return redirect("dev")
 
 
+#
 def text(request):
     context = {}
     return render(request, "database/text.html", context)
@@ -556,3 +548,9 @@ def datenbank_scatterplots_aktualisieren():
         titel="Deliktsumme/Strafhöhe Gegenüberstellung nach Deliktsart (bis Fr. 200'000.--)",
         xlim=200000,
     )
+
+
+def csv_erstellen(request):
+    csv_in_notebooks_speichern(Urteil)
+    messages.success(request, "neues csv-file in notebooks abgespeichert")
+    return redirect("dev")

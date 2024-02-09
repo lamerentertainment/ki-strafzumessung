@@ -441,56 +441,6 @@ def kimodelle_neu_kalibrieren_und_abspeichern():
 
 
 # ALTE FUNKTIONEN
-def y_und_x_erstellen_fuer_classifier(urteil_model, zielwert):
-    """nimmt das Urteilsmodel als Parameter und gibt die zielwerte y und X für ai-model-fitting zurück:
-    y_zielwerte ist eine Liste mit der Anzahl Freiheitsstrafe als Elemente
-    X_urteilsmerkmale ist ein pandas dataframe mit Urteilsmerkmalen Verfahrensart, Geschlecht etc. als Columns
-    """
-    urteil_queryset = urteil_model.objects.all()
-
-    print("hallo?")
-    y_zielwerte = [urteil.vollzug for urteil in urteil_queryset]
-    # transformation in string kategorie
-    for i in range(len(y_zielwerte)):
-        if y_zielwerte[i] == "0":
-            y_zielwerte[i] = 0
-        elif y_zielwerte[i] == "1":
-            y_zielwerte[i] = 1
-        elif y_zielwerte[i] == "2":
-            y_zielwerte[i] = 2
-
-    liste_mit_urteilslisten = [
-        [
-            urteil.geschlecht,
-            urteil.hauptdelikt,
-            urteil.mehrfach,
-            urteil.gewerbsmaessig,
-            urteil.bandenmaessig,
-            urteil.deliktssumme,
-            urteil.nebenverurteilungsscore,
-            urteil.vorbestraft,
-            urteil.vorbestraft_einschlaegig,
-        ]
-        for urteil in Urteil.objects.all()
-    ]
-
-    x_werte = pd.DataFrame(
-        np.array(liste_mit_urteilslisten),
-        columns=[
-            "Geschlecht",
-            "Hauptdelikt",
-            "mehrfach",
-            "gewerbsmaessig",
-            "bandenmaessig",
-            "Deliktssumme",
-            "Nebenverurteilungsscore",
-            "vorbestraft",
-            "einschlaegig vorbestraft",
-        ],
-    )
-
-    return y_zielwerte, x_werte
-
 
 def y_und_x_erstellen(urteil_model, zielwert):
     """nimmt das Urteilsmodel als Parameter und gibt die zielwerte y und X für ai-model-fitting zurück:
@@ -594,53 +544,6 @@ def preprocessing_x(pd_df_x):
     ]
 
     return pd_df_x
-
-
-def ai_model_als_pickle_file_ablegen(urteil_model=Urteil, zielwert="hoehe_strafe"):
-    if zielwert == "hoehe_strafe":
-        y, x = y_und_x_erstellen(urteil_model=Urteil, zielwert="hoehe_strafe")
-        x = preprocessing_x(x)
-
-        # Train a Decision Tree Regressor
-        model = RandomForestRegressor(
-            random_state=42,
-            max_depth=110,
-            min_samples_split=2,
-            min_samples_leaf=4,
-            n_estimators=10,
-        )
-        model.fit(x, y)
-
-        # Save the model as a pkl file
-        filename = "database/ai-model/model.pkl"
-        pickle.dump(model, open(filename, "wb"))
-
-    elif zielwert == "vollzug":
-        y, x = y_und_x_erstellen_fuer_classifier(
-            urteil_model=Urteil, zielwert="vollzug"
-        )
-        print(y)
-        x = preprocessing_x(x)
-
-        # Train a Decision Tree Classifier
-        model = RandomForestClassifier(n_estimators=20, random_state=0)
-        model.fit(x, y)
-
-        # Save the model as a pkl file
-        filename = "database/ai-model/model2.pkl"
-        pickle.dump(model, open(filename, "wb"))
-
-    elif zielwert == "knn":
-        y, x = y_und_x_erstellen(urteil_model=Urteil, zielwert="knn")
-        x = preprocessing_x(x)
-
-        # Train a knn Regressor
-        model = KNeighborsRegressor()
-        model.fit(x, y)
-
-        # Save the model as a pkl file
-        filename = "database/ai-model/knn.pkl"
-        pickle.dump(model, open(filename, "wb"))
 
 
 def formulareingaben_in_abfragesample_konvertieren(cleaned_data_dict):

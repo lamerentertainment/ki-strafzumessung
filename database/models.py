@@ -7,10 +7,15 @@ class DataFrameExporter(models.Manager):
         """Gibt die Urteile in der Datenbank als Pandas DataFrame aus
         *fields: auf welche Datenfelder es beschränkt sein soll"""
         alle_urteile = super().get_queryset().filter(in_ki_modell=True)
-        # Datenbankeintrags-id ('pk') wird mitgeliefert
-        alle_urteile_als_dict = alle_urteile.values("pk", *fields)
-        # Datenbankeintrags-id ('pk') wird als index des DataFrames verwendet
-        return pd.DataFrame.from_records(alle_urteile_als_dict, index="pk")
+        if not fields:
+            # Wenn keine Felder angegeben sind, alle Felder einschließen
+            alle_urteile_als_dict = alle_urteile.values()
+            return pd.DataFrame.from_records(alle_urteile_als_dict, index="id")
+        else:
+            # Andernfalls nur die angegebenen Felder einschließen, Datenbankeintrags-id ('pk') wird immer mitgeliefert
+            alle_urteile_als_dict = alle_urteile.values("pk", *fields)
+            # Datenbankeintrags-id ('pk') wird als index des DataFrames verwendet
+            return pd.DataFrame.from_records(alle_urteile_als_dict, index="pk")
 
     def return_y_zielwerte(self, zielwert="freiheitsstrafe_in_monaten"):
         alle_urteile = super().get_queryset().filter(in_ki_modell=True)

@@ -10,7 +10,16 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import LeaveOneOut
-from .models import Urteil, KIModelPickleFile, DiagrammSVG
+from .models import (
+    Urteil,
+    BetmUrteil,
+    Betm,
+    BetmArt,
+    Kanton,
+    Rolle,
+    KIModelPickleFile,
+    DiagrammSVG,
+)
 from .aws_helpers import (
     kimodell_von_pickle_file_aus_aws_bucket_laden,
     ki_modell_als_pickle_file_speichern,
@@ -393,7 +402,8 @@ def kimodelle_neu_kalibrieren_und_abspeichern():
         list_of_zipped_importance_feature_tuples,
         zusammenfassende_list_of_zipped_importance_features_tuples,
     ) = sortierte_features_importance_list_erstellen(
-        rf_classifier_fuer_sanktionsart_val_fts, categorial_ft_dbfields=categorial_ft_dbfields
+        rf_classifier_fuer_sanktionsart_val_fts,
+        categorial_ft_dbfields=categorial_ft_dbfields,
     )
     # kimodell als pickle file speichern
     ki_modell_als_pickle_file_speichern(
@@ -441,6 +451,7 @@ def kimodelle_neu_kalibrieren_und_abspeichern():
 
 
 # ALTE FUNKTIONEN
+
 
 def y_und_x_erstellen(urteil_model, zielwert):
     """nimmt das Urteilsmodel als Parameter und gibt die zielwerte y und X für ai-model-fitting zurück:
@@ -1062,3 +1073,51 @@ def introspection_plot_und_lesehinweis_abspeichern(
     obj.file.save(f"introspection_plot.svg", content_file)
     obj.lesehinweis = lesehinweis
     obj.save()
+
+
+# Betm-Pipeline
+
+
+def betm_db_zusammenfuegen():
+    """fügt alle datenbanken betreffend Betm-Urteile zusammen"""
+    df_betmurteil = BetmUrteil.pandas.return_as_df()
+    df_betmurteil['betmurteil_id'] = df_betmurteil.index
+    df_betmurteil_betm = pd.DataFrame(list(BetmUrteil.betm.through.objects.values()))
+    df_kanton = Kanton.pandas.return_as_df()
+    df_betm = Betm.pandas.return_as_df()
+    df_betmart = BetmArt.pandas.return_as_df()
+    df_rolle = Rolle.pandas.return_as_df()
+    df_joined = df_betmurteil.merge(
+        df_betmurteil_betm, on="betmurteil_id"
+    )
+    df_joined = df_joined.drop(columns="id")
+    # df_joined = df_joined.merge(
+    #     df_kanton, left_on="kanton_id", right_on="id", suffixes=("_?", "_kanton")
+    # )
+    # df_joined = df_joined.merge(
+    #     df_betm, left_on="betm_id", right_on="id", suffixes=("_!", "_betm")
+    # )
+    # df_joined = df_joined.merge(
+    #     df_betmart, left_on="art_id", right_on="id", suffixes=("_betmart", "_rolle")
+    # )
+    # df_joined = df_joined.merge(
+    #     df_rolle, left_on="rolle_id", right_on="id", suffixes=("_betmart", "_rolle")
+    # )
+    # df_joined = df_joined.drop(
+    #     [
+    #         "id_x",
+    #         "kanton_id",
+    #         "rolle_id",
+    #         "id_!",
+    #         "id_betm",
+    #         "betmurteil_id",
+    #         "betm_id",
+    #         "art_id",
+    #         "id_betmart",
+    #         "id_y",
+    #         "id_rolle",
+    #     ],
+    #     axis=1,
+    # )
+
+    return df_betmurteil, df_betmurteil_betm, df_joined

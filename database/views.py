@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.generic import ListView, DetailView
-from .models import Urteil, BetmUrteil, KIModelPickleFile, DiagrammSVG
+from .models import Urteil, BetmUrteil, Betm, KIModelPickleFile, DiagrammSVG
 from .forms import (
     UrteilModelForm,
     UrteilsEckpunkteAbfrageFormular,
@@ -23,6 +23,7 @@ from .ai_utils import (
     sortierte_koeff_list_erstellen,
     vermoegensstrafrechts_urteile_codes_aufloesen,
     introspection_plot_und_lesehinweis_abspeichern,
+    betm_db_zusammenfuegen
 )
 from .db_utils import (
     kategorie_scatterplot_erstellen,
@@ -509,8 +510,12 @@ def dev_model_neu_kalibrieren(request):
 
 @login_required
 def dev_betm(request):
-    df_betm_urteil = BetmUrteil.pandas.return_as_df("fall_nr")
-    context = {df_betm_urteil: df_betm_urteil.to_html()}
+    df_betmurteil, df_betmurteil_betm, df_joined = betm_db_zusammenfuegen()
+    context = {
+        'df_betmurteil': df_betmurteil.to_html(),
+        'df_joined': df_joined.to_html(),
+        'df_betmurteil_betm': df_betmurteil_betm.to_html()
+               }
     return render(request, "database/dev_betm.html", context=context)
 
 

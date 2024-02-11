@@ -6,7 +6,10 @@ class DataFrameExporter(models.Manager):
     def return_as_df(self, *fields):
         """Gibt die Urteile in der Datenbank als Pandas DataFrame aus
         *fields: auf welche Datenfelder es beschränkt sein soll"""
-        alle_urteile = super().get_queryset().filter(in_ki_modell=True)
+        if "in_ki_modell" in fields:
+            alle_urteile = super().get_queryset().filter(in_ki_modell=True)
+        else:
+            alle_urteile = super().get_queryset().all()
         if not fields:
             # Wenn keine Felder angegeben sind, alle Felder einschließen
             alle_urteile_als_dict = alle_urteile.values()
@@ -234,6 +237,11 @@ class BetmUrteil(models.Model):
 
 
 class Betm(models.Model):
+    # Managers
+    objects = models.Manager()
+    pandas = DataFrameExporter()
+
+    # Datenfelder
     art = models.ForeignKey("BetmArt", on_delete=models.CASCADE)
     menge_in_g = models.IntegerField()
     rein = models.BooleanField(default=True)
@@ -245,6 +253,11 @@ class Betm(models.Model):
 
 
 class BetmArt(models.Model):
+    # Managers
+    objects = models.Manager()
+    pandas = DataFrameExporter()
+
+    # Datenfelder
     name = models.CharField(max_length=40)
 
     def __str__(self):
@@ -252,6 +265,11 @@ class BetmArt(models.Model):
 
 
 class Rolle(models.Model):
+    # Managers
+    objects = models.Manager()
+    pandas = DataFrameExporter()
+
+    # Datenfelder
     name = models.CharField(max_length=50)
 
     def __str__(self):
@@ -259,6 +277,11 @@ class Rolle(models.Model):
 
 
 class Kanton(models.Model):
+    # Managers
+    objects = models.Manager()
+    pandas = DataFrameExporter()
+
+    # Datenfelder
     abk = models.CharField(max_length=2, default="ZH")
 
     def __str__(self):

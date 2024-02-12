@@ -510,11 +510,9 @@ def dev_model_neu_kalibrieren(request):
 
 @login_required
 def dev_betm(request):
-    df_betmurteil, df_betmurteil_betm, df_joined = betm_db_zusammenfuegen()
+    df_joined, df_kanton = betm_db_zusammenfuegen()
     context = {
-        'df_betmurteil': df_betmurteil.to_html(),
         'df_joined': df_joined.to_html(),
-        'df_betmurteil_betm': df_betmurteil_betm.to_html()
                }
     return render(request, "database/dev_betm.html", context=context)
 

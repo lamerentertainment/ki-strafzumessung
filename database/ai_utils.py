@@ -1083,41 +1083,32 @@ def betm_db_zusammenfuegen():
     df_betmurteil = BetmUrteil.pandas.return_as_df()
     df_betmurteil['betmurteil_id'] = df_betmurteil.index
     df_betmurteil_betm = pd.DataFrame(list(BetmUrteil.betm.through.objects.values()))
-    df_kanton = Kanton.pandas.return_as_df()
     df_betm = Betm.pandas.return_as_df()
     df_betmart = BetmArt.pandas.return_as_df()
+    df_kanton = Kanton.pandas.return_as_df()
     df_rolle = Rolle.pandas.return_as_df()
     df_joined = df_betmurteil.merge(
         df_betmurteil_betm, on="betmurteil_id"
     )
     df_joined = df_joined.drop(columns="id")
-    # df_joined = df_joined.merge(
-    #     df_kanton, left_on="kanton_id", right_on="id", suffixes=("_?", "_kanton")
-    # )
-    # df_joined = df_joined.merge(
-    #     df_betm, left_on="betm_id", right_on="id", suffixes=("_!", "_betm")
-    # )
-    # df_joined = df_joined.merge(
-    #     df_betmart, left_on="art_id", right_on="id", suffixes=("_betmart", "_rolle")
-    # )
-    # df_joined = df_joined.merge(
-    #     df_rolle, left_on="rolle_id", right_on="id", suffixes=("_betmart", "_rolle")
-    # )
-    # df_joined = df_joined.drop(
-    #     [
-    #         "id_x",
-    #         "kanton_id",
-    #         "rolle_id",
-    #         "id_!",
-    #         "id_betm",
-    #         "betmurteil_id",
-    #         "betm_id",
-    #         "art_id",
-    #         "id_betmart",
-    #         "id_y",
-    #         "id_rolle",
-    #     ],
-    #     axis=1,
-    # )
+    df_joined = df_joined.merge(df_betm, left_on="betm_id", right_index=True)
+    df_joined = df_joined.merge(df_betmart, left_on="art_id", right_index=True)
+    df_joined = df_joined.merge(df_rolle, left_on="rolle_id", right_index=True)
 
-    return df_betmurteil, df_betmurteil_betm, df_joined
+    df_joined = df_joined.drop(
+        [
+            "art_id",
+            "betm_id"
+
+        ],
+        axis=1,
+    )
+    umbenennungsdict = {
+        'name_x': "betm_art",
+        'name_y': "rolle"
+    }
+
+    df_joined = df_joined.rename(columns=umbenennungsdict)
+    df_joined.index = df_joined['betmurteil_id']
+
+    return df_joined

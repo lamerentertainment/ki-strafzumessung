@@ -23,7 +23,8 @@ from .ai_utils import (
     sortierte_koeff_list_erstellen,
     vermoegensstrafrechts_urteile_codes_aufloesen,
     introspection_plot_und_lesehinweis_abspeichern,
-    betm_db_zusammenfuegen
+    betm_db_zusammenfuegen,
+    urteilcodes_aufloesen
 )
 from .db_utils import (
     kategorie_scatterplot_erstellen,
@@ -510,7 +511,8 @@ def dev_model_neu_kalibrieren(request):
 
 @login_required
 def dev_betm(request):
-    df_joined, df_kanton = betm_db_zusammenfuegen()
+    df_joined = betm_db_zusammenfuegen()
+    df_joined = urteilcodes_aufloesen(df_joined)
     context = {
         'df_joined': df_joined.to_html(),
                }

@@ -1081,34 +1081,56 @@ def introspection_plot_und_lesehinweis_abspeichern(
 def betm_db_zusammenfuegen():
     """fügt alle datenbanken betreffend Betm-Urteile zusammen"""
     df_betmurteil = BetmUrteil.pandas.return_as_df()
-    df_betmurteil['betmurteil_id'] = df_betmurteil.index
+    df_betmurteil["betmurteil_id"] = df_betmurteil.index
     df_betmurteil_betm = pd.DataFrame(list(BetmUrteil.betm.through.objects.values()))
     df_betm = Betm.pandas.return_as_df()
     df_betmart = BetmArt.pandas.return_as_df()
     df_kanton = Kanton.pandas.return_as_df()
     df_rolle = Rolle.pandas.return_as_df()
-    df_joined = df_betmurteil.merge(
-        df_betmurteil_betm, on="betmurteil_id"
-    )
+    df_joined = df_betmurteil.merge(df_betmurteil_betm, on="betmurteil_id")
     df_joined = df_joined.drop(columns="id")
     df_joined = df_joined.merge(df_betm, left_on="betm_id", right_index=True)
     df_joined = df_joined.merge(df_betmart, left_on="art_id", right_index=True)
     df_joined = df_joined.merge(df_rolle, left_on="rolle_id", right_index=True)
+    df_joined = df_joined.merge(df_kanton, left_on="kanton_id", right_index=True)
 
     df_joined = df_joined.drop(
-        [
-            "art_id",
-            "betm_id"
-
-        ],
+        ["art_id", "betm_id", "rolle_id"],
         axis=1,
     )
     umbenennungsdict = {
-        'name_x': "betm_art",
-        'name_y': "rolle"
-    }
+        "name_x": "betm_art",
+        "name_y": "rolle",
+        "abk": "kanton"}
 
     df_joined = df_joined.rename(columns=umbenennungsdict)
-    df_joined.index = df_joined['betmurteil_id']
+    df_joined.index = df_joined["betmurteil_id"]
 
     return df_joined
+
+
+def urteilcodes_aufloesen(dataframe):
+    """Paraphrasiert codiert abgespeicherte Variablen"""
+    if "geschlecht" in dataframe.columns:
+        dataframe["geschlecht"].replace(
+            {"0": "männlich", "1": "weiblich"}, inplace=True
+        )
+    if "nationalitaet" in dataframe.columns:
+        dataframe["nationalitaet"].replace(
+            {
+                "0": "Schweizerin/Schweizer",
+                "1": "Ausländerin/Ausländer",
+                "2": "unbekannt",
+            },
+            inplace=True,
+        )
+    if "vollzug" in dataframe.columns:
+        dataframe["vollzug"].replace(
+            {"0": "bedingt", "1": "teilbedingt", "2": "unbedingt"},
+            inplace=True
+        )
+    if "hauptsanktion" in dataframe.columns:
+        dataframe["hauptsanktion"].replace(
+            {0: "Freiheitsstrafe", 1: "Geldstrafe", 2: "Busse"}, inplace=True
+        )
+    return dataframe

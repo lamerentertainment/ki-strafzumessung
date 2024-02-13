@@ -1097,7 +1097,7 @@ def betm_db_zusammenfuegen():
     df_joined = df_joined.merge(df_kanton, left_on="kanton_id", right_index=True)
 
     df_joined = df_joined.drop(
-        ["art_id", "betm_id", "rolle_id"],
+        ["art_id", "betm_id", "rolle_id", "kanton_id"],
         axis=1,
     )
     umbenennungsdict = {"name_x": "betm_art", "name_y": "rolle", "abk": "kanton"}
@@ -1145,21 +1145,18 @@ def urteilsdatum_in_urteilsjahr_konvertieren(dataframe: pd.DataFrame) -> pd.Data
 
 def betmurteile_onehotencoding(pd_df, liste_der_betmarten=None):
     """
-    Urteile, die mehrere Betmarten zum Gegenstand haben, werden aus der Datenbank mit mehreren Zeilen ausgegeben.
-    Diese müssen zusammengefügt werden.
     pd_df: pandas Datenframe
     liste_der_betmarten: muss ein einzelnes (Abfrage-)sample konvertiert werden muss die Liste aller
         Betäubungsmittelarten mitgegeben werden, um das Sample deckungsgleich wie die Trainingswerte zu machen.
         wenn für liste_der_betmarten keine Liste eingegeben wird, wird eine solche anhand der spalte "betm_art" des
         pandas datenframe erstellt
-        """
+    """
     _liste_aller_onehotencoded_betm_spalten = []
     if liste_der_betmarten is None:
         liste_der_betmarten = pd_df.betm_art.unique()
     else:
         liste_der_betmarten = liste_der_betmarten
     for betmart in liste_der_betmarten:
-        betmart = betmart.lower()
         # neue Spalten erstellen
         pd_df[f"{betmart}_gemisch"] = 0
         # folgende Spalte auskommentiert, weil diese gemisch spalte bei aggregate_faelle wieder gelöscht wird
@@ -1174,3 +1171,46 @@ def betmurteile_onehotencoding(pd_df, liste_der_betmarten=None):
             if row["betm_art"] == betmart and row["rein"] is False:
                 pd_df.at[index, f"{betmart}_gemisch"] = row["menge_in_g"]
     return pd_df, _liste_aller_onehotencoded_betm_spalten
+
+
+def betmurteile_zusammenfuegen(pd_df, liste_aller_ohe_betm_spalten):
+    """Urteile, die mehrere Betmarten zum Gegenstand haben, werden aus der Datenbank mit mehreren Zeilen ausgegeben.
+    Diese müssen zusammengefügt werden."""
+    # dict erstellen, welches jeder spalte einzeln die aggreggierungsfunktion zuweist
+    _agg_dict = {}
+    restliche_spalten = [i for i in pd_df.columns if i not in liste_aller_ohe_betm_spalten]
+    for ohe_betm_spalte in liste_aller_ohe_betm_spalten:
+        _agg_dict[ohe_betm_spalte] = np.sum
+    for column_name in restliche_spalten:
+        _agg_dict[column_name] = np.max
+    # agg funktion macht nur einen summenmässige aggregation auf den columns, die im _agg_dict bezeichnet worden sind
+    grouped_pd_df = pd_df.groupby(["fall_nr"]).agg(_agg_dict)
+    # gemisch zu 1/3 auf rein aufrechnen, gemisch Spalte löschen
+    for betmart in pd_df.betm_art.unique():
+        grouped_pd_df[f"{betmart}_rein"] = (
+            grouped_pd_df[f"{betmart}_rein"] + grouped_pd_df[f"{betmart}_gemisch"] / 3
+        )
+        grouped_pd_df.drop([f"{betmart}_gemisch"], axis=1, inplace=True)
+    return grouped_pd_df
+
+
+def betmurteile_fehlende_werte_auffuellen(pd_df, spalten_mit_fehlenden_werten=None):
+    """Die prognosmerkmale 'Deliktsdauer_in_monaten' und "deliktsertrag" sind grösstenteils nicht bekannt,
+    bei fehlenden werten mit 1 auffüllen.
+    (da die Deliktsdauer und der Deliktsertrag offensichtlich nicht nennenswert waren)
+    pd_df: Pandas Datenframe
+    spalten_mit_fehlenden_werten: liste der Spalten, bei denen fehlende Werte auf 1 aufgefüllt werden sollen, default=
+    ["deliktdauer_in_monaten", "deliktsertrag"]
+    return: Pandas Datenframe mit aufgefüllten Werten
+    """
+    if spalten_mit_fehlenden_werten is None:
+        spalten_mit_fehlenden_werten = ["deliktsdauer_in_monaten", "deliktsertrag"]
+
+    from sklearn.impute import SimpleImputer
+
+    imputer = SimpleImputer(missing_values=np.nan, strategy="constant", fill_value=1)
+    pd_df[spalten_mit_fehlenden_werten] = imputer.fit_transform(
+        pd_df[spalten_mit_fehlenden_werten]
+    )
+
+    return pd_df

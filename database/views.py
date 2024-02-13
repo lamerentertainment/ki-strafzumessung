@@ -26,7 +26,9 @@ from .ai_utils import (
     betm_db_zusammenfuegen,
     urteilcodes_aufloesen,
     urteilsdatum_in_urteilsjahr_konvertieren,
-    betmurteile_onehotencoding
+    betmurteile_onehotencoding,
+    betmurteile_zusammenfuegen,
+    betmurteile_fehlende_werte_auffuellen
 )
 from .db_utils import (
     kategorie_scatterplot_erstellen,
@@ -518,9 +520,11 @@ def dev_betm(request):
     df_joined = betm_db_zusammenfuegen()
     df_joined = urteilcodes_aufloesen(df_joined)
     df_joined = urteilsdatum_in_urteilsjahr_konvertieren(df_joined)
-    df_urteile, liste_aller_ohe_betm_spalten = betmurteile_onehotencoding(df_joined)
+    df_joined, liste_aller_ohe_betm_spalten = betmurteile_onehotencoding(df_joined)
+    df_urteile = betmurteile_zusammenfuegen(df_joined, liste_aller_ohe_betm_spalten=liste_aller_ohe_betm_spalten)
+    df_urteile = betmurteile_fehlende_werte_auffuellen(df_urteile)
     context = {
-        'df_joined': df_joined.to_html(),
+        'df_joined': df_urteile.to_html(),
         'liste': liste_aller_ohe_betm_spalten
                }
     return render(request, "database/dev_betm.html", context=context)

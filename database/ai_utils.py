@@ -1080,7 +1080,7 @@ def introspection_plot_und_lesehinweis_abspeichern(
 
 def betm_db_zusammenfuegen():
     """fügt alle datenbanken betreffend Betm-Urteile zusammen"""
-    df_betmurteil = BetmUrteil.pandas.return_as_df()
+    df_betmurteil = BetmUrteil.pandas.return_as_df(exclude_unmarked=False)
     df_betmurteil["betmurteil_id"] = df_betmurteil.index
     df_betmurteil_betm = pd.DataFrame(list(BetmUrteil.betm.through.objects.values()))
     df_betm = Betm.pandas.return_as_df()
@@ -1133,4 +1133,13 @@ def urteilcodes_aufloesen(dataframe):
         dataframe["hauptsanktion"].replace(
             {0: "Freiheitsstrafe", 1: "Geldstrafe", 2: "Busse"}, inplace=True
         )
+    return dataframe
+
+
+def urteilsdatum_in_urteilsjahr_konvertieren(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """urteilsjahr ist eine brauchbarere Variable als Urteilsjahr"""
+    if 'urteilsdatum' in dataframe.columns:
+        dataframe['urteilsdatum'] = pd.to_datetime(dataframe['urteilsdatum'])
+        dataframe['urteilsdatum'] = dataframe['urteilsdatum'].map(lambda a: a.year)
+        dataframe = dataframe.rename(columns={'urteilsdatum': 'urteilsjahr'})
     return dataframe

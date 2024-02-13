@@ -3,10 +3,13 @@ from django.db import models
 
 
 class DataFrameExporter(models.Manager):
-    def return_as_df(self, *fields):
-        """Gibt die Urteile in der Datenbank als Pandas DataFrame aus
-        *fields: auf welche Datenfelder es beschränkt sein soll"""
-        if "in_ki_modell" in fields:
+    def return_as_df(self, *fields, exclude_unmarked=False):
+        """
+        Gibt die Urteile in einer Datenbank als Pandas DataFrame aus
+        *fields: auf welche Datenfelder es beschränkt sein soll
+        exclude_unmarked: ob jene Einträge ausgelassen werden sollen, bei denen in_ki_modell=False ist
+        """
+        if exclude_unmarked:
             alle_urteile = super().get_queryset().filter(in_ki_modell=True)
         else:
             alle_urteile = super().get_queryset().all()
@@ -20,8 +23,16 @@ class DataFrameExporter(models.Manager):
             # Datenbankeintrags-id ('pk') wird als index des DataFrames verwendet
             return pd.DataFrame.from_records(alle_urteile_als_dict, index="pk")
 
-    def return_y_zielwerte(self, zielwert="freiheitsstrafe_in_monaten"):
-        alle_urteile = super().get_queryset().filter(in_ki_modell=True)
+    def return_y_zielwerte(self, zielwert="freiheitsstrafe_in_monaten", exclude_unmarked=False):
+        """
+        gibt ein Datenframe mit den Zielwerten aus
+        zielwert: Zielwert als String
+        exclude_unmarked: ob jene Einträge ausgelassen werden sollen, bei denen in_ki_modell=False ist
+        """
+        if exclude_unmarked:
+            alle_urteile = super().get_queryset().filter(in_ki_modell=True)
+        else:
+            alle_urteile = super().get_queryset().all()
         alle_urteile_als_dict_mit_nur_einer_spalte = alle_urteile.values(zielwert)
         return pd.DataFrame.from_records(alle_urteile_als_dict_mit_nur_einer_spalte)
 

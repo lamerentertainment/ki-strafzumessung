@@ -78,6 +78,7 @@ def kategorie_scatterplot_erstellen(model=Urteil,
         "hauptsanktion",
         "anzahl_tagessaetze",
         kategorie_feld,
+        exclude_unmarked=False
     )
     if kategorie_feld == 'nationalitaet':
         df['nationalitaet'].replace({'0': 'Schweizerin/Schweizer',

@@ -24,7 +24,8 @@ from .ai_utils import (
     vermoegensstrafrechts_urteile_codes_aufloesen,
     introspection_plot_und_lesehinweis_abspeichern,
     betm_db_zusammenfuegen,
-    urteilcodes_aufloesen
+    urteilcodes_aufloesen,
+    urteilsdatum_in_urteilsjahr_konvertieren
 )
 from .db_utils import (
     kategorie_scatterplot_erstellen,
@@ -248,6 +249,7 @@ def prognose(request):
                 "vorbestraft",
                 "vorbestraft_einschlaegig",
                 "hauptdelikt",
+                exclude_unmarked=True
             )
             y_train_df = Urteil.pandas.return_y_zielwerte()
 
@@ -386,6 +388,7 @@ def prognose_betm(request):
                 "vorbestraft",
                 "vorbestraft_einschlaegig",
                 "hauptdelikt",
+                exclude_unmarked=True,
             )
             y_train_df = Urteil.pandas.return_y_zielwerte()
 
@@ -513,6 +516,7 @@ def dev_model_neu_kalibrieren(request):
 def dev_betm(request):
     df_joined = betm_db_zusammenfuegen()
     df_joined = urteilcodes_aufloesen(df_joined)
+    df_joined = urteilsdatum_in_urteilsjahr_konvertieren(df_joined)
     context = {
         'df_joined': df_joined.to_html(),
                }

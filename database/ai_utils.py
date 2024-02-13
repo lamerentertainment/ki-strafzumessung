@@ -1,15 +1,22 @@
 import pickle
 from io import StringIO, BytesIO
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+from django.core.files.base import ContentFile
+from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.linear_model import LinearRegression
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler
-from sklearn.pipeline import Pipeline
-from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import LeaveOneOut
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
+from .aws_helpers import (
+    kimodell_von_pickle_file_aus_aws_bucket_laden,
+    ki_modell_als_pickle_file_speichern,
+)
 from .models import (
     Urteil,
     BetmUrteil,
@@ -20,11 +27,6 @@ from .models import (
     KIModelPickleFile,
     DiagrammSVG,
 )
-from .aws_helpers import (
-    kimodell_von_pickle_file_aus_aws_bucket_laden,
-    ki_modell_als_pickle_file_speichern,
-)
-from django.core.files.base import ContentFile
 
 
 def onehotx_und_y_erstellen(
@@ -1098,10 +1100,7 @@ def betm_db_zusammenfuegen():
         ["art_id", "betm_id", "rolle_id"],
         axis=1,
     )
-    umbenennungsdict = {
-        "name_x": "betm_art",
-        "name_y": "rolle",
-        "abk": "kanton"}
+    umbenennungsdict = {"name_x": "betm_art", "name_y": "rolle", "abk": "kanton"}
 
     df_joined = df_joined.rename(columns=umbenennungsdict)
     df_joined.index = df_joined["betmurteil_id"]
@@ -1126,8 +1125,7 @@ def urteilcodes_aufloesen(dataframe):
         )
     if "vollzug" in dataframe.columns:
         dataframe["vollzug"].replace(
-            {"0": "bedingt", "1": "teilbedingt", "2": "unbedingt"},
-            inplace=True
+            {"0": "bedingt", "1": "teilbedingt", "2": "unbedingt"}, inplace=True
         )
     if "hauptsanktion" in dataframe.columns:
         dataframe["hauptsanktion"].replace(
@@ -1138,8 +1136,41 @@ def urteilcodes_aufloesen(dataframe):
 
 def urteilsdatum_in_urteilsjahr_konvertieren(dataframe: pd.DataFrame) -> pd.DataFrame:
     """urteilsjahr ist eine brauchbarere Variable als Urteilsjahr"""
-    if 'urteilsdatum' in dataframe.columns:
-        dataframe['urteilsdatum'] = pd.to_datetime(dataframe['urteilsdatum'])
-        dataframe['urteilsdatum'] = dataframe['urteilsdatum'].map(lambda a: a.year)
-        dataframe = dataframe.rename(columns={'urteilsdatum': 'urteilsjahr'})
+    if "urteilsdatum" in dataframe.columns:
+        dataframe["urteilsdatum"] = pd.to_datetime(dataframe["urteilsdatum"])
+        dataframe["urteilsdatum"] = dataframe["urteilsdatum"].map(lambda a: a.year)
+        dataframe = dataframe.rename(columns={"urteilsdatum": "urteilsjahr"})
     return dataframe
+
+
+def betmurteile_onehotencoding(pd_df, liste_der_betmarten=None):
+    """
+    Urteile, die mehrere Betmarten zum Gegenstand haben, werden aus der Datenbank mit mehreren Zeilen ausgegeben.
+    Diese müssen zusammengefügt werden.
+    pd_df: pandas Datenframe
+    liste_der_betmarten: muss ein einzelnes (Abfrage-)sample konvertiert werden muss die Liste aller
+        Betäubungsmittelarten mitgegeben werden, um das Sample deckungsgleich wie die Trainingswerte zu machen.
+        wenn für liste_der_betmarten keine Liste eingegeben wird, wird eine solche anhand der spalte "betm_art" des
+        pandas datenframe erstellt
+        """
+    _liste_aller_onehotencoded_betm_spalten = []
+    if liste_der_betmarten is None:
+        liste_der_betmarten = pd_df.betm_art.unique()
+    else:
+        liste_der_betmarten = liste_der_betmarten
+    for betmart in liste_der_betmarten:
+        betmart = betmart.lower()
+        # neue Spalten erstellen
+        pd_df[f"{betmart}_gemisch"] = 0
+        # folgende Spalte auskommentiert, weil diese gemisch spalte bei aggregate_faelle wieder gelöscht wird
+        # _liste_aller_onehotencoded_betm_spalten.append(f'{betmart}_gemisch')
+        pd_df[f"{betmart}_rein"] = 0
+        _liste_aller_onehotencoded_betm_spalten.append(f"{betmart}_rein")
+
+        for index, row in pd_df.iterrows():
+            if row["betm_art"] == betmart and row["rein"] is True:
+                pd_df.at[index, f"{betmart}_rein"] = row["menge_in_g"]
+
+            if row["betm_art"] == betmart and row["rein"] is False:
+                pd_df.at[index, f"{betmart}_gemisch"] = row["menge_in_g"]
+    return pd_df, _liste_aller_onehotencoded_betm_spalten

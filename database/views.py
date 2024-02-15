@@ -28,7 +28,8 @@ from .ai_utils import (
     urteilsdatum_in_urteilsjahr_konvertieren,
     betmurteile_onehotencoding,
     betmurteile_zusammenfuegen,
-    betmurteile_fehlende_werte_auffuellen
+    betmurteile_fehlende_werte_auffuellen,
+    onehotx_und_y_erstellen_from_dataframe
 )
 from .db_utils import (
     kategorie_scatterplot_erstellen,
@@ -252,7 +253,7 @@ def prognose(request):
                 "vorbestraft",
                 "vorbestraft_einschlaegig",
                 "hauptdelikt",
-                exclude_unmarked=True
+                exclude_unmarked=True,
             )
             y_train_df = Urteil.pandas.return_y_zielwerte()
 
@@ -521,12 +522,49 @@ def dev_betm(request):
     df_joined = urteilcodes_aufloesen(df_joined)
     df_joined = urteilsdatum_in_urteilsjahr_konvertieren(df_joined)
     df_joined, liste_aller_ohe_betm_spalten = betmurteile_onehotencoding(df_joined)
-    df_urteile = betmurteile_zusammenfuegen(df_joined, liste_aller_ohe_betm_spalten=liste_aller_ohe_betm_spalten)
+    df_urteile = betmurteile_zusammenfuegen(
+        df_joined, liste_aller_ohe_betm_spalten=liste_aller_ohe_betm_spalten
+    )
     df_urteile = betmurteile_fehlende_werte_auffuellen(df_urteile)
+
+    # Prognosemerkmale definieren, auf welche die Prädiktoren abstützen dürfen
+    liste_kategoriale_prognosemerkmale = [
+        "mengenmaessig",
+        "bandenmaessig",
+        "gewerbsmaessig",
+        "anstaltentreffen",
+        "mehrfach",
+        "beschaffungskriminalitaet",
+        "vorbestraft",
+        "vorbestraft_einschlaegig",
+        "rolle",
+        "kanton",
+    ]
+    liste_numerische_prognosemerkmale = [
+        "nebenverurteilungsscore",
+        "deliktsertrag",
+        "deliktsdauer_in_monaten",
+        "urteilsjahr",
+    ]
+    liste_numerische_prognosemerkmale.extend(liste_aller_ohe_betm_spalten)
+
+    X_ohe, y_vollzugsart, encoder = onehotx_und_y_erstellen_from_dataframe(pandas_dataframe=df_urteile,
+                                                               categorial_ft_dbfields=liste_kategoriale_prognosemerkmale,
+                                                               numerical_ft_dbfields=liste_numerische_prognosemerkmale,
+                                                               target_dbfields=['vollzug'],
+                                                               return_encoder=True)
+    # Prognosemodell erstellen
+    from sklearn.ensemble import RandomForestClassifier
+
+    classifier_fuer_vollzugsart = RandomForestClassifier(oob_score=True)
+    classifier_fuer_vollzugsart.fit(X_ohe, y_vollzugsart)
+
+    oob_score = f'OOB-Score für Vollzugsart-Prädiktor: {round(classifier_fuer_vollzugsart.oob_score_*100, 1)}%'
+
     context = {
-        'df_joined': df_urteile.to_html(),
-        'liste': liste_aller_ohe_betm_spalten
-               }
+        "df_joined": df_urteile.to_html(),
+        "liste": oob_score
+    }
     return render(request, "database/dev_betm.html", context=context)
 
 

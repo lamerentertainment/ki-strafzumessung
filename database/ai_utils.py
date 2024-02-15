@@ -1214,3 +1214,44 @@ def betmurteile_fehlende_werte_auffuellen(pd_df, spalten_mit_fehlenden_werten=No
     )
 
     return pd_df
+
+def onehotx_und_y_erstellen_from_dataframe(pandas_dataframe,
+                            categorial_ft_dbfields=None,
+                            numerical_ft_dbfields=None,
+                            target_dbfields=None,
+                            return_encoder=False):
+    """
+    :param pandas_dataframe: ein Pandas Datenframe
+    :param categorial_ft_dbfields: eine Liste mit den kategorialen Datenbank-Feldern
+    :param numerical_ft_dbfields: eine Liste mit den numerischen Datenbank-Feldern
+    :param target_dbfields: eine Liste mit der Zielvariable(n)
+    :param return_encoder: gibt encoder zurück, um diesen bei einem ki-modell abzuspeichern
+    :return: x (Pandas-Datenframe, 1hot encoded), y (np_array)
+    """
+
+    fall_nr_index = pandas_dataframe.index
+
+    # 1hot encoding der kategorialen variablen
+    encoder = OneHotEncoder(drop='if_binary', sparse_output=False)
+    encoder.fit(pandas_dataframe[categorial_ft_dbfields])
+    categorical_1hot = encoder.transform(pandas_dataframe[categorial_ft_dbfields])
+    encoder_categorical_ft_names = encoder.get_feature_names_out(categorial_ft_dbfields)
+    df_categorical_1hot = pd.DataFrame(categorical_1hot, columns=encoder_categorical_ft_names, index=fall_nr_index)
+
+    # für numerische features eine pandas df mit selbem index kreieren
+    dataframe_mit_numerischen_werten_und_fallnr_index = pd.DataFrame(pandas_dataframe[numerical_ft_dbfields], index=fall_nr_index)
+
+    # df der 1hot-kodierten features mit df der numerischen features zusammenfügen
+    x = pd.concat([df_categorical_1hot, dataframe_mit_numerischen_werten_und_fallnr_index], axis=1)
+
+    # y erstellen
+    if len(target_dbfields) == 1:
+        y = pandas_dataframe[target_dbfields].values.ravel()
+    elif len(target_dbfields) > 1:
+        y = pandas_dataframe[target_dbfields]
+
+    if return_encoder:
+        return x, y, encoder
+    else:
+        return x, y
+

@@ -29,12 +29,15 @@ from .ai_utils import (
     betmurteile_onehotencoding,
     betmurteile_zusammenfuegen,
     betmurteile_fehlende_werte_auffuellen,
-    onehotx_und_y_erstellen_from_dataframe
+    onehotx_und_y_erstellen_from_dataframe,
 )
 from .db_utils import (
     kategorie_scatterplot_erstellen,
 )
-from .aws_helpers import kimodell_von_pickle_file_aus_aws_bucket_laden
+from .aws_helpers import (
+    kimodell_von_pickle_file_aus_aws_bucket_laden,
+    ki_modell_als_pickle_file_speichern,
+)
 import pickle
 from sklearn.model_selection import cross_val_score
 
@@ -338,131 +341,60 @@ def prognose_betm(request):
     # if this is a POST request we need to process the form data
     if request.method == "POST":
         # create a form instance and populate it with data from the request:
-        form = UrteilsEckpunkteAbfrageFormular(request.POST)
+        form = BetmUrteilsEckpunkteAbfrageFormular(request.POST)
         # check whether it's valid:
         if form.is_valid():
             # process the data in form.cleaned_data as required
-            sample_pandas_dataframe = formulareingaben_in_abfragesample_konvertieren(
-                form.cleaned_data
-            )
+            allgemeine_prognosemerkmale = {
+                "fall_nr": "neuer Fall",
+                "mengenmaessig": form.cleaned_data["mengenmaessig"],
+                "bandenmaessig": form.cleaned_data["bandenmaessig"],
+                "gewerbsmaessig": form.cleaned_data["gewerbsmaessig"],
+                "anstaltentreffen": form.cleaned_data["anstaltentreffen"],
+                "mehrfach": form.cleaned_data["mehrfache"],
+                "beschaffungskriminalitaet": form.cleaned_data["beschaffungskriminalitaet"],
+                "deliktsdauer_in_monaten": form.cleaned_data["deliktsdauer_in_monaten"],
+                "nebenverurteilungsscore": form.cleaned_data["nebenverurteilungsscore"],
+                "vorbestraft": form.cleaned_data["vorbestraft"],
+                "vorbestraft_einschlaegig": form.cleaned_data[""],
+                "deliktsertrag": 1000,
+                "urteilsjahr": 2023,
+                "rolle": "Handel",
+                # 0 ist ordentliches Verfahren
+                "verfahrensart": 0,
+                "geschlecht": "männlich",
+                "nationalitaet": "unbekannt",
+                "gericht": "Bezirksgericht Zürich",
+                "kanton": "ZH",
+            }
 
-            # give prediction response Strafmass
-            strafmass_model = kimodell_von_pickle_file_aus_aws_bucket_laden(
-                "pickles/random_forest_regressor_val_fts.pkl"
-            )
-            vorhersage_strafmass = strafmass_model.predict(sample_pandas_dataframe)
+            betm1 = {
+                "betm_art": cleaned_data_dict["betm1"],
+                "menge_in_g": cleaned_data_dict["betm1_menge"],
+                "rein": cleaned_data_dict["betm1_rein"],
+            }
+            betm2 = {
+                "betm_art": cleaned_data_dict["betm2"],
+                "menge_in_g": cleaned_data_dict["betm2_menge"],
+                "rein": cleaned_data_dict["betm2_rein"],
+            }
+            betm3 = {
+                "betm_art": cleaned_data_dict["betm3"],
+                "menge_in_g": cleaned_data_dict["betm3_menge"],
+                "rein": cleaned_data_dict["betm3_rein"],
+            }
 
             # give prediction response Vollzug
-            vollzugs_model = kimodell_von_pickle_file_aus_aws_bucket_laden(
-                "pickles/random_forest_classifier_val_fts.pkl"
+            vollzugs_modell = kimodell_von_pickle_file_aus_aws_bucket_laden(
+                "betm_rf_classifier_vollzugsart.pkl"
             )
-            vorhersage_vollzug = vollzugs_model.predict(sample_pandas_dataframe)
-
-            # give prediction response Sanktionsart
-            sanktionsart_model = kimodell_von_pickle_file_aus_aws_bucket_laden(
-                "pickles/rf_classifier_fuer_sanktionsart_val_fts.pkl"
-            )
-            vorhersage_sanktionsart = sanktionsart_model.predict(
-                sample_pandas_dataframe
-            )
-
-            vollzugsstring = "empty"
-
-            if vorhersage_vollzug[0] == "0":
-                vollzugsstring = "bedingte"
-            elif vorhersage_vollzug[0] == "1":
-                vollzugsstring = "teilbedingte"
-            elif vorhersage_vollzug[0] == "2":
-                vollzugsstring = "unbedingte"
-
-            string_sanktionsart = "empty"
-
-            if vorhersage_sanktionsart[0] == "0":
-                string_sanktionsart = "Freiheitsstrafe"
-            elif vorhersage_sanktionsart[0] == "1":
-                string_sanktionsart = "Geldstrafe"
-            elif vorhersage_sanktionsart[0] == "2":
-                string_sanktionsart = "Busse"
-
-            # knn model errechnen
-            x_train_df = Urteil.pandas.return_as_df(
-                "deliktssumme",
-                "nebenverurteilungsscore",
-                "gewerbsmaessig",
-                "vorbestraft",
-                "vorbestraft_einschlaegig",
-                "hauptdelikt",
-                exclude_unmarked=True,
-            )
-            y_train_df = Urteil.pandas.return_y_zielwerte()
-
-            deliktssumme = form.cleaned_data["deliktssumme"]
-            nebenverurteilungsscore = form.cleaned_data["nebenverurteilungsscore"]
-            hauptdelikt = form.cleaned_data["hauptdelikt"]
-            gewerbsmaessig = form.cleaned_data["gewerbsmaessig"]
-            vorbestraft = form.cleaned_data["vorbestraft"]
-            vorbestraft_einschlaegig = form.cleaned_data["vorbestraft_einschlaegig"]
-
-            urteil_features_list = [
-                gewerbsmaessig,
-                hauptdelikt,
-                vorbestraft_einschlaegig,
-                vorbestraft,
-                deliktssumme,
-                nebenverurteilungsscore,
-            ]
-            urteil_features_series = pd.Series(urteil_features_list)
-
-            nachbar_pk, nachbar_pk2, knn_prediction = knn_pipeline(
-                x_train_df, y_train_df, urteil_features_series
-            )
-
-            nachbar = Urteil.objects.get(pk=nachbar_pk)
-            nachbar2 = Urteil.objects.get(pk=nachbar_pk2)
-
-            # differenzen von eingabe und nachbarn berechnen, evt. mal auslagern
-            def differenzengenerator(nachbarobjekt, formobjekt):
-                """legt im Nachbarobjekt die Differenzen zu den Formulareingaben als Attribute ab"""
-                nachbarobjekt.ds_diff = (
-                    nachbarobjekt.deliktssumme - form.cleaned_data["deliktssumme"]
-                )
-                nachbarobjekt.nvs_diff = (
-                    nachbarobjekt.nebenverurteilungsscore
-                    - form.cleaned_data["nebenverurteilungsscore"]
-                )
-                nachbarobjekt.entsprechung_hauptdelikt = (
-                    True
-                    if nachbarobjekt.hauptdelikt == form.cleaned_data["hauptdelikt"]
-                    else False
-                )
-                nachbarobjekt.entsprechung_gewerbsmaessig = (
-                    True
-                    if nachbarobjekt.gewerbsmaessig
-                    == form.cleaned_data["gewerbsmaessig"]
-                    else False
-                )
-                nachbarobjekt.entsprechung_vorbestraft_einschlaegig = (
-                    True
-                    if nachbarobjekt.vorbestraft_einschlaegig
-                    == form.cleaned_data["vorbestraft_einschlaegig"]
-                    else False
-                )
-                return nachbarobjekt
-
-            nachbar = differenzengenerator(nachbar, form)
-            nachbar2 = differenzengenerator(nachbar2, form)
+            vorhersage_vollzug = vollzugs_modell.predict(sample)
 
             return render(
                 request,
                 "database/prognose.html",
                 {
                     "form": form,
-                    "vorhersage_strafmass": vorhersage_strafmass[0],
-                    "vorhersage_vollzug": vollzugsstring,
-                    "vorhersage_sanktionsart": string_sanktionsart,
-                    "knn_prediction": knn_prediction,
-                    "nachbar": nachbar,
-                    "nachbar2": nachbar2,
                 },
             )
 
@@ -517,7 +449,7 @@ def dev_model_neu_kalibrieren(request):
 
 
 @login_required
-def dev_betm(request):
+def betm_kimodelle_neu_generieren(request):
     df_joined = betm_db_zusammenfuegen()
     df_joined = urteilcodes_aufloesen(df_joined)
     df_joined = urteilsdatum_in_urteilsjahr_konvertieren(df_joined)
@@ -548,23 +480,45 @@ def dev_betm(request):
     ]
     liste_numerische_prognosemerkmale.extend(liste_aller_ohe_betm_spalten)
 
-    X_ohe, y_vollzugsart, encoder = onehotx_und_y_erstellen_from_dataframe(pandas_dataframe=df_urteile,
-                                                               categorial_ft_dbfields=liste_kategoriale_prognosemerkmale,
-                                                               numerical_ft_dbfields=liste_numerische_prognosemerkmale,
-                                                               target_dbfields=['vollzug'],
-                                                               return_encoder=True)
+    X_ohe, y_vollzugsart, encoder = onehotx_und_y_erstellen_from_dataframe(
+        pandas_dataframe=df_urteile,
+        categorial_ft_dbfields=liste_kategoriale_prognosemerkmale,
+        numerical_ft_dbfields=liste_numerische_prognosemerkmale,
+        target_dbfields=["vollzug"],
+        return_encoder=True,
+    )
     # Prognosemodell erstellen
     from sklearn.ensemble import RandomForestClassifier
 
     classifier_fuer_vollzugsart = RandomForestClassifier(oob_score=True)
     classifier_fuer_vollzugsart.fit(X_ohe, y_vollzugsart)
 
-    oob_score = f'OOB-Score für Vollzugsart-Prädiktor: {round(classifier_fuer_vollzugsart.oob_score_*100, 1)}%'
+    oob_score = f"OOB-Score für Vollzugsart-Prädiktor: {round(classifier_fuer_vollzugsart.oob_score_*100, 1)}%"
 
-    context = {
-        "df_joined": df_urteile.to_html(),
-        "liste": oob_score
-    }
+    prognoseleistung_dict = dict()
+    prognoseleistung_dict["oob_score_class_vollzugsart"] = oob_score
+
+    # kimodell als pickle file speichern
+    ki_modell_als_pickle_file_speichern(
+        instanziertes_kimodel=classifier_fuer_vollzugsart,
+        name="betm_rf_classifier_vollzugsart",
+        filename="betm_rf_classifier_vollzugsart.pkl",
+        prognoseleistung_dict=prognoseleistung_dict,
+    )
+
+    messages.success(request, "Die KI-Modelle wurden erfolgreich aktualisiert.")
+
+
+@login_required
+def dev_betm(request):
+    classifier_vollzugsart = kimodell_von_pickle_file_aus_aws_bucket_laden(
+        filepath="pickles/betm_rf_classifier_vollzugsart.pkl"
+    )
+    oob_score = KIModelPickleFile.objects.get(
+        name="betm_rf_classifier_vollzugsart"
+    ).prognoseleistung_dict["oob_score_class_vollzugsart"]
+
+    context = {"liste": oob_score}
     return render(request, "database/dev_betm.html", context=context)
 
 

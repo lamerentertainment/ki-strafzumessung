@@ -3,15 +3,14 @@
 {% block body %}
     <section id="reload-button" class="row mb-3">
         <div class="col">
-        <a type="button" class="btn btn-primary" href="{% url 'dev_model_neu_kalibrieren' %}">KI-Modelle neu
-            kalibrieren</a>
+        <a type="button" class="btn btn-primary" href="{% url 'betm_kimodelle_neu_generieren' %}">Betm KI-Modelle neu
+            generieren</a>
         </div>
     </section>
-
+    
     <h1>Debug Output</h1>
     <section id="debug" class="my-3">
     {% autoescape off %}
-        {{ df_joined }}
         {{ liste }}
     {% endautoescape %}
 

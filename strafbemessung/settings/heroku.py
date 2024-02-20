@@ -29,4 +29,9 @@ DATABASES = {
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # CSRF-Protection
-CSRF_TRUSTED_ORIGINS = ["https://stagingstrafzumessung.applikuapp.com", "https://www.stagingstrafzumessung.applikuapp.com", "https://strafzumessung.ch", "https://www.strafzumessung.ch"]
+CSRF_TRUSTED_ORIGINS = ["https://stagingstrafzumessung.applikuapp.com",
+                        "https://www.stagingstrafzumessung.applikuapp.com",
+                        "https://strafzumessung.ch",
+                        "https://www.strafzumessung.ch",
+                        "https://ki.strafzumessung.ch",
+                        "https://www.ki.strafzumessung.ch"]

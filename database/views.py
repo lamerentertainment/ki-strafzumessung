@@ -258,7 +258,7 @@ def prognose(request):
                 "hauptdelikt",
                 exclude_unmarked=True,
             )
-            y_train_df = Urteil.pandas.return_y_zielwerte()
+            y_train_df = Urteil.pandas.return_y_zielwerte(exclude_unmarked=True)
 
             deliktssumme = form.cleaned_data["deliktssumme"]
             nebenverurteilungsscore = form.cleaned_data["nebenverurteilungsscore"]

@@ -371,7 +371,7 @@ def kimodelle_neu_kalibrieren_und_abspeichern():
     content_file.close()
 
     # random forest CLASSIFIER mit ausschliesslich validen features, VOLLZUGSART als zielvariable
-    y = Urteil.pandas.return_y_zielwerte(zielwert="vollzug")
+    y = Urteil.pandas.return_y_zielwerte(zielwert="vollzug", exclude_unmarked=True)
     random_forest_classifier_val_fts = RandomForestClassifier()
     random_forest_classifier_val_fts.fit(x_val, y)
     # leeres prognoseleistung dict, weil dies nicht für classifier geht
@@ -394,7 +394,7 @@ def kimodelle_neu_kalibrieren_und_abspeichern():
     )
 
     # random forest CLASSIFIER mit ausschliesslich validen features, SANKTIONSART als zielvariable
-    y = Urteil.pandas.return_y_zielwerte(zielwert="hauptsanktion")
+    y = Urteil.pandas.return_y_zielwerte(zielwert="hauptsanktion", exclude_unmarked=True)
     rf_classifier_fuer_sanktionsart_val_fts = RandomForestClassifier()
     rf_classifier_fuer_sanktionsart_val_fts.fit(x_val, y)
     # leeres prognoseleistung dict, weil dies nicht für classifier geht

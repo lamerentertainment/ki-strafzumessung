@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.generic import ListView, DetailView
-from .models import Urteil, BetmUrteil, Betm, KIModelPickleFile, DiagrammSVG
+from .models import Urteil, BetmUrteil, BetmArt, KIModelPickleFile, DiagrammSVG
 from .forms import (
     UrteilModelForm,
     UrteilsEckpunkteAbfrageFormular,
@@ -351,38 +351,57 @@ def prognose_betm(request):
                 "bandenmaessig": form.cleaned_data["bandenmaessig"],
                 "gewerbsmaessig": form.cleaned_data["gewerbsmaessig"],
                 "anstaltentreffen": form.cleaned_data["anstaltentreffen"],
-                "mehrfach": form.cleaned_data["mehrfache"],
-                "beschaffungskriminalitaet": form.cleaned_data["beschaffungskriminalitaet"],
+                "mehrfach": form.cleaned_data["mehrfach"],
+                "beschaffungskriminalitaet": form.cleaned_data[
+                    "beschaffungskriminalitaet"
+                ],
                 "deliktsdauer_in_monaten": form.cleaned_data["deliktsdauer_in_monaten"],
                 "nebenverurteilungsscore": form.cleaned_data["nebenverurteilungsscore"],
                 "vorbestraft": form.cleaned_data["vorbestraft"],
-                "vorbestraft_einschlaegig": form.cleaned_data[""],
-                "deliktsertrag": 1000,
-                "urteilsjahr": 2023,
-                "rolle": "Handel",
-                # 0 ist ordentliches Verfahren
-                "verfahrensart": 0,
-                "geschlecht": "männlich",
-                "nationalitaet": "unbekannt",
-                "gericht": "Bezirksgericht Zürich",
-                "kanton": "ZH",
+                "vorbestraft_einschlaegig": form.cleaned_data[
+                    "vorbestraft_einschlaegig"
+                ],
+                "deliktsertrag": form.cleaned_data["deliktsertrag"],
+                "rolle": form.cleaned_data["rolle"],
             }
 
-            betm1 = {
-                "betm_art": cleaned_data_dict["betm1"],
-                "menge_in_g": cleaned_data_dict["betm1_menge"],
-                "rein": cleaned_data_dict["betm1_rein"],
+            betm_1 = {
+                "betm_art": form.cleaned_data["betm1"],
+                "menge_in_g": form.cleaned_data["betm1_menge"],
+                "rein": form.cleaned_data["betm1_rein"],
             }
-            betm2 = {
-                "betm_art": cleaned_data_dict["betm2"],
-                "menge_in_g": cleaned_data_dict["betm2_menge"],
-                "rein": cleaned_data_dict["betm2_rein"],
+            betm_2 = {
+                "betm_art": form.cleaned_data["betm2"],
+                "menge_in_g": form.cleaned_data["betm2_menge"],
+                "rein": form.cleaned_data["betm2_rein"],
             }
-            betm3 = {
-                "betm_art": cleaned_data_dict["betm3"],
-                "menge_in_g": cleaned_data_dict["betm3_menge"],
-                "rein": cleaned_data_dict["betm3_rein"],
+            betm_3 = {
+                "betm_art": form.cleaned_data["betm3"],
+                "menge_in_g": form.cleaned_data["betm3_menge"],
+                "rein": form.cleaned_data["betm3_rein"],
             }
+
+            list_betm = [betm_1, betm_2, betm_3]
+            urteilszeilen = dict()
+            for i, dict_betm in enumerate(list_betm):
+                prognosemerkmale = allgemeine_prognosemerkmale.copy()
+                prognosemerkmale.update(dict_betm)
+                urteilszeilen[i] = prognosemerkmale
+
+            liste_mit_urteilszeilen = [value for value in urteilszeilen.values()]
+            pd_df_mit_prognosewerten = pd.DataFrame(liste_mit_urteilszeilen)
+
+            # damit alle spalten für ohe-betm-arten erstellt werden, musste die liste_der_betmarten
+            # von der ursprünglichen pandas df genommen werden
+            df_prognosewerte_ohe, list_ohe_betm_columns = betmurteile_onehotencoding(
+                pd_df_mit_prognosewerten,
+                liste_der_betmarten=list(BetmArt.objects.all()),
+            )
+            df_prognosewerte_ohe_grouped = betmurteile_zusammenfuegen(
+                df_prognosewerte_ohe, list_ohe_betm_columns
+            )
+
+            # onehotencoding
 
             # give prediction response Vollzug
             vollzugs_modell = kimodell_von_pickle_file_aus_aws_bucket_laden(

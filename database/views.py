@@ -558,7 +558,8 @@ def betm_kimodelle_neu_generieren(request):
     kimodell.encoder.save("betm_encoder.pkl", content_file)
     content_file.close()
 
-    messages.success(request, "Die KI-Modelle wurden erfolgreich aktualisiert.")
+    messages.success(request, "Die KI-Modelle für Betm-Strafrecht wurden erfolgreich aktualisiert.")
+    return redirect("dev_betm")
 
 
 @login_required

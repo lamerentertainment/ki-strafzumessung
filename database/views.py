@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.generic import ListView, DetailView
+from django.core.files.base import ContentFile
 from .models import Urteil, BetmUrteil, BetmArt, KIModelPickleFile, DiagrammSVG
 from .forms import (
     UrteilModelForm,
@@ -402,7 +403,30 @@ def prognose_betm(request):
             )
 
             # onehotencoding
+            encoder = kimodell_von_pickle_file_aus_aws_bucket_laden(
+                "encoders/betm_encoder.pkl"
+            )
+            prognoseleistung_dict = KIModelPickleFile.objects.get(name="betm_rf_classifier_vollzugsart").prognoseleistungs_dict
+            liste_kategoriale_prognosemerkmale = prognoseleistung_dict["liste_kategoriale_merkmale"]
+            liste_numerische_prognosemerkmale = prognoseleistung_dict["liste_numerische_merkmale"]
 
+            cat_fts_onehot = encoder.transform(
+                df_prognosewerte_ohe_grouped[liste_kategoriale_prognosemerkmale]
+            )
+            enc_cat_fts_names = encoder.get_feature_names_out(
+                liste_kategoriale_prognosemerkmale
+            )
+            df_cat_fts = pd.DataFrame(cat_fts_onehot, columns=enc_cat_fts_names)
+
+            df_num_fts = (
+                df_prognosewerte_ohe_grouped[liste_numerische_prognosemerkmale]
+                .reset_index()
+                .drop(["fall_nr"], axis=1)
+            )
+
+            prognosemerkmale_df_preprocessed = pd.concat(
+                [df_cat_fts, df_num_fts], axis=1
+            )
             # give prediction response Vollzug
             vollzugs_modell = kimodell_von_pickle_file_aus_aws_bucket_laden(
                 "betm_rf_classifier_vollzugsart.pkl"
@@ -516,6 +540,8 @@ def betm_kimodelle_neu_generieren(request):
 
     prognoseleistung_dict = dict()
     prognoseleistung_dict["oob_score_class_vollzugsart"] = oob_score
+    prognoseleistung_dict["liste_kategoriale_prognosemerkmale"] = liste_kategoriale_prognosemerkmale
+    prognoseleistung_dict["liste_numerische_prognosemerkmale"] = liste_numerische_prognosemerkmale
 
     # kimodell als pickle file speichern
     ki_modell_als_pickle_file_speichern(
@@ -524,6 +550,13 @@ def betm_kimodelle_neu_generieren(request):
         filename="betm_rf_classifier_vollzugsart.pkl",
         prognoseleistung_dict=prognoseleistung_dict,
     )
+
+    # den onehotencoder für späteren transform der eingeabwerte abspeichern
+    kimodell = KIModelPickleFile.objects.get(name="betm_rf_classifier_vollzugsart")
+    content = pickle.dumps(encoder)
+    content_file = ContentFile(content)
+    kimodell.encoder.save("betm_encoder.pkl", content_file)
+    content_file.close()
 
     messages.success(request, "Die KI-Modelle wurden erfolgreich aktualisiert.")
 

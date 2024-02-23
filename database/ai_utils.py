@@ -1215,6 +1215,7 @@ def betmurteile_fehlende_werte_auffuellen(pd_df, spalten_mit_fehlenden_werten=No
 
     return pd_df
 
+
 def onehotx_und_y_erstellen_from_dataframe(pandas_dataframe,
                             categorial_ft_dbfields=None,
                             numerical_ft_dbfields=None,

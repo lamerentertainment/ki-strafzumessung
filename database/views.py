@@ -366,6 +366,15 @@ def prognose_betm(request):
                 "rolle": form.cleaned_data["rolle"],
             }
 
+            # wenn die typen nicht string gibt, gibt es später probleme beim groupby agg
+            def _convert_django_types_to_string(dict_):
+                for key, value in dict_.items():
+                    if value is not None and not isinstance(value, (bool, float, str, int)):
+                        dict_[key] = value.name
+                        return dict_
+
+            allgemeine_prognosemerkmale = _convert_django_types_to_string(allgemeine_prognosemerkmale)
+
             betm_1 = {
                 "betm_art": form.cleaned_data["betm1"],
                 "menge_in_g": form.cleaned_data["betm1_menge"],
@@ -381,6 +390,10 @@ def prognose_betm(request):
                 "menge_in_g": form.cleaned_data["betm3_menge"],
                 "rein": form.cleaned_data["betm3_rein"],
             }
+
+            betm_1 = _convert_django_types_to_string(betm_1)
+            betm_2 = _convert_django_types_to_string(betm_2)
+            betm_3 = _convert_django_types_to_string(betm_3)
 
             list_betm = [betm_1, betm_2, betm_3]
             urteilszeilen = dict()
@@ -399,16 +412,23 @@ def prognose_betm(request):
                 liste_der_betmarten=list(BetmArt.objects.all()),
             )
             df_prognosewerte_ohe_grouped = betmurteile_zusammenfuegen(
-                df_prognosewerte_ohe, list_ohe_betm_columns
+                pd_df=df_prognosewerte_ohe,
+                liste_aller_ohe_betm_spalten=list_ohe_betm_columns,
             )
 
             # onehotencoding
             encoder = kimodell_von_pickle_file_aus_aws_bucket_laden(
                 "encoders/betm_encoder.pkl"
             )
-            prognoseleistung_dict = KIModelPickleFile.objects.get(name="betm_rf_classifier_vollzugsart").prognoseleistungs_dict
-            liste_kategoriale_prognosemerkmale = prognoseleistung_dict["liste_kategoriale_merkmale"]
-            liste_numerische_prognosemerkmale = prognoseleistung_dict["liste_numerische_merkmale"]
+            prognoseleistung_dict = KIModelPickleFile.objects.get(
+                name="betm_rf_classifier_vollzugsart"
+            ).prognoseleistungs_dict
+            liste_kategoriale_prognosemerkmale = prognoseleistung_dict[
+                "liste_kategoriale_merkmale"
+            ]
+            liste_numerische_prognosemerkmale = prognoseleistung_dict[
+                "liste_numerische_merkmale"
+            ]
 
             cat_fts_onehot = encoder.transform(
                 df_prognosewerte_ohe_grouped[liste_kategoriale_prognosemerkmale]
@@ -540,8 +560,12 @@ def betm_kimodelle_neu_generieren(request):
 
     prognoseleistung_dict = dict()
     prognoseleistung_dict["oob_score_class_vollzugsart"] = oob_score
-    prognoseleistung_dict["liste_kategoriale_prognosemerkmale"] = liste_kategoriale_prognosemerkmale
-    prognoseleistung_dict["liste_numerische_prognosemerkmale"] = liste_numerische_prognosemerkmale
+    prognoseleistung_dict[
+        "liste_kategoriale_prognosemerkmale"
+    ] = liste_kategoriale_prognosemerkmale
+    prognoseleistung_dict[
+        "liste_numerische_prognosemerkmale"
+    ] = liste_numerische_prognosemerkmale
 
     # kimodell als pickle file speichern
     ki_modell_als_pickle_file_speichern(
@@ -558,7 +582,9 @@ def betm_kimodelle_neu_generieren(request):
     kimodell.encoder.save("betm_encoder.pkl", content_file)
     content_file.close()
 
-    messages.success(request, "Die KI-Modelle für Betm-Strafrecht wurden erfolgreich aktualisiert.")
+    messages.success(
+        request, "Die KI-Modelle für Betm-Strafrecht wurden erfolgreich aktualisiert."
+    )
     return redirect("dev_betm")
 
 

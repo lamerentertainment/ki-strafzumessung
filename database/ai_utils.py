@@ -1183,6 +1183,7 @@ def betmurteile_zusammenfuegen(pd_df, liste_aller_ohe_betm_spalten):
         _agg_dict[ohe_betm_spalte] = np.sum
     for column_name in restliche_spalten:
         _agg_dict[column_name] = np.max
+    dtypes = pd_df.dtypes
     # agg funktion macht nur einen summenmässige aggregation auf den columns, die im _agg_dict bezeichnet worden sind
     grouped_pd_df = pd_df.groupby(["fall_nr"]).agg(_agg_dict)
     # gemisch zu 1/3 auf rein aufrechnen, gemisch Spalte löschen

@@ -371,7 +371,7 @@ def prognose_betm(request):
                 for key, value in dict_.items():
                     if value is not None and not isinstance(value, (bool, float, str, int)):
                         dict_[key] = value.name
-                        return dict_
+                return dict_
 
             allgemeine_prognosemerkmale = _convert_django_types_to_string(allgemeine_prognosemerkmale)
 
@@ -407,10 +407,14 @@ def prognose_betm(request):
 
             # damit alle spalten für ohe-betm-arten erstellt werden, musste die liste_der_betmarten
             # von der ursprünglichen pandas df genommen werden
+            liste_der_betmarten = list(BetmArt.objects.all())
+            liste_der_betmarten_strings = [betmart.name for betmart in liste_der_betmarten]
+
             df_prognosewerte_ohe, list_ohe_betm_columns = betmurteile_onehotencoding(
                 pd_df_mit_prognosewerten,
-                liste_der_betmarten=list(BetmArt.objects.all()),
+                liste_der_betmarten=liste_der_betmarten_strings,
             )
+            df_prognosewerte_ohe.drop(labels=["betm_art", "menge_in_g"], axis=1, inplace=True)
             df_prognosewerte_ohe_grouped = betmurteile_zusammenfuegen(
                 pd_df=df_prognosewerte_ohe,
                 liste_aller_ohe_betm_spalten=list_ohe_betm_columns,

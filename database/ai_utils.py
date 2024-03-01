@@ -1187,11 +1187,22 @@ def betmurteile_zusammenfuegen(pd_df, liste_aller_ohe_betm_spalten):
     # agg funktion macht nur einen summenmässige aggregation auf den columns, die im _agg_dict bezeichnet worden sind
     grouped_pd_df = pd_df.groupby(["fall_nr"]).agg(_agg_dict)
     # gemisch zu 1/3 auf rein aufrechnen, gemisch Spalte löschen
-    for betmart in pd_df.betm_art.unique():
-        grouped_pd_df[f"{betmart}_rein"] = (
-            grouped_pd_df[f"{betmart}_rein"] + grouped_pd_df[f"{betmart}_gemisch"] / 3
-        )
-        grouped_pd_df.drop([f"{betmart}_gemisch"], axis=1, inplace=True)
+    if "betm_art" in pd_df:
+        for betmart in pd_df.betm_art.unique():
+            grouped_pd_df[f"{betmart}_rein"] = (
+                grouped_pd_df[f"{betmart}_rein"] + grouped_pd_df[f"{betmart}_gemisch"] / 3
+            )
+            grouped_pd_df.drop([f"{betmart}_gemisch"], axis=1, inplace=True)
+    else:
+        # split('_')[0] gibt alles vor dem underscore aus
+        # dieses else ist für die prognosesamples nötig, weil die spalte betm_art vorher gelöscht wurde, da es mit
+        # dieser Spalte mutmasslich Probleme beim aggreggieren gab (unterschiedliche typen)
+        betmart_liste = [entry.split('_')[0] for entry in liste_aller_ohe_betm_spalten]
+        for betmart in betmart_liste:
+            grouped_pd_df[f"{betmart}_rein"] = (
+                grouped_pd_df[f"{betmart}_rein"] + grouped_pd_df[f"{betmart}_gemisch"] / 3
+            )
+            grouped_pd_df.drop([f"{betmart}_gemisch"], axis=1, inplace=True)
     return grouped_pd_df
 
 

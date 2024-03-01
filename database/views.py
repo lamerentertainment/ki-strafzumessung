@@ -369,11 +369,15 @@ def prognose_betm(request):
             # wenn die typen nicht string gibt, gibt es später probleme beim groupby agg
             def _convert_django_types_to_string(dict_):
                 for key, value in dict_.items():
-                    if value is not None and not isinstance(value, (bool, float, str, int)):
+                    if value is not None and not isinstance(
+                        value, (bool, float, str, int)
+                    ):
                         dict_[key] = value.name
                 return dict_
 
-            allgemeine_prognosemerkmale = _convert_django_types_to_string(allgemeine_prognosemerkmale)
+            allgemeine_prognosemerkmale = _convert_django_types_to_string(
+                allgemeine_prognosemerkmale
+            )
 
             betm_1 = {
                 "betm_art": form.cleaned_data["betm1"],
@@ -408,13 +412,17 @@ def prognose_betm(request):
             # damit alle spalten für ohe-betm-arten erstellt werden, musste die liste_der_betmarten
             # von der ursprünglichen pandas df genommen werden
             liste_der_betmarten = list(BetmArt.objects.all())
-            liste_der_betmarten_strings = [betmart.name for betmart in liste_der_betmarten]
+            liste_der_betmarten_strings = [
+                betmart.name for betmart in liste_der_betmarten
+            ]
 
             df_prognosewerte_ohe, list_ohe_betm_columns = betmurteile_onehotencoding(
                 pd_df_mit_prognosewerten,
                 liste_der_betmarten=liste_der_betmarten_strings,
             )
-            df_prognosewerte_ohe.drop(labels=["betm_art", "menge_in_g"], axis=1, inplace=True)
+            df_prognosewerte_ohe.drop(
+                labels=["betm_art", "menge_in_g"], axis=1, inplace=True
+            )
             df_prognosewerte_ohe_grouped = betmurteile_zusammenfuegen(
                 pd_df=df_prognosewerte_ohe,
                 liste_aller_ohe_betm_spalten=list_ohe_betm_columns,
@@ -424,15 +432,12 @@ def prognose_betm(request):
             encoder = kimodell_von_pickle_file_aus_aws_bucket_laden(
                 "encoders/betm_encoder.pkl"
             )
-            prognoseleistung_dict = KIModelPickleFile.objects.get(
+            liste_kategoriale_prognosemerkmale = KIModelPickleFile.objects.get(
                 name="betm_rf_classifier_vollzugsart"
-            ).prognoseleistungs_dict
-            liste_kategoriale_prognosemerkmale = prognoseleistung_dict[
-                "liste_kategoriale_merkmale"
-            ]
-            liste_numerische_prognosemerkmale = prognoseleistung_dict[
-                "liste_numerische_merkmale"
-            ]
+            ).prognoseleistung_dict["liste_kategoriale_prognosemerkmale"]
+            liste_numerische_prognosemerkmale = KIModelPickleFile.objects.get(
+                name="betm_rf_classifier_vollzugsart"
+            ).prognoseleistung_dict["liste_numerische_prognosemerkmale"]
 
             cat_fts_onehot = encoder.transform(
                 df_prognosewerte_ohe_grouped[liste_kategoriale_prognosemerkmale]
@@ -453,15 +458,16 @@ def prognose_betm(request):
             )
             # give prediction response Vollzug
             vollzugs_modell = kimodell_von_pickle_file_aus_aws_bucket_laden(
-                "betm_rf_classifier_vollzugsart.pkl"
+                "pickles/betm_rf_classifier_vollzugsart.pkl"
             )
-            vorhersage_vollzug = vollzugs_modell.predict(sample)
+            vorhersage_vollzug = vollzugs_modell.predict(prognosemerkmale_df_preprocessed)
 
             return render(
                 request,
-                "database/prognose.html",
+                "database/prognose_betm.html",
                 {
                     "form": form,
+                    "vorhersage_vollzug": vorhersage_vollzug
                 },
             )
 
@@ -537,13 +543,11 @@ def betm_kimodelle_neu_generieren(request):
         "vorbestraft",
         "vorbestraft_einschlaegig",
         "rolle",
-        "kanton",
     ]
     liste_numerische_prognosemerkmale = [
         "nebenverurteilungsscore",
         "deliktsertrag",
         "deliktsdauer_in_monaten",
-        "urteilsjahr",
     ]
     liste_numerische_prognosemerkmale.extend(liste_aller_ohe_betm_spalten)
 

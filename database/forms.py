@@ -46,7 +46,7 @@ class BetmUrteilsEckpunkteAbfrageFormular(forms.Form):
     betm1_menge = forms.IntegerField(
         help_text="Menge in Gramm oder Einheiten", label="Menge"
     )
-    betm1_rein = forms.BooleanField(initial=True, label="Rein?")
+    betm1_rein = forms.BooleanField(initial=True, label="Rein?", required=False)
     betm2 = forms.ModelChoiceField(
         queryset=BetmArt.objects.all(),
         label="Betäubungsmittelart",

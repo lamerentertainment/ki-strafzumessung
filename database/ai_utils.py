@@ -1180,9 +1180,9 @@ def betmurteile_zusammenfuegen(pd_df, liste_aller_ohe_betm_spalten):
     _agg_dict = {}
     restliche_spalten = [i for i in pd_df.columns if i not in liste_aller_ohe_betm_spalten]
     for ohe_betm_spalte in liste_aller_ohe_betm_spalten:
-        _agg_dict[ohe_betm_spalte] = np.sum
+        _agg_dict[ohe_betm_spalte] = "sum"
     for column_name in restliche_spalten:
-        _agg_dict[column_name] = np.max
+        _agg_dict[column_name] = "max"
     dtypes = pd_df.dtypes
     # agg funktion macht nur einen summenmässige aggregation auf den columns, die im _agg_dict bezeichnet worden sind
     grouped_pd_df = pd_df.groupby(["fall_nr"]).agg(_agg_dict)

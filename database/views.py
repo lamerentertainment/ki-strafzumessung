@@ -460,15 +460,26 @@ def prognose_betm(request):
             vollzugs_modell = kimodell_von_pickle_file_aus_aws_bucket_laden(
                 "pickles/betm_rf_classifier_vollzugsart.pkl"
             )
-            vorhersage_vollzug = vollzugs_modell.predict(prognosemerkmale_df_preprocessed)
+            vorhersage_vollzug = vollzugs_modell.predict(
+                prognosemerkmale_df_preprocessed
+            )
+            strafmass_modell = kimodell_von_pickle_file_aus_aws_bucket_laden(
+                "pickles/betm_rf_regressor_strafmass.pkl"
+            )
+            vorhersage_strafmass = strafmass_modell.predict(
+                prognosemerkmale_df_preprocessed
+            )
+
+            context = {
+                "form": form,
+                "vorhersage_vollzug": vorhersage_vollzug,
+                "vorhersage_strafmass": vorhersage_strafmass
+            }
 
             return render(
                 request,
                 "database/prognose_betm.html",
-                {
-                    "form": form,
-                    "vorhersage_vollzug": vorhersage_vollzug
-                },
+                context,
             )
 
     # if a GET (or any other method) we'll create a blank form
@@ -583,6 +594,45 @@ def betm_kimodelle_neu_generieren(request):
         prognoseleistung_dict=prognoseleistung_dict,
     )
 
+    y_strafmass = (
+        (df_urteile["anzahl_tagessaetze"] / 30)
+        .where(
+            df_urteile["freiheitsstrafe_in_monaten"] == 0,
+            df_urteile["freiheitsstrafe_in_monaten"],
+        )
+        .values.ravel()
+    )
+
+    from sklearn.ensemble import RandomForestRegressor
+
+    regressor_fuer_strafmass = RandomForestRegressor(oob_score=True)
+    regressor_fuer_strafmass.fit(X_ohe, y_strafmass)
+
+    def durchschnittlicher_fehler_berechnen(regressor, y):
+        liste_mit_zielwert_prognose_tuples = list(zip(y, regressor.oob_prediction_))
+        liste_mit_fehler = []
+        for t in liste_mit_zielwert_prognose_tuples:
+            fehler = abs(t[0] - t[1])
+            liste_mit_fehler.append(fehler)
+        durchschnittswert = sum(liste_mit_fehler) / len(liste_mit_fehler)
+        return durchschnittswert
+
+    durchschnittlicher_fehler = durchschnittlicher_fehler_berechnen(
+        regressor_fuer_strafmass, y_strafmass
+    )
+    prognoseleistung_dict_regressor = dict()
+    prognoseleistung_dict_regressor[
+        "durchschnittlicher_fehler"
+    ] = f"Der durchnittliche Strafmassprognosefehler bei einer Prognose jeweils mit dem OOB-leftout beträgt {round(durchschnittlicher_fehler,2)} Monate."
+
+    # kimodell als pickle file speichern
+    ki_modell_als_pickle_file_speichern(
+        instanziertes_kimodel=regressor_fuer_strafmass,
+        name="betm_rf_regressor_strafmass",
+        filename="betm_rf_regressor_strafmass.pkl",
+        prognoseleistung_dict=prognoseleistung_dict_regressor,
+    )
+
     # den onehotencoder für späteren transform der eingeabwerte abspeichern
     kimodell = KIModelPickleFile.objects.get(name="betm_rf_classifier_vollzugsart")
     content = pickle.dumps(encoder)
@@ -605,7 +655,14 @@ def dev_betm(request):
         name="betm_rf_classifier_vollzugsart"
     ).prognoseleistung_dict["oob_score_class_vollzugsart"]
 
-    context = {"liste": oob_score}
+    durchschnittlicher_fehler = KIModelPickleFile.objects.get(
+        name="betm_rf_regressor_strafmass"
+    ).prognoseleistung_dict["durchschnittlicher_fehler"]
+
+    context = {
+        "string_oob_vollzugsart": oob_score,
+        "durchschnittlicher_fehler": durchschnittlicher_fehler
+    }
     return render(request, "database/dev_betm.html", context=context)
 
 

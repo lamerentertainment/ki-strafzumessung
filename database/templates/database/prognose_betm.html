@@ -44,7 +44,10 @@
         {% if form.is_valid %}
         <div>
             <h1>Vorhersage</h1>
-            Vorhersage Vollzug: {{ vorhersage_vollzug }}
+            <ul>
+                <li>Vorhersage Strafmass: {{ vorhersage_strafmass }} Monatseinheiten</li>
+                <li>Vorhersage Vollzug: {{ vorhersage_vollzug }}</li>
+            </ul>
         </div>
         {% endif %}
 

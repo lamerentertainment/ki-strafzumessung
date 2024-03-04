@@ -31,6 +31,8 @@ from .ai_utils import (
     betmurteile_zusammenfuegen,
     betmurteile_fehlende_werte_auffuellen,
     onehotx_und_y_erstellen_from_dataframe,
+    merkmalswichtigkeitslistegenerator,
+    merkmale_in_merkmalswichtigkeitsliste_zusammenfassen,
 )
 from .db_utils import (
     kategorie_scatterplot_erstellen,
@@ -410,7 +412,7 @@ def prognose_betm(request):
             pd_df_mit_prognosewerten = pd.DataFrame(liste_mit_urteilszeilen)
 
             # damit alle spalten für ohe-betm-arten erstellt werden, musste die liste_der_betmarten
-            # von der ursprünglichen pandas df genommen werden
+            # von der ursprünglichen pandas df genommen werden, danach in strings konvertieren
             liste_der_betmarten = list(BetmArt.objects.all())
             liste_der_betmarten_strings = [
                 betmart.name for betmart in liste_der_betmarten
@@ -473,7 +475,7 @@ def prognose_betm(request):
             context = {
                 "form": form,
                 "vorhersage_vollzug": vorhersage_vollzug,
-                "vorhersage_strafmass": vorhersage_strafmass
+                "vorhersage_strafmass": vorhersage_strafmass,
             }
 
             return render(
@@ -575,10 +577,33 @@ def betm_kimodelle_neu_generieren(request):
     classifier_fuer_vollzugsart = RandomForestClassifier(oob_score=True)
     classifier_fuer_vollzugsart.fit(X_ohe, y_vollzugsart)
 
+    merkmalswichtigkeit_fuer_prognose_vollzugsart = merkmalswichtigkeitslistegenerator(
+        classifier_fuer_vollzugsart
+    )
+
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_vollzugsart = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            merkmalswichtigkeit_fuer_prognose_vollzugsart,
+            liste_mit_zusammenfassenden_merkmalen=liste_aller_ohe_betm_spalten,
+        )
+    )
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_vollzugsart = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            zusammengefasste_merkmalswichtigkeit_fuer_prognose_vollzugsart,
+            liste_mit_zusammenfassenden_merkmalen=[
+                f"rolle_{rolle}" for rolle in df_urteile.rolle.unique()
+            ],
+            neuer_merkmalsname="Rolle",
+        )
+    )
+
     oob_score = f"OOB-Score für Vollzugsart-Prädiktor: {round(classifier_fuer_vollzugsart.oob_score_*100, 1)}%"
 
     prognoseleistung_dict = dict()
     prognoseleistung_dict["oob_score_class_vollzugsart"] = oob_score
+    prognoseleistung_dict[
+        "merkmalswichtigkeit_fuer_prognose_vollzugsart"
+    ] = zusammengefasste_merkmalswichtigkeit_fuer_prognose_vollzugsart
     prognoseleistung_dict[
         "liste_kategoriale_prognosemerkmale"
     ] = liste_kategoriale_prognosemerkmale
@@ -625,6 +650,27 @@ def betm_kimodelle_neu_generieren(request):
         "durchschnittlicher_fehler"
     ] = f"Der durchnittliche Strafmassprognosefehler bei einer Prognose jeweils mit dem OOB-leftout beträgt {round(durchschnittlicher_fehler,2)} Monate."
 
+    merkmalswichtigkeit_fuer_prognose_strafmass = merkmalswichtigkeitslistegenerator(
+        regressor_fuer_strafmass
+    )
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            merkmalswichtigkeit_fuer_prognose_strafmass,
+            liste_mit_zusammenfassenden_merkmalen=liste_aller_ohe_betm_spalten,
+        )
+    )
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass,
+            liste_mit_zusammenfassenden_merkmalen=[
+                f"rolle_{rolle}" for rolle in df_urteile.rolle.unique()
+            ],
+            neuer_merkmalsname="Rolle",
+        )
+    )
+
+    prognoseleistung_dict_regressor["merkmalswichtigkeit_fuer_prognose_strafmass"] = zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass
+
     # kimodell als pickle file speichern
     ki_modell_als_pickle_file_speichern(
         instanziertes_kimodel=regressor_fuer_strafmass,
@@ -648,20 +694,30 @@ def betm_kimodelle_neu_generieren(request):
 
 @login_required
 def dev_betm(request):
-    classifier_vollzugsart = kimodell_von_pickle_file_aus_aws_bucket_laden(
-        filepath="pickles/betm_rf_classifier_vollzugsart.pkl"
-    )
-    oob_score = KIModelPickleFile.objects.get(
+    prognoseleistung_dict_vollzugsart = KIModelPickleFile.objects.get(
         name="betm_rf_classifier_vollzugsart"
-    ).prognoseleistung_dict["oob_score_class_vollzugsart"]
+    ).prognoseleistung_dict
 
-    durchschnittlicher_fehler = KIModelPickleFile.objects.get(
+    oob_score_vollzugsart = prognoseleistung_dict_vollzugsart[
+        "oob_score_class_vollzugsart"
+    ]
+    merkmalswichtigkeit_fuer_prognose_vollzugsart = prognoseleistung_dict_vollzugsart[
+        "merkmalswichtigkeit_fuer_prognose_vollzugsart"
+    ]
+
+
+    prognoseleistung_dict_strafmass = KIModelPickleFile.objects.get(
         name="betm_rf_regressor_strafmass"
-    ).prognoseleistung_dict["durchschnittlicher_fehler"]
+    ).prognoseleistung_dict
+
+    durchschnittlicher_fehler = prognoseleistung_dict_strafmass["durchschnittlicher_fehler"]
+    merkmalswichtigkeit_fuer_prognose_strafmass = prognoseleistung_dict_strafmass["merkmalswichtigkeit_fuer_prognose_strafmass"]
 
     context = {
-        "string_oob_vollzugsart": oob_score,
-        "durchschnittlicher_fehler": durchschnittlicher_fehler
+        "string_oob_vollzugsart": oob_score_vollzugsart,
+        "merkmalswichtigkeit_prognose_vollzugsart": merkmalswichtigkeit_fuer_prognose_vollzugsart,
+        "durchschnittlicher_fehler": durchschnittlicher_fehler,
+        "merkmalswichtigkeit_fuer_prognose_strafmass": merkmalswichtigkeit_fuer_prognose_strafmass
     }
     return render(request, "database/dev_betm.html", context=context)
 

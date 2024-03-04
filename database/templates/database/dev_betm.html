@@ -13,8 +13,27 @@
     {% autoescape off %}
         <ul>
             <li>{{ string_oob_vollzugsart }}</li>
+            <li>Merkmalswichtigkeit für Vollzugsprognose: {{ merkmalswichtigkeit_prognose_vollzugsart }}</li>
             <li>{{ durchschnittlicher_fehler }}</li>
+            <li>Merkmalswichtigkeit für Prognose Strafmass: {{ merkmalswichtigkeit_fuer_prognose_strafmass }}</li>
         </ul>
+        <h4>Merkmalswichtigkeit für Vollzugsprognose</h4>
+        <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Wichtigkeit</th>
+                        <th>Merkmal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for list_ in merkmalswichtigkeit_prognose_vollzugsart %}
+                        <tr>
+                            <td>{{ list_.1|floatformat }} %</td>
+                            <td>{{ list_.0|capfirst }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
     {% endautoescape %}
 
     </section>

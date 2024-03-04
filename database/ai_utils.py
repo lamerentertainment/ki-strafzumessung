@@ -394,7 +394,9 @@ def kimodelle_neu_kalibrieren_und_abspeichern():
     )
 
     # random forest CLASSIFIER mit ausschliesslich validen features, SANKTIONSART als zielvariable
-    y = Urteil.pandas.return_y_zielwerte(zielwert="hauptsanktion", exclude_unmarked=True)
+    y = Urteil.pandas.return_y_zielwerte(
+        zielwert="hauptsanktion", exclude_unmarked=True
+    )
     rf_classifier_fuer_sanktionsart_val_fts = RandomForestClassifier()
     rf_classifier_fuer_sanktionsart_val_fts.fit(x_val, y)
     # leeres prognoseleistung dict, weil dies nicht für classifier geht
@@ -1178,7 +1180,9 @@ def betmurteile_zusammenfuegen(pd_df, liste_aller_ohe_betm_spalten):
     Diese müssen zusammengefügt werden."""
     # dict erstellen, welches jeder spalte einzeln die aggreggierungsfunktion zuweist
     _agg_dict = {}
-    restliche_spalten = [i for i in pd_df.columns if i not in liste_aller_ohe_betm_spalten]
+    restliche_spalten = [
+        i for i in pd_df.columns if i not in liste_aller_ohe_betm_spalten
+    ]
     for ohe_betm_spalte in liste_aller_ohe_betm_spalten:
         _agg_dict[ohe_betm_spalte] = "sum"
     for column_name in restliche_spalten:
@@ -1190,17 +1194,19 @@ def betmurteile_zusammenfuegen(pd_df, liste_aller_ohe_betm_spalten):
     if "betm_art" in pd_df:
         for betmart in pd_df.betm_art.unique():
             grouped_pd_df[f"{betmart}_rein"] = (
-                grouped_pd_df[f"{betmart}_rein"] + grouped_pd_df[f"{betmart}_gemisch"] / 3
+                grouped_pd_df[f"{betmart}_rein"]
+                + grouped_pd_df[f"{betmart}_gemisch"] / 3
             )
             grouped_pd_df.drop([f"{betmart}_gemisch"], axis=1, inplace=True)
     else:
         # split('_')[0] gibt alles vor dem underscore aus
         # dieses else ist für die prognosesamples nötig, weil die spalte betm_art vorher gelöscht wurde, da es mit
         # dieser Spalte mutmasslich Probleme beim aggreggieren gab (unterschiedliche typen)
-        betmart_liste = [entry.split('_')[0] for entry in liste_aller_ohe_betm_spalten]
+        betmart_liste = [entry.split("_")[0] for entry in liste_aller_ohe_betm_spalten]
         for betmart in betmart_liste:
             grouped_pd_df[f"{betmart}_rein"] = (
-                grouped_pd_df[f"{betmart}_rein"] + grouped_pd_df[f"{betmart}_gemisch"] / 3
+                grouped_pd_df[f"{betmart}_rein"]
+                + grouped_pd_df[f"{betmart}_gemisch"] / 3
             )
             grouped_pd_df.drop([f"{betmart}_gemisch"], axis=1, inplace=True)
     return grouped_pd_df
@@ -1228,11 +1234,13 @@ def betmurteile_fehlende_werte_auffuellen(pd_df, spalten_mit_fehlenden_werten=No
     return pd_df
 
 
-def onehotx_und_y_erstellen_from_dataframe(pandas_dataframe,
-                            categorial_ft_dbfields=None,
-                            numerical_ft_dbfields=None,
-                            target_dbfields=None,
-                            return_encoder=False):
+def onehotx_und_y_erstellen_from_dataframe(
+    pandas_dataframe,
+    categorial_ft_dbfields=None,
+    numerical_ft_dbfields=None,
+    target_dbfields=None,
+    return_encoder=False,
+):
     """
     :param pandas_dataframe: ein Pandas Datenframe
     :param categorial_ft_dbfields: eine Liste mit den kategorialen Datenbank-Feldern
@@ -1245,17 +1253,23 @@ def onehotx_und_y_erstellen_from_dataframe(pandas_dataframe,
     fall_nr_index = pandas_dataframe.index
 
     # 1hot encoding der kategorialen variablen
-    encoder = OneHotEncoder(drop='if_binary', sparse_output=False)
+    encoder = OneHotEncoder(drop="if_binary", sparse_output=False)
     encoder.fit(pandas_dataframe[categorial_ft_dbfields])
     categorical_1hot = encoder.transform(pandas_dataframe[categorial_ft_dbfields])
     encoder_categorical_ft_names = encoder.get_feature_names_out(categorial_ft_dbfields)
-    df_categorical_1hot = pd.DataFrame(categorical_1hot, columns=encoder_categorical_ft_names, index=fall_nr_index)
+    df_categorical_1hot = pd.DataFrame(
+        categorical_1hot, columns=encoder_categorical_ft_names, index=fall_nr_index
+    )
 
     # für numerische features eine pandas df mit selbem index kreieren
-    dataframe_mit_numerischen_werten_und_fallnr_index = pd.DataFrame(pandas_dataframe[numerical_ft_dbfields], index=fall_nr_index)
+    dataframe_mit_numerischen_werten_und_fallnr_index = pd.DataFrame(
+        pandas_dataframe[numerical_ft_dbfields], index=fall_nr_index
+    )
 
     # df der 1hot-kodierten features mit df der numerischen features zusammenfügen
-    x = pd.concat([df_categorical_1hot, dataframe_mit_numerischen_werten_und_fallnr_index], axis=1)
+    x = pd.concat(
+        [df_categorical_1hot, dataframe_mit_numerischen_werten_und_fallnr_index], axis=1
+    )
 
     # y erstellen
     if len(target_dbfields) == 1:
@@ -1268,3 +1282,56 @@ def onehotx_und_y_erstellen_from_dataframe(pandas_dataframe,
     else:
         return x, y
 
+
+def merkmalswichtigkeitslistegenerator(instanzierter_estimator):
+    """Gibt eine sortierte Liste mit der vom KI-Modell eruierten Merkmalswichtigkeit aus"""
+    _liste_mit_merkmalswichtigkeiten = list(
+        zip(
+            instanzierter_estimator.feature_names_in_,
+            instanzierter_estimator.feature_importances_,
+        )
+    )
+    _sortierte_liste_mit_merkmalswichtigkeiten = sorted(
+        _liste_mit_merkmalswichtigkeiten,
+        key=lambda merkmal_wichtigkeit_tuple: merkmal_wichtigkeit_tuple[1],
+        reverse=True,
+    )
+    _sortierte_liste_mit_merkmalswichtigkeiten = [
+        (merkmal_wichtigkeit_tuple[0], round(merkmal_wichtigkeit_tuple[1] * 100, 3))
+        for merkmal_wichtigkeit_tuple in _sortierte_liste_mit_merkmalswichtigkeiten
+    ]
+    return _sortierte_liste_mit_merkmalswichtigkeiten
+
+
+def merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+    merkmalswichtigkeitsliste,
+    liste_mit_zusammenfassenden_merkmalen,
+    neuer_merkmalsname="Menge Betäubungsmittel",
+):
+    dict_mit_zusammengefasster_wichtigkeit = {neuer_merkmalsname: 0}
+    for tuple_ in merkmalswichtigkeitsliste.copy():
+        if tuple_[0] in liste_mit_zusammenfassenden_merkmalen:
+            dict_mit_zusammengefasster_wichtigkeit[neuer_merkmalsname] += tuple_[1]
+    merkmalswichtigkeitsliste.append(
+        (neuer_merkmalsname, dict_mit_zusammengefasster_wichtigkeit[neuer_merkmalsname])
+    )
+    # neue Liste erstellen, in welche die zuvor zusammengefassten Merkmale nicht mitübernommen werden
+    _zusammengefasste_merkmalswichtigkeitsliste = []
+    for tuple_ in merkmalswichtigkeitsliste:
+        if tuple_[0] not in liste_mit_zusammenfassenden_merkmalen:
+            _zusammengefasste_merkmalswichtigkeitsliste.append(tuple_)
+    # neu sortieren
+    _sortierte_zusammengefasste_merkmalswichtigkeitsliste = sorted(
+        _zusammengefasste_merkmalswichtigkeitsliste,
+        key=lambda merkmal_wichtigkeit_tuple: merkmal_wichtigkeit_tuple[1],
+        reverse=True,
+    )
+    # runden
+    _sortierte_zusammengefasste_merkmalswichtigkeitsliste = [
+        (merkmal_string, round(wichtigkeit, 2))
+        for (
+            merkmal_string,
+            wichtigkeit,
+        ) in _sortierte_zusammengefasste_merkmalswichtigkeitsliste
+    ]
+    return _sortierte_zusammengefasste_merkmalswichtigkeitsliste

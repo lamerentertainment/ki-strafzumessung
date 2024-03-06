@@ -7,7 +7,17 @@
         {% comment %}<p>Die Prognose erfolgt auf Grundlage des folgendem <a href="{% url 'database' %}">Datensatzes</a> und der darauf
             aufbauendem <a href="{% url 'kimodel_evaluation' %}">KI-Modelle</a>. 
             Die Funktionsweise der KI-Modelle wird <a href="{% url 'text' %}">hier</a> erklärt.</p>{% endcomment %}
-
+        {% if form.is_valid %}
+        <section>
+            <h1>Vorhersage</h1>
+            <ul>
+                <li>Vorhersage Strafmass: {{ vorhersage_strafmass }} Monatseinheiten</li>
+                <li>Vorhersage Hauptsanktion: {{ vorhersage_hauptsanktion }} </li>
+                <li>Vorhersage Vollzug: {{ vorhersage_vollzug }}</li>
+            </ul>
+        </section>
+        {% endif %}
+    
         <div class="col-4">
             <form action="" method="post">
                     {% csrf_token %}
@@ -41,15 +51,7 @@
                 </form>
         </div>
 
-        {% if form.is_valid %}
-        <div>
-            <h1>Vorhersage</h1>
-            <ul>
-                <li>Vorhersage Strafmass: {{ vorhersage_strafmass }} Monatseinheiten</li>
-                <li>Vorhersage Vollzug: {{ vorhersage_vollzug }}</li>
-            </ul>
-        </div>
-        {% endif %}
+        
 
         {% if form.is_valid %}
         <div>

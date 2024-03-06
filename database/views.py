@@ -459,6 +459,12 @@ def prognose_betm(request):
                 [df_cat_fts, df_num_fts], axis=1
             )
             # give prediction response Vollzug
+            hauptsanktions_modell = kimodell_von_pickle_file_aus_aws_bucket_laden(
+                "pickles/betm_rf_classifier_sanktion.pkl"
+            )
+            vorhersage_hauptsanktion = hauptsanktions_modell.predict(
+                prognosemerkmale_df_preprocessed
+            )
             vollzugs_modell = kimodell_von_pickle_file_aus_aws_bucket_laden(
                 "pickles/betm_rf_classifier_vollzugsart.pkl"
             )
@@ -472,9 +478,57 @@ def prognose_betm(request):
                 prognosemerkmale_df_preprocessed
             )
 
+            # nearest neighbors
+            df_joined = betm_db_zusammenfuegen()
+            df_joined = urteilcodes_aufloesen(df_joined)
+            df_joined = urteilsdatum_in_urteilsjahr_konvertieren(df_joined)
+            df_joined, liste_aller_ohe_betm_spalten = betmurteile_onehotencoding(
+                df_joined
+            )
+            df_urteile = betmurteile_zusammenfuegen(
+                df_joined, liste_aller_ohe_betm_spalten=liste_aller_ohe_betm_spalten
+            )
+            df_urteile = betmurteile_fehlende_werte_auffuellen(df_urteile)
+
+            # Prognosemerkmale definieren, auf welche die Prädiktoren abstützen dürfen
+            liste_kategoriale_prognosemerkmale = [
+                "mengenmaessig",
+                "bandenmaessig",
+                "gewerbsmaessig",
+                "anstaltentreffen",
+                "mehrfach",
+                "beschaffungskriminalitaet",
+                "vorbestraft",
+                "vorbestraft_einschlaegig",
+                "rolle",
+            ]
+            liste_numerische_prognosemerkmale = [
+                "nebenverurteilungsscore",
+                "deliktsertrag",
+                "deliktsdauer_in_monaten",
+            ]
+            liste_numerische_prognosemerkmale.extend(liste_aller_ohe_betm_spalten)
+
+            X_ohe, y_vollzugsart = onehotx_und_y_erstellen_from_dataframe(
+                pandas_dataframe=df_urteile,
+                categorial_ft_dbfields=liste_kategoriale_prognosemerkmale,
+                numerical_ft_dbfields=liste_numerische_prognosemerkmale,
+                target_dbfields=["vollzug"],
+                return_encoder=False,
+            )
+
+            from sklearn.preprocessing import MinMaxScaler
+
+            scaler = MinMaxScaler()
+            x_onehot_scaled = scaler.fit_transform(X_ohe)
+            df_X_ohe_scaled = pd.DataFrame(
+                x_onehot_scaled, columns=scaler.feature_names_in_
+            )
+
             context = {
                 "form": form,
                 "vorhersage_vollzug": vorhersage_vollzug,
+                "vorhersage_hauptsanktion": vorhersage_hauptsanktion,
                 "vorhersage_strafmass": vorhersage_strafmass,
             }
 
@@ -575,11 +629,11 @@ def betm_kimodelle_neu_generieren(request):
     from sklearn.ensemble import RandomForestClassifier
 
     classifier_fuer_hauptsanktion = RandomForestClassifier(oob_score=True)
-    y_hauptsanktion = df_urteile[['hauptsanktion']].values.ravel()
+    y_hauptsanktion = df_urteile[["hauptsanktion"]].values.ravel()
     classifier_fuer_hauptsanktion.fit(X_ohe, y_hauptsanktion)
 
-    merkmalswichtigkeit_fuer_prognose_hauptsanktion = merkmalswichtigkeitslistegenerator(
-        classifier_fuer_hauptsanktion
+    merkmalswichtigkeit_fuer_prognose_hauptsanktion = (
+        merkmalswichtigkeitslistegenerator(classifier_fuer_hauptsanktion)
     )
 
     zusammengefasste_merkmalswichtigkeit_fuer_prognose_hauptsanktion = (
@@ -601,7 +655,9 @@ def betm_kimodelle_neu_generieren(request):
     oob_score_hauptsanktion = f"OOB-Score für Hauptsanktion-Prädiktor: {round(classifier_fuer_hauptsanktion.oob_score_*100, 1)}%"
 
     prognoseleistung_dict_hauptsanktion = dict()
-    prognoseleistung_dict_hauptsanktion["oob_score_class_vollzugsart"] = oob_score_hauptsanktion
+    prognoseleistung_dict_hauptsanktion[
+        "oob_score_class_hauptsanktion"
+    ] = oob_score_hauptsanktion
     prognoseleistung_dict_hauptsanktion[
         "merkmalswichtigkeit_fuer_prognose_hauptsanktion"
     ] = zusammengefasste_merkmalswichtigkeit_fuer_prognose_hauptsanktion
@@ -615,8 +671,8 @@ def betm_kimodelle_neu_generieren(request):
     # kimodell als pickle file speichern
     ki_modell_als_pickle_file_speichern(
         instanziertes_kimodel=classifier_fuer_hauptsanktion,
-        name="betm_rf_classifier_hauptsanktion",
-        filename="betm_rf_classifier_hauptsanktion.pkl",
+        name="betm_rf_classifier_sanktion",
+        filename="betm_rf_classifier_sanktion.pkl",
         prognoseleistung_dict=prognoseleistung_dict_hauptsanktion,
     )
 
@@ -755,6 +811,19 @@ def dev_betm(request):
         "merkmalswichtigkeit_fuer_prognose_vollzugsart"
     ]
 
+    prognoseleistung_dict_hauptsanktion = KIModelPickleFile.objects.get(
+        name="betm_rf_classifier_sanktion"
+    ).prognoseleistung_dict
+
+    oob_score_hauptsanktion = prognoseleistung_dict_hauptsanktion[
+        "oob_score_class_hauptsanktion"
+    ]
+    merkmalswichtigkeit_fuer_prognose_hauptsanktion = (
+        prognoseleistung_dict_hauptsanktion[
+            "merkmalswichtigkeit_fuer_prognose_hauptsanktion"
+        ]
+    )
+
     prognoseleistung_dict_strafmass = KIModelPickleFile.objects.get(
         name="betm_rf_regressor_strafmass"
     ).prognoseleistung_dict
@@ -769,6 +838,8 @@ def dev_betm(request):
     context = {
         "string_oob_vollzugsart": oob_score_vollzugsart,
         "merkmalswichtigkeit_prognose_vollzugsart": merkmalswichtigkeit_fuer_prognose_vollzugsart,
+        "string_oob_hauptsanktion": oob_score_hauptsanktion,
+        "merkmalswichtigkeit_prognose_hauptsanktion": merkmalswichtigkeit_fuer_prognose_hauptsanktion,
         "durchschnittlicher_fehler": durchschnittlicher_fehler,
         "merkmalswichtigkeit_fuer_prognose_strafmass": merkmalswichtigkeit_fuer_prognose_strafmass,
     }

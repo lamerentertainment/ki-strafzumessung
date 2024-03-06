@@ -86,7 +86,7 @@ def onehotx_und_y_erstellen(
     df.rename(columns={"urteilsdatum": "urteilsjahr"}, inplace=True)
 
     # 1hot encoding der kategorialen variablen
-    encoder = OneHotEncoder(sparse=False)
+    encoder = OneHotEncoder(sparse_output=False)
     encoder.fit(df[categorial_ft_dbfields])
     categorical_1hot = encoder.transform(df[categorial_ft_dbfields])
     encoder_categorical_ft_names = encoder.get_feature_names_out(categorial_ft_dbfields)

@@ -498,12 +498,21 @@ def prognose_betm(request):
             ]
             liste_numerische_prognosemerkmale.extend(liste_aller_ohe_betm_spalten)
 
-            X_ohe, y_vollzugsart = onehotx_und_y_erstellen_from_dataframe(
+            X_ohe, y_strafmass = onehotx_und_y_erstellen_from_dataframe(
                 pandas_dataframe=df_urteile,
                 categorial_ft_dbfields=liste_kategoriale_prognosemerkmale,
                 numerical_ft_dbfields=liste_numerische_prognosemerkmale,
-                target_dbfields=["vollzug"],
+                target_dbfields=["freiheitsstrafe_in_monaten"],
                 return_encoder=False,
+            )
+
+            y_strafmass = (
+                (df_urteile["anzahl_tagessaetze"] / 30)
+                .where(
+                    df_urteile["freiheitsstrafe_in_monaten"] == 0,
+                    df_urteile["freiheitsstrafe_in_monaten"],
+                )
+                .values.ravel()
             )
 
             from sklearn.preprocessing import MinMaxScaler
@@ -531,13 +540,55 @@ def prognose_betm(request):
                 ]
             )
 
-            gewichte_dict = gewichte_dict_ausgeben()
+            gewichtungs_dict_strafmass_regressor = gewichte_dict_ausgeben(
+                merkmalswichtigkeit_fuer_prognose_strafmass
+            )
+
+            def pandas_df_mit_gewichtungs_dict_gewichten(pd_df, gewichtungs_dict):
+                for prognosemerkmal, gewichtung in gewichtungs_dict.items():
+                    if prognosemerkmal in pd_df.columns:
+                        pd_df[prognosemerkmal] = pd_df[prognosemerkmal] * gewichtung
+                return pd_df
+
+            df_x_onehot_scaled_gewichtet = pandas_df_mit_gewichtungs_dict_gewichten(
+                df_X_ohe_scaled, gewichtungs_dict_strafmass_regressor
+            )
+
+            from sklearn.neighbors import KNeighborsRegressor
+
+            neigh = KNeighborsRegressor(n_neighbors=5)
+            neigh.fit(df_x_onehot_scaled_gewichtet, y_strafmass)
+            prognosemerkmale_df_preprocessed_scaled = scaler.transform(
+                prognosemerkmale_df_preprocessed
+            )
+            df_prognosemerkmale_df_preprocessed_scaled = pd.DataFrame(
+                prognosemerkmale_df_preprocessed_scaled,
+                columns=scaler.feature_names_in_,
+            )
+            df_prognosemerkmale_df_preprocessed_scaled_gewichtet = (
+                pandas_df_mit_gewichtungs_dict_gewichten(
+                    df_prognosemerkmale_df_preprocessed_scaled,
+                    gewichtungs_dict_strafmass_regressor,
+                )
+            )
+
+            neigh.kneighbors(df_prognosemerkmale_df_preprocessed_scaled_gewichtet)
+            aehnlichstes_uerteile_gemaess_gewichtetem_kneighbormodell = df_urteile.iloc[
+                neigh.kneighbors(df_prognosemerkmale_df_preprocessed_scaled_gewichtet)[
+                    1
+                ][0]
+            ]
+
+            nachbar1 = aehnlichstes_uerteile_gemaess_gewichtetem_kneighbormodell.index[
+                0
+            ]
 
             context = {
                 "form": form,
                 "vorhersage_vollzug": vorhersage_vollzug,
                 "vorhersage_hauptsanktion": vorhersage_hauptsanktion,
                 "vorhersage_strafmass": vorhersage_strafmass,
+                "nachbar1": nachbar1,
             }
 
             return render(
@@ -837,9 +888,11 @@ def dev_betm(request):
     durchschnittlicher_fehler = prognoseleistung_dict_strafmass[
         "durchschnittlicher_fehler"
     ]
-    zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass = prognoseleistung_dict_strafmass[
-        "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass"
-    ]
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass = (
+        prognoseleistung_dict_strafmass[
+            "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass"
+        ]
+    )
 
     context = {
         "string_oob_vollzugsart": oob_score_vollzugsart,

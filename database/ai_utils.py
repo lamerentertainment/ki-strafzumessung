@@ -1285,6 +1285,7 @@ def onehotx_und_y_erstellen_from_dataframe(
 
     # y erstellen
     if len(target_dbfields) == 1:
+        # TODO bei freiheitsstrafe_in_monaten == 0 muss wert der anzahl_tagessaetze genommen werden
         y = pandas_dataframe[target_dbfields].values.ravel()
     elif len(target_dbfields) > 1:
         y = pandas_dataframe[target_dbfields]

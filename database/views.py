@@ -24,15 +24,13 @@ from .ai_utils import (
     sortierte_koeff_list_erstellen,
     vermoegensstrafrechts_urteile_codes_aufloesen,
     introspection_plot_und_lesehinweis_abspeichern,
-    betm_db_zusammenfuegen,
-    urteilcodes_aufloesen,
-    urteilsdatum_in_urteilsjahr_konvertieren,
     betmurteile_onehotencoding,
     betmurteile_zusammenfuegen,
     betmurteile_fehlende_werte_auffuellen,
     onehotx_und_y_erstellen_from_dataframe,
     merkmalswichtigkeitslistegenerator,
     merkmale_in_merkmalswichtigkeitsliste_zusammenfassen,
+    betm_urteile_dataframe_erzeugen,
 )
 from .db_utils import (
     kategorie_scatterplot_erstellen,
@@ -479,16 +477,7 @@ def prognose_betm(request):
             )
 
             # nearest neighbors
-            df_joined = betm_db_zusammenfuegen()
-            df_joined = urteilcodes_aufloesen(df_joined)
-            df_joined = urteilsdatum_in_urteilsjahr_konvertieren(df_joined)
-            df_joined, liste_aller_ohe_betm_spalten = betmurteile_onehotencoding(
-                df_joined
-            )
-            df_urteile = betmurteile_zusammenfuegen(
-                df_joined, liste_aller_ohe_betm_spalten=liste_aller_ohe_betm_spalten
-            )
-            df_urteile = betmurteile_fehlende_werte_auffuellen(df_urteile)
+            df_urteile, liste_aller_ohe_betm_spalten = betm_urteile_dataframe_erzeugen()
 
             # Prognosemerkmale definieren, auf welche die Prädiktoren abstützen dürfen
             liste_kategoriale_prognosemerkmale = [
@@ -524,6 +513,25 @@ def prognose_betm(request):
             df_X_ohe_scaled = pd.DataFrame(
                 x_onehot_scaled, columns=scaler.feature_names_in_
             )
+
+            def gewichte_dict_ausgeben(liste_mit_prognosekriterium_wichtigkeits_tuples):
+                """für spätere Gewichtung der Werte bei einem späteren knn-neighbor Prädiktor"""
+                gewichtungs_dict = {}
+                for t in liste_mit_prognosekriterium_wichtigkeits_tuples:
+                    gewichtungs_dict[t[0]] = t[1]
+                return gewichtungs_dict
+
+            prognoseleistung_dict_strafmass = KIModelPickleFile.objects.get(
+                name="betm_rf_regressor_strafmass"
+            ).prognoseleistung_dict
+
+            merkmalswichtigkeit_fuer_prognose_strafmass = (
+                prognoseleistung_dict_strafmass[
+                    "merkmalswichtigkeit_fuer_prognose_strafmass"
+                ]
+            )
+
+            gewichte_dict = gewichte_dict_ausgeben()
 
             context = {
                 "form": form,
@@ -590,14 +598,7 @@ def dev_model_neu_kalibrieren(request):
 
 @login_required
 def betm_kimodelle_neu_generieren(request):
-    df_joined = betm_db_zusammenfuegen()
-    df_joined = urteilcodes_aufloesen(df_joined)
-    df_joined = urteilsdatum_in_urteilsjahr_konvertieren(df_joined)
-    df_joined, liste_aller_ohe_betm_spalten = betmurteile_onehotencoding(df_joined)
-    df_urteile = betmurteile_zusammenfuegen(
-        df_joined, liste_aller_ohe_betm_spalten=liste_aller_ohe_betm_spalten
-    )
-    df_urteile = betmurteile_fehlende_werte_auffuellen(df_urteile)
+    df_urteile, liste_aller_ohe_betm_spalten = betm_urteile_dataframe_erzeugen()
 
     # Prognosemerkmale definieren, auf welche die Prädiktoren abstützen dürfen
     liste_kategoriale_prognosemerkmale = [
@@ -757,6 +758,11 @@ def betm_kimodelle_neu_generieren(request):
     merkmalswichtigkeit_fuer_prognose_strafmass = merkmalswichtigkeitslistegenerator(
         regressor_fuer_strafmass
     )
+
+    prognoseleistung_dict_regressor[
+        "merkmalswichtigkeit_fuer_prognose_strafmass"
+    ] = merkmalswichtigkeit_fuer_prognose_strafmass
+
     zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass = (
         merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
             merkmalswichtigkeit_fuer_prognose_strafmass,
@@ -774,7 +780,7 @@ def betm_kimodelle_neu_generieren(request):
     )
 
     prognoseleistung_dict_regressor[
-        "merkmalswichtigkeit_fuer_prognose_strafmass"
+        "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass"
     ] = zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass
 
     # kimodell als pickle file speichern
@@ -831,8 +837,8 @@ def dev_betm(request):
     durchschnittlicher_fehler = prognoseleistung_dict_strafmass[
         "durchschnittlicher_fehler"
     ]
-    merkmalswichtigkeit_fuer_prognose_strafmass = prognoseleistung_dict_strafmass[
-        "merkmalswichtigkeit_fuer_prognose_strafmass"
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass = prognoseleistung_dict_strafmass[
+        "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass"
     ]
 
     context = {
@@ -841,7 +847,7 @@ def dev_betm(request):
         "string_oob_hauptsanktion": oob_score_hauptsanktion,
         "merkmalswichtigkeit_prognose_hauptsanktion": merkmalswichtigkeit_fuer_prognose_hauptsanktion,
         "durchschnittlicher_fehler": durchschnittlicher_fehler,
-        "merkmalswichtigkeit_fuer_prognose_strafmass": merkmalswichtigkeit_fuer_prognose_strafmass,
+        "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass": zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass,
     }
     return render(request, "database/dev_betm.html", context=context)
 

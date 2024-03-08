@@ -1080,6 +1080,18 @@ def introspection_plot_und_lesehinweis_abspeichern(
 
 
 # Betm-Pipeline
+def betm_urteile_dataframe_erzeugen():
+    """erzeugt ein pandas datenframe mit den in der BetmUrteil abgelegten Daten"""
+    df_joined = betm_db_zusammenfuegen()
+    df_joined = urteilcodes_aufloesen(df_joined)
+    df_joined = urteilsdatum_in_urteilsjahr_konvertieren(df_joined)
+    df_joined, liste_aller_ohe_betm_spalten = betmurteile_onehotencoding(df_joined)
+    df_urteile = betmurteile_zusammenfuegen(
+        df_joined, liste_aller_ohe_betm_spalten=liste_aller_ohe_betm_spalten
+    )
+    df_urteile = betmurteile_fehlende_werte_auffuellen(df_urteile)
+
+    return df_urteile, liste_aller_ohe_betm_spalten
 
 
 def betm_db_zusammenfuegen():

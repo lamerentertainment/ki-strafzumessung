@@ -7,17 +7,7 @@
         {% comment %}<p>Die Prognose erfolgt auf Grundlage des folgendem <a href="{% url 'database' %}">Datensatzes</a> und der darauf
             aufbauendem <a href="{% url 'kimodel_evaluation' %}">KI-Modelle</a>. 
             Die Funktionsweise der KI-Modelle wird <a href="{% url 'text' %}">hier</a> erklärt.</p>{% endcomment %}
-        {% if form.is_valid %}
-        <section>
-            <h1>Vorhersage</h1>
-            <ul>
-                <li>Vorhersage Strafmass: {{ vorhersage_strafmass }} Monatseinheiten</li>
-                <li>Vorhersage Hauptsanktion: {{ vorhersage_hauptsanktion }} </li>
-                <li>Vorhersage Vollzug: {{ vorhersage_vollzug }}</li>
-                <li>Nachbar: {{ nachbar1 }}</li>
-            </ul>
-        </section>
-        {% endif %}
+        
     
         <div class="col-4">
             <form action="" method="post">
@@ -52,7 +42,17 @@
                 </form>
         </div>
 
-        
+        {% if form.is_valid %}
+        <section>
+            <h1>Vorhersage</h1>
+            <ul>
+                <li>Vorhersage Strafmass: {{ vorhersage_strafmass }} Monatseinheiten</li>
+                <li>Vorhersage Hauptsanktion: {{ vorhersage_hauptsanktion }} </li>
+                <li>Vorhersage Vollzug: {{ vorhersage_vollzug }}</li>
+                <li>Nachbar: {{ nachbar1 }}</li>
+            </ul>
+        </section>
+        {% endif %}
 
         {% if form.is_valid %}
         <div>
@@ -61,8 +61,8 @@
                 <p>knn_prediction: {{ knn_prediction }} Monate</p>
                 {% endcomment %}
             <div class="row">
-                <div class="col">{% include "database/includes/nachbar.html" with nachbar=nachbar %}</div>
-                <div class="col">{% include "database/includes/nachbar.html" with nachbar=nachbar2 %}</div>
+                <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar1 %}</div>
+                <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar2 %}</div>
             </div>
         </div>
         {% endif %}

@@ -1125,25 +1125,28 @@ def betm_db_zusammenfuegen():
 def urteilcodes_aufloesen(dataframe):
     """Paraphrasiert codiert abgespeicherte Variablen"""
     if "geschlecht" in dataframe.columns:
-        dataframe["geschlecht"].replace(
-            {"0": "männlich", "1": "weiblich"}, inplace=True
+        dataframe.replace(
+            {"geschlecht": {"0": "männlich", "1": "weiblich"}}, inplace=True
         )
     if "nationalitaet" in dataframe.columns:
-        dataframe["nationalitaet"].replace(
+        dataframe.replace(
             {
-                "0": "Schweizerin/Schweizer",
-                "1": "Ausländerin/Ausländer",
-                "2": "unbekannt",
+                "nationalitaet": {
+                    "0": "Schweizerin/Schweizer",
+                    "1": "Ausländerin/Ausländer",
+                    "2": "unbekannt",
+                }
             },
             inplace=True,
         )
     if "vollzug" in dataframe.columns:
-        dataframe["vollzug"].replace(
-            {"0": "bedingt", "1": "teilbedingt", "2": "unbedingt"}, inplace=True
+        dataframe.replace(
+            {"vollzug": {"0": "bedingt", "1": "teilbedingt", "2": "unbedingt"}},
+            inplace=True,
         )
+
     if "hauptsanktion" in dataframe.columns:
-        dataframe["hauptsanktion"].replace(
-            {0: "Freiheitsstrafe", 1: "Geldstrafe", 2: "Busse"}, inplace=True
+        dataframe.replace({'hauptsanktion': {0: "Freiheitsstrafe", 1: "Geldstrafe", 2: "Busse"}}, inplace=True
         )
     return dataframe
 

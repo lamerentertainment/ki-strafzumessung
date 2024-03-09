@@ -1,0 +1,113 @@
+{% load humanize %}
+
+<div class="card">
+    <h5 class="card-header">Präjudiz: <a href="{{ nachbar.url_link }}">{{ nachbar }}</a></h5>
+    <div class="card-body">
+        <table class="table table-sm table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <td><p><b>Merkmale des Präjudiz</b></p></td>
+                    <td><p><b>Differenzen</b></p></td>
+                </tr>
+            </thead>
+            <tbody class="table-group-divider">
+                <tr>
+                    <td>
+                        <p>Betäubungsmittel:</p>
+                        {% for betm in nachbar.betm.all %}
+                            <li>{{ betm }}</li>
+                        {% endfor %}
+                    
+                    </td>
+
+                    <td>
+                        empty
+                    </td>
+                </tr>
+                <tr>
+                    <td><p>Rolle: {{ nachbar.rolle }},</p></td>
+                    <td {% if nachbar.entsprechung_rolle %} class="bg-success p-2 text-dark bg-opacity-25"
+                    {% else %} class="bg-danger p-2 text-dark bg-opacity-25" {% endif %}
+                    ><p>
+                        {% if nachbar.entsprechung_rolle %}Entspricht Eingabe {% else %} Entspricht nicht
+                            Eingabe {% endif %}
+                    </p></td>
+                </tr>
+                <tr>
+                    <td><p>Nebenverurteilungscore: {{ nachbar.nebenverurteilungsscore }}</p></td>
+                    {% if nachbar.nvs_diff > 0 %}
+                    <td><p>Differenz: + {{ nachbar.nvs_diff }}</p></td>
+                    {% else %}
+                    <td><p>Differenz: {{ nachbar.nvs_diff }}</p></td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td><p>Mengenmässig: {% if nachbar.mengenmaessig %} Ja {% else %} Nein {% endif %} </p></td>
+                    <td {% if nachbar.entsprechung_mengenmaessig %} class="bg-success p-2 text-dark bg-opacity-25"
+                    {% else %} class="bg-danger p-2 text-dark bg-opacity-25" {% endif %}
+                    ><p>
+                        {% if nachbar.entsprechung_mengenmaessig %}Entspricht Eingabe {% else %} Entspricht nicht
+                            Eingabe {% endif %}
+                    </p></td>
+                </tr>
+                <tr>
+                    <td><p>Gewerbsmässig: {% if nachbar.gewerbsmaessig %} Ja {% else %} Nein {% endif %} </p></td>
+                    <td {% if nachbar.entsprechung_gewerbsmaessig %} class="bg-success p-2 text-dark bg-opacity-25"
+                    {% else %} class="bg-danger p-2 text-dark bg-opacity-25" {% endif %}
+                    ><p>
+                        {% if nachbar.entsprechung_gewerbsmaessig %}Entspricht Eingabe {% else %} Entspricht nicht
+                            Eingabe {% endif %}
+                    </p></td>
+                </tr>
+                <tr>
+                    <td><p>Bandenmässig: {% if nachbar.bandenmaessig %} Ja {% else %} Nein {% endif %} </p></td>
+                    <td {% if nachbar.entsprechung_bandenmaessig %} class="bg-success p-2 text-dark bg-opacity-25"
+                    {% else %} class="bg-danger p-2 text-dark bg-opacity-25" {% endif %}
+                    ><p>
+                        {% if nachbar.entsprechung_bandenmaessig %}Entspricht Eingabe {% else %} Entspricht nicht
+                            Eingabe {% endif %}
+                    </p></td>
+                </tr>
+                <tr>
+                    <td><p>einschlägige Vorstrafe: {% if nachbar.vorbestraft_einschlaegig %} Ja {% else %}
+                        Nein {% endif %} </p></td>
+                    <td {% if nachbar.entsprechung_vorbestraft_einschlaegig %}
+                        class="bg-success p-2 text-dark bg-opacity-25"
+                    {% else %} class="bg-danger p-2 text-dark bg-opacity-25" {% endif %}
+                    ><p>
+                        {% if nachbar.entsprechung_vorbestraft_einschlaegig %}Entspricht Eingabe {% else %} Entspricht
+                            nicht Eingabe {% endif %}
+                    </p></td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="table-light">
+                        <p>
+                            Sanktion:
+                            <b>
+                                {% if nachbar.hauptsanktion == '0' %}
+                                    {% if nachbar.vollzug == '0' %}
+                                    bedingte
+                                    {% elif nachbar.vollzug == '1' %}
+                                    teilbedingte
+                                    {% elif nachbar.vollzug == '2' %}
+                                    unbedingte
+                                    {% endif %}
+                                    Freiheitsstrafe von {{ nachbar.freiheitsstrafe_in_monaten }} Monaten.
+                                {% elif nachbar.hauptsanktion == '1' %}
+                                    {% if nachbar.vollzug == '0' %}
+                                    bedingte
+                                    {% elif nachbar.vollzug == '1' %}
+                                    teilbedingte
+                                    {% elif nachbar.vollzug == '2' %}
+                                    unbedingte
+                                    {% endif %}
+                                    Geldstrafe von {{ nachbar.anzahl_tagessaetze }} Tagessätzen.
+                                {% endif %}
+                            </b>
+                        </p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

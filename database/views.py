@@ -579,9 +579,53 @@ def prognose_betm(request):
                 ][0]
             ]
 
-            nachbar1 = aehnlichstes_uerteile_gemaess_gewichtetem_kneighbormodell.index[
-                0
-            ]
+            nachbarliste = (
+                aehnlichstes_uerteile_gemaess_gewichtetem_kneighbormodell.index.tolist()
+            )
+
+            nachbar1 = BetmUrteil.objects.get(fall_nr=nachbarliste[0])
+            nachbar2 = BetmUrteil.objects.get(fall_nr=nachbarliste[1])
+
+            # differenzen von eingabe und nachbarn berechnen, evt. mal auslagern
+            def differenzengenerator(nachbarobjekt, formobjekt):
+                """legt im Nachbarobjekt die Differenzen zu den Formulareingaben als Attribute ab"""
+                nachbarobjekt.entsprechung_rolle = (
+                    True
+                    if nachbarobjekt.rolle == formobjekt.cleaned_data["rolle"]
+                    else False
+                )
+                nachbarobjekt.nvs_diff = (
+                    nachbarobjekt.nebenverurteilungsscore
+                    - form.cleaned_data["nebenverurteilungsscore"]
+                )
+                nachbarobjekt.entsprechung_mengenmaessig = (
+                    True
+                    if nachbarobjekt.mengenmaessig
+                    == formobjekt.cleaned_data["mengenmaessig"]
+                    else False
+                )
+                nachbarobjekt.entsprechung_gewerbsmaessig = (
+                    True
+                    if nachbarobjekt.gewerbsmaessig
+                    == formobjekt.cleaned_data["gewerbsmaessig"]
+                    else False
+                )
+                nachbarobjekt.entsprechung_bandenmaessig = (
+                    True
+                    if nachbarobjekt.bandenmaessig
+                    == formobjekt.cleaned_data["bandenmaessig"]
+                    else False
+                )
+                nachbarobjekt.entsprechung_vorbestraft_einschlaegig = (
+                    True
+                    if nachbarobjekt.vorbestraft_einschlaegig
+                    == formobjekt.cleaned_data["vorbestraft_einschlaegig"]
+                    else False
+                )
+                return nachbarobjekt
+
+            nachbar1 = differenzengenerator(nachbar1, form)
+            nachbar2 = differenzengenerator(nachbar2, form)
 
             context = {
                 "form": form,
@@ -589,6 +633,7 @@ def prognose_betm(request):
                 "vorhersage_hauptsanktion": vorhersage_hauptsanktion,
                 "vorhersage_strafmass": vorhersage_strafmass,
                 "nachbar1": nachbar1,
+                "nachbar2": nachbar2,
             }
 
             return render(

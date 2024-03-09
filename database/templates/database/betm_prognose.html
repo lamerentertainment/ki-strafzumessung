@@ -45,12 +45,11 @@
         {% if form.is_valid %}
         <section>
             <h1>Vorhersage</h1>
-            <ul>
-                <li>Vorhersage Strafmass: {{ vorhersage_strafmass }} Monatseinheiten</li>
-                <li>Vorhersage Hauptsanktion: {{ vorhersage_hauptsanktion }} </li>
-                <li>Vorhersage Vollzug: {{ vorhersage_vollzug }}</li>
-                <li>Nachbar: {{ nachbar1 }}</li>
-            </ul>
+            {% if vorhersage_hauptsanktion == 'Freiheitsstrafe' %}
+                <p>Das KI-Modell sagt eine <strong>{{ vorhersage_vollzug }} {{ vorhersage_hauptsanktion }} {{ vorhersage_strafmass|prognosebereich_angeben }} Monaten </strong>  voraus.</p>
+            {% elif vorhersage_hauptsanktion == 'Geldstrafe' %}
+                <p>Das KI-Modell sagt eine <strong>{{ vorhersage_vollzug }} {{ vorhersage_hauptsanktion }} {{ vorhersage_strafmass|prognosebereich_angeben_fuer_geldstrafe }} Tagessätzen </strong> voraus.</p>
+            {% endif %}
         </section>
         {% endif %}
 

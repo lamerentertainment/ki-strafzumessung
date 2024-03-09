@@ -1146,7 +1146,7 @@ def urteilcodes_aufloesen(dataframe):
         )
 
     if "hauptsanktion" in dataframe.columns:
-        dataframe.replace({'hauptsanktion': {0: "Freiheitsstrafe", 1: "Geldstrafe", 2: "Busse"}}, inplace=True
+        dataframe.replace({'hauptsanktion': {'0': "Freiheitsstrafe", '1': "Geldstrafe", '2': "Busse"}}, inplace=True
         )
     return dataframe
 

@@ -456,25 +456,43 @@ def betm_prognose(request):
             prognosemerkmale_df_preprocessed = pd.concat(
                 [df_cat_fts, df_num_fts], axis=1
             )
-            # give prediction response Vollzug
+            # Hauptsanktion-Prädiktor laden und Prognose machen
             hauptsanktions_modell = kimodell_von_pickle_file_aus_aws_bucket_laden(
                 "pickles/betm_rf_classifier_sanktion.pkl"
             )
             vorhersage_hauptsanktion = hauptsanktions_modell.predict(
                 prognosemerkmale_df_preprocessed
-            )
+            )[0]
+
+            if vorhersage_hauptsanktion == "0":
+                vorhersage_hauptsanktion = "Freiheitsstrafe"
+            elif vorhersage_hauptsanktion == "1":
+                vorhersage_hauptsanktion = "Geldstrafe"
+            elif vorhersage_hauptsanktion == "2":
+                vorhersage_hauptsanktion = "Busse"
+
+            # Vollzugs-Prädiktor laden und Prognose machen
             vollzugs_modell = kimodell_von_pickle_file_aus_aws_bucket_laden(
                 "pickles/betm_rf_classifier_vollzugsart.pkl"
             )
             vorhersage_vollzug = vollzugs_modell.predict(
                 prognosemerkmale_df_preprocessed
-            )
+            )[0]
+
+            if vorhersage_vollzug == "bedingt":
+                vorhersage_vollzug = "bedingte"
+            elif vorhersage_vollzug == "teilbedingt":
+                vorhersage_vollzug = "teilbedingte"
+            elif vorhersage_vollzug == "unbedingt":
+                vorhersage_vollzug = "unbedingte"
+
+            # Strafmass-Prädiktor laden und Prognose machen
             strafmass_modell = kimodell_von_pickle_file_aus_aws_bucket_laden(
                 "pickles/betm_rf_regressor_strafmass.pkl"
             )
             vorhersage_strafmass = strafmass_modell.predict(
                 prognosemerkmale_df_preprocessed
-            )
+            )[0]
 
             # nearest neighbors
             df_urteile, liste_aller_ohe_betm_spalten = betm_urteile_dataframe_erzeugen()

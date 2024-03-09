@@ -338,7 +338,7 @@ def prognose(request):
     return render(request, "database/prognose.html", {"form": form})
 
 
-def prognose_betm(request):
+def betm_prognose(request):
     # if this is a POST request we need to process the form data
     if request.method == "POST":
         # create a form instance and populate it with data from the request:
@@ -638,7 +638,7 @@ def prognose_betm(request):
 
             return render(
                 request,
-                "database/prognose_betm.html",
+                "database/betm_prognose.html",
                 context,
             )
 
@@ -646,7 +646,7 @@ def prognose_betm(request):
     else:
         form = BetmUrteilsEckpunkteAbfrageFormular()
 
-    return render(request, "database/prognose_betm.html", {"form": form})
+    return render(request, "database/betm_prognose.html", {"form": form})
 
 
 # Dev views

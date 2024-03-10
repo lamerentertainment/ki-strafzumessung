@@ -725,6 +725,124 @@ def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich
     return nachbar_pk, nachbar_pk2, knn_prediction
 
 
+def nachbar_mit_sanktionsbewertung_anreichern(nachbarobjekt, strafmass_estimator, hauptsanktion_estimator, vollzug_estimator):
+    cat_fts = [
+        "hauptdelikt",
+        "mehrfach",
+        "gewerbsmaessig",
+        "bandenmaessig",
+        "vorbestraft",
+        "vorbestraft_einschlaegig",
+    ]
+    num_fts = ["deliktssumme", "nebenverurteilungsscore"]
+
+    hauptdelikt = nachbarobjekt.hauptdelikt
+    mehrfach = nachbarobjekt.mehrfach
+    gewerbsmaessig = nachbarobjekt.gewerbsmaessig
+    bandenmaessig = nachbarobjekt.bandenmaessig
+    deliktssumme = nachbarobjekt.deliktssumme
+    nebenverurteilungsscore = nachbarobjekt.nebenverurteilungsscore
+    vorbestraft = nachbarobjekt.vorbestraft
+    vorbestraft_einschlaegig = nachbarobjekt.vorbestraft_einschlaegig
+
+    liste_mit_urteilsmerkmalen = [
+        hauptdelikt,
+        mehrfach,
+        gewerbsmaessig,
+        bandenmaessig,
+        deliktssumme,
+        nebenverurteilungsscore,
+        vorbestraft,
+        vorbestraft_einschlaegig,
+    ]
+
+    urteilsmerkmale_als_pandas_df = pd.DataFrame(
+        [liste_mit_urteilsmerkmalen],
+        columns=[
+            "hauptdelikt",
+            "mehrfach",
+            "gewerbsmaessig",
+            "bandenmaessig",
+            "deliktssumme",
+            "nebenverurteilungsscore",
+            "vorbestraft",
+            "vorbestraft_einschlaegig",
+        ],
+    )
+    urteilsmerkmale_als_pandas_df = vermoegensstrafrechts_urteile_codes_aufloesen(
+        urteilsmerkmale_als_pandas_df
+    )
+    encoder = kimodell_von_pickle_file_aus_aws_bucket_laden(
+        "encoders/one_hot_encoder_fuer_rf_regr_val.pkl"
+    )
+    cat_fts_onehot = encoder.transform(urteilsmerkmale_als_pandas_df[cat_fts])
+    enc_cat_fts_names = encoder.get_feature_names_out(cat_fts)
+    df_cat_fts = pd.DataFrame(cat_fts_onehot, columns=enc_cat_fts_names)
+    urteilsmerkmale_df_preprocessed = pd.concat(
+        [df_cat_fts, urteilsmerkmale_als_pandas_df[num_fts]], axis=1
+    )
+
+    nachbarobjekt.vorhersage_strafmass = strafmass_estimator.predict(
+        urteilsmerkmale_df_preprocessed
+    )[0]
+
+    sanktion_des_prajudiz = (
+        nachbarobjekt.freiheitsstrafe_in_monaten
+        if nachbarobjekt.freiheitsstrafe_in_monaten > 0
+        else (nachbarobjekt.anzahl_tagessaetze / 30)
+    )
+
+    differenz = sanktion_des_prajudiz - nachbarobjekt.vorhersage_strafmass
+    if 3 > differenz > -3:
+        nachbarobjekt.sanktionsbewertung = (
+            "Die KI hält die Sanktion des Präjudiz für angemessen."
+        )
+    elif -10 <= differenz <= -3:
+        nachbarobjekt.sanktionsbewertung = (
+            "Die KI hält die Sanktion des Präjudiz für leicht zu mild."
+        )
+    elif differenz <= -10:
+        nachbarobjekt.sanktionsbewertung = (
+            "Die KI hält die Sanktion des Präjudiz für erheblich zu mild."
+        )
+    elif 3 <= differenz <= 10:
+        nachbarobjekt.sanktionsbewertung = (
+            "Die KI hält die Sanktion des Präjudiz für leicht zu streng."
+        )
+    elif differenz > 10:
+        nachbarobjekt.sanktionsbewertung = (
+            "Die KI hält die Sanktion des Präjudiz für erheblich zu streng."
+        )
+
+    nachbarobjekt.vorhersage_vollzug = vollzug_estimator.predict(
+        urteilsmerkmale_df_preprocessed
+    )
+
+    nachbarobjekt.vorhersage_sanktionsart = hauptsanktion_estimator.predict(
+        urteilsmerkmale_df_preprocessed
+    )
+
+    nachbarobjekt.vollzugsstring = "empty"
+
+    if nachbarobjekt.vorhersage_vollzug[0] == "0":
+        nachbarobjekt.vollzugsstring = "bedingte"
+    elif nachbarobjekt.vorhersage_vollzug[0] == "1":
+        nachbarobjekt.vollzugsstring = "teilbedingte"
+    elif nachbarobjekt.vorhersage_vollzug[0] == "2":
+        nachbarobjekt.vollzugsstring = "unbedingte"
+
+    nachbarobjekt.string_sanktionsart = "empty"
+
+    if nachbarobjekt.vorhersage_sanktionsart[0] == "0":
+        nachbarobjekt.string_sanktionsart = "Freiheitsstrafe"
+    elif nachbarobjekt.vorhersage_sanktionsart[0] == "1":
+        nachbarobjekt.string_sanktionsart = "Geldstrafe"
+    elif nachbarobjekt.vorhersage_sanktionsart[0] == "2":
+        nachbarobjekt.string_sanktionsart = "Busse"
+
+    return nachbarobjekt
+
+
 def introspection_plot_und_lesehinweis_ausgeben(
     db_model=Urteil, xlim=1000000, titel="Prognose", cleaned_data_dict=None
 ):
@@ -1146,7 +1264,15 @@ def urteilcodes_aufloesen(dataframe):
         )
 
     if "hauptsanktion" in dataframe.columns:
-        dataframe.replace({'hauptsanktion': {'0': "Freiheitsstrafe", '1': "Geldstrafe", '2': "Busse"}}, inplace=True
+        dataframe.replace(
+            {
+                "hauptsanktion": {
+                    "0": "Freiheitsstrafe",
+                    "1": "Geldstrafe",
+                    "2": "Busse",
+                }
+            },
+            inplace=True,
         )
     return dataframe
 

@@ -31,6 +31,7 @@ from .ai_utils import (
     merkmalswichtigkeitslistegenerator,
     merkmale_in_merkmalswichtigkeitsliste_zusammenfassen,
     betm_urteile_dataframe_erzeugen,
+    nachbar_mit_sanktionsbewertung_anreichern
 )
 from .db_utils import (
     kategorie_scatterplot_erstellen,
@@ -317,142 +318,8 @@ def prognose(request):
             nachbar = differenzengenerator(nachbar, form)
             nachbar2 = differenzengenerator(nachbar2, form)
 
-            def prognose_mit_nachbar_erstellen(
-                nachbarobjekt
-            ):
-                cat_fts = [
-                    "hauptdelikt",
-                    "mehrfach",
-                    "gewerbsmaessig",
-                    "bandenmaessig",
-                    "vorbestraft",
-                    "vorbestraft_einschlaegig",
-                ]
-                num_fts = ["deliktssumme", "nebenverurteilungsscore"]
-
-                hauptdelikt = nachbarobjekt.hauptdelikt
-                mehrfach = nachbarobjekt.mehrfach
-                gewerbsmaessig = nachbarobjekt.gewerbsmaessig
-                bandenmaessig = nachbarobjekt.bandenmaessig
-                deliktssumme = nachbarobjekt.deliktssumme
-                nebenverurteilungsscore = nachbarobjekt.nebenverurteilungsscore
-                vorbestraft = nachbarobjekt.vorbestraft
-                vorbestraft_einschlaegig = nachbarobjekt.vorbestraft_einschlaegig
-
-                liste_mit_urteilsmerkmalen = [
-                    hauptdelikt,
-                    mehrfach,
-                    gewerbsmaessig,
-                    bandenmaessig,
-                    deliktssumme,
-                    nebenverurteilungsscore,
-                    vorbestraft,
-                    vorbestraft_einschlaegig,
-                ]
-
-                urteilsmerkmale_als_pandas_df = pd.DataFrame(
-                    [liste_mit_urteilsmerkmalen],
-                    columns=[
-                        "hauptdelikt",
-                        "mehrfach",
-                        "gewerbsmaessig",
-                        "bandenmaessig",
-                        "deliktssumme",
-                        "nebenverurteilungsscore",
-                        "vorbestraft",
-                        "vorbestraft_einschlaegig",
-                    ],
-                )
-                urteilsmerkmale_als_pandas_df = (
-                    vermoegensstrafrechts_urteile_codes_aufloesen(
-                        urteilsmerkmale_als_pandas_df
-                    )
-                )
-                encoder = kimodell_von_pickle_file_aus_aws_bucket_laden(
-                    "encoders/one_hot_encoder_fuer_rf_regr_val.pkl"
-                )
-                cat_fts_onehot = encoder.transform(
-                    urteilsmerkmale_als_pandas_df[cat_fts]
-                )
-                enc_cat_fts_names = encoder.get_feature_names_out(cat_fts)
-                df_cat_fts = pd.DataFrame(cat_fts_onehot, columns=enc_cat_fts_names)
-                urteilsmerkmale_df_preprocessed = pd.concat(
-                    [df_cat_fts, urteilsmerkmale_als_pandas_df[num_fts]], axis=1
-                )
-
-                # give prediction response Strafmass
-                strafmass_model = kimodell_von_pickle_file_aus_aws_bucket_laden(
-                    "pickles/random_forest_regressor_val_fts.pkl"
-                )
-                nachbarobjekt.vorhersage_strafmass = strafmass_model.predict(
-                    urteilsmerkmale_df_preprocessed
-                )[0]
-
-                sanktion_des_prajudiz = nachbar.freiheitsstrafe_in_monaten if nachbar.freiheitsstrafe_in_monaten >= 0 else (nachbar.anzaehl_tagessaetze / 30)
-
-                differenz = (
-                    nachbarobjekt.vorhersage_strafmass - sanktion_des_prajudiz
-                )
-                if differenz <= -10:
-                    nachbarobjekt.sanktionsbewertung = (
-                        "Die KI hält die Sanktion des Präjudiz für erheblich zu mild."
-                    )
-                elif differenz <= -3:
-                    nachbarobjekt.sanktionsbewertung = (
-                        "Die KI hält die Sanktion des Präjudiz für leicht zu mild."
-                    )
-                elif differenz <= 3:
-                    nachbarobjekt.sanktionsbewertung = (
-                        "Die KI hält die Sanktion des Präjudiz für angemessen."
-                    )
-                elif differenz <= 10:
-                    nachbarobjekt.sanktionsbewertung = (
-                        "Die KI hält die Sanktion des Präjudiz für leicht zu streng."
-                    )
-                elif differenz > 10:
-                    nachbarobjekt.sanktionsbewertung = (
-                        "Die KI hält die Sanktion des Präjudiz für erheblich zu streng."
-                    )
-
-
-                # give prediction response Vollzug
-                vollzugs_model = kimodell_von_pickle_file_aus_aws_bucket_laden(
-                    "pickles/random_forest_classifier_val_fts.pkl"
-                )
-                nachbarobjekt.vorhersage_vollzug = vollzugs_model.predict(
-                    urteilsmerkmale_df_preprocessed
-                )
-
-                # give prediction response Sanktionsart
-                sanktionsart_model = kimodell_von_pickle_file_aus_aws_bucket_laden(
-                    "pickles/rf_classifier_fuer_sanktionsart_val_fts.pkl"
-                )
-                nachbarobjekt.vorhersage_sanktionsart = sanktionsart_model.predict(
-                    urteilsmerkmale_df_preprocessed
-                )
-
-                nachbarobjekt.vollzugsstring = "empty"
-
-                if nachbarobjekt.vorhersage_vollzug[0] == "0":
-                    nachbarobjekt.vollzugsstring = "bedingte"
-                elif nachbarobjekt.vorhersage_vollzug[0] == "1":
-                    nachbarobjekt.vollzugsstring = "teilbedingte"
-                elif nachbarobjekt.vorhersage_vollzug[0] == "2":
-                    nachbarobjekt.vollzugsstring = "unbedingte"
-
-                nachbarobjekt.string_sanktionsart = "empty"
-
-                if nachbarobjekt.vorhersage_sanktionsart[0] == "0":
-                    nachbarobjekt.string_sanktionsart = "Freiheitsstrafe"
-                elif vorhersage_sanktionsart[0] == "1":
-                    nachbarobjekt.string_sanktionsart = "Geldstrafe"
-                elif vorhersage_sanktionsart[0] == "2":
-                    nachbarobjekt.string_sanktionsart = "Busse"
-
-                return nachbarobjekt
-
-            nachbar = prognose_mit_nachbar_erstellen(nachbar)
-            nachbar2 = prognose_mit_nachbar_erstellen(nachbar2)
+            nachbar = nachbar_mit_sanktionsbewertung_anreichern(nachbar, strafmass_estimator=strafmass_model, hauptsanktion_estimator=sanktionsart_model, vollzug_estimator=vollzugs_model)
+            nachbar2 = nachbar_mit_sanktionsbewertung_anreichern(nachbar2, strafmass_estimator=strafmass_model, hauptsanktion_estimator=sanktionsart_model, vollzug_estimator=vollzugs_model)
 
             return render(
                 request,

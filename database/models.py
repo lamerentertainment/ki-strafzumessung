@@ -1,5 +1,6 @@
 import pandas as pd
 from django.db import models
+import locale
 
 
 class DataFrameExporter(models.Manager):
@@ -23,7 +24,9 @@ class DataFrameExporter(models.Manager):
             # Datenbankeintrags-id ('pk') wird als index des DataFrames verwendet
             return pd.DataFrame.from_records(alle_urteile_als_dict, index="pk")
 
-    def return_y_zielwerte(self, zielwert="freiheitsstrafe_in_monaten", exclude_unmarked=False):
+    def return_y_zielwerte(
+        self, zielwert="freiheitsstrafe_in_monaten", exclude_unmarked=False
+    ):
         """
         gibt ein Datenframe mit den Zielwerten aus
         zielwert: Zielwert als String
@@ -139,7 +142,8 @@ class Urteil(models.Model):
 
     # Methoden
     def __str__(self):
-        return f"{self.fall_nr}"
+        locale.setlocale(locale.LC_TIME, "de_DE")
+        return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B. %Y')}, {self.fall_nr}"
 
     class Meta:
         verbose_name_plural = "Urteile"

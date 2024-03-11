@@ -144,7 +144,7 @@ class Urteil(models.Model):
     def __str__(self):
         try:
             locale.setlocale(locale.LC_TIME, "de_CH")
-        except Error:
+        except:
             locale.setlocale(locale.LC_ALL, "")
         return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B %Y')}, {self.fall_nr}"
 

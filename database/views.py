@@ -43,6 +43,9 @@ from .aws_helpers import (
 import pickle
 from sklearn.model_selection import cross_val_score
 
+def homepage(request):
+    context = {}
+    return render(request, "database/homepage.html", context)
 
 # Database Views
 def database(request):

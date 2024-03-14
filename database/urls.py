@@ -5,7 +5,8 @@ from django.conf.urls.static import static
 from . import views
 
 urlpatterns = [
-    path('', views.prognose, name='prognose'),
+    path('', views.homepage, name='homepage'),
+    path('prognose', views.prognose, name='prognose'),
     path('betm_prognose', views.betm_prognose, name='betm_prognose'),
     path('urteil/erstellen', views.UrteilErstellenView.as_view(), name='urteil_erstellen'),
     path('urteil/update/<int:pk>/', views.UrteilUpdateView.as_view(), name='urteil_update'),

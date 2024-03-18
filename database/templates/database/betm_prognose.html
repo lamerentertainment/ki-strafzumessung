@@ -4,42 +4,65 @@
 {% block body %}
 
         <h1>Strafprognose bei Betäubungsmitteldelikt vornehmen und Präjudizien anzeigen</h1>
-        {% comment %}<p>Die Prognose erfolgt auf Grundlage des folgendem <a href="{% url 'database' %}">Datensatzes</a> und der darauf
-            aufbauendem <a href="{% url 'kimodel_evaluation' %}">KI-Modelle</a>. 
-            Die Funktionsweise der KI-Modelle wird <a href="{% url 'text' %}">hier</a> erklärt.</p>{% endcomment %}
-        
+        <p>Die Prognose erfolgt auf Grundlage des folgendem <a href="{% url 'betmdatabase' %}">Datensatzes</a> und der darauf
+            aufbauendem KI-Modelle. 
+            Die Funktionsweise der KI-Modelle wird <a href="{% url 'text' %}">hier</a> erklärt.</p>
     
-        <div class="col-4">
+        <div class="row">
             <form action="" method="post">
                     {% csrf_token %}
-                    <table class="table">
-                        {% for field in form %}
-                            <tr class="fieldWrapper">
-                                <td>
-                                    {{ field.errors }}
-                                    {{ field.label_tag }}
-                                </td>
-                                <td>
-                                    {{ field }}
-                                </td>
-                                <td>
-                                    {% if field.help_text %}
-                                        <div data-bs-toggle="tooltip" data-bs-placement="right"
-                                             title="{{ field.help_text|safe }}">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                 fill="currentColor"
-                                                 class="bi bi-info-square" viewBox="0 0 16 16">
-                                                <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
-                                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-                                            </svg>
-                                        </div>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </table>
+
+                    <div class="row">
+                        <div class="col-6">
+                            <table class="table border rounded">
+                                    <legend>Schuldspruch/Dispositiv</legend>
+                                    {{ form.mengenmaessig.as_field_group }}
+                                    {{ form.bandenmaessig.as_field_group }}
+                                    {{ form.gewerbsmaessig.as_field_group }}
+                                    {{ form.mehrfach.as_field_group }}
+                                    {{ form.anstaltentreffen.as_field_group }}
+                                    {{ form.nebenverurteilungsscore.as_field_group }}
+                            </table>
+                            <table class="table border">
+                            <legend>Strafzumessungsfaktoren</legend>
+                            {{ form.rolle.as_field_group }}
+                            {{ form.beschaffungskriminalitaet.as_field_group }}
+                            {{ form.deliktsdauer_in_monaten.as_field_group }}
+                            {{ form.deliktsertrag.as_field_group }}
+                            {{ form.vorbestraft.as_field_group }}
+                            {{ form.vorbestraft_einschlaegig.as_field_group }}
+                    </table> 
+                        </div>
+                        <div class="col-6">
+                            <div id="betmform1">
+                                <h4>Betäubungsmittel</h4>
+                                <table id="betm1" class="table border rounded">
+                                    {{ form.betm1.as_field_group }}
+                                    {{ form.betm1_menge.as_field_group }}
+                                    {{ form.betm1_rein.as_field_group }}
+                                </table>
+                            </div>
+                            <div id="betmform2">
+                                <h4>allf. Betäubungsmittel 2</h4>
+                                <table id="betm2" class="table border rounded">
+                                    {{ form.betm2.as_field_group }}
+                                    {{ form.betm2_menge.as_field_group }}
+                                    {{ form.betm2_rein.as_field_group }}
+                                </table>
+                            </div>
+                            <div id="betmform3">
+                                <h4>allf. Betäubungsmittel 3</h4>
+                                <table id="betm3" class="table border rounded">
+                                    {{ form.betm3.as_field_group }}
+                                    {{ form.betm3_menge.as_field_group }}
+                                    {{ form.betm3_rein.as_field_group }}
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                     <input type="submit" class="btn btn-primary" value="Strafmass und Vollzugsform prognostizieren">
-                </form>
+                        
+            </form>
         </div>
 
         {% if form.is_valid %}
@@ -65,6 +88,46 @@
             </div>
         </div>
         {% endif %}
+    
+        {% comment %}<script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Select the input field for betm1_menge
+                const betm1MengeInput = document.getElementById('id_betm1_menge');
+                
+                // Select the input field for betm2_menge
+                const betm2MengeInput = document.getElementById('id_betm2_menge');
+        
+                // Select the table for betm2
+                const betm2Form = document.getElementById('betmform2');
+                
+                // Select the table for betm3
+                const betm3Form = document.getElementById('betmform3');
+        
+                // Hide betm2 and betm3 initially
+                betm2Form.style.display = 'none';
+                betm3Form.style.display = 'none';
+        
+                // Add event listener to betm1_menge input field
+                betm1MengeInput.addEventListener('input', function () {
+                    // If betm1_menge has a value, show betm2; otherwise, hide it
+                    if (betm1MengeInput.value.trim() !== '') {
+                        betm2Form.style.display = 'table'; // Show betm2
+                    } else {
+                        betm2Form.style.display = 'none'; // Hide betm2
+                    }
+                });
+                
+                // Add event listener to betm2_menge input field
+                betm2MengeInput.addEventListener('input', function () {
+                    // If betm1_menge has a value, show betm2; otherwise, hide it
+                    if (betm2MengeInput.value.trim() !== '') {
+                        betm3Form.style.display = 'table'; // Show betm2
+                    } else {
+                        betm3Form.style.display = 'none'; // Hide betm2
+                    }
+                });
+            });
+        </script>{% endcomment %}
 
 
 {% endblock %}

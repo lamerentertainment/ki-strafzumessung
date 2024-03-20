@@ -1,3 +1,5 @@
+{% load static %}
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -14,60 +16,91 @@
 <body>
 
 {% block body %}
-    <div class="container">
+    <div class="container" style="background-image: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url('{% static 'png/illustration-graph-fadeout.png' %}');">
         
-        <div class="p-4 p-md-5 mb-4 rounded text-body-emphasis bg-body-secondary">
-            <h1 class="display-4 fst-italic">ki.strafzumessung.ch</h1>
-            <p class="lead my-3">Strafzumessung unter Zuhilfenahme der künstlichen Intelligenz</p>
+        <div class="row" >
+            <div class="col-6" >
+                <h1 class="display-4 fst-italic">ki.strafzumessung.ch</h1>
+                <p class="lead my-3">
+                    Strafzumessung unter Zuhilfenahme der künstlichen Intelligenz
+                </p>
+            </div>
+            <div class="col-6" >
+                <!-- Content for the right side column -->
+            </div>
         </div>
         
         
         <div class="row mb-1 g-1" id="ki-row">
-                <div class="col-md-6 p-4 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
-                    <p>Präjudizen anzeigen und KI-Strafmassprognose bei</p>
-                    <a class="stretched-link" href="{% url "betm_prognose" %}">Betäubungsmittelkriminalität</a>
+                <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
+                    <p class="lead">
+                        <a class="stretched-link text-decoration-none text-dark" href="{% url "betm_prognose" %}">
+                        Präjudizen anzeigen und KI-Strafmassprognose bei Betäubungsmittelkriminalität
+                        </a>
+                    </p>
                 </div>
-                <div class="col-md-6 p-4 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
-                    <p>Präjudizen anzeigen und KI-Strafmassprognose bei</p>
-                    <a class="stretched-link" href="{% url "prognose" %}">Wirtschaftskriminalität</a>
+                <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
+                    <p class="lead">
+                        <a class="stretched-link text-decoration-none text-dark" href="{% url "prognose" %}">
+                        Präjudizen anzeigen und KI-Strafmassprognose bei Wirtschaftskriminalität
+                        </a>
+                    </p>
                 </div>
         </div>
     
-        <div class="row mb-1" id="db-row">
-                <div class="col-md-6 p-2 g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
-                    <p>Datenbank der Urteile betreffend die</p>
-                    <a class="stretched-link disabled" href="">Betäubungsmittelkriminalität</a>
-                    <p>betrachten</p>
+        <div class="row mb-1 g-1" id="db-row">
+                <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
+                    <p class="lead"> 
+                        <a class="stretched-link text-decoration-none text-muted" href="">Datenbank der
+                        Urteile betreffend die Betäubungsmittelkriminalität betrachten
+                        </a>
+                    </p>
                 </div>
-                <div class="col-md-6 p-2 g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
-                    <p>Datenbank der Urteile betreffend die</p>
-                    <a class="stretched-link" href="{% url "betmdatabase" %}">Wirtschaftskriminalität</a>
-                    <p>betrachten</p>
+                <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
+                    <p class="lead"> 
+                        <a class="stretched-link text-decoration-none text-dark" href="{% url "betmdatabase" %}">
+                            Datenbank der Urteile betreffend die Wirtschaftskriminalität betrachten 
+                        </a>
+                    </p>
                 </div>
         </div>
         
-        <div class="row mb-1" id="eval-row">
-            <div class="col-md-6 p-2 g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative disabled">
-                <p>Eckwerte der KI betreffend die</p>
-                <a class="stretched-link" href="{% url "database" %}">Betäubungsmittelkriminalität</a>
-                <p>betrachten</p>
+        <div class="row mb-1 g-1" id="eval-row">
+            <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
+                <p class="lead">
+                    <a class="stretched-link text-decoration-none text-dark" href="">
+                        Eckwerte der KI betreffend die
+                    Betäubungsmittelkriminalität betrachten
+                    </a>
+                </p>
             </div>
-            <div class="col-md-6 p-2 g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
-                <p>Eckwerte der KI und eine Evaluation betreffend die</p>
-                <a class="stretched-link" href="{% url "kimodel_evaluation" %}">Wirtschaftskriminalität</a>
-                <p>betrachten</p>
+            <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
+                <p class="lead">
+                    <a class="stretched-link text-decoration-none text-dark" href="{% url "kimodel_evaluation" %}">
+                        Eckwerte
+                    der KI und eine Evaluation betreffend die Wirtschaftskriminalität betrachten
+                    </a>
+                </p>
             </div>
         </div>
         
-        <div class="row mb-2" id="sci-row">
-            <div class="col-md-6 p-2 g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
-                    <p>Strafzumessung unter Zuhilfenahme der KI</p>
-                    <a class="stretched-link disabled" href="">ein Plädoyer</a>
-                </div>
-                <div class="col-md-6 p-2 g-0 border rounded overflow-hidden flex-md-row mb-4 shadow-sm h-md-250 position-relative">
-                    <p>Wie die vorliegend eingesetzte KI</p>
-                    <a class="stretched-link" href="{% url "text" %}">funktioniert</a>
-                </div>
+        <div class="row mb-1 g-1" id="sci-row">
+            <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
+                <p class="lead">
+                    <a class="stretched-link text-decoration-none text-muted" href="">
+                        Strafzumessung unter
+                    Zuhilfenahme der KI - ein Plädoyer
+                    </a>
+                </p>
+            </div>
+            <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
+                <p class="lead"> 
+                    <a class="stretched-link text-decoration-none text-dark" href="{% url "text" %}">
+                        Wie die
+                    vorliegend eingesetzte KI funktioniert
+                    </a>
+                </p>
+            </div>
         </div>
     
     </div>

@@ -12,8 +12,8 @@
             <form action="" method="post">
                     {% csrf_token %}
 
-                    <div class="row">
-                        <div class="col-6">
+                    <div class="row g-1">
+                        <div class="col col-lg-6">
                             <table class="table border rounded">
                                     <legend>Schuldspruch/Dispositiv</legend>
                                     {{ form.mengenmaessig.as_field_group }}
@@ -33,7 +33,7 @@
                             {{ form.vorbestraft_einschlaegig.as_field_group }}
                     </table> 
                         </div>
-                        <div class="col-6">
+                        <div class="col col-lg-6">
                             <div id="betmform1">
                                 <table id="betm1" class="table border rounded">
                                     <legend>Betäubungsmittel</legend>

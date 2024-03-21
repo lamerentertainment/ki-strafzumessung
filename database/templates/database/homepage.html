@@ -16,9 +16,11 @@
 <body>
 
 {% block body %}
-    <div class="container" style="background-image: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url('{% static 'png/illustration-graph-fadeout.png' %}');">
-        
-        <div class="row" >
+    <div class="container"
+         style="background-image: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url('{% static 'png/illustration-graph-fadeout.png' %}');
+                background-repeat: no-repeat ">
+
+        <div class="row">
             <div class="col-6" >
                 <h1 class="display-4 fst-italic">ki.strafzumessung.ch</h1>
                 <p class="lead my-3">
@@ -31,79 +33,82 @@
         </div>
         
         
-        <div class="row mb-1 g-1" id="ki-row">
-                <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
+        <div class="row mb-2 g-3" id="ki-row">
+                <div class="col-sm-5 mx-1 p-4 border rounded bg-light position-relative" style="--bs-bg-opacity: .5;">
                     <p class="lead">
-                        <a class="stretched-link text-decoration-none text-dark" href="{% url "betm_prognose" %}">
                         Präjudizen anzeigen und KI-Strafmassprognose bei Betäubungsmittelkriminalität
-                        </a>
                     </p>
+                    <a class="stretched-link" href="{% url "betm_prognose" %}">
+                        Zum KI-Tool
+                    </a>
                 </div>
-                <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
+                <div class="col-sm-5 mx-1 p-4 border rounded bg-light position-relative" style="--bs-bg-opacity: .5;">
                     <p class="lead">
-                        <a class="stretched-link text-decoration-none text-dark" href="{% url "prognose" %}">
                         Präjudizen anzeigen und KI-Strafmassprognose bei Wirtschaftskriminalität
-                        </a>
                     </p>
+                    <a class="stretched-link " href="{% url "prognose" %}">
+                        Zum KI-Tool
+                    </a>
                 </div>
         </div>
     
-        <div class="row mb-1 g-1" id="db-row">
-                <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
+        <div class="row mb-2 g-3" id="db-row">
+                <div class="col-sm-5 mx-1 p-4 border rounded bg-light position-relative" style="--bs-bg-opacity: .5;">
                     <p class="lead"> 
-                        <a class="stretched-link text-decoration-none text-muted" href="">Datenbank der
-                        Urteile betreffend die Betäubungsmittelkriminalität betrachten
-                        </a>
+                        Datenbank der Urteile betreffend die Betäubungsmittelurteile
                     </p>
+                    <a class="stretched-link " href="{% url "betmdatabase" %}">
+                         betrachten 
+                    </a>
                 </div>
-                <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
+                <div class="col-sm-5 mx-1 p-4 border rounded bg-light position-relative" style="--bs-bg-opacity: .5;">
                     <p class="lead"> 
-                        <a class="stretched-link text-decoration-none text-dark" href="{% url "betmdatabase" %}">
-                            Datenbank der Urteile betreffend die Wirtschaftskriminalität betrachten 
-                        </a>
+                        Datenbank der Urteile betreffend die Wirtschaftskriminalität
                     </p>
+                    <a class="stretched-link " href="{% url "database" %}">
+                         betrachten 
+                    </a>
                 </div>
         </div>
         
-        <div class="row mb-1 g-1" id="eval-row">
-            <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
+        <div class="row mb-1 g-3" id="eval-row">
+            <div class="col-sm-5 mx-1 p-4 border rounded bg-light position-relative" style="--bs-bg-opacity: .5;">
                 <p class="lead">
-                    <a class="stretched-link text-decoration-none text-dark" href="">
-                        Eckwerte der KI betreffend die
-                    Betäubungsmittelkriminalität betrachten
-                    </a>
+                    Eckwerte der KI für die Prognose der Betäubungsmittelkriminalität und 
+                    <br> Evaluation der Rechtsprechung
                 </p>
-            </div>
-            <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
+                <p class="" href="">
+                    (in Vorbereitung)
+                </p>
+             </div>
+            <div class="col-sm-5 mx-1 p-4 border rounded bg-light position-relative" style="--bs-bg-opacity: .5;">
                 <p class="lead">
-                    <a class="stretched-link text-decoration-none text-dark" href="{% url "kimodel_evaluation" %}">
-                        Eckwerte
-                    der KI und eine Evaluation betreffend die Wirtschaftskriminalität betrachten
-                    </a>
+                    Eckwerte der KI für die Prognose der Wirtschaftskriminalität und 
+                    <br> Evaluation der Rechtsprechung
                 </p>
-            </div>
+                <a class="stretched-link" href="{% url "kimodel_evaluation" %}">
+                    betrachten
+                </a>
+             </div>
         </div>
         
-        <div class="row mb-1 g-1" id="sci-row">
-            <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
-                <p class="lead">
-                    <a class="stretched-link text-decoration-none text-muted" href="">
-                        Strafzumessung unter
-                    Zuhilfenahme der KI - ein Plädoyer
-                    </a>
+        <div class="row mb-1 g-3" id="sci-row">
+            <div class="col-sm-5 mx-1 p-4 border rounded bg-light bg-opacity-25 position-relative">
+                <p class="lead">Strafzumessung mit Hilfe von KI? - ein Plädoyer</p>
+                <p class="stretched-link" href="">
+                    (in Vorbereitung)
                 </p>
             </div>
-            <div class="col-md-6 p-4 border rounded bg-light bg-opacity-25">
-                <p class="lead"> 
-                    <a class="stretched-link text-decoration-none text-dark" href="{% url "text" %}">
-                        Wie die
-                    vorliegend eingesetzte KI funktioniert
-                    </a>
-                </p>
+            <div class="col-sm-5 mx-1 p-4 border rounded bg-light bg-opacity-25 position-relative">
+                <p class="lead">Wie die vorliegend eingesetzte KI funktioniert</p>
+                <a class="stretched-link" href="{% url "text" %}">
+                    lesen
+                </a>
             </div>
         </div>
     
     </div>
+
 {% endblock %}
 
 </body>

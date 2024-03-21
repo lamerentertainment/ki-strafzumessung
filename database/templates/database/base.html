@@ -20,16 +20,6 @@
         </div>
     {% endblock nav %}
 
-    {% block userinfo %}
-        <div class="row">
-            {% if user.is_authenticated %}
-                <p>Eingeloggt als {{ user.username }}. <a href="{% url 'logout' %}">logout</a></p>
-            {% else %}
-                <p>Sie befinden sich mit Besucherstatus auf der Website, zum <a href="{% url 'login' %} ">login</a></p>
-            {% endif %}
-        </div>
-    {% endblock %}
-
     {% if messages %}
         <ul class="messages">
             {% for message in messages %}

@@ -1,24 +1,40 @@
 {% extends './base.html' %}
 
 {% block body %}
-    <h1>Liste der Betäubungsmittel-Urteile</h1>
+    <h1>Liste der Betäubungsmittel-Urteile  ({{ object_list|length }})</h1>
       <table class="table">
         <thead>
           <tr>
             <th>Fall-Nr.</th>
-            <th>Gericht</th>
-            <th>Urteilsdatum</th>
-            <th>Sanktion (Monate)</th>
+            <th>Gericht/Urteilsdatum</th>
+            <th>Betäubungsmittel</th>
+            <th>Rolle</th>
+            <th>Sanktion</th>
+            <th>Dauer/Höhe</th>
             <th>Details</th>
           </tr>
         </thead>
         <tbody>
           {% for urteil in object_list %}
             <tr>
-              <td>{{ urteil.fall_nr }}</td>
-              <td>{{ urteil.gericht }}</td>
-              <td>{{ urteil.urteilsdatum }}</td>
-              <td>{{ urteil.freiheitsstrafe_in_monaten }}</td>
+              <td><a href="{{ urteil.url_link }}">{{ urteil.fall_nr }}</a></td>
+              <td>Urteil des {{ urteil.gericht }}s <br />
+                  vom {{ urteil.urteilsdatum }}</td>
+                <td>
+                    <ul>
+                        {% for betm in urteil.betm.all %}
+                            <li>{{betm}}</li>
+                        {% endfor %}
+                    </ul>
+                </td>
+              <td>{{ urteil.rolle }}</td>
+                {% if urteil.hauptsanktion == '0' %}
+                    <td>Freiheitsstrafe</td>
+                    <td>{{ urteil.freiheitsstrafe_in_monaten }} Monate</td>
+                {% elif urteil.hauptsanktion == '1' %}
+                    <td>Geldstrafe</td>
+                    <td>{{ urteil.anzahl_tagessaetze }} Tagessätze</td>
+                {% endif %}
               <td><a href="{% url 'betmurteil_detail' pk=urteil.pk %}">Details</a></td>
             </tr>
           {% empty %}

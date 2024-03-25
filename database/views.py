@@ -31,7 +31,7 @@ from .ai_utils import (
     merkmalswichtigkeitslistegenerator,
     merkmale_in_merkmalswichtigkeitsliste_zusammenfassen,
     betm_urteile_dataframe_erzeugen,
-    nachbar_mit_sanktionsbewertung_anreichern
+    nachbar_mit_sanktionsbewertung_anreichern,
 )
 from .db_utils import (
     kategorie_scatterplot_erstellen,
@@ -43,14 +43,14 @@ from .aws_helpers import (
 import pickle
 from sklearn.model_selection import cross_val_score
 
+
 def homepage(request):
     context = {}
     return render(request, "database/homepage.html", context)
 
+
 # Database Views
 def database(request):
-    datenbank_scatterplots_aktualisieren()
-
     vollzug_scatterplot_1000000 = DiagrammSVG.objects.get(
         name="vollzug_scatterplot_1000000"
     )
@@ -72,6 +72,12 @@ def database(request):
         "hauptdelikt_scatterplot_1000000": hauptdelikt_scatterplot_1000000,
     }
     return render(request, "database/database.html", context)
+
+
+def ws_db_scatterplots_aktualisieren(request):
+    datenbank_scatterplots_aktualisieren()
+    messages.success(request, "Die Datenbank Scatterplots für Wirtschafsdelikte wurden erfolgreich neu erstellt")
+    return redirect("dev")
 
 
 class UrteilErstellenView(LoginRequiredMixin, generic.CreateView):
@@ -321,8 +327,18 @@ def prognose(request):
             nachbar = differenzengenerator(nachbar, form)
             nachbar2 = differenzengenerator(nachbar2, form)
 
-            nachbar = nachbar_mit_sanktionsbewertung_anreichern(nachbar, strafmass_estimator=strafmass_model, hauptsanktion_estimator=sanktionsart_model, vollzug_estimator=vollzugs_model)
-            nachbar2 = nachbar_mit_sanktionsbewertung_anreichern(nachbar2, strafmass_estimator=strafmass_model, hauptsanktion_estimator=sanktionsart_model, vollzug_estimator=vollzugs_model)
+            nachbar = nachbar_mit_sanktionsbewertung_anreichern(
+                nachbar,
+                strafmass_estimator=strafmass_model,
+                hauptsanktion_estimator=sanktionsart_model,
+                vollzug_estimator=vollzugs_model,
+            )
+            nachbar2 = nachbar_mit_sanktionsbewertung_anreichern(
+                nachbar2,
+                strafmass_estimator=strafmass_model,
+                hauptsanktion_estimator=sanktionsart_model,
+                vollzug_estimator=vollzugs_model,
+            )
 
             return render(
                 request,

@@ -18,6 +18,7 @@ urlpatterns = [
     path('dev_betm', views.dev_betm, name='dev_betm'),
     path('betm_kimodelle_neu_generieren', views.betm_kimodelle_neu_generieren, name='betm_kimodelle_neu_generieren'),
     path('model_neu_kalibrieren', views.dev_model_neu_kalibrieren, name='dev_model_neu_kalibrieren'),
+    path('ws_db_scatterplots_aktualisieren', views.ws_db_scatterplots_aktualisieren, name='ws_db_scatterplots_aktualisieren'),
     path('csv_neu_speichern', views.csv_erstellen, name='csv_neu_speichern'),
     path('text', views.text, name='text'),
     path('betmdatabase', views.BetmUrteilListView.as_view(), name='betmdatabase'),

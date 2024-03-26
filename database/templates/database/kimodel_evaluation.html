@@ -9,7 +9,7 @@
             <h2>Verwendete KI-Modelle</h2>
             <p>Für die Prognose der <b>Höhe des Strafmass</b> wird der
                 <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html">RandomForestRegressor</a>,
-                für die Prognose der <b>Vollzugsform</b> wird der
+                für die Prognose der <b>Sanktionsart</b> und <b>Vollzugsform</b> wird der
                 <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">RandomForestClassifier</a>
                 und für die <b>Eruierung der Präjudizen</b> der
                 <a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html#sklearn.neighbors.KNeighborsRegressor">KNeighborsRegressor</a>
@@ -120,11 +120,11 @@
         <div id="introspection-plot" class="row">
         <h2>Prognosediagramm</h2>
 
-        <section class="col-6 mb-3">
+        <section class="col-12 col-lg-8 mb-3">
             <img src="{{ introspection_plot.file.url }}" style="max-width: 100%">
         </section>
 
-        <section id="feature-importance-rf-regressor" class="col-4 mb-3">
+        <section id="feature-importance-rf-regressor" class="col-12 col-lg-4 mb-3">
             <h4> Lesehinweis </h4>
             {% autoescape off %}
             <div>{{ introspection_plot.lesehinweis }}</div>

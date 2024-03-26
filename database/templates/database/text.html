@@ -5,9 +5,9 @@
 
     <div class="container">
         <div class="row">
-            <div class="col-md-11 mx-auto wissenschaftlich">
-                <h3>Wie die vorliegend eingesetzten KI-Systeme funktionieren</h3>
-                <h4>a. Ausgangslage/Gedankenbeispiel</h4>
+            <div class="col-md-11 mx-auto">
+                <h3 class="mt-4">Wie die vorliegend eingesetzten KI-Systeme funktionieren</h3>
+                <h4 class="mt-3">a. Ausgangslage/Gedankenbeispiel</h4>
                 <p>Nachfolgend soll an einem fiktiven, bewusst einfach gehaltenen Gedankenbeispiel erklärt werden, wie
                     die vorliegend verwendeten KI-Konzepte rechnerisch funktionieren. Es wird als Gedankenbeispiel
                     angenommen, dass eine Person wegen eines Betrugsdelikts i.S.v. Art. 146 StGB verfolgt wird und dass dabei die
@@ -20,9 +20,9 @@
                     nun fiktiv angenommen, eine Erhebung beim entsprechenden Gericht habe ergeben, dass dieses in den
                     vergangenen Jahren sechs Urteile wegen Betrugs ausgesprochen hat und dass diese Urteile mit einer
                     schriftlichen Begründung vorliegen. Die Verurteilungen sind wie folgt ausgefallen:</p>
-                <section id="table-urteile" class="col mb-3">
-                    <div class="rounded border border-1 fs-6 w-50 mx-auto my-3">
-                        <table class="table table-sm fs-6">
+                <section id="table-urteile" class="col-12 col-xl-6 mx-auto">
+                    <div class="rounded border border-1 m-3">
+                        <table class="table table-sm">
                             <tr>
                                 <th>Nr.</th>
                                 <th>Strafe</th>
@@ -72,8 +72,8 @@
                     massgebendes Sachverhaltsmerkmal für die Bewertung des objektiven Tatverschuldens genannt wird.
                     Nehmen wir an, dass sich anlässlich der Konsultation der schriftlichen Urteilsbegründungen ergab,
                     dass den sechs vorhandenen Verurteilungen folgende Deliktssummen zugrunde lagen:</p>
-                <section id="table-deliktssumme" class="col">
-                    <div class="rounded border border-1 fs-6 w-50 mb-3 mx-auto my-3">
+                <section id="table-deliktssumme" class="col12 col-xl-6 mx-auto">
+                    <div class="rounded border border-1 m-3">
                         <table class="table table-sm">
                             <tr>
                                 <th>Nr.</th>
@@ -116,14 +116,14 @@
                 <p>Der Zusammenhang zwischen dem erhobenen Merkmal (Deliktssumme) und dem Zielwert (Freiheitsstrafe in
                     Monaten) lässt sich nun durch eine Abbildung der (Urteils-)Datenpunkte auf einem x/y-Diagramm bildlich
                     darstellen.</p>
-                <section id="png-urteile" class="col my-2">
+                <section id="png-urteile" class="col-12 col-xl-6 my-2 mx-auto">
                     <img src="{% static 'png/urteile.png' %}" alt="urteile"
-                         class="rounded border border-1 w-50 mx-auto d-block my-3">
+                         class="rounded border border-1 w-100 d-block">
                 </section>
                 <p>Daran vermag man zu erkennen, dass es bei den erhobenen Präjudizien wohl durchaus einen Zusammenhang
                     bzw. eine Korrelation zwischen der Deliktssumme und dem Strafmass geben könnte, dass es sich aber nicht
                     so verhält, dass man von der Deliktssumme ohne Weiteres auf die Strafe schliessen könnte.</p>
-                <h4>b. Lineare Regression als erstes Prognose- bzw. KI-Rechenmodell</h4>
+                <h4 class="mt-3">b. Lineare Regression als erstes Prognose- bzw. KI-Rechenmodell</h4>
                 <p>Um den genannten Zusammenhang zwischen mutmasslich korrelierenden Sachverhaltsmerkmalen zu errechnen
                     bzw. rechnerisch nachzuvollziehen, hält die mathematische Methode der Statistik das Rechenmodell der
                     linearen Regression bereit.<sup><a href="#fn2" id="ref2">2</a></sup> Dabei wird, vereinfacht ausgedrückt, in
@@ -136,9 +136,9 @@
                     und den einzelnen (Urteils-)Datenpunkten minimiert wird.
                     <sup><a href="#fn4" id="ref4">4</a></sup></p>
 
-                <section id="png-linear-regression" class="col my-2">
+                <section id="png-linear-regression" class="col-12 col-xl-6 mx-auto">
                     <img src="{% static 'png/linearmodel.png' %}" alt="lineares modell"
-                         class="rounded border border-1 w-50 mx-auto d-block my-3">
+                         class="rounded border border-1 w-100 d-block my-3">
                 </section>
 
                 <p>Auf diese Weise hat man zugleich ein erstes, einfaches – aber in der Praxis, insb. in der erklärenden und
@@ -160,8 +160,8 @@
                     und der (Prognose-)Geraden stellt zugleich der Mess- bzw. Prognosefehler des KI-Modells dar.
                     Dieser könnte, um die <b>Prognoseleistung</b> dieses KI-Systems abzuschätzen, wie folgt als
                     durchschnittlicher Fehler ausgedrückt werden:</p>
-                <section id="table-prognosefehler" class="col">
-                    <div class="rounded border border-1 fs-6 w-50 mb-3 mx-auto my-3">
+                <section id="table-prognosefehler" class="col-12 col-xl-6 mx-auto">
+                    <div class="rounded border border-1 m-3">
                         <table class="table table-sm">
                             <thead>
                             <tr>
@@ -241,8 +241,8 @@
                     bspw. erhoben werden, ob der Verurteilung eine gewerbsmässige Begehung im Sinne von Art. 146 Abs. 2
                     StGB zugrunde lag oder nicht.</p>
                 
-                <section id="table-gewerbsmaessigkeit" class="col">
-                    <div class="rounded border border-1 fs-6 w-50 mb-3 mx-auto my-3">
+                <section id="table-gewerbsmaessigkeit" class="col-12 col-xl-6 mx-auto">
+                    <div class="rounded border border-1 m-3">
                         <table class="table table-sm">
                             <thead>
                             <tr>
@@ -296,10 +296,10 @@
                 <p>Wie man aufgrund der nachfolgenden Darstellung erkennen kann, hat die Aufnahme dieses neuen
                     Vorhersagemerkmals der Gewerbsmässigkeit die Prognoseleistung des (neu gebildeten bzw. errechneten) linearen
                     KI-Modells erheblich verbessert: </p>
-                <section id="png-linear-regression" class="col my-2">
+                <section id="png-linear-regression" class="col-12 col-xl-6 mx-auto">
                     <img src="{% static 'png/linear_mit_gewerbsmaessigkeit.png' %}"
                          alt="lineares modell mit Gewerbsmässigkeit"
-                         class="rounded border border-1 w-50 mx-auto d-block my-3">
+                         class="rounded border border-1 w-100 d-block m-3">
                 </section>
                 <p>Der durchschnittliche Prognosefehler dieses (linearen) KI-Modells – errechnet nach der zuvor
                     dargestellten Methode – ist deutlich geringer geworden, namentlich 2.83 Monate. Dieser Umstand lässt sich mit
@@ -330,12 +330,12 @@
                     KI-Modelle, welche nicht auf Linearität beschränkt sind und sich somit den vorhandenen Datenpunkten besser
                     «anschmiegen» können, im Vorteil.</p>
 
-                <section id="png-linear-regression" class="col my-2">
+                <section id="png-linear-regression" class="col-12 col-xl-6 mx-auto">
                     <img src="{% static 'png/nichtlinearitaet.png' %}" alt="Nichtlinearität"
-                         class="rounded border border-1 w-50 mx-auto d-block my-3">
+                         class="rounded border border-1 w-100 d-block m-3">
                 </section>
 
-                <h4>c. Entscheidungsbaum- und Zufallswaldrechenmodelle (tree- und random forest-model) als zweites Prognose-
+                <h4 class="mt-3">c. Entscheidungsbaum- und Zufallswaldrechenmodelle (tree- und random forest-model) als zweites Prognose-
                     bzw. KI-Rechenmodell</h4>
                 <p>
                     Zur Eruierung der «Wichtigkeit» der Sachverhaltsmerkmale in Bezug auf die Höhe des Strafmass wird
@@ -358,16 +358,16 @@
                     vorliegenden Urteile perfekt vorhersagen würde:
                 </p>
 
-                <section id="decision-tree" class="col my-2">
+                <section id="decision-tree" class="col-12 col-xl-6 mx-auto">
                     <div class="position-relative">
                         <img src="{% static 'png/decisiontree.png' %}" alt="Decision Tree"
-                             class="rounded border border-1 w-50 mx-auto d-block my-3">
+                             class="rounded border border-1 w-100 d-block my-3">
                         <div class="overlay-container">
-                            <div id="number-overlay-titel" class="position-absolute" style="top: 5%; left: 30%;"><strong>Ebene</strong></div>
-                            <div id="number-overlay-1" class="position-absolute" style="top: 15%; left: 30%;"><strong>1</strong></div>
-                            <div id="number-overlay-2" class="position-absolute" style="top: 33%; left: 30%;"><strong>2</strong></div>
-                            <div id="number-overlay-3" class="position-absolute" style="top: 54%; left: 30%;"><strong>3</strong></div>
-                            <div id="number-overlay-4" class="position-absolute" style="top: 73%; left: 30%;"><strong>4</strong></div>
+                            <div id="number-overlay-titel" class="position-absolute" style="top: 5%; left: 5%;"><strong>Ebene</strong></div>
+                            <div id="number-overlay-1" class="position-absolute" style="top: 15%; left: 5%;"><strong>1</strong></div>
+                            <div id="number-overlay-2" class="position-absolute" style="top: 33%; left: 5%;"><strong>2</strong></div>
+                            <div id="number-overlay-3" class="position-absolute" style="top: 54%; left: 5%;"><strong>3</strong></div>
+                            <div id="number-overlay-4" class="position-absolute" style="top: 73%; left: 5%;"><strong>4</strong></div>
                         </div>
                     </div>
                 </section>
@@ -459,9 +459,9 @@
                     durch die vorhandenen Urteile gehen.
                 </p>
 
-                <section id="png-linear-regression" class="col my-2">
+                <section id="png-linear-regression" class="col-12 col-xl-6 mx-auto">
                     <img src="{% static 'png/decisiontree-prognosen.png' %}" alt="Prognosen Decision Treee"
-                         class="rounded border border-1 w-50 mx-auto d-block my-3">
+                         class="rounded border border-1 w-100 d-block m-3">
                 </section>
 
                 <p>
@@ -491,9 +491,9 @@
                     zufällig ausgewählten Hälfte der in der Datengrundlage vorhandenen Urteile einen Entscheidungsbaum
                     erstellt haben.
                 </p>
-                <section id="png-linear-regression" class="col my-2">
+                <section id="png-linear-regression" class="col-12 col-xl-6 mx-auto">
                     <img src="{% static 'png/randomforest-prognosen.png' %}" alt="Random Forest Prognosen"
-                         class="rounded border border-1 w-50 mx-auto d-block my-3">
+                         class="rounded border border-1 w-100 d-block m-3">
                 </section>
                 <p>
                     Auch ein solches «random forest» KI-Modell «merkt sich» für jeden einzelnen Entscheidungsbaum,
@@ -505,7 +505,7 @@
                     für das verwendete Präjudizien-Vorschlagssystem, dessen Funktionsweise nachfolgend vorgestellt wird.
                 </p>
 
-                <h4>
+                <h4 class="mt-3">
                     d. nächste Nachbarn Rechenmodelle (nearest neighbors-model) als drittes KI-Rechenmodell
                 </h4>
                 <p>Bevor dargelegt wird, wie das vorliegend eingesetzte KI-System im Einzelnen funktioniert,
@@ -563,7 +563,7 @@
                 </p>
 
                 <section id="kneighborbeispiel1">
-                    <div class="rounded border border-1 fs-6 w-50 mb-3 mx-auto my-3">
+                    <div class="col-12 col-xl-6 mx-auto m-3 rounded border border-1">
                         <table class="table table-sm">
                             <tr>
                                 <th></th>
@@ -591,7 +591,7 @@
                             </tr>
                         </table>
                     </div>
-                    <div class="rounded border border-1 fs-6 w-50 mb-3 mx-auto my-3">
+                    <div class="col-12 col-xl-6 mx-auto m-3 rounded border border-1">
                         <table class="table table-sm">
                             <tr>
                                 <th></th>
@@ -645,7 +645,7 @@
                 </p>
 
                 <section id="kneighborbeispiel2">
-                    <div class="rounded border border-1 fs-6 w-50 mb-3 mx-auto my-3">
+                    <div class="col-12 col-xl-6 mx-auto m-3 rounded border border-1">
                         <table class="table table-sm">
                             <tr>
                                 <th></th>
@@ -673,7 +673,7 @@
                             </tr>
                         </table>
                     </div>
-                    <div class="rounded border border-1 fs-6 w-50 mb-3 mx-auto my-3">
+                    <div class="col-12 col-xl-6 mx-auto m-3 rounded border border-1">
                         <table class="table table-sm">
                             <tr>
                                 <th></th>
@@ -722,7 +722,7 @@
                 </p>
 
                 <section id="kneighborbeispiel2">
-                    <div class="rounded border border-1 fs-6 w-50 mb-3 mx-auto my-3">
+                    <div class="col-12 col-xl-6 mx-auto m-3 rounded border border-1">
                         <table class="table table-sm">
                             <tr>
                                 <th></th>
@@ -750,7 +750,7 @@
                             </tr>
                         </table>
                     </div>
-                    <div class="rounded border border-1 fs-6 w-50 mb-3 mx-auto my-3">
+                    <div class="col-12 col-xl-6 mx-auto m-3 rounded border border-1">
                         <table class="table table-sm">
                             <tr>
                                 <th></th>
@@ -793,7 +793,7 @@
 
     <hr>
 
-    <section class="footnotes mt-5 wissenschaftlich">
+    <section class="footnotes mt-5">
         <ol style="list-style-type: none;">
 
             <li id="fn1" class="fussnote mb-0 small"><sup><a href="#ref1">1</a></sup>

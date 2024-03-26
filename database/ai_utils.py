@@ -372,10 +372,12 @@ def kimodelle_neu_kalibrieren_und_abspeichern():
 
     # random forest CLASSIFIER mit ausschliesslich validen features, VOLLZUGSART als zielvariable
     y = Urteil.pandas.return_y_zielwerte(zielwert="vollzug", exclude_unmarked=True)
-    random_forest_classifier_val_fts = RandomForestClassifier()
+    random_forest_classifier_val_fts = RandomForestClassifier(oob_score=True)
     random_forest_classifier_val_fts.fit(x_val, y)
-    # leeres prognoseleistung dict, weil dies nicht für classifier geht
-    prognoseleistung_dict = {"content": "empty"}
+    gerundeter_oob_score_vollzugsart = round(
+        random_forest_classifier_val_fts.oob_score_ * 100, 1
+    )
+    prognoseleistung_dict = {"oob_score": gerundeter_oob_score_vollzugsart}
     # merkmalwchtigkeitslisten erstellen
     (
         list_of_zipped_importance_feature_tuples,
@@ -397,10 +399,12 @@ def kimodelle_neu_kalibrieren_und_abspeichern():
     y = Urteil.pandas.return_y_zielwerte(
         zielwert="hauptsanktion", exclude_unmarked=True
     )
-    rf_classifier_fuer_sanktionsart_val_fts = RandomForestClassifier()
+    rf_classifier_fuer_sanktionsart_val_fts = RandomForestClassifier(oob_score=True)
     rf_classifier_fuer_sanktionsart_val_fts.fit(x_val, y)
-    # leeres prognoseleistung dict, weil dies nicht für classifier geht
-    prognoseleistung_dict = {"content": "empty"}
+    gerundeter_oob_score_sanktionsart = round(
+        rf_classifier_fuer_sanktionsart_val_fts.oob_score_ * 100, 1
+    )
+    prognoseleistung_dict = {"oob_score": gerundeter_oob_score_sanktionsart}
     # merkmalwchtigkeitslisten erstellen
     (
         list_of_zipped_importance_feature_tuples,
@@ -725,7 +729,9 @@ def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich
     return nachbar_pk, nachbar_pk2, knn_prediction
 
 
-def nachbar_mit_sanktionsbewertung_anreichern(nachbarobjekt, strafmass_estimator, hauptsanktion_estimator, vollzug_estimator):
+def nachbar_mit_sanktionsbewertung_anreichern(
+    nachbarobjekt, strafmass_estimator, hauptsanktion_estimator, vollzug_estimator
+):
     cat_fts = [
         "hauptdelikt",
         "mehrfach",

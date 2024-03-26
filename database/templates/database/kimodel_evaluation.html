@@ -36,8 +36,16 @@
                     lag {{ val_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung }}
                     Monate neben der effektiv ausgefällten Strafe. Dies war beim Urteil
                     {{ val_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung_urteil }} der Fall.</p>
-            <p>Die Prognoseleistung/Fehlerquote des KI-Modells, welches die Vollzugsart (bedingt, teilbedingt, unbedingt) prognostiziert, wird nicht
-                erhoben.</p>
+            <p>Die Prognoseleistung des KI-Modells, welches die Vollzugsart (bedingt, teilbedingt, unbedingt) 
+                prognostiziert, beträgt {{ val_rf_clf_kimodel_vollzugsart.prognoseleistung_dict.oob_score }} %. D.h. 
+                in {{ val_rf_clf_kimodel_vollzugsart.prognoseleistung_dict.oob_score }} % der Fälle wird die Vollzugsart 
+                korrekt prognostiziert.
+            </p>
+            <p>Die Prognoseleistung des KI-Modells, welches die Sanktionsart (Freiheitstrafe, Geldstrafe) 
+                prognostiziert, beträgt {{ val_rf_clf_kimodel_sanktionsart.prognoseleistung_dict.oob_score }} %. D.h. 
+                in {{ val_rf_clf_kimodel_sanktionsart.prognoseleistung_dict.oob_score }} % der Fälle wird die Sanktionsart 
+                korrekt prognostiziert.
+            </p>
         </div>
 
         <h1>Evaluation der Rechtsprechung</h1>
@@ -77,7 +85,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    {% for tuple in val_rf_clf_kimodel.ft_importance_list_merged %}
+                    {% for tuple in val_rf_clf_kimodel_vollzugsart.ft_importance_list_merged %}
                         <tr>
                             <td>{{ tuple.0|floatformat }} %</td>
                             <td>{{ tuple.1|capfirst }}</td>

@@ -76,7 +76,10 @@ def database(request):
 
 def ws_db_scatterplots_aktualisieren(request):
     datenbank_scatterplots_aktualisieren()
-    messages.success(request, "Die Datenbank Scatterplots für Wirtschafsdelikte wurden erfolgreich neu erstellt")
+    messages.success(
+        request,
+        "Die Datenbank Scatterplots für Wirtschafsdelikte wurden erfolgreich neu erstellt",
+    )
     return redirect("dev")
 
 
@@ -190,7 +193,12 @@ def kimodel_evaluation(request):
     else:
         # kimodelle mit nur validen features laden
         val_rf_kimodel = KIModelPickleFile.objects.get(name="rf_regr_val")
-        val_rf_clf_kimodel = KIModelPickleFile.objects.get(name="rf_clf_val")
+        val_rf_clf_kimodel_vollzugsart = KIModelPickleFile.objects.get(
+            name="rf_clf_val"
+        )
+        val_rf_clf_kimodel_sanktionsart = KIModelPickleFile.objects.get(
+            name="rf_clf_sanktionsart_val"
+        )
         # kimodelle mit allen features laden
         all_rf_kimodel = KIModelPickleFile.objects.get(name="rf_regr_all")
         lr_kimodel = KIModelPickleFile.objects.get(name="lr_regr_all")
@@ -200,7 +208,8 @@ def kimodel_evaluation(request):
         # kontext füllen
         context = {
             "val_rf_kimodel": val_rf_kimodel,
-            "val_rf_clf_kimodel": val_rf_clf_kimodel,
+            "val_rf_clf_kimodel_vollzugsart": val_rf_clf_kimodel_vollzugsart,
+            "val_rf_clf_kimodel_sanktionsart": val_rf_clf_kimodel_sanktionsart,
             "all_rf_kimodel": all_rf_kimodel,
             "introspection_plot": introspection_plot,
         }

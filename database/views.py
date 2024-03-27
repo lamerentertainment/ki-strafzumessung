@@ -734,7 +734,7 @@ def dev(request):
 
 
 @login_required
-def dev_model_neu_kalibrieren(request):
+def ws_kimodelle_neu_generieren(request):
     kimodelle_neu_kalibrieren_und_abspeichern()
     introspection_plot_und_lesehinweis_abspeichern()
     messages.success(request, "Die KI-Modelle wurden erfolgreich aktualisiert.")

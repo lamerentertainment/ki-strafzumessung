@@ -21,6 +21,7 @@ urlpatterns = [
     path('ws_db_scatterplots_aktualisieren', views.ws_db_scatterplots_aktualisieren, name='ws_db_scatterplots_aktualisieren'),
     path('csv_neu_speichern', views.csv_erstellen, name='csv_neu_speichern'),
     path('text', views.text, name='text'),
+    path('suigeneris', views.suigeneris, name='sugeneris'),
     path('betmdatabase', views.BetmUrteilListView.as_view(), name='betmdatabase'),
     path('betmurteil/<int:pk>', views.BetmUrteilDetailView.as_view(), name='betmurteil_detail'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

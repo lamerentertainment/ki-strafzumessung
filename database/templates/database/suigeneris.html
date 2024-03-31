@@ -1,0 +1,230 @@
+{% extends './base.html' %}
+{% load static %}
+
+{% block body %}
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-11 mx-auto">
+                <h3 class="mt-4">Strafzumessung mit Hilfe künstlicher Intelligenz?</h3>
+                <p class="lead mb-2">Die richterliche Zumessung der Strafe ist geprägt von weiten Ermessenspielräumen und ihr 
+                    haftet – nicht gänzlich unberechtigt – das Etikett der Willkür an. Mit vorliegendem Beitrag wird 
+                    dargelegt, wie die künstliche Intelligenz einen Beitrag für eine rechtsgleiche und somit gerechtere 
+                    Strafzumessung leisten kann.</p>
+                
+                <h4 class="mt-3">Einleitung</h4>
+                <p>Spätestens seit das Softwarunternehmen OpenAI mit ChatGPT Ende November 2022 ein leicht zugängliches 
+                    und daher massentaugliches Large Language Model veröffentlicht hat, ist die «künstliche Intelligenz» 
+                    (KI) in aller Munde. Unter diesem Begriff wird eine Technologie angesprochen, deren theoretische 
+                    Grundlagen zwar lange vor dem gegenwärtigen digitalen Wandel erforscht worden sind, die jedoch erst 
+                    dank der stetig voranschreitenden Rechen- und Speicherkapazitäten von Computern für den 
+                    Alltagsgebrauch nutzbar wurde. Die Bezeichnung rührt daher, dass die Leistungsfähigkeit der KI von 
+                    der Arbeitsweise bzw. der Intelligenz des menschlichen Gehirns inspiriert ist. Die KI soll unter 
+                    anderem komplexe menschliche Entscheidungen, die mit einer auf der Lebenserfahrung gestützten 
+                    Intuition gefällt werden, nachahmen und damit assistieren oder gar gänzlich substituieren.</p>
+                <p>Angesichts dieser erhofften Leistungen vermag es nicht zu verwundern, dass vermehrt Überlegungen 
+                    angestellt werden, wie die KI innerhalb der Justiz gewinnbringend genutzt werden könnte und unter 
+                    welchen Bedingungen ihr Einsatz bei der richterlichen Tätigkeit zulässig sein kann.<sup><a href="#fn1" id="ref1">1</a></sup> Der vorliegende 
+                    Beitrag nimmt sich am Beispiel der Strafzumessung diesen beiden Fragen an und legt dar, wie 
+                    bestimmte Methoden der KI genutzt werden können, um einen Beitrag für eine gerechtere Sanktionierung 
+                    zu leisten. Zu diesem Zweck wird in einem ersten Teil aufgezeigt, welche Herausforderungen bei der 
+                    Ausübung der Strafzumessung bestehen (I.), um darauf aufbauend darzulegen, wie diese mit dem 
+                    Einsatz der KI besser bewältigt werden können (II.). Zuletzt wird begründet, wieso die Vorbehalte, 
+                    welche gegen den Einsatz von KI in der Justiz angebracht worden sind, auf die hier vorgeschlagene 
+                    Anwendung nicht zutreffen (III.).</p>
+                
+                <h4 class="mt-3">I.	Die Strafzumessung in Theorie und Praxis</h4>
+                <h5 class="mt-3">1.	Der Begriff der Strafzumessung und deren gesetzliche Grundlagen</h5>
+                <p>Unter dem Begriff der Strafzumessung wird der Vorgang verstanden, anlässlich jenem die Strafbehörde 
+                    die Art und das Mass (verstanden als Dauer einer freiheitsentziehenden bzw. als Höhe einer 
+                    pekuniären Sanktion) der Strafe festlegt, welche wegen einer Straftat ausgesprochen wird. 
+                    Der gesetzliche Ausgangspunkt dieses Vorgangs bildet in jedem Fall der vom verwirklichten 
+                    Straftatbestand abgesteckte Strafrahmen, in welchem sich die für die fragliche Straftat 
+                    auszusprechende Strafe grundsätzlich zu bewegen hat. Dazu ist festzuhalten, dass die einzelnen 
+                    Straftatbestände – bewusst<sup><a href="#fn2" id="ref2">2</a></sup> – jeweils einen weiten Strafrahmen vorsehen. So ist es etwa möglich, 
+                    einen Betrug i.S.v. Art. 146 Abs. 1 StGB mit einer Geldstrafe von drei Tagessätzen oder mit einer 
+                    Freiheitsstrafe von fünf Jahren zu bestrafen. Es ist selbst-redend, dass zwischen diesen beiden 
+                    möglichen Strafmassen, was die Wirkung auf die betroffene Person betrifft, «Welten liegen». 
+                    Darüber hinaus öffnet sich dieser ohnehin schon <b>weite richterliche Ermessenspielraum</b> erheblich, 
+                    wenn bspw. mehrere Straftatbestände verwirklicht worden sind und/oder Strafmilderungs-/Strafschärfungsgründe 
+                    vorliegen, was es der Strafbehörde erlaubt, den tatbestandlich abgesteckten 
+                    Strafrahmen zu verlassen.</p>
+                <p>Innerhalb dieses gesetzlich vorgegebenen Strafrahmens ist anlässlich einer «<b>Strafzumessung im 
+                    engeren Sinne</b>» die im Einzelfall «angemessene Strafe» festzusetzen. Die gesetzlichen Vorgaben 
+                    für diese angesichts des weiten Ermessensspielraums anspruchsvolle Aufgabe sind dem 
+                    Strafgesetzbuch aus Art. 47 bzw. – für Übertretungen – aus Art. 106 zu entnehmen. Primäres 
+                    Kriterium für die Bemessung der Strafe ist nach beiden Bestimmungen das «Verschulden». 
+                    Gemäss der Auslegung des Bundesgerichts gehe es dabei im Kern um den Vorwurf an den Täter, 
+                    sich tatbestandsmässig und nicht anders verhalten zu haben, obwohl letzteres möglich gewesen wäre 
+                    – also um das «Mass der Vorwerfbarkeit des Rechtsbruchs».<sup><a href="#fn3" id="ref3">3</a></sup> 
+                    Wie es regelmässig betont, 
+                    sei das für die Strafzumessung massgebliche Verschulden aus dem 
+                    «gesamten Unrechts- und Schuldgehalt» der konkreten Straftat abzuleiten.<sup><a href="#fn4" id="ref4">4</a></sup> </p>
+                <p>Aus diesen floskelhaft anmutenden Formulierungen geht zumindest hervor, dass nach der gesetzlichen 
+                    Konzeption hinsichtlich der Festsetzung der im Einzelfall angemessenen Strafe <b>zahlreiche 
+                        Sachverhaltskriterien</b> berücksichtigt werden müssen. In Rechtsprechung und Lehre besteht 
+                    Einigkeit darüber, dass die in Frage kommenden Kriterien in zwei grobe Hauptkategorien, 
+                    in die sog. Tat- und Täterkomponenten, aufzuteilen sind.<sup><a href="#fn5" id="ref5">5</a></sup> 
+                    Diese Aufteilung lässt sich auch dem Strafgesetzbuch entnehmen, indem es in Art. 
+                    47 Abs. 2 die einzelnen Tatkomponenten aufzählt, die zur Festsetzung des 
+                    zumessungsrelevanten Verschuldens massgebend sind, und in Abs. 1 Satz 2 derselben 
+                    Bestimmung einzelne Täterkomponenten ausformuliert, welche bei der Strafzumessung 
+                    ebenfalls zu berücksichtigen sind.</p>
+                <p>Bei diesen Kriterien nach Art. 47 ff. StGB handelt es sich um <b>interpretations- und ausfüllungsbedürftige 
+                    Generalklauseln</b>. Der Gesetzgeber hat diese unbestimmte Formulierung gewählt, weil er sich bewusst 
+                    ist, dass die Frage, wann ein bestimmtes Strafmass angemessen ist, nach unterschiedlichen und 
+                    im Einzelnen umstrittenen Gesichtspunkten beantwortet werden kann.<sup><a href="#fn6" id="ref6">6</a></sup>
+                    Um diese Grundsatzfrage nicht vorwegnehmen zu müssen, hat er mit der gewählten Gesetzgebungstechnik 
+                    die Aufgabe der Findung des im Einzelfall gerechten Massstabs, an welchem sich das Angemessenheit 
+                    der Strafe zu messen hat, an die Anwenderinnen und Anwender delegiert.<sup><a href="#fn7" id="ref7">7</a></sup></p>
+                <p>Damit ist als Zwischenfazit festzuhalten, dass den Strafbehörden bei der Strafzumessung ein 
+                    grosser Ermessenspielraum zukommt, welcher durch die wenig konkreten gesetzlichen Vorgaben 
+                    kaum eingeschränkt wird.<sup><a href="#fn8" id="ref8">8</a></sup> 
+                    Ein solches Legiferieren ist angesichts des Umstands, dass die Art 
+                    sowie die Höhe der Strafe für die davon betroffene Person von <b>unmittelbarer Bedeutung</b> ist 
+                    und einen wesentlichen Eingriff in die persönliche Freiheit darstellt, durchaus überraschend. 
+                    Gemessen an der Tatsache, dass mit der Entscheidung über die Sanktion das Strafurteil für den 
+                    Angeklagten konkret spürbar wird, sowie am Ideal, dass Gesetze staatliche Willkür verhindern, 
+                    ist die Strafzumessung somit die «am schlechtesten gelöste»<sup><a href="#fn9" id="ref9">9</a></sup>  
+                    Aufgabe der strafbehördlichen Tätigkeit.<sup><a href="#fn10" id="ref10">10</a></sup></p>
+                
+                <h5 class="mt-3">2.	Die Strafzumessung in bundesgerichtlicher Rechtsprechung und im rechtswissenschaftlichen Schrifttum</h5>
+                <p>
+                    Es entspricht der üblichen Arbeitsweise der Juristinnen und Juristen, dass sie bei einer unklaren 
+                    Gesetzeslage prüfen, welche Vorgaben und Hilfestellungen einerseits der Rechtsprechung sowie 
+                    anderseits der Lehre zu entnehmen sind. In der Tat hat das <b>Bundesgericht</b> – nachdem es sich lange 
+                    zurückgehalten hat, in die weitgehend undurchsichtige Strafzumessungspraxis der kantonalen 
+                    Gerichte einzugreifen – in den letzten Jahrzehnten begonnen, eine 
+                    (in besonderen Konstellationen höchst anspruchsvolle) «<b>Strafzumessungsmethodik</b>» zu etablieren, 
+                    deren Nichtbeachtung es als Verletzung von Bundesrecht taxiert:<sup><a href="#fn11" id="ref11">11</a></sup> 
+                    Weil die entscheidende 
+                    Rolle für das Strafmass dem (objektiven und subjektiven) Tatverschulden zukomme,<sup><a href="#fn12" id="ref12">12</a></sup>  
+                    habe das Gericht in einem ersten Zwischenschritt abzuwägen, welche verschuldensmindernden 
+                    und -erhöhenden Gründe im konkreten Fall gegeben sind, um so zu einer Gesamteinschätzung 
+                    des Tatverschuldens zu gelangen. Das Tatverschulden sei nach dieser Einschätzung 
+                    qualitativ zu bewerten (leichtes, mittelgradiges oder schweres Tatverschulden) und es sei 
+                    – zumindest in bestimmten Konstellationen, etwa wenn eine verminderte Schuldfähigkeit 
+                    oder mehrere Straftaten vorliegen – nach Massgabe dieser Schuldbewertung vor dem 
+                    Hintergrund des konkret anwendbaren Strafrahmens eine sog. «hypothetische Einsatzstrafe» 
+                    festzulegen. Diese Einsatzstrafe sei sodann in einem zweiten Zwischenschritt anhand 
+                    der Täterkomponente und/oder anderen tatunabhängigen Gesichtspunkten 
+                    (bspw. Vorstrafen, Geständnis oder Asperation im Rahmen der Gesamtstrafenbildung bei 
+                    mehreren verwirklichten Straftatbeständen) anzupassen.<sup><a href="#fn13" id="ref13">13</a></sup> 
+                    Da sich das Bundesgericht jedoch 
+                    nicht dazu äussert, wie die qualitative Tatverschuldensbewertung «rechnerisch» 
+                    umzusetzen ist, vermögen diese höchstgerichtlichen methodischen Vorgaben 
+                    hinsichtlich der Findung der im Einzelfall angemessenen Strafe 
+                    jedoch kaum weiterzuhelfen.<sup><a href="#fn14" id="ref14">14</a></sup>
+                </p>
+                <p>
+                    Auch der Blick in das <b>rechtswissenschaftliche Schrifttum</b> ist bezüglich der konkreten 
+                    Festsetzung der Strafe selten erhellend. Zwar hat die Lehre gemeinsam mit der Rechtsprechung 
+                    zuweilen in eindrucksvoller Zahl bestimmte (Sachverhalts-)Kriterien bzw. Merkmale 
+                    (sog. «<b>Strafzumessungsfaktoren</b>») herausgearbeitet, welche für die Bewertung des Tat 
+                    und Täterverschuldens von Belang sein sollen. So soll bspw. bei den Vermögensdelikten 
+                    insb. der Schadens- bzw. der Deliktsbetrag im Vordergrund stehen, welchem eine 
+                    «ganz erhebliche Bedeutung» zukomme.<sup><a href="#fn15" id="ref15">15</a></sup> 
+                    Wie diese Bewertung dann aber bei der Bemessung 
+                    umzusetzen ist, bleibt nicht selten im Dunkeln. Abgesehen vom Bereich des 
+                    Betäubungsmittelstrafrechts, wo das Schrifttum verschiedene konkrete Vorschläge 
+                    für die Bemessung der Strafe basierend auf der gehandelten Menge, der Art der Betäubungsmittel 
+                    als auch der Stellung des Täters im Gefüge des Handels abgeben hat,<sup><a href="#fn16" id="ref16">16</a></sup> 
+                    unterlässt es auch die 
+                    Lehre regelmässig, numerische Angaben zur Bedeutung der einzelnen Strafzumessungsfaktoren zu machen.
+                </p>
+                
+                <h5 class="mt-3">3.	Die Strafzumessung in der Rechtswirklichkeit</h5>
+
+
+
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <section class="footnotes mt-5">
+        <ol style="list-style-type: none;">
+
+            <li id="fn1" class="fussnote mb-0 small"><sup><a href="#ref1">1</a></sup>
+                Siehe bspw. SABINE GLESS, Künstliche Intelligenz in der Gerichtsbarkeit, (Warum) braucht es weiter 
+                menschliche Richterinnen und Richter?, in: ZSR 5/2023, S. 429 ff. m.w.H.
+            </li>
+            <li id="fn2" class="fussnote mb-0 small"><sup><a href="#ref2">2</a></sup>
+                Vgl. MARTIN KILLIAS et al., Grundriss des Allgemeinen Teils des Schweizerischen Strafgesetzbuchs, 
+                Bern 2017, Nr. 1204.
+            </li>
+            <li id="fn3" class="fussnote mb-0 small"><sup><a href="#ref3">3</a></sup>
+                BGE 134 IV 1 E. 5.3.3, 136 IV 55 E. 5.5.
+            </li>
+            <li id="fn4" class="fussnote mb-0 small"><sup><a href="#ref4">4</a></sup>
+                BGE 134 IV 1 E. 5.3.3, 129 IV 6 E. 6.1, 117 IV 112 E. 1.
+            </li>
+            <li id="fn5" class="fussnote mb-0 small"><sup><a href="#ref5">5</a></sup>
+                Vgl. etwa BGE 129 IV 6 E. 6.1 oder HANS WIPRÄCHTIGER/STEFAN KELLER, in: Niggli Marcel Alexander/Wiprächtiger Hans (Hrsg.), Basler Kommentar Strafrecht, Strafgesetzbuch, Jugendstrafgesetz, 4. Aufl., Basel 2019, Art. 47 StGB N 85 ff. (zit. BSK StGB-BEARBEITER:IN).
+            </li>
+            <li id="fn6" class="fussnote mb-0 small"><sup><a href="#ref6">6</a></sup>
+                Vgl. STEFAN TRECHSEL/MARTIN SEELMANN, in: Trechsel Stefan/Pieth Mark (Hrsg.), 
+                Schweizerisches Strafgesetzbuch, Praxiskommentar, 4. Aufl., Zürich 2021, Art. 47 N 6 ff. 
+                (zit. PK StGB-BEARBEITER:IN); MARTIN SEELMANN, Strafzumessung und Doppelverwertung, 
+                Ein Wegweiser zu einer überprüfbaren Strafzumessung, Diss. Zürich 2023, S. 12 
+                ff. m.w.H.; BSK StGB-WIPRÄCHTIGER/KELLER, Art. 47 N 48 ff.; KILLIAS et al. (Fn. 2), 
+                Nr. 1218; WINFRIED HASSEMER, Die Formalisierung der Strafzumessungsentscheidung, in: ZStW 1978, S. 80.
+            </li>
+            <li id="fn7" class="fussnote mb-0 small"><sup><a href="#ref7">7</a></sup>
+                BSK StGB-WIPRÄCHTIGER/KELLER, Art. 47 N 7; GÜNTHER STRATENWERTH/FELIX BOMMER, 
+                Schweizerisches Strafrecht - Allgemeiner Teil II: Strafen und Massnahmen, § 5 N 3.
+            </li>
+            <li id="fn8" class="fussnote mb-0 small"><sup><a href="#ref8">8</a></sup>
+                Vgl. auch PETER ALBRECHT, Strafzumessung ohne individuelle Tatschuld?, in: ZStR 2017, S. 459 ff., 465, 
+                wonach im Grunde genommen gar nicht möglich ist, das für die Zumessung wesentliche 
+                Kriterium des Tatverschuldens zu bestimmen.
+            </li>
+            <li id="fn9" class="fussnote mb-0 small"><sup><a href="#ref9">9</a></sup>
+                StGB-TRECHSEL/SEELMANN, Art. 47 StGB N 8; vgl. auch BENEDIKT KOHN, Künstliche Intelligenz und 
+                Strafzumessung, Wie der Einsatz technischer Hilfsmittel für eine gerechtere Sanktionspraxis im 
+                digitalen Zeitalter sorgen könnte, Diss. Augsburg, Baden-Baden 2021, S. 123.
+            </li>
+            <li id="fn10" class="fussnote mb-0 small"><sup><a href="#ref10">10</a></sup>
+                PETER ALBRECHT, Die Strafzumessung im Spannungsfeld von Theorie und Praxis, in: ZStrR 1991, 
+                S. 46; STRATENWERTH/BOMMER (Fn. 7), Nr. 4.
+            </li>
+            <li id="fn11" class="fussnote mb-0 small"><sup><a href="#ref11">11</a></sup>
+                Siehe bspw. BGE 147 IV 108 E. 2.2.5, 144 IV 217 E. 2.2 und 3.5.1, 136 IV 55 E. 5.4 ff.
+            </li>
+            <li id="fn12" class="fussnote mb-0 small"><sup><a href="#ref12">12</a></sup>
+                BGE 136 IV 55 E. 5.4.
+            </li>
+            <li id="fn13" class="fussnote mb-0 small"><sup><a href="#ref13">13</a></sup>
+                BGE 144 IV 217 E. 3.5, 136 IV 55 E. 5.7 ff.
+            </li>
+            <li id="fn14" class="fussnote mb-0 small"><sup><a href="#ref14">14</a></sup>
+                ALBRECHT (Fn. 10), S. 50; SEELMANN (Fn. 6), S. 283 f.; Die Tatsache, dass sich das Bundesgericht 
+                zur Massgeblichkeit der einzelnen Strafzumessungsfaktoren nur sehr zurückhaltend äussert, dürfte 
+                darauf zurückzuführen sein, dass auch dort die Auffassungen über die vom Gesetzgeber offengelassene 
+                Grundsatzfrage nach der Letztbegründung des Strafens weit auseinander gehen; vgl. die Rezension von 
+                Alt-Bundesrichter HANS WIPRÄCHTIGER betreffend das in der nachfolgenden Fussnote bezeichnete 
+                Grundlagenwerk zur Strafzumessung von Alt-Bundesrichter HANS MATHYS in: forumpoenale 1/2017, S. 60 ff.
+            </li>
+            <li id="fn15" class="fussnote mb-0 small"><sup><a href="#ref15">15</a></sup>
+                HANS MATHYS, Leitfaden Strafzumessung, 2. Aufl., Basel 2019, Nr. 105.
+            </li>
+            <li id="fn16" class="fussnote mb-0 small"><sup><a href="#ref16">16</a></sup>
+                Vgl. bspw. STEPHAN SCHLEGEL/OLIVER JUCKER, Kommentar zum Betäubungsmittelgesetz sowie zu Bestimmungen 
+                des StGB und OBG mit weiteren Erlassen, 4. Aufl., Zürich 2022, Art. 47 StGB N 44 ff.
+            </li>
+            <li id="fn17" class="fussnote mb-0 small"><sup><a href="#ref17">17</a></sup>
+                STOCKER/STEINKE (Fn. 2), S. 92 ff.
+            </li>
+            <li id="fn18" class="fussnote mb-0 small"><sup><a href="#ref18">18</a></sup>
+                normalisierter Wert = (Deliktsbetrag in Fr. - geringster vorliegender Deliktsbetrag in Fr.) /
+                (höchster - geringster vorliegender Deliktsbetrag in Fr. )
+            </li>
+
+        </ol>
+    </section>
+
+
+
+
+{% endblock body %}

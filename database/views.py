@@ -1006,6 +1006,11 @@ def text(request):
     return render(request, "database/text.html", context)
 
 
+def suigeneris(request):
+    context = {}
+    return render(request, "database/suigeneris.html", context)
+
+
 # helper functions
 def csv_in_notebooks_speichern(dbmodel):
     # Datenframe erstellen, db-id als index

@@ -15,7 +15,7 @@ urlpatterns = [
     # alte Methode
     # path('model/reset', views.kimodel_reset, name='kimodel_reset'),
     path('dev', views.dev, name='dev'),
-    path('dev_betm', views.dev_betm, name='dev_betm'),
+    path('betm_dev', views.betm_dev, name='betm_dev'),
     path('betm_kimodelle_neu_generieren', views.betm_kimodelle_neu_generieren, name='betm_kimodelle_neu_generieren'),
     path('ws_kimodelle_neu_generieren', views.ws_kimodelle_neu_generieren, name='ws_kimodelle_neu_generieren'),
     path('ws_db_scatterplots_aktualisieren', views.ws_db_scatterplots_aktualisieren, name='ws_db_scatterplots_aktualisieren'),

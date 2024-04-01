@@ -968,11 +968,11 @@ def betm_kimodelle_neu_generieren(request):
     messages.success(
         request, "Die KI-Modelle für Betm-Strafrecht wurden erfolgreich aktualisiert."
     )
-    return redirect("dev_betm")
+    return redirect("betm_dev")
 
 
 @login_required
-def dev_betm(request):
+def betm_dev(request):
     prognoseleistung_dict_vollzugsart = KIModelPickleFile.objects.get(
         name="betm_rf_classifier_vollzugsart"
     ).prognoseleistung_dict
@@ -1018,7 +1018,7 @@ def dev_betm(request):
         "durchschnittlicher_fehler": durchschnittlicher_fehler,
         "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass": zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass,
     }
-    return render(request, "database/dev_betm.html", context=context)
+    return render(request, "database/betm_dev.html", context=context)
 
 
 # Science Views

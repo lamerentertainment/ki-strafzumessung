@@ -2,9 +2,8 @@
 {% load hervorhebung %}
 
 {% block body %}
+    <h1>Informationen über die verwendeten KI-Modelle / Auswertung der Rechtsprechung</h1>
     <div class="row">
-        <h1>Informationen über die verwendeten KI-Modelle</h1>
-
         <div id="verwendete-modelle">
             <h2>Verwendete KI-Modelle</h2>
             <p>Für die Prognose der <b>Höhe des Strafmass</b> wird der
@@ -19,7 +18,32 @@
         </div>
 
         <div id="prognosegenauigkeit">
-            <h2>Prognosegenauigkeit</h2>
+            <h2>Erhebung der Prognosegenauigkeit</h2>
+            <h3>Erwartungen</h3>
+            <p>
+                Wenn im folgenden die Prognoseleistung der KI-Modelle, welche das Strafmass, die Sanktionsart und 
+                die Vollzugsmodalität prognostizieren, erhoben wird, ist zu erwarten, dass die Prognoseleistung 
+                dieser KI-Modelle (für eine solche Zwecksetzung zu) gering ausfallen wird. 
+                Dies einerseits aus dem nachgezeichneten Grund, dass bei der Strafzumessung ein hoher 
+                Ermessenspielraum besteht, zu dessen Ausfüllung – abgesehen davon, dass bei Vermögensdelikten 
+                der Deliktsbetrag nach der Theorie eine gewichtige Rolle spielen soll – kaum fassbare Kriterien 
+                vorgegeben werden. Bei dieser Ausgangslage ist zu erwarten, dass die durch sachverhaltsfremde 
+                Kriterien bedingte Streuung, welche darauf zurückzuführen ist, dass weite Ermessenspielräume 
+                von unterschiedlichen Personen verschieden ausgefüllt werden, ein gewisses Ausmass annimmt. 
+                Anderseits werden die verwendeten KI-Modelle nur eine bestimmte Auswahl von Sachverhaltsmerkmalen 
+                berücksichtigen und dabei zwangsläufig Merkmale ausser Acht lassen, welche bei der Strafzumessung 
+                in legitimer Weise eine Rolle spielen dürfen. So wird bspw. nicht berücksichtigt werden, 
+                in welchem Verhältnisausmass die geschädigte Person betroffen ist und in welcher 
+                Art und Weise, der Täter vorgegangen ist. Für die Bemessung des Tatverschuldens eines Betrugs 
+                ist es massgebend, ob eine natürliche Person um ihr gesamtes Hab und Gut gebracht worden ist 
+                oder ob die geschädigte Person eine grundbedürfnislose rechtliche Einheit darstellt, welche 
+                auch einen hohen Deliktsbetrag mühelos verkraften kann. Dabei spielt es – legitimerweise – eine 
+                Rolle, ob der Täter dabei mit besonderer Raffinesse oder Machenschaften vorging, und/oder ob 
+                die geschädigte Person auch ein bestimmtes Mass an Selbstverschulden an den Tag gelegt hat. 
+                Dies sind alles Kriterien, welche das Strafmass beeinflussen dürfen und welche durch 
+                das verwendete KI-Modell nicht erfasst werden.
+            </p>
+            <h3>Resultate</h3>
             <p>Das KI-Modell, welches lediglich mit legitimen Strafzumessungskriterien darauf trainiert wurde, basierend
                 auf bekannte Sachverhaltseckwerte (Deliktsumme, Anzahl Schuldsprüche etc.) das Strafmass hervorzusagen,
                 lag bei der Prognose durchschnittlich um
@@ -30,32 +54,99 @@
                 Die Standardabweichung beträgt {{ val_rf_kimodel.prognoseleistung_dict.standardabweichung }}.
                 Die beste Prognoseleistung dieses KI-Modells
                     lag {{ val_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung }}
-                    Monate neben der effektiv ausgefällten Strafe. Dies war beim Urteil
-                    <a href="{{ konformes_urteil.url_link }}">{{ konformes_urteil }}</a> der Fall. 
+                    Monatseinheiten neben der effektiv ausgefällten Strafe. Dies war beim Urteil des
+                    <a href="{{ konformes_urteil.url_link }}">{{ konformes_urteil.gericht }}s vom {{ konformes_urteil.urteilsdatum }}</a> der Fall. 
                 Die schlechteste Prognoseleistung dieses KI-Modells
                     lag {{ val_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung }}
-                    Monate neben der effektiv ausgefällten Strafe. Dies war beim Urteil
-                    <a href="{{ unkonformes_urteil.url_link }}">{{ unkonformes_urteil }}</a> der Fall.</p>
+                    Monatseinheiten neben der effektiv ausgefällten Strafe. Dies war beim Urteil des
+                    <a href="{{ unkonformes_urteil.url_link }}">{{ unkonformes_urteil.gericht }}s vom {{ unkonformes_urteil.urteilsdatum }}</a> der Fall.</p>
             <p>Die Prognoseleistung des KI-Modells, welches die Vollzugsart (bedingt, teilbedingt, unbedingt) 
-                prognostiziert, beträgt {{ val_rf_clf_kimodel_vollzugsart.prognoseleistung_dict.oob_score }} %. D.h. 
+                prognostiziert, beträgt <b>{{ val_rf_clf_kimodel_vollzugsart.prognoseleistung_dict.oob_score }} %</b>. D.h. 
                 in {{ val_rf_clf_kimodel_vollzugsart.prognoseleistung_dict.oob_score }} % der Fälle wird die Vollzugsart 
                 korrekt prognostiziert.
             </p>
             <p>Die Prognoseleistung des KI-Modells, welches die Sanktionsart (Freiheitstrafe, Geldstrafe) 
-                prognostiziert, beträgt {{ val_rf_clf_kimodel_sanktionsart.prognoseleistung_dict.oob_score }} %. D.h. 
+                prognostiziert, beträgt <b>{{ val_rf_clf_kimodel_sanktionsart.prognoseleistung_dict.oob_score }} %</b>. D.h. 
                 in {{ val_rf_clf_kimodel_sanktionsart.prognoseleistung_dict.oob_score }} % der Fälle wird die Sanktionsart 
                 korrekt prognostiziert.
             </p>
+            
+            <h3>Kommentar</h3>
+            <p>
+                Einzuräumen ist, dass eine Prognose, welche durchschnittlich gegen 7 Monatseinheiten daneben liegt, nicht 
+                wirklich als treffsicher bezeichnet werden kann und etwa einer beschuldigten Person, die ihr 
+                Strafmass vorhersagen möchte, kaum haltbare Orientierung mitzugeben vermöchte. 
+                In diesem Sinne kann die einleitends getroffene Annahme aals bestätigt 
+                angesehen werden. Trotzdem liegt die die Prognoseleistung insb. des random forest KI-Modells 
+                höher, als ich es angesichts der dargelegten weiten Ermessenspielräume, 
+                der empirisch nachgewiesenen Inkonsistenz der Strafzumessung sowie der nur 
+                unzureichenden Erfassung der für die Strafzumessung massgebenden Faktoren intuitiv erwartet hätte. 
+                Ich führe dies auf die Tatsache zurück, dass dem Urteilsmerkmal der Deliktssumme 
+                die in der Theorie bei den Vermögensdelikte nachgesagte Bedeutung zukommt und dass 
+                dieser Umstand womöglich gar die Zufälligkeiten einzudämmen vermag, welche durch den 
+                grossen Ermessenspielraum mitgebracht werden. Vielleicht ist das Feld der Strafzumessung 
+                zumindest auf dem Bereich der Vermögensdelikte – gar nicht so willkürlich, 
+                wie es ihm teilweise nachgesagt wird?    
+            </p>
         </div>
-
-        <h1>Evaluation der Rechtsprechung</h1>
+    
         <div id="merkmalswichtigkeit" class="row">
+            <h1>Evaluation der Rechtsprechung</h1>
+            <p>
+                KI-Systeme sind angesichts ihrer dargelegten Funktionsweise prädestiniert dafür, 
+                eine Prognose über die Zukunft abzugeben. In vorliegendem Kontext bedeutet dies, 
+                dass man eine KI auf Grundlage der Präjudizen-Datenbank – welche die sachverhaltlichen 
+                Eckwerte (wie bspw. die gehandelten Betäubungsmittel, die Stellung des Täters etc.) 
+                sowie das ausgefällte Strafmass von Urteilen enthält – darauf trainieren kann, 
+                basierend auf vorgegebenen Sachverhaltsmerkmalen das Strafmass zu prognostizieren. 
+                Der Funktionsweise eines solchen KI-Prognosemodells ist daher zwangsläufig inhärent, 
+                dass dieses im Rahmen des Trainings eine Bewertung darüber anstellen muss, 
+                wie wichtig die einzelnen, für die Prognosebildung verwendeten Merkmale für diese 
+                Vorhersage sind. Diese Bewertung – wie wichtig das KI-Modell einzelne Sachverhaltsmerkmale 
+                für die Prognosebildung hält – kann nach dem Training des Modells abgerufen werden.
+            </p>
             <h2>Wichtigkeit der verwendeten Sachverhaltsmerkmale</h2>
-            <h3>bei Bekanntgabe lediglich zulässiger Strafzumessungskrieterien</h3>
+            <p>
+                Dieser Umstand kann für die Evaluation der Rechtsprechung nutzbar gemacht werden. 
+                Da Algorithmen für das Training von KI-Modelle grundsätzlich wertfrei sind und 
+                sämtliche mitgegebene Sachverhaltsmerkmale für die Trainingsbildung berücksichtigen, 
+                erlaubt dieser Ansatz, die Erheblichkeit von Sachverhaltsmerkmalen zu evaluieren, 
+                welche gemäss der Strafzumessungsmethodik illegitim (bspw. Nationalität oder Herkunft 
+                der beschuldigten Person; zuständiges Gericht, zuständige Abteilung oder 
+                zuständige Richterpersonen) oder höchstens mittelbar und nicht von ausschlaggebender 
+                Bedeutung sein dürfen (bspw. Alter der beschuldigten Person, Urteilszeitpunkt), 
+                indem man dem fraglichen KI-Modell dem Training diese Sachverhaltsmerkmale bekanntgibt. 
+                Weitere Hypothesen, die mit einem Strafmass prognostizierenden KI-Modell geprüft 
+                werden können, sind etwa, ob dem Geständnis in der Rechtswirklichkeit die von der 
+                Theorie geforderte strafmindernde Wirkung tatsächlich zukommt oder ob die Vereinbarung 
+                eines abgekürzten Verfahrens tatsächlich - im Sinne eines sog. "sentence bargaining" - 
+                eine Verringerung der Strafe bewirkt.
+            </p>
+            <h3>Erwartungen</h3>
+            <p>
+                Es ist zu erwarten, dass die erwähnten KI-Modelle die Zumessungskriterien, welche von der Theorie 
+                für das Strafmass als zulässig und massgebend bezeichnet werden, für die Prognosestellung 
+                als solche identifizieren und stärker gewichten werden. Es ist daher im Bereich der Vermögensdelikte 
+                zu erwarten, dass die KI-Modelle das Sachverhaltsmerkmal der (Höhe der) Deliktssumme als für das 
+                Strafmass als relevant erkennen werden. Überdies ist angesichts der Strafasperation bei mehreren 
+                Straftaten zu erwarten, dass die Anzahl der 
+                Schuldsprüche (in casu erhoben durch einen sog. «Nebenverurteilungsscore») 
+                einen massgebenden Einfluss auf das Strafmass nehmen wird.
+            </p>
+            <p>
+                Umgekehrt ist zu erwarten (bzw. zu erhoffen), dass Sachverhaltsmerkmale, die nach der Theorie 
+                keinen (oder nur ausnahmsweise im Rahmen der Täterkomponente einen geringen) Einfluss auf 
+                das Strafmass nehmen dürften, bei den gebildeten KI-Modelle effektiv keine Rolle spielen. 
+                Um diese Annahme einer Prüfung zu unterziehen, wurden aus dem vorliegenden Datenbestand 
+                bewusst derartige Merkmale erhoben und beim Training der KI-Modelle mitgegeben, 
+                namentlich das Geschlecht der verurteilten Person, deren Nationalität und das zuständige Gericht.
+            </p>
+            <h3>Ergebnisse bei Bekanntgabe lediglich zulässiger Strafzumessungskrieterien</h3>
 
-            <div class="col-6">
+            <div class="col-12 col-md-6">
                 <p>Folgende Prognosemerkmale hält das verwendete KI-Modell für die Vorhersage des <b>Strafmasses</b> in
-                    angegebenem Prozentsatz für bedeutend:</p>
+                    angegebenem Prozentsatz für bedeutend, sofern ihm lediglich zulässige Strafzumessungskriterien bekannt
+                    gegeben werden:</p>
                 <table class="table table-sm">
                     <thead>
                     <tr>
@@ -74,9 +165,10 @@
                 </table>
             </div>
 
-            <div class="col-6">
+            <div class="col-12 col-md-6">
                 <p>Folgende Prognosemerkmale hält das verwendete KI-Modell für die Vorhersage der <b>Vollzugsform</b> in
-                    angegebenem Prozentsatz für bedeutend:</p>
+                    angegebenem Prozentsatz für bedeutend, sofern ihm lediglich zulässige Strafzumessungskriterien bekannt
+                    gegeben werden:</p>
                 <table class="table table-sm">
                     <thead>
                     <tr>
@@ -96,7 +188,7 @@
             </div>
 
             <div id="evaluation-illegitimer-strafzumessungsfaktoren" class="row">
-                <h3>bei Bekanntgabe unzulässiger Strafzumessungskriterien</h3>
+                <h3>Ergebnisse  Bekanntgabe unzulässiger Strafzumessungskriterien</h3>
                 <p>Werden dem KI-Modell beim Training Sachverhaltsgrundlagen bekanntgegeben, die keine legitimen Strafzumessungskriterien 
                 darstellen (Geschlecht, Nationalität, zuständiges Gericht), so schätzt es deren
                 relative Wichtigkeit bei der Strafmassbildung wie folgt ein:</p>
@@ -120,12 +212,24 @@
                     </table>
                 </div>
             </div>
+        
+        <h3>Kommentar</h3>
+        <p>
+            Die zuvor skizzierten Ansätze sind verwendet worden, um einen Feldversuch am Beispiel der 
+            Rechtsprechung des Kantons Zürich vorzunehmen. Dabei sind der KI beim Training 
+            über 150 Urteile aus dem Bereich des Vermögensstrafrechts zur Verfügung gestanden. 
+            Die wichtigsten Erkenntnisse sind die folgenden: Hinsichtlich der Erheblichkeit der 
+            ausgewerteten Strafzumessungsfaktoren hat die KI – was den Erwartungen entsprach – den Deliktsbetrag 
+            als massgebendsten Faktor identifiziert. Bei der Erhebung ob illegitime Sachverhaltsmerkmale 
+            (Nationalität, Geschlecht, zuständiges Gericht) eine Rolle spielen, kann den Zürcher Gerichten 
+            zumindest im Bereich des Vermögensstrafrechts attestiert werden, dass keinerlei Anzeichen für eine 
+            diskriminierende oder gerichtsstandortspezifische Rechtsprechung bestehen.  
+        </p>
 
 
             </div>
-        </div>
 
-        <div id="introspection-plot" class="row">
+    <div id="introspection-plot" class="row">
         <h2>Prognosediagramm</h2>
 
         <section class="col-12 col-lg-8 mb-3">
@@ -140,8 +244,7 @@
         </section>
 
     </div>
-
-    </div>
+    
 
 
 

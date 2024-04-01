@@ -11,6 +11,7 @@ urlpatterns = [
     path('urteil/erstellen', views.UrteilErstellenView.as_view(), name='urteil_erstellen'),
     path('urteil/update/<int:pk>/', views.UrteilUpdateView.as_view(), name='urteil_update'),
     path('ws_evaluation', views.ws_evaluation, name='ws_evaluation'),
+    path('betm_evaluation', views.betm_evaluation, name='betm_evaluation'),
     path('database', views.database, name='database'),
     # alte Methode
     # path('model/reset', views.kimodel_reset, name='kimodel_reset'),

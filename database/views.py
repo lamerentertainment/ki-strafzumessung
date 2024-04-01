@@ -1021,6 +1021,55 @@ def betm_dev(request):
     return render(request, "database/betm_dev.html", context=context)
 
 
+def betm_evaluation(request):
+    prognoseleistung_dict_vollzugsart = KIModelPickleFile.objects.get(
+        name="betm_rf_classifier_vollzugsart"
+    ).prognoseleistung_dict
+
+    oob_score_vollzugsart = prognoseleistung_dict_vollzugsart[
+        "oob_score_class_vollzugsart"
+    ]
+    merkmalswichtigkeit_fuer_prognose_vollzugsart = prognoseleistung_dict_vollzugsart[
+        "merkmalswichtigkeit_fuer_prognose_vollzugsart"
+    ]
+
+    prognoseleistung_dict_hauptsanktion = KIModelPickleFile.objects.get(
+        name="betm_rf_classifier_sanktion"
+    ).prognoseleistung_dict
+
+    oob_score_hauptsanktion = prognoseleistung_dict_hauptsanktion[
+        "oob_score_class_hauptsanktion"
+    ]
+    merkmalswichtigkeit_fuer_prognose_hauptsanktion = (
+        prognoseleistung_dict_hauptsanktion[
+            "merkmalswichtigkeit_fuer_prognose_hauptsanktion"
+        ]
+    )
+
+    prognoseleistung_dict_strafmass = KIModelPickleFile.objects.get(
+        name="betm_rf_regressor_strafmass"
+    ).prognoseleistung_dict
+
+    durchschnittlicher_fehler = prognoseleistung_dict_strafmass[
+        "durchschnittlicher_fehler"
+    ]
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass = (
+        prognoseleistung_dict_strafmass[
+            "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass"
+        ]
+    )
+
+    context = {
+        "string_oob_vollzugsart": oob_score_vollzugsart,
+        "merkmalswichtigkeit_prognose_vollzugsart": merkmalswichtigkeit_fuer_prognose_vollzugsart,
+        "string_oob_hauptsanktion": oob_score_hauptsanktion,
+        "merkmalswichtigkeit_prognose_hauptsanktion": merkmalswichtigkeit_fuer_prognose_hauptsanktion,
+        "durchschnittlicher_fehler": durchschnittlicher_fehler,
+        "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass": zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass,
+    }
+    return render(request, "database/betm_evaluation.html", context=context)
+
+
 # Science Views
 def text(request):
     context = {}

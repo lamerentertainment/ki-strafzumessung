@@ -1,0 +1,82 @@
+{% extends './base.html' %}
+
+{% block body %}
+    <h1>Metanformationen über die verwendeten KI-Modelle</h1>
+    
+    <div id="verwendete-modelle">
+        <h2>Verwendete KI-Modelle</h2>
+        <p>Für die Prognose der <b>Höhe des Strafmass</b> wird der
+            <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html">RandomForestRegressor</a>,
+            für die Prognose der <b>Sanktionsart</b> und <b>Vollzugsform</b> wird der
+            <a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html">RandomForestClassifier</a>
+            und für die <b>Eruierung der Präjudizen</b> der
+            <a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html#sklearn.neighbors.KNeighborsRegressor">KNeighborsRegressor</a>
+            der frei verfügbaren Python-Programmbibliothek <a href="https://scikit-learn.org/stable/index.html">scikit-learn</a>
+            verwendet.</p>
+        <p>Eine Erklärung der Funktionsweise der genannten und hier verwendeten KI-Systeme findet sich <a href="{% url 'text' %}">hier.</a></p>
+    </div>
+    
+    <section id="info" class="my-3">
+        <h2>Prognoseleistung</h2>
+        <ul>
+            <li>{{ string_oob_vollzugsart }}</li>
+            <li>{{ string_oob_hauptsanktion }}</li>
+            <li>{{ durchschnittlicher_fehler }}</li>
+        </ul>
+        <h2>Merkmalswichtigkeiten</h2>
+        <h4>Merkmalswichtigkeit für Strafmassprognose</h4>
+        <table class="table table-sm">
+            <thead>
+            <tr>
+                <th>Wichtigkeit</th>
+                <th>Merkmal</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for list_ in zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass %}
+                <tr>
+                    <td>{{ list_.1|floatformat }} %</td>
+                    <td>{{ list_.0|capfirst }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <h4>Merkmalswichtigkeit für Vollzugsprognose</h4>
+        <table class="table table-sm">
+            <thead>
+            <tr>
+                <th>Wichtigkeit</th>
+                <th>Merkmal</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for list_ in merkmalswichtigkeit_prognose_vollzugsart %}
+                <tr>
+                    <td>{{ list_.1|floatformat }} %</td>
+                    <td>{{ list_.0|capfirst }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    <h4>Merkmalswichtigkeit für Prognose Sanktionsart</h4>
+        <table class="table table-sm">
+            <thead>
+            <tr>
+                <th>Wichtigkeit</th>
+                <th>Merkmal</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for list_ in merkmalswichtigkeit_prognose_hauptsanktion %}
+                <tr>
+                    <td>{{ list_.1|floatformat }} %</td>
+                    <td>{{ list_.0|capfirst }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        
+    </section>
+
+
+{% endblock body %}

@@ -199,6 +199,19 @@ def kimodel_evaluation(request):
         val_rf_clf_kimodel_sanktionsart = KIModelPickleFile.objects.get(
             name="rf_clf_sanktionsart_val"
         )
+
+        # Urteile mit bester und schlechtester Prognoseleistung laden, um im template darauf verlinken zu können
+        konformes_urteil = Urteil.objects.get(
+            fall_nr=val_rf_kimodel.prognoseleistung_dict[
+                "beste_prognoseleistung_urteil"
+            ]
+        )
+        unkonformes_urteil = Urteil.objects.get(
+            fall_nr=val_rf_kimodel.prognoseleistung_dict[
+                "schlechteste_prognoseleistung_urteil"
+            ]
+        )
+
         # kimodelle mit allen features laden
         all_rf_kimodel = KIModelPickleFile.objects.get(name="rf_regr_all")
         lr_kimodel = KIModelPickleFile.objects.get(name="lr_regr_all")
@@ -212,6 +225,8 @@ def kimodel_evaluation(request):
             "val_rf_clf_kimodel_sanktionsart": val_rf_clf_kimodel_sanktionsart,
             "all_rf_kimodel": all_rf_kimodel,
             "introspection_plot": introspection_plot,
+            "konformes_urteil": konformes_urteil,
+            "unkonformes_urteil": unkonformes_urteil,
         }
 
     return render(request, "database/kimodel_evaluation.html", context)
@@ -707,8 +722,14 @@ def dev(request):
     val_rf_clf_kimodel = KIModelPickleFile.objects.get(name="rf_clf_val")
 
     # Urteile mit bester und schlechtester Prognoseleistung laden, um im template darauf verlinken zu können
-    # konformes_urteil = Urteil.objects.get(fall_nr=val_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung_urteil)
-    # unkonformes_urteil = Urteil.objects.get(fall_nr=val_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung_urteil)
+    konformes_urteil = Urteil.objects.get(
+        fall_nr=val_rf_kimodel.prognoseleistung_dict["beste_prognoseleistung_urteil"]
+    )
+    unkonformes_urteil = Urteil.objects.get(
+        fall_nr=val_rf_kimodel.prognoseleistung_dict[
+            "schlechteste_prognoseleistung_urteil"
+        ]
+    )
 
     # kimodelle mit allen features laden
     all_rf_kimodel = KIModelPickleFile.objects.get(name="rf_regr_all")
@@ -727,8 +748,8 @@ def dev(request):
         "lr_kimodel": lr_kimodel,
         "koeff_liste": koeffizientenliste,
         "introspection_plot": introspection_plot,
-        # 'unkonformes_urteil': unkonformes_urteil,
-        # 'konformes_urteil': konformes_urteil,
+        "unkonformes_urteil": unkonformes_urteil,
+        "konformes_urteil": konformes_urteil,
     }
     return render(request, "database/dev.html", context)
 

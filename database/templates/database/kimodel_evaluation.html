@@ -24,18 +24,18 @@
                 auf bekannte Sachverhaltseckwerte (Deliktsumme, Anzahl Schuldsprüche etc.) das Strafmass hervorzusagen,
                 lag bei der Prognose durchschnittlich um
                 <b>
-                    {{ val_rf_kimodel.prognoseleistung_dict.durchschnittlicher_fehler }} Monate
+                    {{ val_rf_kimodel.prognoseleistung_dict.durchschnittlicher_fehler }} Monatseinheiten
                 </b>
                 daneben. 
                 Die Standardabweichung beträgt {{ val_rf_kimodel.prognoseleistung_dict.standardabweichung }}.
                 Die beste Prognoseleistung dieses KI-Modells
                     lag {{ val_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung }}
                     Monate neben der effektiv ausgefällten Strafe. Dies war beim Urteil
-                    {{ val_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung_urteil }} der Fall. 
+                    <a href="{{ konformes_urteil.url_link }}">{{ konformes_urteil }}</a> der Fall. 
                 Die schlechteste Prognoseleistung dieses KI-Modells
                     lag {{ val_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung }}
                     Monate neben der effektiv ausgefällten Strafe. Dies war beim Urteil
-                    {{ val_rf_kimodel.prognoseleistung_dict.schlechteste_prognoseleistung_urteil }} der Fall.</p>
+                    <a href="{{ unkonformes_urteil.url_link }}">{{ unkonformes_urteil }}</a> der Fall.</p>
             <p>Die Prognoseleistung des KI-Modells, welches die Vollzugsart (bedingt, teilbedingt, unbedingt) 
                 prognostiziert, beträgt {{ val_rf_clf_kimodel_vollzugsart.prognoseleistung_dict.oob_score }} %. D.h. 
                 in {{ val_rf_clf_kimodel_vollzugsart.prognoseleistung_dict.oob_score }} % der Fälle wird die Vollzugsart 

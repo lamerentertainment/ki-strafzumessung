@@ -950,6 +950,8 @@ def betm_kimodelle_neu_generieren(request):
         "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass"
     ] = zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass
 
+    prognoseleistung_dict_regressor["urteilsbasis"] = len(y_strafmass)
+
     # kimodell als pickle file speichern
     ki_modell_als_pickle_file_speichern(
         instanziertes_kimodel=regressor_fuer_strafmass,
@@ -1058,6 +1060,15 @@ def betm_evaluation(request):
             "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass"
         ]
     )
+    last_updated = KIModelPickleFile.objects.get(
+        name="betm_rf_regressor_strafmass"
+    ).last_updated
+
+    urteilsbasis = (
+        prognoseleistung_dict_strafmass[
+            "urteilsbasis"
+        ]
+    )
 
     context = {
         "string_oob_vollzugsart": oob_score_vollzugsart,
@@ -1066,6 +1077,8 @@ def betm_evaluation(request):
         "merkmalswichtigkeit_prognose_hauptsanktion": merkmalswichtigkeit_fuer_prognose_hauptsanktion,
         "durchschnittlicher_fehler": durchschnittlicher_fehler,
         "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass": zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass,
+        "last_updated": last_updated,
+        "urteilsbasis": urteilsbasis
     }
     return render(request, "database/betm_evaluation.html", context=context)
 

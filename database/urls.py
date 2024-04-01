@@ -10,7 +10,7 @@ urlpatterns = [
     path('betm_prognose', views.betm_prognose, name='betm_prognose'),
     path('urteil/erstellen', views.UrteilErstellenView.as_view(), name='urteil_erstellen'),
     path('urteil/update/<int:pk>/', views.UrteilUpdateView.as_view(), name='urteil_update'),
-    path('model', views.kimodel_evaluation, name='kimodel_evaluation'),
+    path('ws_evaluation', views.ws_evaluation, name='ws_evaluation'),
     path('database', views.database, name='database'),
     # alte Methode
     # path('model/reset', views.kimodel_reset, name='kimodel_reset'),

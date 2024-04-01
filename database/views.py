@@ -110,7 +110,7 @@ class BetmUrteilDetailView(DetailView):
 
 
 # KI-Model Views:
-def kimodel_evaluation(request):
+def ws_evaluation(request):
     if request.method == "POST":
         form = CeteribusParibusFormular(request.POST)
 
@@ -188,7 +188,7 @@ def kimodel_evaluation(request):
                 "lesehinweis": lesehinweis,
                 "form": form,
             }
-            return render(request, "database/kimodel_evaluation.html", context)
+            return render(request, "database/ws_evaluation.html", context)
 
     else:
         # kimodelle mit nur validen features laden
@@ -229,7 +229,7 @@ def kimodel_evaluation(request):
             "unkonformes_urteil": unkonformes_urteil,
         }
 
-    return render(request, "database/kimodel_evaluation.html", context)
+    return render(request, "database/ws_evaluation.html", context)
 
 
 # Prognose Views:

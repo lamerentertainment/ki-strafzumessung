@@ -146,7 +146,7 @@ class Urteil(models.Model):
             locale.setlocale(locale.LC_TIME, "de_CH")
         except:
             locale.setlocale(locale.LC_ALL, "")
-        return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B %Y')}, {self.fall_nr}"
+        return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B %Y')} ({self.fall_nr})"
 
     class Meta:
         verbose_name_plural = "Urteile"
@@ -247,7 +247,7 @@ class BetmUrteil(models.Model):
     in_ki_modell = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.fall_nr} vom {self.urteilsdatum}"
+        return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B %Y')} ({self.fall_nr})"
 
     class Meta:
         verbose_name_plural = "Betäubungsmittel-Urteile"

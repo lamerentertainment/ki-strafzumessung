@@ -27,6 +27,7 @@ from .ai_utils import (
     betmurteile_onehotencoding,
     betmurteile_zusammenfuegen,
     betmurteile_fehlende_werte_auffuellen,
+    betm_nachbarobjekt_mit_sanktionsbewertung_anreichern,
     onehotx_und_y_erstellen_from_dataframe,
     merkmalswichtigkeitslistegenerator,
     merkmale_in_merkmalswichtigkeitsliste_zusammenfassen,
@@ -650,6 +651,8 @@ def betm_prognose(request):
 
             nachbar1 = BetmUrteil.objects.get(fall_nr=nachbarliste[0])
             nachbar2 = BetmUrteil.objects.get(fall_nr=nachbarliste[1])
+
+            nachbar1 = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(nachbar1, strafmass_estimator=strafmass_modell, hautpsanktion_estimator=hauptsanktions_modell, vollzug_estimator=vollzugs_modell)
 
             # differenzen von eingabe und nachbarn berechnen, evt. mal auslagern
             def differenzengenerator(nachbarobjekt, formobjekt):

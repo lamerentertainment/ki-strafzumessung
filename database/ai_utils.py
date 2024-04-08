@@ -849,6 +849,73 @@ def nachbar_mit_sanktionsbewertung_anreichern(
     return nachbarobjekt
 
 
+def betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
+    nachbarobjekt, strafmass_estimator, hautpsanktion_estimator, vollzug_estimator
+):
+    allgemeine_prognosemerkmale = {
+        "fall_nr": nachbarobjekt.fall_nr,
+        "mengenmaessig": nachbarobjekt.mengenmaessig,
+        "bandenmaessig": nachbarobjekt.bandenmaessig,
+        "gewerbsmaessig": nachbarobjekt.gewerbsmaessig,
+        "anstaltentreffen": nachbarobjekt.anstaltentreffen,
+        "mehrfach": nachbarobjekt.mehrfach,
+        "beschaffungskriminalitaet": nachbarobjekt.beschaffungskriminalitaet,
+        "deliktsdauer_in_monaten": nachbarobjekt.deliktsdauer_in_monaten,
+        "nebenverurteilungsscore": nachbarobjekt.nebenverurteilungsscore,
+        "vorbestraft": nachbarobjekt.vorbestraft,
+        "vorbestraft_einschlaegig": nachbarobjekt.vorbestraft_einschlaegig,
+        "deliktsertrag": nachbarobjekt.deliktsertrag,
+        "rolle": nachbarobjekt.rolle,
+    }
+
+    # wenn die typen nicht string gibt, gibt es später probleme beim groupby agg
+    def _convert_django_types_to_string(dict_):
+        for key, value in dict_.items():
+            if value is not None and not isinstance(value, (bool, float, str, int)):
+                dict_[key] = value.name
+        return dict_
+
+    allgemeine_prognosemerkmale = _convert_django_types_to_string(
+        allgemeine_prognosemerkmale
+    )
+
+    _betm_dict = {}
+    for betm in enumerate(nachbarobjekt.betm.all()):
+        i = betm[0]
+        betm_eintrag = betm[1]
+        _betm_dict[i] = {
+            "betm_art": betm_eintrag["betm_art"],
+            "menge_in_g": betm_eintrag["menge_in_g"],
+            "rein": betm_eintrag["rein"]
+        }
+
+
+
+    betm_1 = {
+        "betm_art": nachbarobjekt.betm1,
+        "menge_in_g": nachbarobjekt.betm1_menge,
+        "rein": form.cleaned_data["betm1_rein"],
+    }
+    betm_2 = {
+        "betm_art": form.cleaned_data["betm2"],
+        "menge_in_g": form.cleaned_data["betm2_menge"],
+        "rein": form.cleaned_data["betm2_rein"],
+    }
+    betm_3 = {
+        "betm_art": form.cleaned_data["betm3"],
+        "menge_in_g": form.cleaned_data["betm3_menge"],
+        "rein": form.cleaned_data["betm3_rein"],
+    }
+
+    _betm_dict[0] = _convert_django_types_to_string(_betm_dict[0])
+    _betm_dict[1] = _convert_django_types_to_string(_betm_dict[1])
+    _betm_dict[2] = _convert_django_types_to_string(_betm_dict[2])
+
+    # weitermachen TODO
+
+    return nachbarobjekt
+
+
 def introspection_plot_und_lesehinweis_ausgeben(
     db_model=Urteil, xlim=1000000, titel="Prognose", cleaned_data_dict=None
 ):

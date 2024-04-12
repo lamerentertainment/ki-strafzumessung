@@ -39,7 +39,7 @@
                     {% else %}
                     <td {% if nachbar.nvs_diff <= 3 %} class="bg-danger p-2 text-dark bg-opacity-25"
                         {% elif nachbar.nvs_diff <= 1 %} class="bg-success-subtle p-2 text-dark bg-opacity-25"
-                        {% elif nachbar.nvs_diff = 0 %} class="bg-success p-2 text-dark bg-opacity-25" {% endif %}
+                        {% elif nachbar.nvs_diff == 0 %} class="bg-success p-2 text-dark bg-opacity-25" {% endif %}
                     ><p>Differenz: {{ nachbar.nvs_diff }}</p></td>
                     {% endif %}
                 </tr>

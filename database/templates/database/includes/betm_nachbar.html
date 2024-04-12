@@ -76,6 +76,22 @@
                     </p></td>
                 </tr>
                 <tr>
+                    <td><p>Deliktsdauer in Monaten: {{ nachbar.deliktsdauer_in_monaten }}</p></td>
+                    {% if nachbar.deliktsdauer_diff > 0 %}
+                    <td><p>Differenz: + {{ nachbar.deliktsdauer_diff }}</p></td>
+                    {% else %}
+                    <td><p>Differenz: {{ nachbar.deliktsdauer_diff }}</p></td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td><p>Deliktsertrag: {{ nachbar.deliktsertrag }}</p></td>
+                    {% if nachbar.deliktsertrag_diff > 0 %}
+                    <td><p>Differenz: + {{ nachbar.deliktsertrag_diff }}</p></td>
+                    {% else %}
+                    <td><p>Differenz: {{ nachbar.deliktsertrag_diff }}</p></td>
+                    {% endif %}
+                </tr>
+                <tr>
                     <td colspan="2" class="table-light">
                         <p>
                             Sanktion:

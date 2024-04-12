@@ -687,6 +687,14 @@ def betm_prognose(request):
                     == formobjekt.cleaned_data["vorbestraft_einschlaegig"]
                     else False
                 )
+                nachbarobjekt.deliktsdauer_diff = (
+                    nachbarobjekt.deliktsdauer_in_monaten
+                    - form.cleaned_data["deliktsdauer_in_monaten"]
+                )
+                nachbarobjekt.deliktsertrag_diff = (
+                    nachbarobjekt.deliktsertrag
+                    - form.cleaned_data["deliktsertrag"]
+                )
                 return nachbarobjekt
 
             nachbar1 = differenzengenerator(nachbar1, form)

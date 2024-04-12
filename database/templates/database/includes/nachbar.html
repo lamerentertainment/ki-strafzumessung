@@ -25,7 +25,7 @@
                     <td {% if nachbar.ds_diff <= -100000 %} class="bg-danger p-2 text-dark bg-opacity-25"
                         {% elif nachbar.ds_diff <= -75000 %} class="bg-danger p-2 text-dark bg-opacity-10"
                         {% elif nachbar.ds_diff <= -50000 %} class="bg-success p-2 text-dark bg-opacity-10"
-                        {% elif nachbar.ds_diff <= -25000 %} class="bg-success p-2 text-dark bg-opacity-25"
+                        {% elif nachbar.ds_diff < 25000 %} class="bg-success p-2 text-dark bg-opacity-25"
                         {% endif %}
                     ><p>Differenz: Fr. {{ nachbar.ds_diff|intcomma }}</p></td>
                     {% endif %}

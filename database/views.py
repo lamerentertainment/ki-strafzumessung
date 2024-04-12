@@ -661,7 +661,7 @@ def betm_prognose(request):
                 )
                 nachbarobjekt.nvs_diff = (
                     nachbarobjekt.nebenverurteilungsscore
-                    - form.cleaned_data["nebenverurteilungsscore"]
+                    - formobjekt.cleaned_data["nebenverurteilungsscore"]
                 )
                 nachbarobjekt.entsprechung_mengenmaessig = (
                     True
@@ -689,11 +689,11 @@ def betm_prognose(request):
                 )
                 nachbarobjekt.deliktsdauer_diff = (
                     nachbarobjekt.deliktsdauer_in_monaten
-                    - form.cleaned_data["deliktsdauer_in_monaten"]
+                    - formobjekt.cleaned_data["deliktsdauer_in_monaten"]
                 )
                 nachbarobjekt.deliktsertrag_diff = (
                     nachbarobjekt.deliktsertrag
-                    - form.cleaned_data["deliktsertrag"]
+                    - formobjekt.cleaned_data["deliktsertrag"]
                 )
                 return nachbarobjekt
 

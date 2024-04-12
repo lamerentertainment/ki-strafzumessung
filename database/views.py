@@ -689,7 +689,7 @@ def betm_prognose(request):
                 )
                 # Da deliktsdauer_in_monaten und deliktsertrag nicht zwingend ausgefüllt sein müssen, zuerst auf 0 setzen
                 if nachbarobjekt.deliktsdauer_in_monaten is None:
-                    nachbarobjekt.deliktsdauer_in_monaten = =
+                    nachbarobjekt.deliktsdauer_in_monaten = 0
                 nachbarobjekt.deliktsdauer_diff = (
                     nachbarobjekt.deliktsdauer_in_monaten
                     - formobjekt.cleaned_data["deliktsdauer_in_monaten"]

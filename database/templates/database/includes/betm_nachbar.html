@@ -33,12 +33,12 @@
                     <td><p>Nebenverurteilungscore: {{ nachbar.nebenverurteilungsscore }}</p></td>
                     {% if nachbar.nvs_diff > 0 %}
                     <td {% if nachbar.nvs_diff >= 3 %} class="bg-danger p-2 text-dark bg-opacity-25"
-                        {% elif nachbar.nvs_diff >= 1 %} class="bg-success-subtle p-2 text-dark"
+                        {% elif nachbar.nvs_diff >= 1 %} class="bg-success p-2 text-dark bg-opacity-10"
                         {% endif %}
                     ><p>Differenz: + {{ nachbar.nvs_diff }}</p></td>
                     {% else %}
                     <td {% if nachbar.nvs_diff <= -3 %} class="bg-danger p-2 text-dark bg-opacity-25"
-                        {% elif nachbar.nvs_diff <= -1 %} class="bg-success-subtle p-2 text-dark"
+                        {% elif nachbar.nvs_diff <= -1 %} class="bg-success p-2 text-dark bg-opacity-10"
                         {% elif nachbar.nvs_diff == 0 %} class="bg-success p-2 text-dark bg-opacity-25" 
                         {% endif %}
                     ><p>Differenz: {{ nachbar.nvs_diff }}</p></td>
@@ -85,15 +85,13 @@
                 <tr>
                     <td><p>Deliktsdauer in Monaten: {{ nachbar.deliktsdauer_in_monaten }}</p></td>
                     {% if nachbar.deliktsdauer_diff > 0 %}
-                    <td
-                        {% if nachbar.deliktsdauer_diff >= 6 %} class="bg-danger p-2 text-dark bg-opacity-25"
-                        {% elif nachbar.deliktsdauer_diff >= 2 %} class="bg-success-subtle p-2 text-dark"
+                    <td {% if nachbar.deliktsdauer_diff >= 6 %} class="bg-danger p-2 text-dark bg-opacity-25"
+                        {% elif nachbar.deliktsdauer_diff >= 2 %} class="bg-success p-2 text-dark bg-opacity-10"
                         {% endif %}
                     ><p>Differenz: + {{ nachbar.deliktsdauer_diff }}</p></td>
                     {% else %}
-                    <td
-                        {% if nachbar.deliktsdauer_diff <= -6 %} class="bg-danger p-2 text-dark bg-opacity-25"
-                        {% elif nachbar.deliktsdauer_diff <= -2 %} class="bg-success-subtle p-2 text-dark"
+                    <td {% if nachbar.deliktsdauer_diff <= -6 %} class="bg-danger p-2 text-dark bg-opacity-25"
+                        {% elif nachbar.deliktsdauer_diff <= -2 %} class="bg-success p-2 text-dark bg-opacity-10"
                         {% elif nachbar.deliktsdauer_diff == 0 %} class="bg-success p-2 text-dark bg-opacity-25" 
                         {% endif %}
                     ><p>Differenz: {{ nachbar.deliktsdauer_diff }}</p></td>
@@ -102,15 +100,13 @@
                 <tr>
                     <td><p>Deliktsertrag: {{ nachbar.deliktsertrag }}</p></td>
                     {% if nachbar.deliktsertrag_diff > 0 %}
-                    <td
-                        {% if nachbar.deliktsertrag_diff >= 20000 %} class="bg-danger p-2 text-dark bg-opacity-25"
-                        {% elif nachbar.deliktsertrag_diff >= 5000 %} class="bg-success-subtle p-2 text-dark"
+                    <td {% if nachbar.deliktsertrag_diff >= 20000 %} class="bg-danger p-2 text-dark bg-opacity-25"
+                        {% elif nachbar.deliktsertrag_diff >= 5000 %} class="bg-success p-2 text-dark bg-opacity-10"
                         {% endif %}
                     ><p>Differenz: + {{ nachbar.deliktsertrag_diff }}</p></td>
                     {% else %}
-                    <td
-                        {% if nachbar.deliktsertrag_diff <= -20000 %} class="bg-danger p-2 text-dark bg-opacity-25"
-                        {% elif nachbar.deliktsertrag_diff <= -5000 %} class="bg-success-subtle p-2 text-dark"
+                    <td {% if nachbar.deliktsertrag_diff <= -20000 %} class="bg-danger p-2 text-dark bg-opacity-25"
+                        {% elif nachbar.deliktsertrag_diff <= -5000 %} class="bg-success p-2 text-dark bg-opacity-10"
                         {% elif nachbar.deliktsertrag_diff == 0 %} class="bg-success p-2 text-dark bg-opacity-25" 
                         {% endif %}
                     ><p>Differenz: {{ nachbar.deliktsertrag_diff }}</p></td>

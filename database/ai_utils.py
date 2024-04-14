@@ -850,7 +850,7 @@ def nachbar_mit_sanktionsbewertung_anreichern(
 
 
 def betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
-    nachbarobjekt, strafmass_estimator, hautpsanktion_estimator, vollzug_estimator
+    nachbarobjekt, strafmass_estimator, hauptsanktion_estimator, vollzug_estimator
 ):
     allgemeine_prognosemerkmale = {
         "fall_nr": nachbarobjekt.fall_nr,
@@ -879,39 +879,106 @@ def betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
         allgemeine_prognosemerkmale
     )
 
+    # Get all related Betm objects for nachbarobjekt
+    related_betms = nachbarobjekt.betm.all()
+
     _betm_dict = {}
-    for betm in enumerate(nachbarobjekt.betm.all()):
-        i = betm[0]
-        betm_eintrag = betm[1]
+    for i, betm_eintrag in enumerate(related_betms):
         _betm_dict[i] = {
-            "betm_art": betm_eintrag["betm_art"],
-            "menge_in_g": betm_eintrag["menge_in_g"],
-            "rein": betm_eintrag["rein"]
+            "betm_art": betm_eintrag.art,
+            "menge_in_g": betm_eintrag.menge_in_g,
+            "rein": betm_eintrag.rein,
         }
 
-
-
-    betm_1 = {
-        "betm_art": nachbarobjekt.betm1,
-        "menge_in_g": nachbarobjekt.betm1_menge,
-        "rein": form.cleaned_data["betm1_rein"],
-    }
-    betm_2 = {
-        "betm_art": form.cleaned_data["betm2"],
-        "menge_in_g": form.cleaned_data["betm2_menge"],
-        "rein": form.cleaned_data["betm2_rein"],
-    }
-    betm_3 = {
-        "betm_art": form.cleaned_data["betm3"],
-        "menge_in_g": form.cleaned_data["betm3_menge"],
-        "rein": form.cleaned_data["betm3_rein"],
-    }
-
     _betm_dict[0] = _convert_django_types_to_string(_betm_dict[0])
-    _betm_dict[1] = _convert_django_types_to_string(_betm_dict[1])
-    _betm_dict[2] = _convert_django_types_to_string(_betm_dict[2])
+    if 1 in _betm_dict:
+        _betm_dict[1] = _convert_django_types_to_string(_betm_dict[1])
+    if 2 in _betm_dict:
+        _betm_dict[2] = _convert_django_types_to_string(_betm_dict[2])
 
     # weitermachen TODO
+    list_betm = []
+    for entry in _betm_dict.values():
+        list_betm.append(entry)
+    urteilszeilen = dict()
+    for i, dict_betm in enumerate(list_betm):
+        prognosemerkmale = allgemeine_prognosemerkmale.copy()
+        prognosemerkmale.update(dict_betm)
+        urteilszeilen[i] = prognosemerkmale
+
+    liste_mit_urteilszeilen = [value for value in urteilszeilen.values()]
+    pd_df_mit_prognosewerten = pd.DataFrame(liste_mit_urteilszeilen)
+
+    # damit alle spalten für ohe-betm-arten erstellt werden, musste die liste_der_betmarten
+    # von der ursprünglichen pandas df genommen werden, danach in strings konvertieren
+    liste_der_betmarten = list(BetmArt.objects.all())
+    liste_der_betmarten_strings = [betmart.name for betmart in liste_der_betmarten]
+
+    df_prognosewerte_ohe, list_ohe_betm_columns = betmurteile_onehotencoding(
+        pd_df_mit_prognosewerten,
+        liste_der_betmarten=liste_der_betmarten_strings,
+    )
+    df_prognosewerte_ohe.drop(labels=["betm_art", "menge_in_g"], axis=1, inplace=True)
+    df_prognosewerte_ohe_grouped = betmurteile_zusammenfuegen(
+        pd_df=df_prognosewerte_ohe,
+        liste_aller_ohe_betm_spalten=list_ohe_betm_columns,
+    )
+
+    # onehotencoding
+    encoder = kimodell_von_pickle_file_aus_aws_bucket_laden("encoders/betm_encoder.pkl")
+    liste_kategoriale_prognosemerkmale = KIModelPickleFile.objects.get(
+        name="betm_rf_classifier_vollzugsart"
+    ).prognoseleistung_dict["liste_kategoriale_prognosemerkmale"]
+    liste_numerische_prognosemerkmale = KIModelPickleFile.objects.get(
+        name="betm_rf_classifier_vollzugsart"
+    ).prognoseleistung_dict["liste_numerische_prognosemerkmale"]
+
+    cat_fts_onehot = encoder.transform(
+        df_prognosewerte_ohe_grouped[liste_kategoriale_prognosemerkmale]
+    )
+    enc_cat_fts_names = encoder.get_feature_names_out(
+        liste_kategoriale_prognosemerkmale
+    )
+    df_cat_fts = pd.DataFrame(cat_fts_onehot, columns=enc_cat_fts_names)
+
+    df_num_fts = (
+        df_prognosewerte_ohe_grouped[liste_numerische_prognosemerkmale]
+        .reset_index()
+        .drop(["fall_nr"], axis=1)
+    )
+
+    prognosemerkmale_df_preprocessed = pd.concat([df_cat_fts, df_num_fts], axis=1)
+    # Hauptsanktion-Prädiktor laden und Prognose machen
+    vorhersage_hauptsanktion = hauptsanktion_estimator.predict(
+        prognosemerkmale_df_preprocessed
+    )[0]
+
+    if vorhersage_hauptsanktion == "0":
+        vorhersage_hauptsanktion = "Freiheitsstrafe"
+    elif vorhersage_hauptsanktion == "1":
+        vorhersage_hauptsanktion = "Geldstrafe"
+    elif vorhersage_hauptsanktion == "2":
+        vorhersage_hauptsanktion = "Busse"
+
+    nachbarobjekt.vorhersage_hauptsanktion = vorhersage_hauptsanktion
+
+    # Vollzugs-Prädiktor laden und Prognose machen
+
+    vorhersage_vollzug = vollzug_estimator.predict(prognosemerkmale_df_preprocessed)[0]
+
+    if vorhersage_vollzug == "bedingt":
+        vorhersage_vollzug = "bedingte"
+    elif vorhersage_vollzug == "teilbedingt":
+        vorhersage_vollzug = "teilbedingte"
+    elif vorhersage_vollzug == "unbedingt":
+        vorhersage_vollzug = "unbedingte"
+
+    nachbarobjekt.vorhersage_vollzug = vorhersage_vollzug
+
+
+    # Strafmass-Prädiktor laden und Prognose machen
+    vorhersage_strafmass = strafmass_estimator.predict(prognosemerkmale_df_preprocessed)[0]
+    nachbarobjekt.vorhersage_strafmass = vorhersage_strafmass
 
     return nachbarobjekt
 

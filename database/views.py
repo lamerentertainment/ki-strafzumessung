@@ -652,7 +652,18 @@ def betm_prognose(request):
             nachbar1 = BetmUrteil.objects.get(fall_nr=nachbarliste[0])
             nachbar2 = BetmUrteil.objects.get(fall_nr=nachbarliste[1])
 
-            nachbar1 = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(nachbar1, strafmass_estimator=strafmass_modell, hautpsanktion_estimator=hauptsanktions_modell, vollzug_estimator=vollzugs_modell)
+            nachbar1 = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
+                nachbar1,
+                strafmass_estimator=strafmass_modell,
+                hauptsanktion_estimator=hauptsanktions_modell,
+                vollzug_estimator=vollzugs_modell,
+            )
+            nachbar2 = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
+                nachbar2,
+                strafmass_estimator=strafmass_modell,
+                hauptsanktion_estimator=hauptsanktions_modell,
+                vollzug_estimator=vollzugs_modell,
+            )
 
             # differenzen von eingabe und nachbarn berechnen, evt. mal auslagern
             def differenzengenerator(nachbarobjekt, formobjekt):
@@ -1080,11 +1091,7 @@ def betm_evaluation(request):
         name="betm_rf_regressor_strafmass"
     ).last_updated
 
-    urteilsbasis = (
-        prognoseleistung_dict_strafmass[
-            "urteilsbasis"
-        ]
-    )
+    urteilsbasis = prognoseleistung_dict_strafmass["urteilsbasis"]
 
     context = {
         "string_oob_vollzugsart": oob_score_vollzugsart,
@@ -1094,7 +1101,7 @@ def betm_evaluation(request):
         "durchschnittlicher_fehler": durchschnittlicher_fehler,
         "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass": zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass,
         "last_updated": last_updated,
-        "urteilsbasis": urteilsbasis
+        "urteilsbasis": urteilsbasis,
     }
     return render(request, "database/betm_evaluation.html", context=context)
 

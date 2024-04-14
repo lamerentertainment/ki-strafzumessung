@@ -1,4 +1,4 @@
-import pickle
+import pickle, math
 from io import StringIO, BytesIO
 
 import matplotlib.pyplot as plt
@@ -788,9 +788,40 @@ def nachbar_mit_sanktionsbewertung_anreichern(
         [df_cat_fts, urteilsmerkmale_als_pandas_df[num_fts]], axis=1
     )
 
-    nachbarobjekt.vorhersage_strafmass = strafmass_estimator.predict(
-        urteilsmerkmale_df_preprocessed
-    )[0]
+    vorhersage_strafmass = strafmass_estimator.predict(urteilsmerkmale_df_preprocessed)[
+        0
+    ]
+
+    nachbarobjekt.vorhersage_strafmass = vorhersage_strafmass
+
+    # Prognose basierend auf erste Nachkommaziffer auf Bereich ausweiten
+    def _erste_ziffer_nach_dem_komma(zahl):
+        zahl = float(zahl)
+        nachkommastelle = (
+            abs(zahl) % 1
+        )  # Extrahiere die Nachkommastelle (nur positive Werte verwenden)
+        if nachkommastelle == 0:
+            return 0  # Keine Ziffer nach dem Komma
+        else:
+            nachkommastelle *= 10
+            erste_ziffer = int(nachkommastelle)
+            return erste_ziffer
+
+    if _erste_ziffer_nach_dem_komma(vorhersage_strafmass) in [1, 2]:
+        prognosebereich_start = math.floor(vorhersage_strafmass - 2)
+        prognosebereich_ende = math.ceil(vorhersage_strafmass)
+
+    elif _erste_ziffer_nach_dem_komma(vorhersage_strafmass) in [3, 4, 5, 6, 7]:
+        prognosebereich_start = math.floor(vorhersage_strafmass - 1)
+        prognosebereich_ende = math.ceil(vorhersage_strafmass + 1)
+
+    elif _erste_ziffer_nach_dem_komma(vorhersage_strafmass) == 0:
+        prognosebereich_start = vorhersage_strafmass - 1.5
+        prognosebereich_ende = vorhersage_strafmass + 1.5
+
+    elif _erste_ziffer_nach_dem_komma(vorhersage_strafmass) in [8, 9]:
+        prognosebereich_start = math.floor(vorhersage_strafmass)
+        prognosebereich_ende = math.ceil(vorhersage_strafmass + 2)
 
     sanktion_des_prajudiz = (
         nachbarobjekt.freiheitsstrafe_in_monaten
@@ -798,53 +829,75 @@ def nachbar_mit_sanktionsbewertung_anreichern(
         else (nachbarobjekt.anzahl_tagessaetze / 30)
     )
 
-    differenz = sanktion_des_prajudiz - nachbarobjekt.vorhersage_strafmass
-    if 3 > differenz > -3:
-        nachbarobjekt.sanktionsbewertung = (
-            "Die KI hält die Sanktion des Präjudiz für angemessen."
-        )
-    elif -10 <= differenz <= -3:
-        nachbarobjekt.sanktionsbewertung = (
-            "Die KI hält die Sanktion des Präjudiz für leicht zu mild."
-        )
-    elif differenz <= -10:
-        nachbarobjekt.sanktionsbewertung = (
-            "Die KI hält die Sanktion des Präjudiz für erheblich zu mild."
-        )
-    elif 3 <= differenz <= 10:
-        nachbarobjekt.sanktionsbewertung = (
-            "Die KI hält die Sanktion des Präjudiz für leicht zu streng."
-        )
-    elif differenz > 10:
-        nachbarobjekt.sanktionsbewertung = (
-            "Die KI hält die Sanktion des Präjudiz für erheblich zu streng."
-        )
-
     nachbarobjekt.vorhersage_vollzug = vollzug_estimator.predict(
         urteilsmerkmale_df_preprocessed
     )
+    if nachbarobjekt.vorhersage_vollzug[0] == "0":
+        nachbarobjekt.vorhersage_vollzug = "bedingte"
+    elif nachbarobjekt.vorhersage_vollzug[0] == "1":
+        nachbarobjekt.vorhersage_vollzug = "teilbedingte"
+    elif nachbarobjekt.vorhersage_vollzug[0] == "2":
+        nachbarobjekt.vorhersage = "unbedingte"
 
     nachbarobjekt.vorhersage_sanktionsart = hauptsanktion_estimator.predict(
         urteilsmerkmale_df_preprocessed
     )
 
-    nachbarobjekt.vollzugsstring = "empty"
-
-    if nachbarobjekt.vorhersage_vollzug[0] == "0":
-        nachbarobjekt.vollzugsstring = "bedingte"
-    elif nachbarobjekt.vorhersage_vollzug[0] == "1":
-        nachbarobjekt.vollzugsstring = "teilbedingte"
-    elif nachbarobjekt.vorhersage_vollzug[0] == "2":
-        nachbarobjekt.vollzugsstring = "unbedingte"
-
-    nachbarobjekt.string_sanktionsart = "empty"
-
     if nachbarobjekt.vorhersage_sanktionsart[0] == "0":
-        nachbarobjekt.string_sanktionsart = "Freiheitsstrafe"
+        nachbarobjekt.vorhersage_sanktionsart = "Freiheitsstrafe"
     elif nachbarobjekt.vorhersage_sanktionsart[0] == "1":
-        nachbarobjekt.string_sanktionsart = "Geldstrafe"
+        nachbarobjekt.vorhersage_sanktionsart = "Geldstrafe"
     elif nachbarobjekt.vorhersage_sanktionsart[0] == "2":
-        nachbarobjekt.string_sanktionsart = "Busse"
+        nachbarobjekt.vorhersage_sanktionsart = "Busse"
+
+    nachbarobjekt = sanktionsbewertungs_string_erstellen(
+        nachbarobjekt=nachbarobjekt,
+        nachbarobjekt_sanktion=sanktion_des_prajudiz,
+        prognosebereich_ende=prognosebereich_ende,
+        prognosebereich_start=prognosebereich_start,
+        vorhersage_hauptsanktion=nachbarobjekt.vorhersage_sanktionsart,
+        vorhersage_vollzug=nachbarobjekt.vorhersage_vollzug,
+    )
+
+    # differenz = sanktion_des_prajudiz - nachbarobjekt.vorhersage_strafmass
+    # if 3 > differenz > -3:
+    #     nachbarobjekt.sanktionsbewertung = (
+    #         "Die KI hält die Sanktion des Präjudiz für angemessen."
+    #     )
+    # elif -10 <= differenz <= -3:
+    #     nachbarobjekt.sanktionsbewertung = (
+    #         "Die KI hält die Sanktion des Präjudiz für leicht zu mild."
+    #     )
+    # elif differenz <= -10:
+    #     nachbarobjekt.sanktionsbewertung = (
+    #         "Die KI hält die Sanktion des Präjudiz für erheblich zu mild."
+    #     )
+    # elif 3 <= differenz <= 10:
+    #     nachbarobjekt.sanktionsbewertung = (
+    #         "Die KI hält die Sanktion des Präjudiz für leicht zu streng."
+    #     )
+    # elif differenz > 10:
+    #     nachbarobjekt.sanktionsbewertung = (
+    #         "Die KI hält die Sanktion des Präjudiz für erheblich zu streng."
+    #     )
+    #
+    # nachbarobjekt.vollzugsstring = "empty"
+    #
+    # if nachbarobjekt.vorhersage_vollzug[0] == "0":
+    #     nachbarobjekt.vollzugsstring = "bedingte"
+    # elif nachbarobjekt.vorhersage_vollzug[0] == "1":
+    #     nachbarobjekt.vollzugsstring = "teilbedingte"
+    # elif nachbarobjekt.vorhersage_vollzug[0] == "2":
+    #     nachbarobjekt.vollzugsstring = "unbedingte"
+    #
+    # nachbarobjekt.string_sanktionsart = "empty"
+    #
+    # if nachbarobjekt.vorhersage_sanktionsart[0] == "0":
+    #     nachbarobjekt.string_sanktionsart = "Freiheitsstrafe"
+    # elif nachbarobjekt.vorhersage_sanktionsart[0] == "1":
+    #     nachbarobjekt.string_sanktionsart = "Geldstrafe"
+    # elif nachbarobjekt.vorhersage_sanktionsart[0] == "2":
+    #     nachbarobjekt.string_sanktionsart = "Busse"
 
     return nachbarobjekt
 
@@ -896,7 +949,6 @@ def betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
     if 2 in _betm_dict:
         _betm_dict[2] = _convert_django_types_to_string(_betm_dict[2])
 
-    # weitermachen TODO
     list_betm = []
     for entry in _betm_dict.values():
         list_betm.append(entry)
@@ -948,7 +1000,8 @@ def betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
     )
 
     prognosemerkmale_df_preprocessed = pd.concat([df_cat_fts, df_num_fts], axis=1)
-    # Hauptsanktion-Prädiktor laden und Prognose machen
+
+    # Prognose Hauptsanktion
     vorhersage_hauptsanktion = hauptsanktion_estimator.predict(
         prognosemerkmale_df_preprocessed
     )[0]
@@ -962,8 +1015,7 @@ def betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
 
     nachbarobjekt.vorhersage_hauptsanktion = vorhersage_hauptsanktion
 
-    # Vollzugs-Prädiktor laden und Prognose machen
-
+    # Prognose Vollzug
     vorhersage_vollzug = vollzug_estimator.predict(prognosemerkmale_df_preprocessed)[0]
 
     if vorhersage_vollzug == "bedingt":
@@ -975,10 +1027,145 @@ def betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
 
     nachbarobjekt.vorhersage_vollzug = vorhersage_vollzug
 
-
-    # Strafmass-Prädiktor laden und Prognose machen
-    vorhersage_strafmass = strafmass_estimator.predict(prognosemerkmale_df_preprocessed)[0]
+    # Prognose Strafmass
+    vorhersage_strafmass = strafmass_estimator.predict(
+        prognosemerkmale_df_preprocessed
+    )[0]
     nachbarobjekt.vorhersage_strafmass = vorhersage_strafmass
+
+    # Prognose basierend auf erste Nachkommaziffer auf Bereich ausweiten
+    def _erste_ziffer_nach_dem_komma(zahl):
+        zahl = float(zahl)
+        nachkommastelle = (
+            abs(zahl) % 1
+        )  # Extrahiere die Nachkommastelle (nur positive Werte verwenden)
+        if nachkommastelle == 0:
+            return 0  # Keine Ziffer nach dem Komma
+        else:
+            nachkommastelle *= 10
+            erste_ziffer = int(nachkommastelle)
+            return erste_ziffer
+
+    if _erste_ziffer_nach_dem_komma(vorhersage_strafmass) in [1, 2]:
+        prognosebereich_start = math.floor(vorhersage_strafmass - 2)
+        prognosebereich_ende = math.ceil(vorhersage_strafmass)
+
+    elif _erste_ziffer_nach_dem_komma(vorhersage_strafmass) in [3, 4, 5, 6, 7]:
+        prognosebereich_start = math.floor(vorhersage_strafmass - 1)
+        prognosebereich_ende = math.ceil(vorhersage_strafmass + 1)
+
+    elif _erste_ziffer_nach_dem_komma(vorhersage_strafmass) == 0:
+        prognosebereich_start = vorhersage_strafmass - 1.5
+        prognosebereich_ende = vorhersage_strafmass + 1.5
+
+    elif _erste_ziffer_nach_dem_komma(vorhersage_strafmass) in [8, 9]:
+        prognosebereich_start = math.floor(vorhersage_strafmass)
+        prognosebereich_ende = math.ceil(vorhersage_strafmass + 2)
+
+    if nachbarobjekt.hauptsanktion == "0":
+        nachbarobjekt_sanktion = nachbarobjekt.freiheitsstrafe_in_monaten
+    elif nachbarobjekt.hauptsanktion == "1":
+        nachbarobjekt_sanktion = nachbarobjekt.anzahl_tagessaetze / 30
+
+    nachbarobjekt = sanktionsbewertungs_string_erstellen(
+        nachbarobjekt=nachbarobjekt,
+        nachbarobjekt_sanktion=nachbarobjekt_sanktion,
+        prognosebereich_ende=prognosebereich_ende,
+        prognosebereich_start=prognosebereich_start,
+        vorhersage_hauptsanktion=vorhersage_hauptsanktion,
+        vorhersage_vollzug=vorhersage_vollzug,
+    )
+
+    return nachbarobjekt
+
+
+def sanktionsbewertungs_string_erstellen(
+    nachbarobjekt,
+    nachbarobjekt_sanktion,
+    prognosebereich_ende,
+    prognosebereich_start,
+    vorhersage_hauptsanktion,
+    vorhersage_vollzug,
+):
+    if prognosebereich_start <= nachbarobjekt_sanktion <= prognosebereich_ende:
+        if vorhersage_hauptsanktion == "Freiheitsstrafe":
+            nachbarobjekt.sanktionsbewertung = (
+                f"Die KI hält die Sanktion dieses Urteils für angemessen. Sie hätte mit den "
+                f"oben dargestellten Eckwerten dieses Urteils "
+                f"eine {vorhersage_vollzug} Freiheitsstrafe zwischen "
+                f"{str(prognosebereich_start)} und {str(prognosebereich_ende)} Monaten prognostiziert"
+            )
+        if vorhersage_hauptsanktion == "Geldstrafe":
+            nachbarobjekt.sanktionsbewertung = (
+                f"Die KI hält die Sanktion dieses Urteils für angemessen. Sie hätte mit den "
+                f"oben dargestellten Eckwerten dieses Urteils "
+                f"eine {vorhersage_vollzug} Geldstrafe zwischen "
+                f"{str(prognosebereich_start * 30)} und {str(prognosebereich_ende * 30)} Tagessätzen prognostiziert"
+            )
+
+    elif nachbarobjekt_sanktion <= (prognosebereich_ende + 3):
+        if vorhersage_hauptsanktion == "Freiheitstrafe":
+            nachbarobjekt.sanktionsbewertung = (
+                f"Die KI hält die Sanktion dieses Urteils für leicht zu mild. Sie hätte mit den "
+                f"oben dargestellten Eckwerten dieses Urteils "
+                f"eine {vorhersage_vollzug} Freiheitsstrafe zwischen "
+                f"{str(prognosebereich_start)} und {str(prognosebereich_ende)} Monaten prognostiziert"
+            )
+        if vorhersage_hauptsanktion == "Geldstrafe":
+            nachbarobjekt.sanktionsbewertung = (
+                f"Die KI hält die Sanktion dieses Urteils für leicht zu mild. Sie hätte mit den "
+                f"oben dargestellten Eckwerten dieses Urteils "
+                f"eine {vorhersage_vollzug} Geldstrafe zwischen "
+                f"{str(prognosebereich_start * 30)} und {str(prognosebereich_ende * 30)} Tagessätzen prognostiziert"
+            )
+
+    elif nachbarobjekt_sanktion > (prognosebereich_ende + 3):
+        if vorhersage_hauptsanktion == "Freiheitstrafe":
+            nachbarobjekt.sanktionsbewertung = (
+                f"Die KI hält die Sanktion dieses Urteils für deutlich zu mild. Sie hätte mit den "
+                f"oben dargestellten Eckwerten dieses Urteils "
+                f"eine {vorhersage_vollzug} Freiheitsstrafe zwischen "
+                f"{str(prognosebereich_start)} und {str(prognosebereich_ende)} Monaten prognostiziert"
+            )
+        if vorhersage_hauptsanktion == "Geldstrafe":
+            nachbarobjekt.sanktionsbewertung = (
+                f"Die KI hält die Sanktion dieses Urteils für deutlich zu mild. Sie hätte mit den "
+                f"oben dargestellten Eckwerten dieses Urteils "
+                f"eine {vorhersage_vollzug} Geldstrafe zwischen "
+                f"{str(prognosebereich_start * 30)} und {str(prognosebereich_ende * 30)} Tagessätzen prognostiziert"
+            )
+
+    elif nachbarobjekt_sanktion >= (prognosebereich_start - 3):
+        if vorhersage_hauptsanktion == "Freiheitstrafe":
+            nachbarobjekt.sanktionsbewertung = (
+                f"Die KI hält die Sanktion dieses Urteils für leicht zu streng. Sie hätte mit den "
+                f"oben dargestellten Eckwerten dieses Urteils "
+                f"eine {vorhersage_vollzug} Freiheitsstrafe zwischen "
+                f"{str(prognosebereich_start)} und {str(prognosebereich_ende)} Monaten prognostiziert"
+            )
+        if vorhersage_hauptsanktion == "Geldstrafe":
+            nachbarobjekt.sanktionsbewertung = (
+                f"Die KI hält die Sanktion dieses Urteils für leicht zu streng. Sie hätte mit den "
+                f"oben dargestellten Eckwerten dieses Urteils "
+                f"eine {vorhersage_vollzug} Geldstrafe zwischen "
+                f"{str(prognosebereich_start * 30)} und {str(prognosebereich_ende * 30)} Tagessätzen prognostiziert"
+            )
+
+    elif nachbarobjekt_sanktion < (prognosebereich_start - 3):
+        if vorhersage_hauptsanktion == "Freiheitstrafe":
+            nachbarobjekt.sanktionsbewertung = (
+                f"Die KI hält die Sanktion dieses Urteils für deutlich zu streng. Sie hätte mit den "
+                f"oben dargestellten Eckwerten dieses Urteils "
+                f"eine {vorhersage_vollzug} Freiheitsstrafe zwischen "
+                f"{str(prognosebereich_start)} und {str(prognosebereich_ende)} Monaten prognostiziert"
+            )
+        if vorhersage_hauptsanktion == "Geldstrafe":
+            nachbarobjekt.sanktionsbewertung = (
+                f"Die KI hält die Sanktion dieses Urteils für deutlich zu streng. Sie hätte mit den "
+                f"oben dargestellten Eckwerten dieses Urteils "
+                f"eine {vorhersage_vollzug} Geldstrafe zwischen "
+                f"{str(prognosebereich_start * 30)} und {str(prognosebereich_ende * 30)} Tagessätzen prognostiziert"
+            )
 
     return nachbarobjekt
 

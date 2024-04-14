@@ -106,13 +106,7 @@
                     <td colspan="2">
                         <p>
                             Sanktionsbewertung durch KI:
-                            {% if nachbar.string_sanktionsart == "Freiheitsstrafe"%}
-                                {{ nachbar.sanktionsbewertung }} Die KI hätte basierend auf den Eckwerten dieses Präjudiz eine {{ nachbar.vollzugsstring }} {{ nachbar.string_sanktionsart }}
-                                {{ nachbar.vorhersage_strafmass|prognosebereich_angeben }} Monaten vorausgesagt.
-                            {% elif nachbar.string_sanktionsart == "Geldstrafe" %}
-                                {{ nachbar.sanktionsbewertung }} Die KI hätte basierend auf den Eckwerten dieses Präjudiz eine {{ nachbar.vollzugsstring }} {{ nachbar.string_sanktionsart }}
-                                {{ nachbar.vorhersage_strafmass|prognosebereich_angeben_fuer_geldstrafe }} Tagessätzen vorausgesagt.
-                            {% endif %}
+                            {{ nachbar.sanktionsbewertung }}
                         </p>
                     </td>
                 </tr>

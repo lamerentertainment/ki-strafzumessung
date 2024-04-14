@@ -18,14 +18,14 @@
                     <td {% if nachbar.ds_diff >= 100000 %} class="bg-danger p-2 text-dark bg-opacity-25"
                         {% elif nachbar.ds_diff >= 75000 %} class="bg-danger p-2 text-dark bg-opacity-10"
                         {% elif nachbar.ds_diff >= 50000 %} class="bg-success p-2 text-dark bg-opacity-10"
-                        {% elif nachbar.ds_diff >= 25000 %} class="bg-success p-2 text-dark bg-opacity-25"
+                        {% elif nachbar.ds_diff >= 0 %} class="bg-success p-2 text-dark bg-opacity-25"
                         {% endif %}
                     ><p>Differenz: + Fr. {{ nachbar.ds_diff|intcomma }}</p></td>
                     {% else %}
                     <td {% if nachbar.ds_diff <= -100000 %} class="bg-danger p-2 text-dark bg-opacity-25"
                         {% elif nachbar.ds_diff <= -75000 %} class="bg-danger p-2 text-dark bg-opacity-10"
                         {% elif nachbar.ds_diff <= -50000 %} class="bg-success p-2 text-dark bg-opacity-10"
-                        {% elif nachbar.ds_diff < 25000 %} class="bg-success p-2 text-dark bg-opacity-25"
+                        {% elif nachbar.ds_diff <= 0 %} class="bg-success p-2 text-dark bg-opacity-25"
                         {% endif %}
                     ><p>Differenz: Fr. {{ nachbar.ds_diff|intcomma }}</p></td>
                     {% endif %}
@@ -33,12 +33,12 @@
                 <tr>
                     <td><p>Nebenverurteilungscore: {{ nachbar.nebenverurteilungsscore }}</p></td>
                     {% if nachbar.nvs_diff > 0 %}
-                    <td {% if nachbar.nvs_diff >= 3 %} class="bg-danger p-2 text-dark bg-opacity-25"
+                    <td {% if nachbar.nvs_diff >= 4 %} class="bg-danger p-2 text-dark bg-opacity-25"
                         {% elif nachbar.nvs_diff >= 1 %} class="bg-sucess p-2 text-dark bg-opacity-10"
                         {% endif %}
                     ><p>Differenz: + {{ nachbar.nvs_diff }}</p></td>
-                    {% else %}
-                    <td {% if nachbar.nvs_diff <= -3 %} class="bg-danger p-2 text-dark bg-opacity-25"
+                    {% elif nachbar.nvs_diff <= 0 %}
+                    <td {% if nachbar.nvs_diff <= -4 %} class="bg-danger p-2 text-dark bg-opacity-25"
                         {% elif nachbar.nvs_diff <= -1 %} class="bg-sucess p-2 text-dark bg-opacity-10"
                         {% elif nachbar.nvs_diff == 0 %} class="bg-sucess p-2 text-dark bg-opacity-25"
                         {% endif %}

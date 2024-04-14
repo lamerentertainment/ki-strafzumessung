@@ -1104,7 +1104,7 @@ def sanktionsbewertungs_string_erstellen(
             )
 
     elif nachbarobjekt_sanktion <= (prognosebereich_ende + 3):
-        if vorhersage_hauptsanktion == "Freiheitstrafe":
+        if vorhersage_hauptsanktion == "Freiheitsstrafe":
             nachbarobjekt.sanktionsbewertung = (
                 f"Die KI hält die Sanktion dieses Urteils für leicht zu mild. Sie hätte mit den "
                 f"oben dargestellten Eckwerten dieses Urteils "
@@ -1120,7 +1120,7 @@ def sanktionsbewertungs_string_erstellen(
             )
 
     elif nachbarobjekt_sanktion > (prognosebereich_ende + 3):
-        if vorhersage_hauptsanktion == "Freiheitstrafe":
+        if vorhersage_hauptsanktion == "Freiheitsstrafe":
             nachbarobjekt.sanktionsbewertung = (
                 f"Die KI hält die Sanktion dieses Urteils für deutlich zu mild. Sie hätte mit den "
                 f"oben dargestellten Eckwerten dieses Urteils "
@@ -1136,7 +1136,7 @@ def sanktionsbewertungs_string_erstellen(
             )
 
     elif nachbarobjekt_sanktion >= (prognosebereich_start - 3):
-        if vorhersage_hauptsanktion == "Freiheitstrafe":
+        if vorhersage_hauptsanktion == "Freiheitsstrafe":
             nachbarobjekt.sanktionsbewertung = (
                 f"Die KI hält die Sanktion dieses Urteils für leicht zu streng. Sie hätte mit den "
                 f"oben dargestellten Eckwerten dieses Urteils "
@@ -1152,7 +1152,7 @@ def sanktionsbewertungs_string_erstellen(
             )
 
     elif nachbarobjekt_sanktion < (prognosebereich_start - 3):
-        if vorhersage_hauptsanktion == "Freiheitstrafe":
+        if vorhersage_hauptsanktion == "Freiheitsstrafe":
             nachbarobjekt.sanktionsbewertung = (
                 f"Die KI hält die Sanktion dieses Urteils für deutlich zu streng. Sie hätte mit den "
                 f"oben dargestellten Eckwerten dieses Urteils "

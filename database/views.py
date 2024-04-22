@@ -1107,14 +1107,14 @@ def betm_evaluation(request):
 
 
 # Science Views
-def text(request):
+def text_funktionsweise(request):
     context = {}
-    return render(request, "database/text.html", context)
+    return render(request, "database/funktionsweise.html", context)
 
 
-def suigeneris(request):
+def text_strafzumessung_mit_hilfe_von_ki(request):
     context = {}
-    return render(request, "database/suigeneris.html", context)
+    return render(request, "database/strafzumessung_mit_hilfe_von_ki.html", context)
 
 
 # helper functions

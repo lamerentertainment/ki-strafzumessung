@@ -1525,9 +1525,9 @@ def introspection_plot_und_lesehinweis_abspeichern(
 
 
 # Betm-Pipeline
-def betm_urteile_dataframe_erzeugen():
+def betm_urteile_dataframe_erzeugen(kanton_filtern=None):
     """erzeugt ein pandas datenframe mit den in der BetmUrteil abgelegten Daten"""
-    df_joined = betm_db_zusammenfuegen()
+    df_joined = betm_db_zusammenfuegen(kanton_filtern=kanton_filtern)
     df_joined = urteilcodes_aufloesen(df_joined)
     df_joined = urteilsdatum_in_urteilsjahr_konvertieren(df_joined)
     df_joined, liste_aller_ohe_betm_spalten = betmurteile_onehotencoding(df_joined)
@@ -1539,9 +1539,9 @@ def betm_urteile_dataframe_erzeugen():
     return df_urteile, liste_aller_ohe_betm_spalten
 
 
-def betm_db_zusammenfuegen():
+def betm_db_zusammenfuegen(kanton_filtern=None):
     """fügt alle datenbanken betreffend Betm-Urteile zusammen"""
-    df_betmurteil = BetmUrteil.pandas.return_as_df(exclude_unmarked=False)
+    df_betmurteil = BetmUrteil.pandas.return_as_df(exclude_unmarked=False, kanton_filtern=kanton_filtern)
     df_betmurteil["betmurteil_id"] = df_betmurteil.index
     df_betmurteil_betm = pd.DataFrame(list(BetmUrteil.betm.through.objects.values()))
     df_betm = Betm.pandas.return_as_df()

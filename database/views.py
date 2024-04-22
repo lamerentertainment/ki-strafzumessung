@@ -997,6 +997,214 @@ def betm_kimodelle_neu_generieren(request):
     messages.success(
         request, "Die KI-Modelle für Betm-Strafrecht wurden erfolgreich aktualisiert."
     )
+    return redirect("betm_dev") @ login_required
+
+
+def betm_evaluations_kimodelle_neu_generieren(request):
+    kanton = "ZH"
+    df_urteile, liste_aller_ohe_betm_spalten = betm_urteile_dataframe_erzeugen(
+        kanton_filtern=kanton
+    )
+
+    # Prognosemerkmale definieren, auf welche die Prädiktoren abstützen dürfen
+    liste_kategoriale_prognosemerkmale = [
+        "mengenmaessig",
+        "bandenmaessig",
+        "gewerbsmaessig",
+        "anstaltentreffen",
+        "mehrfach",
+        "beschaffungskriminalitaet",
+        "vorbestraft",
+        "vorbestraft_einschlaegig",
+        "rolle",
+    ]
+    liste_numerische_prognosemerkmale = [
+        "nebenverurteilungsscore",
+        "deliktsertrag",
+        "deliktsdauer_in_monaten",
+    ]
+    liste_numerische_prognosemerkmale.extend(liste_aller_ohe_betm_spalten)
+
+    X_ohe, y_vollzugsart, encoder = onehotx_und_y_erstellen_from_dataframe(
+        pandas_dataframe=df_urteile,
+        categorial_ft_dbfields=liste_kategoriale_prognosemerkmale,
+        numerical_ft_dbfields=liste_numerische_prognosemerkmale,
+        target_dbfields=["vollzug"],
+        return_encoder=True,
+    )
+    # Classifier für HAUPTSANKTION-Prognose erstellen
+    from sklearn.ensemble import RandomForestClassifier
+
+    classifier_fuer_hauptsanktion = RandomForestClassifier(oob_score=True)
+    y_hauptsanktion = df_urteile[["hauptsanktion"]].values.ravel()
+    classifier_fuer_hauptsanktion.fit(X_ohe, y_hauptsanktion)
+
+    merkmalswichtigkeit_fuer_prognose_hauptsanktion = (
+        merkmalswichtigkeitslistegenerator(classifier_fuer_hauptsanktion)
+    )
+
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_hauptsanktion = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            merkmalswichtigkeit_fuer_prognose_hauptsanktion,
+            liste_mit_zusammenfassenden_merkmalen=liste_aller_ohe_betm_spalten,
+        )
+    )
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_hauptsanktion = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            zusammengefasste_merkmalswichtigkeit_fuer_prognose_hauptsanktion,
+            liste_mit_zusammenfassenden_merkmalen=[
+                f"rolle_{rolle}" for rolle in df_urteile.rolle.unique()
+            ],
+            neuer_merkmalsname="Rolle",
+        )
+    )
+
+    oob_score_hauptsanktion = f"OOB-Score für Hauptsanktion-Prädiktor: {round(classifier_fuer_hauptsanktion.oob_score_*100, 1)}%"
+
+    prognoseleistung_dict_hauptsanktion = dict()
+    prognoseleistung_dict_hauptsanktion[
+        "oob_score_class_hauptsanktion"
+    ] = oob_score_hauptsanktion
+    prognoseleistung_dict_hauptsanktion[
+        "merkmalswichtigkeit_fuer_prognose_hauptsanktion"
+    ] = zusammengefasste_merkmalswichtigkeit_fuer_prognose_hauptsanktion
+    prognoseleistung_dict_hauptsanktion[
+        "liste_kategoriale_prognosemerkmale"
+    ] = liste_kategoriale_prognosemerkmale
+    prognoseleistung_dict_hauptsanktion[
+        "liste_numerische_prognosemerkmale"
+    ] = liste_numerische_prognosemerkmale
+    prognoseleistung_dict_hauptsanktion["anzahl_urteile"] = df_urteile.shape[0]
+
+    # kimodell als pickle file speichern
+    ki_modell_als_pickle_file_speichern(
+        instanziertes_kimodel=classifier_fuer_hauptsanktion,
+        name=f"betm_sanktion_nur_{kanton}",
+        filename=f"betm_sanktion_nur_{kanton}.pkl",
+        prognoseleistung_dict=prognoseleistung_dict_hauptsanktion,
+    )
+
+    # Classifier für VOLLZUGSART-Prognose erstellen
+    classifier_fuer_vollzugsart = RandomForestClassifier(oob_score=True)
+    classifier_fuer_vollzugsart.fit(X_ohe, y_vollzugsart)
+
+    merkmalswichtigkeit_fuer_prognose_vollzugsart = merkmalswichtigkeitslistegenerator(
+        classifier_fuer_vollzugsart
+    )
+
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_vollzugsart = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            merkmalswichtigkeit_fuer_prognose_vollzugsart,
+            liste_mit_zusammenfassenden_merkmalen=liste_aller_ohe_betm_spalten,
+        )
+    )
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_vollzugsart = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            zusammengefasste_merkmalswichtigkeit_fuer_prognose_vollzugsart,
+            liste_mit_zusammenfassenden_merkmalen=[
+                f"rolle_{rolle}" for rolle in df_urteile.rolle.unique()
+            ],
+            neuer_merkmalsname="Rolle",
+        )
+    )
+
+    oob_score = f"OOB-Score für Vollzugsart-Prädiktor: {round(classifier_fuer_vollzugsart.oob_score_*100, 1)}%"
+
+    prognoseleistung_dict = dict()
+    prognoseleistung_dict["oob_score_class_vollzugsart"] = oob_score
+    prognoseleistung_dict[
+        "merkmalswichtigkeit_fuer_prognose_vollzugsart"
+    ] = zusammengefasste_merkmalswichtigkeit_fuer_prognose_vollzugsart
+    prognoseleistung_dict[
+        "liste_kategoriale_prognosemerkmale"
+    ] = liste_kategoriale_prognosemerkmale
+    prognoseleistung_dict[
+        "liste_numerische_prognosemerkmale"
+    ] = liste_numerische_prognosemerkmale
+    prognoseleistung_dict_hauptsanktion["anzahl_urteile"] = df_urteile.shape[0]
+
+    # kimodell als pickle file speichern
+    ki_modell_als_pickle_file_speichern(
+        instanziertes_kimodel=classifier_fuer_vollzugsart,
+        name=f"betm_vollzugsart_nur_{kanton}",
+        filename=f"betm_vollzugsart_nur_{kanton}.pkl",
+        prognoseleistung_dict=prognoseleistung_dict,
+    )
+
+    # Regressor für STRAFMASS-Prognose erstellen
+    y_strafmass = (
+        (df_urteile["anzahl_tagessaetze"] / 30)
+        .where(
+            df_urteile["freiheitsstrafe_in_monaten"] == 0,
+            df_urteile["freiheitsstrafe_in_monaten"],
+        )
+        .values.ravel()
+    )
+
+    from sklearn.ensemble import RandomForestRegressor
+
+    regressor_fuer_strafmass = RandomForestRegressor(oob_score=True)
+    regressor_fuer_strafmass.fit(X_ohe, y_strafmass)
+
+    def durchschnittlicher_fehler_berechnen(regressor, y):
+        liste_mit_zielwert_prognose_tuples = list(zip(y, regressor.oob_prediction_))
+        liste_mit_fehler = []
+        for t in liste_mit_zielwert_prognose_tuples:
+            fehler = abs(t[0] - t[1])
+            liste_mit_fehler.append(fehler)
+        durchschnittswert = sum(liste_mit_fehler) / len(liste_mit_fehler)
+        return durchschnittswert
+
+    durchschnittlicher_fehler = durchschnittlicher_fehler_berechnen(
+        regressor_fuer_strafmass, y_strafmass
+    )
+    prognoseleistung_dict_regressor = dict()
+    prognoseleistung_dict_regressor[
+        "durchschnittlicher_fehler"
+    ] = f"Der durchnittliche Strafmassprognosefehler bei einer Prognose jeweils mit dem OOB-leftout beträgt {round(durchschnittlicher_fehler,2)} Monate."
+
+    merkmalswichtigkeit_fuer_prognose_strafmass = merkmalswichtigkeitslistegenerator(
+        regressor_fuer_strafmass
+    )
+
+    prognoseleistung_dict_regressor[
+        "merkmalswichtigkeit_fuer_prognose_strafmass"
+    ] = merkmalswichtigkeit_fuer_prognose_strafmass
+
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            merkmalswichtigkeit_fuer_prognose_strafmass,
+            liste_mit_zusammenfassenden_merkmalen=liste_aller_ohe_betm_spalten,
+        )
+    )
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass,
+            liste_mit_zusammenfassenden_merkmalen=[
+                f"rolle_{rolle}" for rolle in df_urteile.rolle.unique()
+            ],
+            neuer_merkmalsname="Rolle",
+        )
+    )
+
+    prognoseleistung_dict_regressor[
+        "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass"
+    ] = zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass
+
+    prognoseleistung_dict_regressor["urteilsbasis"] = len(y_strafmass)
+
+    # kimodell als pickle file speichern
+    ki_modell_als_pickle_file_speichern(
+        instanziertes_kimodel=regressor_fuer_strafmass,
+        name=f"betm_strafmass_nur_{kanton}",
+        filename=f"betm_strafmass_nur_{kanton}.pkl",
+        prognoseleistung_dict=prognoseleistung_dict_regressor,
+    )
+
+    messages.success(
+        request,
+        "Die KI-Evaluations-Modelle für Betm-Strafrecht wurden erfolgreich aktualisiert.",
+    )
     return redirect("betm_dev")
 
 
@@ -1039,13 +1247,33 @@ def betm_dev(request):
         ]
     )
 
+    # Kantonsspezifische Prädiktoren laden
+    prognoseleistung_dict_strafmass_nur_zh = KIModelPickleFile.objects.get(
+        name="betm_strafmass_nur_ZH"
+    ).prognoseleistung_dict
+
+    durchschnittlicher_fehler_nur_zh = prognoseleistung_dict_strafmass_nur_zh[
+        "durchschnittlicher_fehler"
+    ]
+    urteilsbasis_zh = prognoseleistung_dict_strafmass_nur_zh[
+        "urteilsbasis"
+    ]
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass_nur_zh = (
+        prognoseleistung_dict_strafmass_nur_zh[
+            "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass"
+        ]
+    )
+
     context = {
         "string_oob_vollzugsart": oob_score_vollzugsart,
         "merkmalswichtigkeit_prognose_vollzugsart": merkmalswichtigkeit_fuer_prognose_vollzugsart,
         "string_oob_hauptsanktion": oob_score_hauptsanktion,
         "merkmalswichtigkeit_prognose_hauptsanktion": merkmalswichtigkeit_fuer_prognose_hauptsanktion,
         "durchschnittlicher_fehler": durchschnittlicher_fehler,
+        "durchschnittlicher_fehler_nur_zh": durchschnittlicher_fehler_nur_zh,
         "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass": zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass,
+        "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass_nur_zh": zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass_nur_zh,
+        "urteilsbasis_zh": urteilsbasis_zh
     }
     return render(request, "database/betm_dev.html", context=context)
 

@@ -3,18 +3,32 @@
 {% block body %}
     <section id="reload-button" class="row mb-3">
         <div class="col">
-        <a type="button" class="btn btn-primary" href="{% url 'betm_kimodelle_neu_generieren' %}">Betm KI-Modelle neu
+        <a type="button" class="btn btn-primary" href="{% url 'betm_kimodelle_neu_generieren' %}">Betm KI-Modelle für Prognose neu
+            generieren
+        </a><a type="button" class="btn btn-primary" href="{% url 'betm_evaluations_kimodelle_neu_generieren' %}">Betm KI-Modelle zur Evaluation der Rechtsprechung neu
             generieren</a>
         </div>
     </section>
     
     <h1>Debug Output</h1>
     <section id="debug" class="my-3">
-        <ul>
-            <li>{{ string_oob_vollzugsart }}</li>
-            <li>{{ string_oob_hauptsanktion }}</li>
-            <li>{{ durchschnittlicher_fehler }}</li>
-        </ul>
+        <div class="row">
+            <ul>
+                <li>{{ string_oob_vollzugsart }}</li>
+                <li>{{ string_oob_hauptsanktion }}</li>
+                <li>{{ durchschnittlicher_fehler }}</li>
+            </ul>
+        </div>
+        <div class="row">
+            <div class="col-12 col-md-6">
+                <h3>Kanton Zürich</h3>
+                <ul>
+                    <li>Urteilsbasis: {{ urteilsbasis_zh }}</li>
+                    <li>{{ durchschnittlicher_fehler_nur_zh }}</li>
+                    <li>{{ zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass_nur_zh }}</li>
+                </ul>
+            </div>
+        </div>
         <h4>Merkmalswichtigkeit für Vollzugsprognose</h4>
         <table class="table table-sm">
             <thead>

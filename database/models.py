@@ -4,7 +4,7 @@ import locale
 
 
 class DataFrameExporter(models.Manager):
-    def return_as_df(self, *fields, exclude_unmarked=False):
+    def return_as_df(self, *fields, exclude_unmarked=False, kanton_filtern=None):
         """
         Gibt die Urteile in einer Datenbank als Pandas DataFrame aus
         *fields: auf welche Datenfelder es beschränkt sein soll
@@ -14,6 +14,9 @@ class DataFrameExporter(models.Manager):
             alle_urteile = super().get_queryset().filter(in_ki_modell=True)
         else:
             alle_urteile = super().get_queryset().all()
+        if isinstance(kanton_filtern, str):
+            kanton = kanton_filtern
+            alle_urteile = alle_urteile.filter(kanton=kanton)
         if not fields:
             # Wenn keine Felder angegeben sind, alle Felder einschließen
             alle_urteile_als_dict = alle_urteile.values()

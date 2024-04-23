@@ -311,7 +311,7 @@ class Kanton(models.Model):
 
 
 class KIModelPickleFile(models.Model):
-    name = models.CharField(max_length=30)
+    name = models.CharField(max_length=80)
     file = models.FileField(upload_to="pickles/")
     encoder = models.FileField(upload_to="encoders/", blank=True)
     prognoseleistung_dict = models.JSONField()

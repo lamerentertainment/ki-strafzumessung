@@ -9,6 +9,7 @@ class DataFrameExporter(models.Manager):
         Gibt die Urteile in einer Datenbank als Pandas DataFrame aus
         *fields: auf welche Datenfelder es beschränkt sein soll
         exclude_unmarked: ob jene Einträge ausgelassen werden sollen, bei denen in_ki_modell=False ist
+        kanton_filtern: um datenframe eines einzelne Kantons zu exportieren, kann man hier den Kürzels des Kantons angeben
         """
         if exclude_unmarked:
             alle_urteile = super().get_queryset().filter(in_ki_modell=True)
@@ -16,7 +17,7 @@ class DataFrameExporter(models.Manager):
             alle_urteile = super().get_queryset().all()
         if isinstance(kanton_filtern, str):
             kanton = kanton_filtern
-            alle_urteile = alle_urteile.filter(kanton=kanton)
+            alle_urteile = alle_urteile.filter(kanton__abk=kanton)
         if not fields:
             # Wenn keine Felder angegeben sind, alle Felder einschließen
             alle_urteile_als_dict = alle_urteile.values()

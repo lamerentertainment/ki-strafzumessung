@@ -16,66 +16,141 @@
         <p>Eine Erklärung der Funktionsweise der genannten und hier verwendeten KI-Systeme findet sich <a href="{% url 'text_funktionsweise' %}">hier.</a></p>
     </div>
     
-    <section id="info" class="my-3">
-        <h2>Prognoseleistung</h2>
+    <section id="ki-evaluation" class="my-3">
+        <h2>Prognoseleistung der verwendeten KI-Modelle</h2>
         <ul>
             <li>{{ string_oob_vollzugsart }}</li>
             <li>{{ string_oob_hauptsanktion }}</li>
             <li>{{ durchschnittlicher_fehler }}</li>
         </ul>
-        <h2>Merkmalswichtigkeiten</h2>
-        <h4>Merkmalswichtigkeit für Strafmassprognose</h4>
-        <table class="table table-sm">
-            <thead>
-            <tr>
-                <th>Wichtigkeit</th>
-                <th>Merkmal</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for list_ in zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass %}
-                <tr>
-                    <td>{{ list_.1|floatformat }} %</td>
-                    <td>{{ list_.0|capfirst }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        <h4>Merkmalswichtigkeit für Vollzugsprognose</h4>
-        <table class="table table-sm">
-            <thead>
-            <tr>
-                <th>Wichtigkeit</th>
-                <th>Merkmal</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for list_ in merkmalswichtigkeit_prognose_vollzugsart %}
-                <tr>
-                    <td>{{ list_.1|floatformat }} %</td>
-                    <td>{{ list_.0|capfirst }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    <h4>Merkmalswichtigkeit für Prognose Sanktionsart</h4>
-        <table class="table table-sm">
-            <thead>
-            <tr>
-                <th>Wichtigkeit</th>
-                <th>Merkmal</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for list_ in merkmalswichtigkeit_prognose_hauptsanktion %}
-                <tr>
-                    <td>{{ list_.1|floatformat }} %</td>
-                    <td>{{ list_.0|capfirst }}</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+        <h2>Merkmalswichtigkeiten der verwendeten KI-Modelle</h2>
+        <div class="row">
+            <div class="col-12 col-md-4">
+                <h4>Merkmalswichtigkeit für Strafmassprognose</h4>
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Wichtigkeit</th>
+                        <th>Merkmal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for list_ in zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass %}
+                        <tr>
+                            <td>{{ list_.1|floatformat }} %</td>
+                            <td>{{ list_.0|capfirst }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-12 col-md-4">
+                <h4>Merkmalswichtigkeit für Vollzugsprognose</h4>
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Wichtigkeit</th>
+                        <th>Merkmal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for list_ in merkmalswichtigkeit_prognose_vollzugsart %}
+                        <tr>
+                            <td>{{ list_.1|floatformat }} %</td>
+                            <td>{{ list_.0|capfirst }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-12 col-md-4">
+                <h4>Merkmalswichtigkeit für Prognose Sanktionsart</h4>
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Wichtigkeit</th>
+                        <th>Merkmal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for list_ in merkmalswichtigkeit_prognose_hauptsanktion %}
+                        <tr>
+                            <td>{{ list_.1|floatformat }} %</td>
+                            <td>{{ list_.0|capfirst }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
         
+    </section>
+    <section id="rechtsprechng-evaluation" class="row">
+        <h1 class="mt-3">Evaluation der Rechtsprechung</h1>
+        <h2>Kantonsvergleich</h2>
+            <div class="col-12 col-md-6">
+                <h4>
+                    Eckwerte eines KI-Modells, gebildet ausschliesslich mit Zürcher Urteilen und Bekanntgabe lediglich 
+                    legitimer Strafzumessungsfaktoren als Prognosekriterien
+                </h4>
+                <p>
+                    Wenn das KI-Modell lediglich auf Basis der {{ urteilsbasis_zh }} Zürcher Gerichtsurteile trainiert wird, 
+                    dann hat besteht bei der Prognose des Strafmass eine durchschnittliche Fehlerquote von 
+                    {{ durschnittlicher_fehler_zh|floatformat:2 }} Monatseinheiten.
+                </p>
+                <p>
+                    Folgende Urteilsmerkmale würde ein rein auf Zürcher Urteilen trainiertes KI-Modell für die Bildung des 
+                    Strafmass in nachfolgendem Ausmass für relevant halten:
+                </p>
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Wichtigkeit</th>
+                        <th>Merkmal</th>
+                    </tr>
+                    </thead>
+                     <tbody>
+                    {% for list_ in merkmalswichtigkeit_strafmass_nur_zh %}
+                        <tr>
+                            <td>{{ list_.1|floatformat }} %</td>
+                            <td>{{ list_.0|capfirst }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-12 col-md-6">
+                <h4>
+                    Eckwerte eines KI-Modells, gebildet ausschliesslich mit Berner Urteilen und Bekanntgabe lediglich 
+                    legitimer Strafzumessungsfaktoren als Prognosekriterien
+                </h4>
+                <p>
+                    Wenn das KI-Modell lediglich auf Basis der {{ urteilsbasis_be }} Berner Gerichtsurteile trainiert wird, 
+                    dann hat besteht bei der Prognose des Strafmass eine durchschnittliche Fehlerquote von 
+                    {{ durschnittlicher_fehler_be|floatformat:2 }} Monatseinheiten.
+                </p>
+                <p>
+                    Folgende Urteilsmerkmale würde ein rein auf Bernerischen Urteilen trainiertes KI-Modell für die Bildung des 
+                    Strafmass in nachfolgendem Ausmass für relevant halten:
+                </p>
+                <table class="table table-sm">
+                    <thead>
+                    <tr>
+                        <th>Wichtigkeit</th>
+                        <th>Merkmal</th>
+                    </tr>
+                    </thead>
+                     <tbody>
+                    {% for list_ in merkmalswichtigkeit_strafmass_nur_be %}
+                        <tr>
+                            <td>{{ list_.1|floatformat }} %</td>
+                            <td>{{ list_.0|capfirst }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+    
     </section>
 
 

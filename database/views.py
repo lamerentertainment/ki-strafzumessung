@@ -997,9 +997,9 @@ def betm_kimodelle_neu_generieren(request):
     messages.success(
         request, "Die KI-Modelle für Betm-Strafrecht wurden erfolgreich aktualisiert."
     )
-    return redirect("betm_dev") @ login_required
+    return redirect("betm_dev") 
 
-
+@ login_required
 def betm_evaluations_kimodelle_neu_generieren(request):
     kantone = ["ZH", "BE"]
     for kanton in kantone:

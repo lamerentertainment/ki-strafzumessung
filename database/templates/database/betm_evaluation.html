@@ -1,4 +1,5 @@
 {% extends './base.html' %}
+{% load hervorhebung %}
 
 {% block body %}
     <h1>Metainformationen über die verwendeten KI-Modelle</h1>
@@ -38,7 +39,7 @@
                     {% for list_ in zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass %}
                         <tr>
                             <td>{{ list_.1|floatformat }} %</td>
-                            <td>{{ list_.0|capfirst }}</td>
+                            <td>{{ list_.0|formatieren_und_illegitim_hervorheben }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -57,7 +58,7 @@
                     {% for list_ in merkmalswichtigkeit_prognose_vollzugsart %}
                         <tr>
                             <td>{{ list_.1|floatformat }} %</td>
-                            <td>{{ list_.0|capfirst }}</td>
+                            <td>{{ list_.0|formatieren_und_illegitim_hervorheben }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -76,7 +77,7 @@
                     {% for list_ in merkmalswichtigkeit_prognose_hauptsanktion %}
                         <tr>
                             <td>{{ list_.1|floatformat }} %</td>
-                            <td>{{ list_.0|capfirst }}</td>
+                            <td>{{ list_.0|formatieren_und_illegitim_hervorheben }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -95,7 +96,7 @@
                     legitimer Strafzumessungsfaktoren als Prognosekriterien
                 </h4>
                     <p>
-                        Wenn das KI-Modell lediglich auf Basis der {{ urteilsbasis_zh }} zürcher Gerichtsurteile
+                        Wenn das KI-Modell lediglich auf Basis der {{ urteilsbasis_zh }} Zürcher Gerichtsurteile
                         trainiert wird,
                         dann hat besteht bei der Prognose des Strafmass eine durchschnittliche Fehlerquote von
                         {{ durschnittlicher_fehler_zh|floatformat:2 }} Monatseinheiten.
@@ -116,7 +117,7 @@
                         {% for list_ in merkmalswichtigkeit_strafmass_nur_zh %}
                             <tr>
                                 <td>{{ list_.1|floatformat }} %</td>
-                                <td>{{ list_.0|capfirst }}</td>
+                                <td>{{ list_.0|formatieren_und_illegitim_hervorheben }}</td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -124,17 +125,17 @@
                 </div>
                 <div id="zh-illegitim">
                     <h4>
-                        Eckwerte eines KI-Modells, gebildet ausschliesslich mit zürcher Urteilen und Bekanntgabe illegitimer 
+                        Eckwerte eines KI-Modells, gebildet ausschliesslich mit Zürcher Urteilen und Bekanntgabe illegitimer 
                         Strafzumessungsfaktoren als Prognosekriterien
                     </h4>
                     <p>
-                        Wenn das KI-Modell lediglich auf Basis der {{ urteilsbasis_zh }} zürcher Gerichtsurteile trainiert wird, 
+                        Wenn das KI-Modell lediglich auf Basis der {{ urteilsbasis_zh }} Zürcher Gerichtsurteile trainiert wird, 
                         diesem aber die illegitimen Strafzumessungskriterien Geschlecht, Nationalität und Gericht bekanntgegeben werden, 
                         dann besteht bei der Prognose des Strafmass eine durchschnittliche Fehlerquote von 
                         {{ durschnittlicher_fehler_zh_illegitim|floatformat:2 }} Monatseinheiten.
                     </p>
                     <p>
-                        Folgende Urteilsmerkmale würde ein rein auf zürcherischen Urteilen trainiertes KI-Modell bei Kenntnis der 
+                        Folgende Urteilsmerkmale würde ein rein auf Zürcher Urteilen trainiertes KI-Modell bei Kenntnis der 
                         illegitimen Strafzumessungskriterien Geschlecht, Nationalität und Gericht für die Bildung des 
                         Strafmass in nachfolgendem Ausmass für relevant halten:
                     </p>
@@ -149,7 +150,7 @@
                         {% for list_ in merkmalswichtigkeit_strafmass_nur_zh_illegitim %}
                             <tr>
                                 <td>{{ list_.1|floatformat }} %</td>
-                                <td>{{ list_.0|capfirst }}</td>
+                                <td>{{ list_.0|formatieren_und_illegitim_hervorheben }}</td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -160,17 +161,17 @@
             <div class="col-12 col-md-6">
                 <div id="be-legitim">
                     <h4>
-                    Eckwerte eines KI-Modells, gebildet ausschliesslich mit berner Urteilen und Bekanntgabe lediglich
+                    Eckwerte eines KI-Modells, gebildet ausschliesslich mit Berner Urteilen und Bekanntgabe lediglich
                     legitimer Strafzumessungsfaktoren als Prognosekriterien
                     </h4>
                     <p>
-                        Wenn das KI-Modell lediglich auf Basis der {{ urteilsbasis_be }} berner Gerichtsurteile
+                        Wenn das KI-Modell lediglich auf Basis der {{ urteilsbasis_be }} Berner Gerichtsurteile
                         trainiert wird,
                         dann besteht bei der Prognose des Strafmass eine durchschnittliche Fehlerquote von
                         {{ durschnittlicher_fehler_be|floatformat:2 }} Monatseinheiten.
                     </p>
                     <p>
-                        Folgende Urteilsmerkmale würde ein rein auf bernerischen Urteilen trainiertes KI-Modell für die
+                        Folgende Urteilsmerkmale würde ein rein auf Berner Urteilen trainiertes KI-Modell für die
                         Bildung des
                         Strafmass in nachfolgendem Ausmass für relevant halten:
                     </p>
@@ -185,7 +186,7 @@
                         {% for list_ in merkmalswichtigkeit_strafmass_nur_be %}
                             <tr>
                                 <td>{{ list_.1|floatformat }} %</td>
-                                <td>{{ list_.0|capfirst }}</td>
+                                <td>{{ list_.0|formatieren_und_illegitim_hervorheben }}</td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -193,17 +194,17 @@
                 </div>
                 <div id="be-illegitim">
                     <h4>
-                        Eckwerte eines KI-Modells, gebildet ausschliesslich mit berner Urteilen und Bekanntgabe illegitimer 
+                        Eckwerte eines KI-Modells, gebildet ausschliesslich mit Berner Urteilen und Bekanntgabe illegitimer 
                         Strafzumessungsfaktoren als Prognosekriterien
                     </h4>
                     <p>
-                        Wenn das KI-Modell lediglich auf Basis der {{ urteilsbasis_be }} berner Gerichtsurteile trainiert wird, 
+                        Wenn das KI-Modell lediglich auf Basis der {{ urteilsbasis_be }} Berner Gerichtsurteile trainiert wird, 
                         diesem aber die illegitimen Strafzumessungskriterien Geschlecht, Nationalität und Gericht bekanntgegeben werden, 
                         dann besteht bei der Prognose des Strafmass eine durchschnittliche Fehlerquote von 
                         {{ durschnittlicher_fehler_be_illegitim|floatformat:2 }} Monatseinheiten.
                     </p>
                     <p>
-                        Folgende Urteilsmerkmale würde ein rein auf bernerischen Urteilen trainiertes KI-Modell bei Kenntnis der 
+                        Folgende Urteilsmerkmale würde ein rein auf Berner Urteilen trainiertes KI-Modell bei Kenntnis der 
                         illegitimen Strafzumessungskriterien Geschlecht, Nationalität und Gericht für die Bildung des 
                         Strafmass in nachfolgendem Ausmass für relevant halten:
                     </p>
@@ -218,7 +219,7 @@
                         {% for list_ in merkmalswichtigkeit_strafmass_nur_be_illegitim %}
                             <tr>
                                 <td>{{ list_.1|floatformat }} %</td>
-                                <td>{{ list_.0|capfirst }}</td>
+                                <td>{{ list_.0|formatieren_und_illegitim_hervorheben }}</td>
                             </tr>
                         {% endfor %}
                         </tbody>

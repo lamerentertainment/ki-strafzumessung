@@ -158,7 +158,7 @@
                     {% for tuple in val_rf_kimodel.ft_importance_list_merged %}
                         <tr>
                             <td>{{ tuple.0|floatformat }} %</td>
-                            <td>{{ tuple.1|capfirst }}</td>
+                            <td>{{ tuple.1|formatieren_und_illegitim_hervorheben }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -180,7 +180,7 @@
                     {% for tuple in val_rf_clf_kimodel_vollzugsart.ft_importance_list_merged %}
                         <tr>
                             <td>{{ tuple.0|floatformat }} %</td>
-                            <td>{{ tuple.1|capfirst }}</td>
+                            <td>{{ tuple.1|formatieren_und_illegitim_hervorheben }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -205,7 +205,7 @@
                         {% for tuple in all_rf_kimodel.ft_importance_list_merged %}
                             <tr>
                                 <td>{{ tuple.0|floatformat }} %</td>
-                                <td>{{ tuple.1|illegitim_hervorheben }}</td>
+                                <td>{{ tuple.1|formatieren_und_illegitim_hervorheben }}</td>
                             </tr>
                         {% endfor %}
                         </tbody>

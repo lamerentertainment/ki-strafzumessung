@@ -997,9 +997,10 @@ def betm_kimodelle_neu_generieren(request):
     messages.success(
         request, "Die KI-Modelle für Betm-Strafrecht wurden erfolgreich aktualisiert."
     )
-    return redirect("betm_dev") 
+    return redirect("betm_dev")
 
-@ login_required
+
+@login_required
 def betm_evaluations_kimodelle_neu_generieren(request):
     kantone = ["ZH", "BE"]
     for kanton in kantone:
@@ -1392,6 +1393,37 @@ def betm_evaluations_kimodelle_neu_generieren(request):
                 neuer_merkmalsname="Rolle",
             )
         )
+        zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass = (
+            merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+                zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass,
+                liste_mit_zusammenfassenden_merkmalen=[
+                    "nationalitaet_Schweizerin/Schweizer",
+                    "nationalitaet_Ausländerin/Ausländer",
+                    "nationalitaet_unbekannt",
+                ],
+                neuer_merkmalsname="Nationalität",
+            )
+        )
+        zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass = merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass,
+            liste_mit_zusammenfassenden_merkmalen=[
+                # Liste der Zürcher Gerichte
+                "gericht_Bezirksgericht Zürich",
+                "gericht_Bezirksgericht Winterthur",
+                "gericht_Bezirksgericht Bülach",
+                "gericht_Bezirksgericht Uster",
+                "gericht_Bezirksgericht Dielsdorf",
+                "gericht_Bezirksgericht Dietikon",
+                "gericht_Bezirksgericht Horgen",
+                "gericht_Bezirksgericht Meilen",
+                # Liste der Berner Gerichte
+                "gericht_Regionalgericht Bern-Mittelland",
+                "gericht_Regionalgericht Berner Jura-Seeland",
+                "gericht_Regionalgericht Emmental-Oberaargau",
+                "gericht_Regionalgericht Oberland",
+            ],
+            neuer_merkmalsname="Gericht",
+        )
 
         prognoseleistung_dict_regressor[
             "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass"
@@ -1564,7 +1596,9 @@ def betm_evaluation(request):
     durchschnittlicher_fehler_nur_zh_illegitim = (
         prognoseleistung_dict_strafmass_nur_zh_illegitim["durchschnittlicher_fehler"]
     )
-    urteilsbasis_zh_illegitim = prognoseleistung_dict_strafmass_nur_zh_illegitim["urteilsbasis"]
+    urteilsbasis_zh_illegitim = prognoseleistung_dict_strafmass_nur_zh_illegitim[
+        "urteilsbasis"
+    ]
     zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass_nur_zh_illegitim = (
         prognoseleistung_dict_strafmass_nur_zh_illegitim[
             "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass"
@@ -1579,7 +1613,9 @@ def betm_evaluation(request):
     durchschnittlicher_fehler_nur_be_illegitim = (
         prognoseleistung_dict_strafmass_nur_be_illegitim["durchschnittlicher_fehler"]
     )
-    urteilsbasis_be_illegitim = prognoseleistung_dict_strafmass_nur_be_illegitim["urteilsbasis"]
+    urteilsbasis_be_illegitim = prognoseleistung_dict_strafmass_nur_be_illegitim[
+        "urteilsbasis"
+    ]
     zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass_nur_be_illegitim = (
         prognoseleistung_dict_strafmass_nur_be_illegitim[
             "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass"

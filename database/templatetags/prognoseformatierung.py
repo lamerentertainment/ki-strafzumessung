@@ -33,7 +33,7 @@ def prognosebereich_angeben(prognose_float):
 def prognosebereich_angeben_fuer_geldstrafe(prognose_float):
     """Die Prognosewerte werden mit 30 multipliziert, wenn eine Geldstrafe prognostiziert wird"""
 
-    def erste_ziffer_nach_dem_komma(zahl):
+    def erste_ziffer_nach_dem_komma_eruieren(zahl):
         zahl = float(zahl)
         nachkommastelle = abs(zahl) % 1  # Extrahiere die Nachkommastelle (nur positive Werte verwenden)
         if nachkommastelle == 0:
@@ -43,14 +43,16 @@ def prognosebereich_angeben_fuer_geldstrafe(prognose_float):
             erste_ziffer = int(nachkommastelle)
             return erste_ziffer
 
-    if erste_ziffer_nach_dem_komma(prognose_float) in [1, 2]:
+    erste_ziffer_nach_dem_komma = erste_ziffer_nach_dem_komma_eruieren(prognose_float)
+
+    if erste_ziffer_nach_dem_komma in [1, 2]:
         return f'zwischen {str(math.floor(prognose_float-2)*30)} und {str(math.ceil(prognose_float)*30)}'
 
-    elif erste_ziffer_nach_dem_komma(prognose_float) in [3, 4, 5, 6, 7]:
+    elif erste_ziffer_nach_dem_komma in [3, 4, 5, 6, 7]:
         return f'zwischen {str(math.floor(prognose_float-1)*30)} und {str(math.ceil(prognose_float+1)*30)}'
 
-    elif erste_ziffer_nach_dem_komma(prognose_float) == 0:
-        return f'zwischen {str(math.floor(prognose_float)-1.5*30)} und {str(math.ceil(prognose_float)+1.5*30)}'
+    elif erste_ziffer_nach_dem_komma == 0:
+        return f'zwischen {str(math.floor(prognose_float-1.5)*30)} und {str(math.ceil(prognose_float+1.5)*30)}'
 
-    elif erste_ziffer_nach_dem_komma(prognose_float) in [8, 9]:
+    elif erste_ziffer_nach_dem_komma in [8, 9]:
         return f'zwischen {str(math.floor(prognose_float)*30)} und {str(math.ceil(prognose_float+2)*30)}'

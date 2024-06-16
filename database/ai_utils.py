@@ -807,19 +807,21 @@ def nachbar_mit_sanktionsbewertung_anreichern(
             erste_ziffer = int(nachkommastelle)
             return erste_ziffer
 
-    if _erste_ziffer_nach_dem_komma(vorhersage_strafmass) in [1, 2]:
+    erste_ziffer_nach_dem_komma = _erste_ziffer_nach_dem_komma(vorhersage_strafmass)
+
+    if erste_ziffer_nach_dem_komma in [1, 2]:
         prognosebereich_start = math.floor(vorhersage_strafmass - 2)
         prognosebereich_ende = math.ceil(vorhersage_strafmass)
 
-    elif _erste_ziffer_nach_dem_komma(vorhersage_strafmass) in [3, 4, 5, 6, 7]:
+    elif erste_ziffer_nach_dem_komma in [3, 4, 5, 6, 7]:
         prognosebereich_start = math.floor(vorhersage_strafmass - 1)
         prognosebereich_ende = math.ceil(vorhersage_strafmass + 1)
 
-    elif _erste_ziffer_nach_dem_komma(vorhersage_strafmass) == 0:
-        prognosebereich_start = vorhersage_strafmass - 1.5
-        prognosebereich_ende = vorhersage_strafmass + 1.5
+    elif erste_ziffer_nach_dem_komma == 0:
+        prognosebereich_start = math.floor(vorhersage_strafmass - 1.5)
+        prognosebereich_ende = math.ceil(vorhersage_strafmass + 1.5)
 
-    elif _erste_ziffer_nach_dem_komma(vorhersage_strafmass) in [8, 9]:
+    elif erste_ziffer_nach_dem_komma in [8, 9]:
         prognosebereich_start = math.floor(vorhersage_strafmass)
         prognosebereich_ende = math.ceil(vorhersage_strafmass + 2)
 
@@ -837,7 +839,7 @@ def nachbar_mit_sanktionsbewertung_anreichern(
     elif nachbarobjekt.vorhersage_vollzug[0] == "1":
         nachbarobjekt.vorhersage_vollzug = "teilbedingte"
     elif nachbarobjekt.vorhersage_vollzug[0] == "2":
-        nachbarobjekt.vorhersage = "unbedingte"
+        nachbarobjekt.vorhersage_vollzug = "unbedingte"
 
     nachbarobjekt.vorhersage_sanktionsart = hauptsanktion_estimator.predict(
         urteilsmerkmale_df_preprocessed
@@ -858,46 +860,6 @@ def nachbar_mit_sanktionsbewertung_anreichern(
         vorhersage_hauptsanktion=nachbarobjekt.vorhersage_sanktionsart,
         vorhersage_vollzug=nachbarobjekt.vorhersage_vollzug,
     )
-
-    # differenz = sanktion_des_prajudiz - nachbarobjekt.vorhersage_strafmass
-    # if 3 > differenz > -3:
-    #     nachbarobjekt.sanktionsbewertung = (
-    #         "Die KI hält die Sanktion des Präjudiz für angemessen."
-    #     )
-    # elif -10 <= differenz <= -3:
-    #     nachbarobjekt.sanktionsbewertung = (
-    #         "Die KI hält die Sanktion des Präjudiz für leicht zu mild."
-    #     )
-    # elif differenz <= -10:
-    #     nachbarobjekt.sanktionsbewertung = (
-    #         "Die KI hält die Sanktion des Präjudiz für erheblich zu mild."
-    #     )
-    # elif 3 <= differenz <= 10:
-    #     nachbarobjekt.sanktionsbewertung = (
-    #         "Die KI hält die Sanktion des Präjudiz für leicht zu streng."
-    #     )
-    # elif differenz > 10:
-    #     nachbarobjekt.sanktionsbewertung = (
-    #         "Die KI hält die Sanktion des Präjudiz für erheblich zu streng."
-    #     )
-    #
-    # nachbarobjekt.vollzugsstring = "empty"
-    #
-    # if nachbarobjekt.vorhersage_vollzug[0] == "0":
-    #     nachbarobjekt.vollzugsstring = "bedingte"
-    # elif nachbarobjekt.vorhersage_vollzug[0] == "1":
-    #     nachbarobjekt.vollzugsstring = "teilbedingte"
-    # elif nachbarobjekt.vorhersage_vollzug[0] == "2":
-    #     nachbarobjekt.vollzugsstring = "unbedingte"
-    #
-    # nachbarobjekt.string_sanktionsart = "empty"
-    #
-    # if nachbarobjekt.vorhersage_sanktionsart[0] == "0":
-    #     nachbarobjekt.string_sanktionsart = "Freiheitsstrafe"
-    # elif nachbarobjekt.vorhersage_sanktionsart[0] == "1":
-    #     nachbarobjekt.string_sanktionsart = "Geldstrafe"
-    # elif nachbarobjekt.vorhersage_sanktionsart[0] == "2":
-    #     nachbarobjekt.string_sanktionsart = "Busse"
 
     return nachbarobjekt
 
@@ -1055,8 +1017,8 @@ def betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
         prognosebereich_ende = math.ceil(vorhersage_strafmass + 1)
 
     elif _erste_ziffer_nach_dem_komma(vorhersage_strafmass) == 0:
-        prognosebereich_start = vorhersage_strafmass - 1.5
-        prognosebereich_ende = vorhersage_strafmass + 1.5
+        prognosebereich_start = round(vorhersage_strafmass - 1.5, 2)
+        prognosebereich_ende = round(vorhersage_strafmass + 1.5, 2)
 
     elif _erste_ziffer_nach_dem_komma(vorhersage_strafmass) in [8, 9]:
         prognosebereich_start = math.floor(vorhersage_strafmass)

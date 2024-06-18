@@ -370,6 +370,8 @@ def prognose(request):
                 "database/prognose.html",
                 {
                     "form": form,
+                    "display_eingabeformular_button": "d-inline-flex",
+                    "eingabeformular_anzeigen": "",
                     "vorhersage_strafmass": vorhersage_strafmass[0],
                     "vorhersage_vollzug": vollzugsstring,
                     "vorhersage_sanktionsart": string_sanktionsart,
@@ -383,7 +385,13 @@ def prognose(request):
     else:
         form = UrteilsEckpunkteAbfrageFormular()
 
-    return render(request, "database/prognose.html", {"form": form})
+    context = {
+        "form": form,
+        "display_eingabeformular_button": "d-none",
+        "eingabeformular_anzeigen": "show"
+    }
+
+    return render(request, "database/prognose.html", context=context)
 
 
 def betm_prognose(request):
@@ -721,6 +729,8 @@ def betm_prognose(request):
 
             context = {
                 "form": form,
+                "display_eingabeformular_button": "d-inline-flex",
+                "eingabeformular_anzeigen": "",
                 "vorhersage_vollzug": vorhersage_vollzug,
                 "vorhersage_hauptsanktion": vorhersage_hauptsanktion,
                 "vorhersage_strafmass": vorhersage_strafmass,
@@ -731,14 +741,20 @@ def betm_prognose(request):
             return render(
                 request,
                 "database/betm_prognose.html",
-                context,
+                context=context,
             )
 
     # if a GET (or any other method) we'll create a blank form
     else:
         form = BetmUrteilsEckpunkteAbfrageFormular()
 
-    return render(request, "database/betm_prognose.html", {"form": form})
+    context = {
+        "form": form,
+        "display_eingabeformular_button": "d-none",
+        "eingabeformular_anzeigen": "show",
+    }
+
+    return render(request, "database/betm_prognose.html", context=context)
 
 
 # Dev views

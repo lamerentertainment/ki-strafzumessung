@@ -7,8 +7,17 @@
         <p>Die Prognose erfolgt auf Grundlage des folgendem <a href="{% url 'betmdatabase' %}">Datensatzes</a> und der darauf
             aufbauendem KI-Modelle. 
             Die Funktionsweise der KI-Modelle wird <a href="{% url 'text_funktionsweise' %}">hier</a> erklärt.</p>
-    
-        <div class="row">
+        
+        <p class="{{ display_eingabeformular_button }}">
+            <a class="btn btn-primary" 
+               type="button" 
+               data-bs-toggle="collapse" 
+               href="#eingabeformular" 
+               role="button" 
+               aria-expanded="true"
+           aria-controls="eingabeformular">Eingabeformular und Prognosedaten wieder anzeigen</a>
+        </p>
+        <div class="row collapse {{ eingabeformular_anzeigen }}"  id="eingabeformular">
             <form action="" method="post">
                     {% csrf_token %}
 

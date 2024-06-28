@@ -48,7 +48,7 @@ urlpatterns = [
     path(
         "text_strafzumessung_mit_hilfe_von_ki",
         views.text_strafzumessung_mit_hilfe_von_ki,
-        name="sugeneris",
+        name="text_warum",
     ),
     path("betmdatabase", views.BetmUrteilListView.as_view(), name="betmdatabase"),
     path(

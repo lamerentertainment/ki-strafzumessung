@@ -143,6 +143,10 @@ class Urteil(models.Model):
     VOLLZUG = (("0", "bedingt"), ("1", "teilbedingt"), ("2", "unbedingt"))
     vollzug = models.CharField(max_length=20, choices=VOLLZUG, default="0")
     in_ki_modell = models.BooleanField(default=True)
+    zusammenfassung = models.TextField(
+        blank=True,
+        help_text="Die Zusammenfassung der massgebenden Erwägungen für die Strafzumessung",
+    )
 
     # Methoden
     def __str__(self):
@@ -249,6 +253,10 @@ class BetmUrteil(models.Model):
         help_text="Ob die verurteilte Person einschlägig vorbestraft ist.",
     )
     in_ki_modell = models.BooleanField(default=True)
+    zusammenfassung = models.TextField(
+        blank=True,
+        help_text="Die Zusammenfassung der massgebenden Erwägungen für die Strafzumessung",
+    )
 
     def __str__(self):
         return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B %Y')} ({self.fall_nr})"

@@ -113,6 +113,15 @@
                         </p>
                     </td>
                 </tr>
+                {% if nachbar.zusammenfassung %}
+                    <tr>
+                        <td colspan="2">
+                            Zusammenfassung der massgebenden Erwägungen betreffend die Strafzumessung (LLM-generiert 
+                            und ohne Gewähr): 
+                            {{ nachbar.zusammenfassung }}
+                        </td>
+                    </tr>
+                {% endif %}
             </tbody>
         </table>
     </div>

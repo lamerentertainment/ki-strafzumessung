@@ -831,7 +831,7 @@ ALTER SEQUENCE public.database_kanton_id_seq OWNED BY public.database_kanton.id;
 
 CREATE TABLE public.database_kimodelpicklefile (
     id bigint NOT NULL,
-    name character varying(30) NOT NULL,
+    name character varying(80) NOT NULL,
     file character varying(100) NOT NULL,
     last_updated timestamp with time zone NOT NULL,
     prognoseleistung_dict jsonb NOT NULL,
@@ -1860,7 +1860,7 @@ COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
 --
 
 COPY public.auth_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) FROM stdin;
-1	pbkdf2_sha256$720000$bO6BJ0QaelZPltvBUrDYKY$Tk0M0T2EEGD1HPb09+dJ8wXhq0Ex7zF9/9VPtahCYhs=	2024-04-18 09:28:14.54731+00	t	jonasachermann			jonasachermann@mac.com	t	t	2021-11-07 22:02:20.593968+00
+1	pbkdf2_sha256$720000$bO6BJ0QaelZPltvBUrDYKY$Tk0M0T2EEGD1HPb09+dJ8wXhq0Ex7zF9/9VPtahCYhs=	2024-08-13 11:46:44.788518+00	t	jonasachermann			jonasachermann@mac.com	t	t	2021-11-07 22:02:20.593968+00
 \.
 
 
@@ -2073,6 +2073,61 @@ COPY public.database_betm (id, menge_in_g, rein, art_id) FROM stdin;
 186	670	t	2
 187	1596	t	2
 188	757	t	2
+189	130000	f	1
+190	4000	t	3
+191	48000	t	3
+192	3334	t	2
+193	3389	t	2
+194	12	t	2
+195	717	t	2
+196	660	t	2
+197	1244	t	2
+198	767	t	2
+199	1299	t	2
+200	2791	t	2
+201	800	f	2
+202	210042	t	2
+203	83	t	2
+204	1195	f	2
+205	186	t	2
+206	1153	t	2
+207	330	t	3
+208	2900	t	2
+209	804	t	2
+210	513	t	2
+211	644	t	2
+212	144	t	2
+213	1216	t	2
+214	1305	t	2
+215	664	t	2
+216	505	t	3
+217	312	t	3
+218	179	t	4
+219	14	f	2
+220	966	t	2
+221	5200	t	2
+222	54	t	3
+223	12	t	2
+224	2099	t	2
+225	46	t	2
+226	50	t	1
+227	1512	t	2
+228	607	t	3
+229	2567	f	12
+230	11874	f	1
+231	4168	f	5
+232	184000	f	1
+233	45	t	2
+234	576	t	2
+235	35000	t	1
+236	212	t	2
+237	14740	t	2
+238	25	t	2
+239	32	f	5
+240	472	f	1
+241	118	t	4
+242	121	t	2
+243	18	f	2
 \.
 
 
@@ -2138,8 +2193,7 @@ COPY public.database_betmurteil (id, bandenmaessig, gewerbsmaessig, anstaltentre
 60	f	f	f	f	f	12	\N	Regionalgericht Emmental-Oberaargau	2019-03-14	SK 19 198-200	https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_005_SK-2019-198_2020-01-30.pdf#view=FitH	0	0	2	0	t	f	3	4	0	\N	0	0	t	t
 36	f	f	f	t	f	50	1	Regionalgericht Bern-Mittelland	2019-12-12	SK 20 113	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2020-113_2021-01-21.pdf	0	0	2	0	t	t	3	5	2	\N	0	0	t	t
 40	f	f	f	f	f	27	\N	Regionalgericht Bern-Mittelland	2020-01-04	SK 21 86	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2021-86_2022-02-02.pdf	0	0	1	0	f	f	3	2	1	\N	0	0	t	t
-42	f	f	f	f	f	12	13	Bezirksgerichts Bülach	2022-07-06	SB220577	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB220577-O1.pdf	0	0	1	0	f	f	1	7	0	\N	0	0	t	t
-38	f	t	f	f	t	18	8	Regionalgericht Bern-Mittellan	2019-04-24	SK 19 207	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2019-207_2020-02-11.pdf	0	0	2	1	t	t	3	7	1	19800	0	0	t	f
+63	t	f	f	f	f	64	18	Regionalgericht Berner Jura-Seeland	2019-05-23	SK 19 342	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2019-342_2020-04-21.pdf	0	0	2	2	f	f	3	2	2	35000	0	0	t	t
 37	f	f	f	t	f	20	6	Regionalgericht Oberland	2018-12-05	SK 19 89	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2019-89_2019-12-10.pdf	0	0	2	2	t	t	3	8	0	\N	0	0	t	f
 43	f	f	f	t	f	0	6	Bezirksgericht Zürich	2022-05-04	SB220493	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB220493-O1.pdf	0	0	1	0	t	f	1	7	2	\N	80	1	t	f
 45	t	f	f	f	f	84	4	Bezirksgericht Winterthur	2014-05-22	SB140017	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB140017_2014-05-22.pdf	0	0	2	0	t	f	1	5	2	\N	0	0	t	t
@@ -2149,7 +2203,6 @@ COPY public.database_betmurteil (id, bandenmaessig, gewerbsmaessig, anstaltentre
 49	f	f	f	f	f	42	\N	Bezirksgericht Bülach	2011-07-19	SB110591	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB110591_2012-01-31.pdf	0	0	2	0	f	f	1	2	0	\N	0	0	t	t
 50	f	f	f	f	f	36	\N	Bezirksgericht Zürich	2010-11-04	SB110426	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB110426_2011-11-25.pdf	0	0	2	0	f	f	1	8	1	\N	0	0	t	t
 51	f	f	f	f	f	24	\N	Regionalgericht Berner Jura-Seeland	2019-06-07	SK 19 400	https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_005_SK-2019-400_2020-07-02.pdf#view=FitH	0	0	2	2	t	t	3	8	0	\N	0	0	t	t
-52	f	f	f	f	f	16	\N	Regionalgericht Bern-Mitteland	2017-02-16	SK 17 149	https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_005_SK-2017-149_2019-02-08.pdf#view=FitH	0	0	2	2	t	t	3	8	2	\N	0	0	t	t
 53	f	f	f	f	f	22	5	Regionalgericht Emmental-Oberaargau	2020-12-11	SK 21 135	https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_005_SK-2021-135_2021-11-10.pdf#view=FitH	0	0	1	0	t	f	3	7	0	\N	0	0	t	t
 54	f	f	f	f	f	42	\N	Bezirksgericht Bülach	2022-07-13	SB220650	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB220650-O1.pdf	0	0	1	0	f	f	1	2	2	\N	0	0	t	t
 55	f	f	f	f	t	14	\N	Bezirksgericht Zürich	2021-04-27	SB210353	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB210353_2021-08-19.pdf	0	0	0	2	t	t	1	4	2	\N	0	0	t	t
@@ -2158,13 +2211,15 @@ COPY public.database_betmurteil (id, bandenmaessig, gewerbsmaessig, anstaltentre
 58	t	t	f	f	f	75	3	Regionalgericht Bern-Mittelland	2020-01-29	SK 2020 255	https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_005_SK-2020-255_2020-11-04.pdf#view=FitH	0	0	1	0	t	f	3	2	2	\N	0	0	t	t
 59	t	t	f	f	f	112	\N	Regionalgericht Bern-Mittelland	2015-08-28	SK 15 346	https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_005_SK-2015-346_2017-08-07.pdf#view=FitH	0	0	1	0	t	f	3	5	2	\N	0	0	t	t
 62	t	f	f	f	f	32	24	Regionalgericht Bern-Mittelland	2020-06-11	SK 20 425	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2020-425_2021-07-01.pdf	0	0	2	1	f	f	3	1	1	\N	0	0	t	t
-63	t	f	f	f	f	64	18	Regionalgerichts Berner Jura-Seeland	2019-05-23	SK 19 342	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2019-342_2020-04-21.pdf	0	0	2	2	f	f	3	2	2	35000	0	0	t	t
 64	t	f	f	f	f	51	3	Regionalgericht Bern-Mittelland	2020-06-16	SK 20 366	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2020-366_2021-02-19.pdf	0	0	1	0	f	f	3	8	2	\N	0	0	t	t
 65	f	f	t	t	f	46	\N	Regionalgericht Bern-Mittelland	2020-02-18	SK 20 188	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2020-188_2020-11-10.pdf	0	0	2	0	f	f	3	8	2	\N	0	0	t	t
-66	f	t	f	f	f	51	12	s Regionalgericht Bern-Mittelland	2018-01-25	SK 18 158	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2018-158_2018-12-04.pdf	0	0	2	4	t	t	3	5	2	\N	0	0	t	t
 67	f	t	t	t	f	57	\N	Regionalgericht Bern-Mittelland	2018-01-25	SK 18 158c	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2018-158_2018-12-04.pdf	0	0	2	4	t	t	3	5	2	\N	0	0	t	t
 68	f	t	f	t	t	52	\N	Regionalgericht Bern-Mittelland	2017-12-08	SK 18 87	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2018-87_2018-08-23.pdf	0	0	1	1	t	f	3	8	2	\N	0	0	t	t
 41	f	f	f	f	f	58	3	Regionalgericht Bern-Mittelland	2016-05-18	SK 19 137	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2019-137_2020-05-06.pdf	0	0	1	2	t	t	3	4	0	\N	0	0	t	t
+66	f	t	f	f	f	51	12	Regionalgericht Bern-Mittelland	2018-01-25	SK 18 158	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2018-158_2018-12-04.pdf	0	0	2	4	t	t	3	5	2	\N	0	0	t	t
+38	f	t	f	f	t	18	8	Regionalgericht Bern-Mittelland	2019-04-24	SK 19 207	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2019-207_2020-02-11.pdf	0	0	2	1	t	t	3	7	1	19800	0	0	t	f
+52	f	f	f	f	f	16	\N	Regionalgericht Bern-Mittelland	2017-02-16	SK 17 149	https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_005_SK-2017-149_2019-02-08.pdf#view=FitH	0	0	2	2	t	t	3	8	2	\N	0	0	t	t
+42	f	f	f	f	f	12	13	Bezirksgericht Bülach	2022-07-06	SB220577	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB220577-O1.pdf	0	0	1	0	f	f	1	7	0	\N	0	0	t	t
 69	f	f	t	f	f	36	1	Regionalgericht Berner Jura-Seeland	2021-02-05	SK 21 218	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2021-218_2022-09-20.pdf	0	0	1	0	t	f	3	2	1	\N	0	0	t	t
 70	t	t	f	f	f	69	6	Regionalgericht Berner Jura-Seeland	2020-06-09	SK 21 70	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2021-70_2021-11-17.pdf	0	0	1	4	f	f	3	8	2	\N	0	0	t	t
 71	f	t	f	f	f	34	\N	Regionalgericht Bern-Mittelland	2018-04-13	SK 18 255	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2018-255_2019-02-28.pdf	0	0	2	4	t	t	3	8	1	\N	0	0	t	t
@@ -2174,8 +2229,6 @@ COPY public.database_betmurteil (id, bandenmaessig, gewerbsmaessig, anstaltentre
 74	f	f	f	f	t	20	8	Regionalgericht Bern-Mittelland	2016-12-16	SK 17 113+114	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2017-113_2017-12-20.pdf	0	0	2	0	t	t	3	7	2	\N	0	0	t	t
 75	t	t	f	f	f	78	18	Regionalgericht Berner Jura-Seeland	2018-09-07	SK 19 30-33	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2019-30_2020-01-24.pdf	0	0	2	0	t	t	3	2	2	\N	0	0	t	t
 76	t	t	f	f	f	44	\N	Regionalgericht Berner Jura-Seeland	2018-09-07	SK 19 30-33c	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2019-30_2020-01-24.pdf	0	1	2	0	f	f	3	2	2	\N	0	0	t	t
-77	f	t	f	f	f	62	8	Regionalgerichts Bern-Mittelland	2018-06-15	SK 18 345	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2018-345_2019-04-16.pdf	0	0	1	3	f	f	3	8	2	\N	0	0	t	t
-78	f	f	f	f	f	20	\N	Regionalgerichts Bern-Mittelland	2016-12-20	SK 17 94+95	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2017-94_2017-08-07.pdf	0	0	2	1	t	t	3	7	2	\N	0	0	t	f
 79	t	t	f	f	f	48	3	Regionalgericht Bern-Mittelland	2016-06-01	SK 16 245	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2016-245_2016-12-13.pdf	0	0	2	0	f	f	3	8	2	\N	0	0	t	t
 80	f	f	f	t	t	30	\N	Regionalgericht Bern-Mittelland	2020-04-29	SK 20 289	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2020-289_2021-02-12.pdf	0	0	2	6	t	t	3	8	1	\N	0	0	t	t
 81	f	f	f	f	f	36	12	Regionalgericht Bern-Mittelland	2019-03-26	SK 19 165	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2019-165_2020-02-20.pdf	0	0	1	0	t	f	3	8	1	\N	0	0	t	t
@@ -2191,13 +2244,15 @@ COPY public.database_betmurteil (id, bandenmaessig, gewerbsmaessig, anstaltentre
 91	t	f	t	f	f	84	\N	Regionalgericht Bern-Mittelland	2016-12-23	SK 17 119	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2017-119_2017-12-01.pdf	0	0	1	6	t	f	3	5	2	\N	0	0	t	t
 92	f	f	f	f	f	58	\N	Regionalgericht Bern-Mittelland	2016-11-18	SK 29 29+30	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2017-29_2017-10-17.pdf	0	0	1	2	t	t	3	4	2	\N	0	0	t	t
 93	f	f	f	f	t	30	18	Regionalgericht Berner Jura-Seeland	2016-10-08	SK 15 392	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2015-392_2016-12-08.pdf	0	0	2	3	t	f	3	8	2	\N	0	0	t	t
-94	t	t	f	f	f	28	120	Regionalgerichts Berner Jura-Seeland	2015-11-05	SK 16 62	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2016-62_2016-11-10.pdf	0	0	2	0	t	f	3	7	1	11390	0	0	t	f
 95	f	t	f	t	f	13	4	Regionalgericht Bern-Mittelland	2016-03-16	SK 16 226 + 227	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2016-226_2017-03-16.pdf	0	0	2	1	t	f	3	1	0	\N	0	0	t	f
 96	t	f	t	f	f	62	8	Regionalgericht Emmental-Oberaargau	2022-04-28	SK 22 446	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2022-446_2023-03-02.pdf	0	0	1	1	f	f	3	9	2	\N	0	0	t	t
 98	f	f	f	f	f	18	1	Regionalgericht Bern-Mittelland	2018-06-21	SK 18 349	https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_005_SK-2018-349_2019-06-27.pdf#view=FitH	0	1	2	5	t	t	3	7	2	\N	0	0	t	t
 99	f	f	f	f	f	26	\N	Regionalgericht Bern-Mittelland	2019-03-12	SK 19 267	https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_005_SK-2019-267_2021-02-25.pdf#view=FitH	0	0	1	0	t	f	3	2	1	\N	0	0	t	t
 100	f	f	f	f	f	24	12	Bezirksgericht Bülach	2022-06-11	SB230019	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB230019-O1.pdf	0	0	0	0	f	f	1	8	1	4300	0	0	t	t
 101	f	t	f	f	t	49	\N	Bezirksgericht Zürich	2022-05-19	SB220502	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB220502-O1.pdf	0	0	0	3	t	t	1	8	2	247000	0	0	t	t
+94	t	t	f	f	f	28	120	Regionalgericht Berner Jura-Seeland	2015-11-05	SK 16 62	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2016-62_2016-11-10.pdf	0	0	2	0	t	f	3	7	1	11390	0	0	t	f
+78	f	f	f	f	f	20	\N	Regionalgericht Bern-Mittelland	2016-12-20	SK 17 94+95	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2017-94_2017-08-07.pdf	0	0	2	1	t	t	3	7	2	\N	0	0	t	f
+77	f	t	f	f	f	62	8	Regionalgericht Bern-Mittelland	2018-06-15	SK 18 345	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2018-345_2019-04-16.pdf	0	0	1	3	f	f	3	8	2	\N	0	0	t	t
 102	f	f	f	f	f	0	\N	Bezirksgericht Zürich	2022-08-23	SB220605	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB220605-O1.pdf	0	0	2	0	t	t	1	7	2	\N	30	1	t	f
 103	f	f	f	f	f	52	\N	Bezirksgericht Bülach	2022-08-30	SB220609	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB220609-O1.pdf	0	0	1	0	f	f	1	2	2	\N	0	0	t	t
 97	f	f	f	f	f	12	\N	Regionalgericht Berner Jura-Seeland	2018-02-01	SK 18 189	https://entscheidsuche.ch/dok/BE_ZivilStraf/BE_OG_005_SK-2018-189_2018-09-05.pdf	0	0	1	0	t	t	3	4	0	\N	0	0	t	t
@@ -2236,7 +2291,6 @@ COPY public.database_betmurteil (id, bandenmaessig, gewerbsmaessig, anstaltentre
 137	f	f	f	f	f	44	\N	Bezirksgericht Bülach	2022-11-01	SB230036	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB230036_2023-05-12.pdf	0	0	1	0	f	f	1	2	0	\N	0	0	t	t
 138	f	f	f	f	f	32	3	Bezirksgericht Bülach	2013-06-12	SB130369	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB130369_2014-03-06.pdf	0	0	2	0	t	t	1	2	1	\N	0	0	t	t
 139	f	f	f	f	f	6	\N	Bezirksgericht Dielsdorf	2019-08-19	SB200248	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB200248_2020-12-07.pdf	0	0	2	0	t	f	1	8	0	1000	0	0	t	f
-140	t	f	f	t	f	60	4	Bezirksgericht Zürich	2008-03-18	SB080533	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB080533_2014-11-11.pdf	0	0	2	0	f	f	1	5	0	\N	0	0	t	t
 141	f	f	f	f	f	27	6	Bezirksgericht Zürich	2013-04-25	SB130363	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB130363_2014-01-28.pdf	0	0	2	0	t	t	1	8	1	\N	0	0	t	t
 142	f	f	f	f	f	26	\N	Bezirksgericht Zürich	2011-11-30	SB120070	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB120070_2012-05-08.pdf	0	0	2	0	t	t	1	4	1	\N	0	0	t	t
 143	f	f	f	f	f	0	84	Bezirksgericht Winterthur	2017-07-19	SB170313	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB170313_2018-01-19.pdf	0	0	2	0	f	f	1	4	0	\N	120	1	t	f
@@ -2245,6 +2299,51 @@ COPY public.database_betmurteil (id, bandenmaessig, gewerbsmaessig, anstaltentre
 146	f	f	f	t	f	50	40	Bezirksgericht Zürich	2013-09-23	SB140001	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB140001_2014-03-18.pdf	0	1	1	0	t	t	1	8	2	\N	0	0	t	t
 147	f	f	f	f	f	45	\N	Bezirksgericht Bülach	2016-04-26	SB160314	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB160314_2016-11-10.pdf	0	0	1	0	t	t	1	2	2	5000	0	0	t	t
 148	f	f	f	f	f	36	\N	Bezirksgericht Bülach	2014-05-07	SB140324	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB140324_2014-09-23.pdf	0	0	1	0	t	t	1	2	2	5000	0	0	t	t
+149	t	t	f	f	f	24	8	Bezirksgericht Dielsdorf	2021-02-05	SB210268	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB210268_2021-11-15.pdf	0	0	0	0	t	t	1	8	0	\N	0	0	t	f
+150	f	f	f	f	f	60	\N	Bezirksgericht Zürich	2011-12-08	SB120242b	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB120242_2012-11-19.pdf	0	0	2	0	f	f	1	8	2	\N	0	0	t	t
+151	f	f	f	t	f	120	\N	Bezirksgericht Zürich	2011-12-08	SB120242a	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB120242_2012-11-19.pdf	0	0	2	0	f	f	1	5	2	\N	0	0	t	t
+152	f	f	f	f	f	36	\N	Bezirksgericht Bülach	2016-03-30	SB160218	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB160218_2016-08-22.pdf	0	0	1	0	f	f	1	2	1	\N	0	0	t	t
+153	f	f	f	f	f	45	\N	Bezirksgericht Bülach	2014-11-05	SB150110	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB150110_2015-06-11.pdf	0	0	1	0	f	t	1	2	2	\N	0	0	t	t
+154	f	f	f	f	f	10	\N	Bezirksgericht Zürich	2013-09-11	SB130532	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB130532_2014-05-06.pdf	0	0	2	2	f	f	1	2	0	\N	1	0	t	f
+155	f	f	f	f	f	28	\N	Bezirksgericht Bülach	2018-07-17	SB180459	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB180459_2019-02-04.pdf	0	0	1	0	t	f	1	2	1	8000	0	0	t	t
+156	f	f	f	t	f	34	1	Bezirksgericht Bülach	2012-06-20	SB120390	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB120390_2013-03-26.pdf	0	0	2	0	t	f	1	4	1	\N	0	0	t	t
+157	f	f	f	f	t	42	18	Bezirksgericht Zürich	2013-06-19	SB130372	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB130372_2014-01-30.pdf	0	0	2	7	t	t	1	8	0	\N	0	0	t	t
+158	f	f	f	f	f	24	\N	Bezirksgericht Dietikon	2019-03-12	SB190221	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB190221_2019-12-03.pdf	0	0	1	0	f	f	1	2	0	\N	0	0	t	t
+159	f	f	f	f	f	40	\N	Bezirksgericht Bülach	2014-10-14	SB140550	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB140550_2015-03-31.pdf	0	0	2	0	t	t	1	2	2	6800	0	0	t	t
+160	f	f	f	f	f	52	12	Bezirksgericht Zürich	2011-12-21	SB120195	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB120195_2012-08-29.pdf	0	1	2	2	t	t	1	9	2	\N	0	0	t	t
+161	f	f	f	f	f	21	8	Bezirksgericht Zürich	2020-09-24	SB210042	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB210042_2021-10-19.pdf	0	0	1	0	f	f	1	4	0	\N	0	0	t	t
+162	f	f	f	f	f	18	\N	Bezirksgericht Zürich	2020-11-04	SB210034	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB210034_2021-06-10.pdf	0	0	1	0	t	f	1	8	0	\N	0	0	t	t
+163	f	f	f	t	f	42	\N	Bezirksgericht Zürich	2011-02-25	SB110360	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB110360_2011-10-18.pdf	0	0	1	0	f	f	1	8	2	\N	0	0	t	t
+164	f	f	f	f	f	20	\N	Bezirksgericht Zürich	2018-07-03	SB180503	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB180503_2019-11-11.pdf	0	0	1	0	f	f	1	2	0	\N	0	0	t	t
+165	f	f	f	f	f	39	\N	Bezirksgericht Uster	2021-07-08	SB210426	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB210426_2022-04-13.pdf	0	0	1	0	f	f	1	5	2	\N	0	0	t	t
+166	f	f	f	f	f	30	1	Bezirksgericht Zürich	2015-11-24	SB160175	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB160175_2016-09-13.pdf	0	0	2	1	t	f	1	8	1	\N	0	0	t	t
+167	f	f	f	f	f	54	\N	Bezirksgericht Zürich	2013-04-23	SB130376	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB130376_2014-03-11.pdf	0	1	2	0	t	t	1	5	2	\N	0	0	t	t
+168	f	f	f	f	f	24	\N	Bezirksgericht Dietikon	2019-03-12	SB190224		0	0	1	0	f	f	1	2	0	4000	0	0	t	t
+169	f	f	f	f	f	30	\N	Bezirksgericht Bülach	2015-09-08	SB150454	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB150454_2016-01-22.pdf	0	0	1	0	f	f	1	2	1	\N	0	0	t	t
+170	f	f	f	f	f	39	\N	Bezirksgerichtes Bülach	2019-06-18	SB190415	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB190415_2020-01-21.pdf	0	0	1	0	f	f	1	8	2	\N	0	0	t	t
+171	f	f	f	f	f	24	\N	Bezirksgericht Zürich	2020-09-24	SB210015	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB210015_2021-10-19.pdf	0	0	1	2	t	t	1	8	0	\N	0	0	t	t
+172	f	f	f	f	f	45	9	Bezirksgericht Bülach	2012-06-21	SB120395	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB120395_2012-12-21.pdf	0	0	2	0	t	t	1	8	2	\N	0	0	t	t
+173	f	f	t	f	f	42	4	Bezirksgericht Uster	2021-04-01	SB210385	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB210385_2022-01-10.pdf	0	0	1	0	f	f	1	8	2	\N	0	0	t	t
+174	f	f	f	t	f	40	\N	Bezirksgericht Zürich	2019-03-28	SB190343	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB190343_2019-10-22.pdf	0	0	1	0	f	f	1	2	2	2800	0	0	t	t
+175	f	f	f	f	f	33	\N	Bezirksgericht Bülach	2014-05-07	SB140419	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB140419_2014-12-05.pdf	0	1	1	0	f	f	1	2	1	\N	0	0	t	t
+176	f	f	f	f	f	30	\N	Bezirksgericht Bülach	2014-07-01	SB140402	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB140402_2015-02-19.pdf	0	0	2	0	f	f	1	8	1	\N	0	0	t	t
+177	f	f	f	f	f	24	\N	Bezirksgericht Zürich	2022-12-13	SB230294	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB230294-O1.pdf	0	0	1	0	t	t	1	8	0	5500	0	0	t	t
+178	f	f	f	f	f	0	\N	Bezirksgericht Zürich	2022-10-20	SB230060	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB230060-O2.pdf	0	0	2	0	f	f	1	4	0	\N	120	1	t	f
+179	f	f	t	t	f	54	\N	Bezirksgericht Zürich	2021-02-08	SB210249	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB210249-O1.pdf	0	0	1	3	t	t	1	5	0	\N	0	0	t	t
+180	f	f	f	f	f	69	\N	Bezirksgericht Dietikon	2021-11-17	SB220454	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB220454-O1.pdf	0	0	1	0	f	f	1	2	2	\N	0	0	t	t
+181	f	f	f	f	t	23	\N	Bezirksgericht Zürich	2022-03-31	SB220433	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB220433-O1.pdf	0	0	1	2	t	t	1	7	1	\N	0	0	t	t
+182	f	f	f	f	f	40	\N	Bezirksgericht Bülach	2022-11-15	SB220631	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB220631-O1.pdf	0	0	1	0	f	f	1	2	2	\N	0	0	t	t
+183	f	f	f	f	f	15	\N	Bezirksgericht Zürich	2022-03-03	SB220350	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB220350-O1.pdf	0	0	0	3	t	t	1	3	2	\N	0	0	t	t
+184	f	f	f	f	f	64	\N	Bezirksgericht Zürich	2022-11-07	SB230096	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB230096-O1.pdf	0	0	1	5	t	t	1	4	2	\N	0	0	t	t
+185	f	f	f	f	f	16	\N	Bezirksgericht Zürich	2021-09-15	SB210596	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB210596-O1.pdf	0	0	0	0	t	f	1	9	1	51600	0	0	t	t
+186	f	f	f	f	f	44	\N	Bezirksgericht Dietikon	2021-07-19	SB220154	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB220154-O1.pdf	0	0	1	6	t	t	1	4	2	\N	0	0	t	t
+187	f	t	f	f	f	48	6	Bezirksgericht Zürich	2022-08-12	SB230087	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB230087-O1.pdf	0	0	2	6	f	f	1	8	2	\N	0	0	t	t
+188	t	f	f	f	f	29	\N	Bezirksgericht Zürich	2022-07-14	SB230053	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB230053-O1.pdf	0	0	2	1	t	t	1	4	1	\N	0	0	t	t
+140	t	f	f	t	f	60	4	Bezirksgericht Zürich	2008-03-18	SB080533	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB080533_2014-11-11.pdf	0	0	2	0	f	f	1	5	2	\N	0	0	t	t
+190	f	f	f	f	f	12	\N	Bezirksgericht Bülach	2021-03-10	SB230386	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB230386-O1.pdf	0	0	1	0	t	t	1	7	2	\N	0	0	t	t
+189	t	t	f	t	f	108	24	Bezirksgericht Zürich	2022-08-12	SB220612	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB220612-O1.pdf	0	0	0	0	f	f	1	5	2	\N	0	0	t	t
+191	f	f	f	f	f	24	\N	Bezirksgericht Bülach	2022-10-12	SB230205	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB230205-O1.pdf	0	0	1	1	t	t	1	2	0	\N	0	0	t	t
+192	f	f	f	f	t	19	6	Bezirksgericht Zürich	2023-05-04	SB230379	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB230379-O1.pdf	0	0	1	3	t	t	1	2	0	\N	0	0	t	t
 \.
 
 
@@ -2437,6 +2536,61 @@ COPY public.database_betmurteil_betm (id, betmurteil_id, betm_id) FROM stdin;
 184	146	186
 185	147	187
 186	148	188
+187	149	189
+188	150	190
+189	151	191
+190	152	192
+191	153	193
+192	154	194
+193	155	195
+194	156	196
+195	157	197
+196	158	198
+197	159	199
+198	160	200
+199	160	201
+200	161	202
+201	162	203
+202	163	204
+203	164	205
+204	165	206
+205	166	207
+206	167	208
+207	168	209
+208	169	210
+209	170	211
+210	171	212
+211	172	213
+212	173	214
+213	174	215
+214	175	216
+215	176	217
+216	177	218
+217	178	219
+218	179	220
+219	180	221
+220	181	222
+221	181	223
+222	182	224
+223	183	225
+224	183	226
+225	184	227
+226	184	228
+227	184	229
+228	184	230
+229	184	231
+230	185	232
+231	186	233
+232	187	234
+233	187	235
+234	188	236
+235	189	237
+236	190	240
+237	190	238
+238	190	239
+239	191	241
+240	192	242
+241	192	243
 \.
 
 
@@ -2449,10 +2603,10 @@ COPY public.database_diagrammsvg (id, name, file, last_updated, lesehinweis) FRO
 5	nationalitaet_scatterplot_1000000	diagramme/nationalitaet_scatterplot_1000000.svg	2023-03-10 15:56:36.174991+00	\N
 2	nationalitaet_scatterplot_200000	diagramme/nationalitaet_scatterplot_200000.svg	2023-03-10 15:56:36.396749+00	\N
 8	introspection_plot	diagramme/introspection_plot.svg	2023-09-25 07:46:16.301942+00	<p>Der Liniengraph bildet die Prognose bei unterschiedlichen Deliktssummen ab, wenn die übrigen Sachverhaltsmerkmale – ceteribus paribus – wie folgt bestehen bleiben: </p><ul><li>mehrfache Tatbegehung: nicht zutreffend, </li><li>gewerbsmässige Tatbegehung: nicht zutreffend, </li><li>bandenmässige Tatbegehung: nicht zutreffend, </li><li>Nebenverurteilungsscore: 0, </li><li>Vorbestraft: nicht zutreffend, </li><li>Einschlägig vorbestraft: nicht zutreffend </li></ul>
-3	vollzug_scatterplot_1000000	diagramme/vollzug_scatterplot_1000000.svg	2024-04-11 11:22:49.19251+00	\N
-4	vollzug_scatterplot_200000	diagramme/vollzug_scatterplot_200000.svg	2024-04-11 11:22:49.457549+00	\N
-6	hauptdelikt_scatterplot_1000000	diagramme/hauptdelikt_scatterplot_1000000.svg	2024-04-11 11:22:49.774219+00	\N
-7	hauptdelikt_scatterplot_200000	diagramme/hauptdelikt_scatterplot_200000.svg	2024-04-11 11:22:50.10497+00	\N
+3	vollzug_scatterplot_1000000	diagramme/vollzug_scatterplot_1000000.svg	2024-05-28 09:22:02.781625+00	\N
+4	vollzug_scatterplot_200000	diagramme/vollzug_scatterplot_200000.svg	2024-05-28 09:22:03.014769+00	\N
+6	hauptdelikt_scatterplot_1000000	diagramme/hauptdelikt_scatterplot_1000000.svg	2024-05-28 09:22:03.335703+00	\N
+7	hauptdelikt_scatterplot_200000	diagramme/hauptdelikt_scatterplot_200000.svg	2024-05-28 09:22:03.615502+00	\N
 \.
 
 
@@ -2471,14 +2625,26 @@ COPY public.database_kanton (id, abk) FROM stdin;
 --
 
 COPY public.database_kimodelpicklefile (id, name, file, last_updated, prognoseleistung_dict, encoder, ft_importance_list, ft_importance_list_merged) FROM stdin;
-9	lr_regr_all	pickles/linear_regression_regressor_all_fts.pkl	2024-04-17 10:05:35.518174+00	{"standardabweichung": 8.05, "beste_prognoseleistung": 0.07, "durchschnittlicher_fehler": 9.54, "standardabweichung_string": "70.62% aller Prognosen weisen einen Fehler zwischen 1.49 und 17.6 Monaten auf", "beste_prognoseleistung_index": 92, "schlechteste_prognoseleistung": 44.64, "schlechteste_prognoseleistung_index": 4}		\N	\N
-10	rf_regr_val	pickles/random_forest_regressor_val_fts.pkl	2024-04-17 10:05:28.945284+00	{"standardabweichung": 6.43, "beste_prognoseleistung": 0.09, "durchschnittlicher_fehler": 6.9, "standardabweichung_string": "80.0% aller Prognosen weisen einen Fehler zwischen 0.47 und 13.34 Monaten auf", "beste_prognoseleistung_index": 100, "beste_prognoseleistung_urteil": "SB200480", "schlechteste_prognoseleistung": 31.23, "schlechteste_prognoseleistung_index": 89, "schlechteste_prognoseleistung_urteil": "SB200250"}	encoders/one_hot_encoder_fuer_rf_regr_val.pkl	[[57.86367194596919, "deliktssumme"], [13.4774064716468, "nebenverurteilungsscore"], [9.660427698762609, "gewerbsmaessig_False"], [5.039350543637733, "gewerbsmaessig_True"], [5.002116770125369, "vorbestraft_einschlaegig_True"], [4.1878095484664035, "vorbestraft_einschlaegig_False"], [1.800257013373415, "hauptdelikt_Diebstahl"], [1.4695508546080216, "vorbestraft_True"], [0.4838741598639661, "hauptdelikt_Betrug"], [0.35205761462627744, "mehrfach_False"], [0.3127696132543218, "hauptdelikt_Veruntreuung"], [0.1997234736206028, "mehrfach_True"], [0.08780798260999655, "vorbestraft_False"], [0.03345245979077229, "hauptdelikt_betr. Missbrauch DVA"], [0.02972384964453325, "hauptdelikt_ung. Geschäftsbesorgung"], [0.0, "hauptdelikt_Sachbeschädigung"], [0.0, "bandenmaessig_False"], [0.0, "bandenmaessig_True"]]	[[57.86367194596919, "deliktssumme"], [14.699778242400342, "gewerbsmaessig"], [13.4774064716468, "nebenverurteilungsscore"], [9.189926318591771, "einschlaegig_vorbestraft"], [2.6600770959270084, "hauptdelikt"], [1.557358837218018, "vorbestraft"], [0.5517810882468802, "mehrfach"], [0.0, "bandenmaessig"]]
-12	rf_clf_sanktionsart_val	pickles/rf_classifier_fuer_sanktionsart_val_fts.pkl	2024-04-17 10:05:29.933931+00	{"oob_score": 90.0}		[[45.911193762372584, "deliktssumme"], [15.391985420339898, "nebenverurteilungsscore"], [4.4057909489245395, "vorbestraft_False"], [4.161050421458896, "gewerbsmaessig_False"], [3.6266591341764167, "vorbestraft_einschlaegig_False"], [3.440108185195189, "gewerbsmaessig_True"], [3.137752199064334, "hauptdelikt_Diebstahl"], [2.975276685049115, "hauptdelikt_ung. Geschäftsbesorgung"], [2.8602601245698445, "hauptdelikt_betr. Missbrauch DVA"], [2.820760406640049, "hauptdelikt_Betrug"], [2.648896756988584, "vorbestraft_einschlaegig_True"], [2.233265744494733, "mehrfach_False"], [2.118927999943667, "mehrfach_True"], [1.6381495170225093, "vorbestraft_True"], [1.5489400215002456, "hauptdelikt_Veruntreuung"], [0.48522399552256024, "bandenmaessig_False"], [0.3994033611222804, "bandenmaessig_True"], [0.19635531561454375, "hauptdelikt_Sachbeschädigung"]]	[[45.911193762372584, "deliktssumme"], [15.391985420339898, "nebenverurteilungsscore"], [13.539344752438131, "hauptdelikt"], [7.601158606654085, "gewerbsmaessig"], [6.275555891165001, "einschlaegig_vorbestraft"], [6.043940465947049, "vorbestraft"], [4.3521937444384, "mehrfach"], [0.8846273566448407, "bandenmaessig"]]
-11	rf_clf_val	pickles/random_forest_classifier_val_fts.pkl	2024-04-17 10:05:29.506608+00	{"oob_score": 67.5}		[[30.79450556481668, "deliktssumme"], [14.599141550959724, "nebenverurteilungsscore"], [9.414545738673286, "vorbestraft_False"], [8.181620809364663, "vorbestraft_einschlaegig_True"], [5.9334012753274665, "vorbestraft_True"], [5.9161249625544, "vorbestraft_einschlaegig_False"], [3.548636312187807, "gewerbsmaessig_False"], [3.5232951957983794, "gewerbsmaessig_True"], [3.1217756582640463, "hauptdelikt_Diebstahl"], [2.8560371217879035, "mehrfach_False"], [2.8267170712044902, "hauptdelikt_Betrug"], [2.5704203785047444, "mehrfach_True"], [2.429013806486709, "hauptdelikt_Veruntreuung"], [1.4744323278595488, "hauptdelikt_betr. Missbrauch DVA"], [1.3697467171350393, "hauptdelikt_ung. Geschäftsbesorgung"], [0.5734408945721156, "hauptdelikt_Sachbeschädigung"], [0.49188067803371766, "bandenmaessig_True"], [0.3752639364692923, "bandenmaessig_False"]]	[[30.79450556481668, "deliktssumme"], [15.347947014000754, "vorbestraft"], [14.599141550959724, "nebenverurteilungsscore"], [14.097745771919062, "einschlaegig_vorbestraft"], [11.795126475521949, "hauptdelikt"], [7.0719315079861875, "gewerbsmaessig"], [5.426457500292647, "mehrfach"], [0.8671446145030098, "bandenmaessig"]]
-15	betm_rf_classifier_sanktion	pickles/betm_rf_classifier_sanktion.pkl	2024-04-22 07:51:17.756592+00	{"oob_score_class_hauptsanktion": "OOB-Score für Hauptsanktion-Prädiktor: 93.9%", "liste_numerische_prognosemerkmale": ["nebenverurteilungsscore", "deliktsertrag", "deliktsdauer_in_monaten", "Kokain_rein", "Heroin_rein", "Methamphetamin_rein", "Marihuana_rein", "MDMA Pulver_rein", "Haschisch_rein", "Amphetamin_rein", "LSD Trips_rein", "MDMA/Ecstasy Pillen_rein"], "liste_kategoriale_prognosemerkmale": ["mengenmaessig", "bandenmaessig", "gewerbsmaessig", "anstaltentreffen", "mehrfach", "beschaffungskriminalitaet", "vorbestraft", "vorbestraft_einschlaegig", "rolle"], "merkmalswichtigkeit_fuer_prognose_hauptsanktion": [["Menge Betäubungsmittel", 29.05], ["Rolle", 19.15], ["mengenmaessig_True", 16.99], ["deliktsdauer_in_monaten", 9.83], ["nebenverurteilungsscore", 5.25], ["deliktsertrag", 5.01], ["vorbestraft_einschlaegig_True", 4.16], ["vorbestraft_True", 3.15], ["gewerbsmaessig_True", 2.68], ["mehrfach_True", 2.5], ["bandenmaessig_True", 1.03], ["beschaffungskriminalitaet_True", 0.77], ["anstaltentreffen_True", 0.44]]}		\N	\N
-8	rf_regr_all	pickles/random_forest_regressor_all_fts.pkl	2024-04-17 10:05:34.702728+00	{"standardabweichung": 6.35, "beste_prognoseleistung": 0.14, "durchschnittlicher_fehler": 6.97, "standardabweichung_string": "80.0% aller Prognosen weisen einen Fehler zwischen 0.62 und 13.33 Monaten auf", "beste_prognoseleistung_index": 109, "schlechteste_prognoseleistung": 29.18, "schlechteste_prognoseleistung_index": 31}		[[55.210440695532036, "deliktssumme"], [12.8450909580956, "nebenverurteilungsscore"], [7.605275686011955, "gewerbsmaessig_False"], [7.419790416998757, "vorbestraft_einschlaegig_False"], [6.830461320595162, "gewerbsmaessig_True"], [3.4545295329559225, "urteilsjahr"], [1.8692081364174167, "hauptdelikt_Diebstahl"], [1.0753618800075941, "vorbestraft_einschlaegig_True"], [0.8407740529090145, "vorbestraft_False"], [0.6513449668915305, "vorbestraft_True"], [0.43189927728238986, "gericht_Bezirksgericht Zürich"], [0.3434573670341744, "nationalitaet_unbekannt"], [0.33859914464577096, "mehrfach_False"], [0.30681452791158803, "hauptdelikt_Veruntreuung"], [0.21247091932143086, "geschlecht_weiblich"], [0.17756533594856258, "hauptdelikt_Betrug"], [0.15203373793295147, "geschlecht_männlich"], [0.11984546579585811, "mehrfach_True"], [0.03640421257132891, "gericht_Bezirksgericht Bülach"], [0.03282732343078212, "hauptdelikt_betr. Missbrauch DVA"], [0.02931924318492223, "hauptdelikt_ung. Geschäftsbesorgung"], [0.016485798525244517, "nationalitaet_Ausländerin/Ausländer"], [0.0, "hauptdelikt_Sachbeschädigung"], [0.0, "nationalitaet_Schweizerin/Schweizer"], [0.0, "gericht_Bezirksgericht Dielsdorf"], [0.0, "gericht_Bezirksgericht Dietikon"], [0.0, "gericht_Bezirksgericht Hinwil"], [0.0, "gericht_Bezirksgericht Horgen"], [0.0, "gericht_Bezirksgericht Meilen"], [0.0, "gericht_Bezirksgericht Pfäffikon"], [0.0, "gericht_Bezirksgericht Päffikon"], [0.0, "gericht_Bezirksgericht Uster"], [0.0, "gericht_Bezirksgericht Winterthur"]]	[[55.210440695532036, "deliktssumme"], [14.435737006607116, "gewerbsmaessig"], [12.8450909580956, "nebenverurteilungsscore"], [8.495152297006351, "einschlaegig_vorbestraft"], [3.4545295329559225, "urteilsjahr"], [2.4157345668932715, "hauptdelikt"], [1.492119019800545, "vorbestraft"], [0.4683034898537187, "gericht"], [0.45844461044162904, "mehrfach"], [0.3645046572543823, "geschlecht"], [0.3599431655594189, "nationalitaet"], [0, "bandenmaessig"]]
-13	betm_rf_classifier_vollzugsart	pickles/betm_rf_classifier_vollzugsart.pkl	2024-04-22 07:51:18.785454+00	{"oob_score_class_vollzugsart": "OOB-Score für Vollzugsart-Prädiktor: 62.6%", "liste_numerische_prognosemerkmale": ["nebenverurteilungsscore", "deliktsertrag", "deliktsdauer_in_monaten", "Kokain_rein", "Heroin_rein", "Methamphetamin_rein", "Marihuana_rein", "MDMA Pulver_rein", "Haschisch_rein", "Amphetamin_rein", "LSD Trips_rein", "MDMA/Ecstasy Pillen_rein"], "liste_kategoriale_prognosemerkmale": ["mengenmaessig", "bandenmaessig", "gewerbsmaessig", "anstaltentreffen", "mehrfach", "beschaffungskriminalitaet", "vorbestraft", "vorbestraft_einschlaegig", "rolle"], "merkmalswichtigkeit_fuer_prognose_vollzugsart": [["Menge Betäubungsmittel", 39.79], ["Rolle", 15.21], ["nebenverurteilungsscore", 8.51], ["deliktsdauer_in_monaten", 8.27], ["vorbestraft_einschlaegig_True", 6.28], ["deliktsertrag", 5.86], ["bandenmaessig_True", 2.96], ["vorbestraft_True", 2.81], ["gewerbsmaessig_True", 2.73], ["beschaffungskriminalitaet_True", 2.3], ["mehrfach_True", 1.91], ["anstaltentreffen_True", 1.77], ["mengenmaessig_True", 1.58]]}	encoders/betm_encoder.pkl	\N	\N
-14	betm_rf_regressor_strafmass	pickles/betm_rf_regressor_strafmass.pkl	2024-04-22 07:51:18.712616+00	{"urteilsbasis": 147, "durchschnittlicher_fehler": "Der durchnittliche Strafmassprognosefehler bei einer Prognose jeweils mit dem OOB-leftout beträgt 9.02 Monate.", "merkmalswichtigkeit_fuer_prognose_strafmass": [["Kokain_rein", 29.293], ["bandenmaessig_True", 17.758], ["Heroin_rein", 17.06], ["Methamphetamin_rein", 6.393], ["mengenmaessig_True", 5.357], ["rolle_Grosshandel", 4.969], ["deliktsdauer_in_monaten", 3.699], ["nebenverurteilungsscore", 2.542], ["Amphetamin_rein", 2.063], ["deliktsertrag", 1.727], ["gewerbsmaessig_True", 1.439], ["rolle_Verkauf Konsumeinheiten", 1.25], ["rolle_Handel", 1.181], ["vorbestraft_einschlaegig_True", 1.101], ["vorbestraft_True", 0.815], ["Marihuana_rein", 0.635], ["mehrfach_True", 0.529], ["anstaltentreffen_True", 0.504], ["rolle_Transport", 0.489], ["beschaffungskriminalitaet_True", 0.285], ["rolle_Aufbewahrung/Besitz", 0.218], ["rolle_Produktion", 0.171], ["rolle_Gehilfenschaft", 0.158], ["Haschisch_rein", 0.127], ["LSD Trips_rein", 0.085], ["MDMA Pulver_rein", 0.079], ["MDMA/Ecstasy Pillen_rein", 0.043], ["rolle_Kauf", 0.028], ["Menge Betäubungsmittel", 55.778]], "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass": [["Menge Betäubungsmittel", 55.78], ["bandenmaessig_True", 17.76], ["Rolle", 8.47], ["mengenmaessig_True", 5.36], ["deliktsdauer_in_monaten", 3.7], ["nebenverurteilungsscore", 2.54], ["deliktsertrag", 1.73], ["gewerbsmaessig_True", 1.44], ["vorbestraft_einschlaegig_True", 1.1], ["vorbestraft_True", 0.82], ["mehrfach_True", 0.53], ["anstaltentreffen_True", 0.5], ["beschaffungskriminalitaet_True", 0.28]]}		\N	\N
+9	lr_regr_all	pickles/linear_regression_regressor_all_fts.pkl	2024-07-26 13:15:12.281832+00	{"standardabweichung": 8.21, "beste_prognoseleistung": 0.01, "durchschnittlicher_fehler": 9.77, "standardabweichung_string": "73.03% aller Prognosen weisen einen Fehler zwischen 1.56 und 17.97 Monaten auf", "beste_prognoseleistung_index": 141, "schlechteste_prognoseleistung": 46.49, "schlechteste_prognoseleistung_index": 4}		\N	\N
+26	betm_vollzugsart_nur_BE_illegitim	pickles/betm_vollzugsart_nur_BE_illegitim.pkl	2024-08-21 10:44:07.661377+00	{"oob_score_class_vollzugsart": "OOB-Score für Vollzugsart-Prädiktor: 51.6%", "liste_numerische_prognosemerkmale": ["nebenverurteilungsscore", "deliktsertrag", "deliktsdauer_in_monaten", "Heroin_rein", "Kokain_rein", "MDMA Pulver_rein", "Haschisch_rein", "Marihuana_rein", "Methamphetamin_rein", "Amphetamin_rein", "MDMA/Ecstasy Pillen_rein"], "liste_kategoriale_prognosemerkmale": ["mengenmaessig", "bandenmaessig", "gewerbsmaessig", "anstaltentreffen", "mehrfach", "beschaffungskriminalitaet", "vorbestraft", "vorbestraft_einschlaegig", "rolle", "geschlecht", "nationalitaet", "gericht"], "merkmalswichtigkeit_fuer_prognose_vollzugsart": [["Menge Betäubungsmittel", 30.36], ["Rolle", 13.03], ["deliktsdauer_in_monaten", 8.76], ["nebenverurteilungsscore", 6.77], ["bandenmaessig_True", 5.58], ["gewerbsmaessig_True", 4.69], ["vorbestraft_einschlaegig_True", 3.32], ["nationalitaet_Ausländerin/Ausländer", 3.13], ["gericht_Regionalgericht Bern-Mittelland", 2.87], ["nationalitaet_unbekannt", 2.82], ["vorbestraft_True", 2.52], ["beschaffungskriminalitaet_True", 2.46], ["gericht_Regionalgericht Emmental-Oberaargau", 2.1], ["mehrfach_True", 2.07], ["gericht_Regionalgericht Berner Jura-Seeland", 2.04], ["deliktsertrag", 1.95], ["anstaltentreffen_True", 1.87], ["mengenmaessig_True", 1.68], ["geschlecht_weiblich", 1.11], ["nationalitaet_Schweizerin/Schweizer", 0.62], ["gericht_Regionalgericht Oberland", 0.26]]}		\N	\N
+10	rf_regr_val	pickles/random_forest_regressor_val_fts.pkl	2024-07-26 13:15:06.900971+00	{"standardabweichung": 6.35, "beste_prognoseleistung": 0.0, "durchschnittlicher_fehler": 6.91, "standardabweichung_string": "79.21% aller Prognosen weisen einen Fehler zwischen 0.56 und 13.26 Monaten auf", "beste_prognoseleistung_index": 41, "beste_prognoseleistung_urteil": "SB170011", "schlechteste_prognoseleistung": 32.97, "schlechteste_prognoseleistung_index": 97, "schlechteste_prognoseleistung_urteil": "SB200250"}	encoders/one_hot_encoder_fuer_rf_regr_val.pkl	[[58.79454434072895, "deliktssumme"], [15.237105015815583, "nebenverurteilungsscore"], [6.260123089014617, "gewerbsmaessig_False"], [5.844229135414898, "gewerbsmaessig_True"], [3.7874979702492504, "vorbestraft_False"], [3.653905017511932, "vorbestraft_einschlaegig_True"], [2.0931039605792687, "vorbestraft_True"], [1.462423765503472, "hauptdelikt_Diebstahl"], [1.1973684478786781, "mehrfach_True"], [0.7606378430280029, "vorbestraft_einschlaegig_False"], [0.6365974364025634, "hauptdelikt_Betrug"], [0.23012835635929071, "hauptdelikt_Veruntreuung"], [0.04233562151348603, "mehrfach_False"], [0.0, "hauptdelikt_Sachbeschädigung"], [0.0, "hauptdelikt_betr. Missbrauch DVA"], [0.0, "hauptdelikt_ung. Geschäftsbesorgung"], [0.0, "bandenmaessig_False"], [0.0, "bandenmaessig_True"]]	[[58.79454434072895, "deliktssumme"], [15.237105015815583, "nebenverurteilungsscore"], [12.104352224429515, "gewerbsmaessig"], [5.880601930828519, "vorbestraft"], [4.414542860539935, "einschlaegig_vorbestraft"], [2.3291495582653257, "hauptdelikt"], [1.2397040693921642, "mehrfach"], [0.0, "bandenmaessig"]]
+12	rf_clf_sanktionsart_val	pickles/rf_classifier_fuer_sanktionsart_val_fts.pkl	2024-07-26 13:15:07.705442+00	{"oob_score": 87.6}		[[43.66854624562503, "deliktssumme"], [15.769214409926649, "nebenverurteilungsscore"], [4.501224291177945, "gewerbsmaessig_False"], [4.291753013854795, "vorbestraft_True"], [3.792994978963002, "hauptdelikt_Diebstahl"], [3.7093294428431185, "gewerbsmaessig_True"], [3.540513898646093, "hauptdelikt_Betrug"], [3.4185786132099536, "vorbestraft_False"], [2.7032721100213046, "vorbestraft_einschlaegig_False"], [2.587424978751295, "mehrfach_True"], [2.574252246989361, "hauptdelikt_betr. Missbrauch DVA"], [2.325997904194306, "hauptdelikt_ung. Geschäftsbesorgung"], [2.2246124969764205, "mehrfach_False"], [2.165846548119706, "vorbestraft_einschlaegig_True"], [1.7209470186769686, "hauptdelikt_Veruntreuung"], [0.4551499705284609, "bandenmaessig_False"], [0.3379231176236267, "hauptdelikt_Sachbeschädigung"], [0.2124187138719571, "bandenmaessig_True"]]	[[43.66854624562503, "deliktssumme"], [15.769214409926649, "nebenverurteilungsscore"], [14.292629165093357, "hauptdelikt"], [8.210553734021065, "gewerbsmaessig"], [7.710331627064749, "vorbestraft"], [4.86911865814101, "einschlaegig_vorbestraft"], [4.812037475727716, "mehrfach"], [0.667568684400418, "bandenmaessig"]]
+13	betm_rf_classifier_vollzugsart	pickles/betm_rf_classifier_vollzugsart.pkl	2024-08-21 10:43:57.748849+00	{"oob_score_class_vollzugsart": "OOB-Score für Vollzugsart-Prädiktor: 57.6%", "liste_numerische_prognosemerkmale": ["nebenverurteilungsscore", "deliktsertrag", "deliktsdauer_in_monaten", "Kokain_rein", "Heroin_rein", "Methamphetamin_rein", "Marihuana_rein", "MDMA Pulver_rein", "Haschisch_rein", "Amphetamin_rein", "LSD Trips_rein", "MDMA/Ecstasy Pillen_rein"], "liste_kategoriale_prognosemerkmale": ["mengenmaessig", "bandenmaessig", "gewerbsmaessig", "anstaltentreffen", "mehrfach", "beschaffungskriminalitaet", "vorbestraft", "vorbestraft_einschlaegig", "rolle"], "merkmalswichtigkeit_fuer_prognose_vollzugsart": [["Menge Betäubungsmittel", 43.29], ["Rolle", 14.31], ["deliktsdauer_in_monaten", 7.76], ["nebenverurteilungsscore", 7.41], ["deliktsertrag", 6.05], ["vorbestraft_einschlaegig_True", 5.75], ["vorbestraft_True", 2.94], ["bandenmaessig_True", 2.85], ["beschaffungskriminalitaet_True", 2.41], ["mehrfach_True", 1.96], ["mengenmaessig_True", 1.94], ["gewerbsmaessig_True", 1.88], ["anstaltentreffen_True", 1.48]]}	encoders/betm_encoder.pkl	\N	\N
+16	betm_sanktion_nur_ZH	pickles/betm_sanktion_nur_ZH.pkl	2024-08-21 10:44:03.686229+00	{"anzahl_urteile": 127, "oob_score_class_hauptsanktion": "OOB-Score für Hauptsanktion-Prädiktor: 94.5%", "liste_numerische_prognosemerkmale": ["nebenverurteilungsscore", "deliktsertrag", "deliktsdauer_in_monaten", "Kokain_rein", "Heroin_rein", "Methamphetamin_rein", "Marihuana_rein", "Amphetamin_rein", "LSD Trips_rein", "Haschisch_rein", "MDMA/Ecstasy Pillen_rein", "MDMA Pulver_rein"], "liste_kategoriale_prognosemerkmale": ["mengenmaessig", "bandenmaessig", "gewerbsmaessig", "anstaltentreffen", "mehrfach", "beschaffungskriminalitaet", "vorbestraft", "vorbestraft_einschlaegig", "rolle"], "merkmalswichtigkeit_fuer_prognose_hauptsanktion": [["Menge Betäubungsmittel", 28.62], ["mengenmaessig_True", 23.77], ["Rolle", 20.97], ["deliktsdauer_in_monaten", 8.67], ["nebenverurteilungsscore", 4.05], ["vorbestraft_True", 4.01], ["vorbestraft_einschlaegig_True", 3.08], ["deliktsertrag", 3.04], ["mehrfach_True", 1.87], ["bandenmaessig_True", 0.76], ["gewerbsmaessig_True", 0.74], ["beschaffungskriminalitaet_True", 0.36], ["anstaltentreffen_True", 0.05]]}		\N	\N
+11	rf_clf_val	pickles/random_forest_classifier_val_fts.pkl	2024-07-26 13:15:07.336379+00	{"oob_score": 68.0}		[[31.41096023023095, "deliktssumme"], [16.49887170496009, "nebenverurteilungsscore"], [10.381812260508294, "vorbestraft_einschlaegig_False"], [7.354404182628816, "vorbestraft_True"], [6.070437384240883, "vorbestraft_False"], [4.070751739154105, "vorbestraft_einschlaegig_True"], [3.389402563949026, "gewerbsmaessig_True"], [3.1426953869626892, "gewerbsmaessig_False"], [2.77527260997855, "hauptdelikt_Diebstahl"], [2.727235970207979, "hauptdelikt_Betrug"], [2.725934861526352, "mehrfach_False"], [2.713021819239029, "mehrfach_True"], [2.610527095745956, "hauptdelikt_Veruntreuung"], [1.3616835359366368, "hauptdelikt_ung. Geschäftsbesorgung"], [1.2672453067281937, "hauptdelikt_betr. Missbrauch DVA"], [0.5743210264327203, "bandenmaessig_False"], [0.4822550449714756, "bandenmaessig_True"], [0.44316727659825006, "hauptdelikt_Sachbeschädigung"]]	[[31.41096023023095, "deliktssumme"], [16.49887170496009, "nebenverurteilungsscore"], [14.452563999662399, "einschlaegig_vorbestraft"], [13.4248415668697, "vorbestraft"], [11.185131795195566, "hauptdelikt"], [6.532097950911715, "gewerbsmaessig"], [5.43895668076538, "mehrfach"], [1.0565760714041958, "bandenmaessig"]]
+21	betm_strafmass_ZH_illegitim	pickles/betm_strafmass_ZH_illegitim.pkl	2024-08-21 10:44:05.748342+00	{"urteilsbasis": 127, "durchschnittlicher_fehler": 8.349228792800975, "durchschnittlicher_fehler_string": "Der durchnittliche Strafmassprognosefehler bei einer Prognose jeweils mit dem OOB-leftout beträgt 8.35 Monate.", "merkmalswichtigkeit_fuer_prognose_strafmass": [["Kokain_rein", 33.331], ["Heroin_rein", 24.99], ["rolle_Grosshandel", 8.404], ["mengenmaessig_True", 5.008], ["nationalitaet_Schweizerin/Schweizer", 3.066], ["deliktsdauer_in_monaten", 2.683], ["deliktsertrag", 2.223], ["mehrfach_True", 2.206], ["nebenverurteilungsscore", 2.079], ["bandenmaessig_True", 1.959], ["rolle_Verkauf Konsumeinheiten", 1.809], ["vorbestraft_True", 1.208], ["Marihuana_rein", 0.995], ["gericht_Bezirksgericht Zürich", 0.893], ["geschlecht_weiblich", 0.867], ["gewerbsmaessig_True", 0.844], ["vorbestraft_einschlaegig_True", 0.831], ["nationalitaet_unbekannt", 0.773], ["rolle_Aufbewahrung/Besitz", 0.687], ["gericht_Bezirksgericht Dietikon", 0.646], ["rolle_Handel", 0.645], ["Methamphetamin_rein", 0.557], ["beschaffungskriminalitaet_True", 0.54], ["gericht_Bezirksgericht Bülach", 0.504], ["rolle_Transport", 0.503], ["nationalitaet_Ausländerin/Ausländer", 0.358], ["gericht_Bezirksgericht Winterthur", 0.23], ["gericht_Bezirksgericht Uster", 0.2], ["gericht_Bezirksgericht Dielsdorf", 0.17], ["rolle_Produktion", 0.164], ["rolle_Kauf", 0.151], ["rolle_Gehilfenschaft", 0.124], ["Haschisch_rein", 0.08], ["anstaltentreffen_True", 0.076], ["LSD Trips_rein", 0.074], ["gericht_Bezirksgerichtes Bülach", 0.039], ["MDMA/Ecstasy Pillen_rein", 0.03], ["MDMA Pulver_rein", 0.025], ["Amphetamin_rein", 0.019], ["gericht_Bezirksgericht Horgen", 0.011], ["gericht_Bezirksgericht Meilen", 0.0], ["Menge Betäubungsmittel", 60.10099999999999]], "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass": [["Menge Betäubungsmittel", 60.1], ["Rolle", 12.47], ["mengenmaessig_True", 5.01], ["Nationalität", 4.2], ["deliktsdauer_in_monaten", 2.68], ["Gericht", 2.65], ["deliktsertrag", 2.22], ["mehrfach_True", 2.21], ["nebenverurteilungsscore", 2.08], ["bandenmaessig_True", 1.96], ["vorbestraft_True", 1.21], ["geschlecht_weiblich", 0.87], ["gewerbsmaessig_True", 0.84], ["vorbestraft_einschlaegig_True", 0.83], ["beschaffungskriminalitaet_True", 0.54], ["anstaltentreffen_True", 0.08], ["gericht_Bezirksgerichtes Bülach", 0.04]]}		\N	\N
+22	betm_sanktion_nur_BE	pickles/betm_sanktion_nur_BE.pkl	2024-08-21 10:44:06.191458+00	{"anzahl_urteile": 64, "oob_score_class_hauptsanktion": "OOB-Score für Hauptsanktion-Prädiktor: 98.4%", "liste_numerische_prognosemerkmale": ["nebenverurteilungsscore", "deliktsertrag", "deliktsdauer_in_monaten", "Heroin_rein", "Kokain_rein", "MDMA Pulver_rein", "Haschisch_rein", "Marihuana_rein", "Methamphetamin_rein", "Amphetamin_rein", "MDMA/Ecstasy Pillen_rein"], "liste_kategoriale_prognosemerkmale": ["mengenmaessig", "bandenmaessig", "gewerbsmaessig", "anstaltentreffen", "mehrfach", "beschaffungskriminalitaet", "vorbestraft", "vorbestraft_einschlaegig", "rolle"], "merkmalswichtigkeit_fuer_prognose_hauptsanktion": [["Menge Betäubungsmittel", 33.34], ["deliktsertrag", 18.81], ["gewerbsmaessig_True", 11.83], ["deliktsdauer_in_monaten", 10.87], ["nebenverurteilungsscore", 10.14], ["mengenmaessig_True", 5.59], ["Rolle", 3.3], ["vorbestraft_einschlaegig_True", 2.98], ["bandenmaessig_True", 1.89], ["beschaffungskriminalitaet_True", 0.98], ["vorbestraft_True", 0.24], ["anstaltentreffen_True", 0.02], ["mehrfach_True", 0.0]]}		\N	\N
+23	betm_vollzugsart_nur_BE	pickles/betm_vollzugsart_nur_BE.pkl	2024-08-21 10:44:06.561328+00	{"oob_score_class_vollzugsart": "OOB-Score für Vollzugsart-Prädiktor: 50.0%", "liste_numerische_prognosemerkmale": ["nebenverurteilungsscore", "deliktsertrag", "deliktsdauer_in_monaten", "Heroin_rein", "Kokain_rein", "MDMA Pulver_rein", "Haschisch_rein", "Marihuana_rein", "Methamphetamin_rein", "Amphetamin_rein", "MDMA/Ecstasy Pillen_rein"], "liste_kategoriale_prognosemerkmale": ["mengenmaessig", "bandenmaessig", "gewerbsmaessig", "anstaltentreffen", "mehrfach", "beschaffungskriminalitaet", "vorbestraft", "vorbestraft_einschlaegig", "rolle"], "merkmalswichtigkeit_fuer_prognose_vollzugsart": [["Menge Betäubungsmittel", 38.66], ["Rolle", 12.98], ["nebenverurteilungsscore", 10.2], ["deliktsdauer_in_monaten", 10.03], ["gewerbsmaessig_True", 5.55], ["bandenmaessig_True", 5.07], ["vorbestraft_einschlaegig_True", 3.05], ["vorbestraft_True", 2.82], ["deliktsertrag", 2.55], ["beschaffungskriminalitaet_True", 2.5], ["anstaltentreffen_True", 2.36], ["mengenmaessig_True", 2.25], ["mehrfach_True", 1.99]]}		\N	\N
+17	betm_vollzugsart_nur_ZH	pickles/betm_vollzugsart_nur_ZH.pkl	2024-08-21 10:44:04.116355+00	{"oob_score_class_vollzugsart": "OOB-Score für Vollzugsart-Prädiktor: 56.7%", "liste_numerische_prognosemerkmale": ["nebenverurteilungsscore", "deliktsertrag", "deliktsdauer_in_monaten", "Kokain_rein", "Heroin_rein", "Methamphetamin_rein", "Marihuana_rein", "Amphetamin_rein", "LSD Trips_rein", "Haschisch_rein", "MDMA/Ecstasy Pillen_rein", "MDMA Pulver_rein"], "liste_kategoriale_prognosemerkmale": ["mengenmaessig", "bandenmaessig", "gewerbsmaessig", "anstaltentreffen", "mehrfach", "beschaffungskriminalitaet", "vorbestraft", "vorbestraft_einschlaegig", "rolle"], "merkmalswichtigkeit_fuer_prognose_vollzugsart": [["Menge Betäubungsmittel", 42.85], ["Rolle", 16.29], ["deliktsertrag", 7.73], ["nebenverurteilungsscore", 6.96], ["deliktsdauer_in_monaten", 6.6], ["vorbestraft_einschlaegig_True", 5.96], ["vorbestraft_True", 3.99], ["mengenmaessig_True", 2.71], ["mehrfach_True", 2.57], ["beschaffungskriminalitaet_True", 1.39], ["bandenmaessig_True", 1.25], ["gewerbsmaessig_True", 0.95], ["anstaltentreffen_True", 0.74]]}		\N	\N
+18	betm_strafmass_nur_ZH	pickles/betm_strafmass_nur_ZH.pkl	2024-08-21 10:44:04.552107+00	{"urteilsbasis": 127, "durchschnittlicher_fehler": 8.12822737100009, "durchschnittlicher_fehler_string": "Der durchnittliche Strafmassprognosefehler bei einer Prognose jeweils mit dem OOB-leftout beträgt 8.13 Monate.", "merkmalswichtigkeit_fuer_prognose_strafmass": [["Kokain_rein", 34.544], ["Heroin_rein", 29.834], ["rolle_Grosshandel", 7.042], ["mengenmaessig_True", 6.647], ["deliktsdauer_in_monaten", 2.799], ["deliktsertrag", 2.479], ["nebenverurteilungsscore", 2.397], ["bandenmaessig_True", 2.248], ["rolle_Verkauf Konsumeinheiten", 1.83], ["mehrfach_True", 1.605], ["vorbestraft_einschlaegig_True", 1.273], ["vorbestraft_True", 1.103], ["rolle_Handel", 0.923], ["gewerbsmaessig_True", 0.901], ["Marihuana_rein", 0.857], ["rolle_Transport", 0.821], ["beschaffungskriminalitaet_True", 0.693], ["rolle_Aufbewahrung/Besitz", 0.651], ["Methamphetamin_rein", 0.439], ["rolle_Produktion", 0.198], ["rolle_Kauf", 0.192], ["rolle_Gehilfenschaft", 0.145], ["Haschisch_rein", 0.103], ["LSD Trips_rein", 0.098], ["Amphetamin_rein", 0.088], ["anstaltentreffen_True", 0.043], ["MDMA Pulver_rein", 0.034], ["MDMA/Ecstasy Pillen_rein", 0.011], ["Menge Betäubungsmittel", 66.00799999999998]], "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass": [["Menge Betäubungsmittel", 66.01], ["Rolle", 11.79], ["mengenmaessig_True", 6.65], ["deliktsdauer_in_monaten", 2.8], ["deliktsertrag", 2.48], ["nebenverurteilungsscore", 2.4], ["bandenmaessig_True", 2.25], ["mehrfach_True", 1.6], ["vorbestraft_einschlaegig_True", 1.27], ["vorbestraft_True", 1.1], ["gewerbsmaessig_True", 0.9], ["beschaffungskriminalitaet_True", 0.69], ["anstaltentreffen_True", 0.04]]}		\N	\N
+19	betm_sanktion_nur_ZH_illegitim	pickles/betm_sanktion_nur_ZH_illegitim.pkl	2024-08-21 10:44:04.882491+00	{"anzahl_urteile": 127, "oob_score_class_hauptsanktion": "OOB-Score für Hauptsanktion-Prädiktor: 96.1%", "liste_numerische_prognosemerkmale": ["nebenverurteilungsscore", "deliktsertrag", "deliktsdauer_in_monaten", "Kokain_rein", "Heroin_rein", "Methamphetamin_rein", "Marihuana_rein", "Amphetamin_rein", "LSD Trips_rein", "Haschisch_rein", "MDMA/Ecstasy Pillen_rein", "MDMA Pulver_rein"], "liste_kategoriale_prognosemerkmale": ["mengenmaessig", "bandenmaessig", "gewerbsmaessig", "anstaltentreffen", "mehrfach", "beschaffungskriminalitaet", "vorbestraft", "vorbestraft_einschlaegig", "rolle", "geschlecht", "nationalitaet", "gericht"], "merkmalswichtigkeit_fuer_prognose_hauptsanktion": [["Menge Betäubungsmittel", 24.7], ["Rolle", 17.15], ["mengenmaessig_True", 16.26], ["gericht_Bezirksgericht Uster", 6.12], ["deliktsdauer_in_monaten", 6.0], ["vorbestraft_True", 4.11], ["gericht_Bezirksgericht Winterthur", 3.57], ["gericht_Bezirksgericht Zürich", 2.99], ["vorbestraft_einschlaegig_True", 2.38], ["nebenverurteilungsscore", 2.22], ["nationalitaet_Schweizerin/Schweizer", 2.09], ["geschlecht_weiblich", 1.88], ["mehrfach_True", 1.79], ["deliktsertrag", 1.75], ["nationalitaet_Ausländerin/Ausländer", 1.52], ["nationalitaet_unbekannt", 1.5], ["bandenmaessig_True", 1.36], ["gewerbsmaessig_True", 1.25], ["gericht_Bezirksgericht Dielsdorf", 0.5], ["gericht_Bezirksgericht Bülach", 0.47], ["beschaffungskriminalitaet_True", 0.18], ["gericht_Bezirksgericht Dietikon", 0.16], ["gericht_Bezirksgericht Horgen", 0.03], ["anstaltentreffen_True", 0.02], ["gericht_Bezirksgerichtes Bülach", 0.0], ["gericht_Bezirksgericht Meilen", 0.0]]}		\N	\N
+20	betm_vollzugsart_nur_ZH_illegitim	pickles/betm_vollzugsart_nur_ZH_illegitim.pkl	2024-08-21 10:44:05.344539+00	{"oob_score_class_vollzugsart": "OOB-Score für Vollzugsart-Prädiktor: 50.4%", "liste_numerische_prognosemerkmale": ["nebenverurteilungsscore", "deliktsertrag", "deliktsdauer_in_monaten", "Kokain_rein", "Heroin_rein", "Methamphetamin_rein", "Marihuana_rein", "Amphetamin_rein", "LSD Trips_rein", "Haschisch_rein", "MDMA/Ecstasy Pillen_rein", "MDMA Pulver_rein"], "liste_kategoriale_prognosemerkmale": ["mengenmaessig", "bandenmaessig", "gewerbsmaessig", "anstaltentreffen", "mehrfach", "beschaffungskriminalitaet", "vorbestraft", "vorbestraft_einschlaegig", "rolle", "geschlecht", "nationalitaet", "gericht"], "merkmalswichtigkeit_fuer_prognose_vollzugsart": [["Menge Betäubungsmittel", 33.37], ["Rolle", 13.05], ["nebenverurteilungsscore", 5.66], ["vorbestraft_einschlaegig_True", 5.48], ["deliktsertrag", 5.34], ["deliktsdauer_in_monaten", 4.94], ["vorbestraft_True", 3.75], ["nationalitaet_Ausländerin/Ausländer", 3.6], ["nationalitaet_unbekannt", 3.38], ["gericht_Bezirksgericht Bülach", 3.28], ["mengenmaessig_True", 2.58], ["gericht_Bezirksgericht Zürich", 2.42], ["geschlecht_weiblich", 2.17], ["mehrfach_True", 1.87], ["nationalitaet_Schweizerin/Schweizer", 1.43], ["gericht_Bezirksgericht Uster", 1.29], ["beschaffungskriminalitaet_True", 1.13], ["gericht_Bezirksgericht Dietikon", 1.04], ["bandenmaessig_True", 0.94], ["gewerbsmaessig_True", 0.67], ["gericht_Bezirksgericht Winterthur", 0.63], ["gericht_Bezirksgericht Dielsdorf", 0.62], ["gericht_Bezirksgericht Horgen", 0.52], ["anstaltentreffen_True", 0.45], ["gericht_Bezirksgerichtes Bülach", 0.28], ["gericht_Bezirksgericht Meilen", 0.1]]}		\N	\N
+24	betm_strafmass_nur_BE	pickles/betm_strafmass_nur_BE.pkl	2024-08-21 10:44:06.960603+00	{"urteilsbasis": 64, "durchschnittlicher_fehler": 12.090646212506577, "durchschnittlicher_fehler_string": "Der durchnittliche Strafmassprognosefehler bei einer Prognose jeweils mit dem OOB-leftout beträgt 12.09 Monate.", "merkmalswichtigkeit_fuer_prognose_strafmass": [["Kokain_rein", 30.684], ["bandenmaessig_True", 24.898], ["Methamphetamin_rein", 10.491], ["Heroin_rein", 8.276], ["rolle_Grosshandel", 5.264], ["deliktsdauer_in_monaten", 5.236], ["Amphetamin_rein", 3.131], ["nebenverurteilungsscore", 2.859], ["vorbestraft_True", 1.59], ["gewerbsmaessig_True", 1.492], ["rolle_Handel", 1.154], ["anstaltentreffen_True", 0.937], ["deliktsertrag", 0.915], ["MDMA Pulver_rein", 0.542], ["vorbestraft_einschlaegig_True", 0.535], ["mehrfach_True", 0.457], ["rolle_Verkauf Konsumeinheiten", 0.327], ["mengenmaessig_True", 0.244], ["rolle_Transport", 0.239], ["Marihuana_rein", 0.222], ["beschaffungskriminalitaet_True", 0.196], ["rolle_Gehilfenschaft", 0.154], ["rolle_Aufbewahrung/Besitz", 0.088], ["rolle_Produktion", 0.053], ["Haschisch_rein", 0.01], ["MDMA/Ecstasy Pillen_rein", 0.006], ["Menge Betäubungsmittel", 53.361999999999995]], "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass": [["Menge Betäubungsmittel", 53.36], ["bandenmaessig_True", 24.9], ["Rolle", 7.27], ["deliktsdauer_in_monaten", 5.24], ["nebenverurteilungsscore", 2.86], ["vorbestraft_True", 1.59], ["gewerbsmaessig_True", 1.49], ["anstaltentreffen_True", 0.94], ["deliktsertrag", 0.92], ["vorbestraft_einschlaegig_True", 0.54], ["mehrfach_True", 0.46], ["mengenmaessig_True", 0.24], ["beschaffungskriminalitaet_True", 0.2]]}		\N	\N
+25	betm_sanktion_nur_BE_illegitim	pickles/betm_sanktion_nur_BE_illegitim.pkl	2024-08-21 10:44:07.301599+00	{"anzahl_urteile": 64, "oob_score_class_hauptsanktion": "OOB-Score für Hauptsanktion-Prädiktor: 98.4%", "liste_numerische_prognosemerkmale": ["nebenverurteilungsscore", "deliktsertrag", "deliktsdauer_in_monaten", "Heroin_rein", "Kokain_rein", "MDMA Pulver_rein", "Haschisch_rein", "Marihuana_rein", "Methamphetamin_rein", "Amphetamin_rein", "MDMA/Ecstasy Pillen_rein"], "liste_kategoriale_prognosemerkmale": ["mengenmaessig", "bandenmaessig", "gewerbsmaessig", "anstaltentreffen", "mehrfach", "beschaffungskriminalitaet", "vorbestraft", "vorbestraft_einschlaegig", "rolle", "geschlecht", "nationalitaet", "gericht"], "merkmalswichtigkeit_fuer_prognose_hauptsanktion": [["Menge Betäubungsmittel", 33.51], ["deliktsertrag", 17.52], ["deliktsdauer_in_monaten", 9.74], ["mengenmaessig_True", 8.64], ["nebenverurteilungsscore", 7.05], ["Rolle", 6.92], ["vorbestraft_einschlaegig_True", 3.31], ["gewerbsmaessig_True", 2.85], ["nationalitaet_unbekannt", 2.65], ["gericht_Regionalgericht Bern-Mittelland", 1.56], ["mehrfach_True", 1.28], ["nationalitaet_Schweizerin/Schweizer", 1.27], ["gericht_Regionalgericht Berner Jura-Seeland", 1.1], ["bandenmaessig_True", 0.94], ["beschaffungskriminalitaet_True", 0.85], ["gericht_Regionalgericht Emmental-Oberaargau", 0.75], ["anstaltentreffen_True", 0.03], ["nationalitaet_Ausländerin/Ausländer", 0.02], ["vorbestraft_True", 0.01], ["geschlecht_weiblich", 0.0], ["gericht_Regionalgericht Oberland", 0.0]]}		\N	\N
+15	betm_rf_classifier_sanktion	pickles/betm_rf_classifier_sanktion.pkl	2024-08-21 10:43:56.794956+00	{"oob_score_class_hauptsanktion": "OOB-Score für Hauptsanktion-Prädiktor: 94.8%", "liste_numerische_prognosemerkmale": ["nebenverurteilungsscore", "deliktsertrag", "deliktsdauer_in_monaten", "Kokain_rein", "Heroin_rein", "Methamphetamin_rein", "Marihuana_rein", "MDMA Pulver_rein", "Haschisch_rein", "Amphetamin_rein", "LSD Trips_rein", "MDMA/Ecstasy Pillen_rein"], "liste_kategoriale_prognosemerkmale": ["mengenmaessig", "bandenmaessig", "gewerbsmaessig", "anstaltentreffen", "mehrfach", "beschaffungskriminalitaet", "vorbestraft", "vorbestraft_einschlaegig", "rolle"], "merkmalswichtigkeit_fuer_prognose_hauptsanktion": [["Menge Betäubungsmittel", 30.98], ["mengenmaessig_True", 18.24], ["Rolle", 17.91], ["deliktsdauer_in_monaten", 9.16], ["nebenverurteilungsscore", 5.68], ["deliktsertrag", 4.8], ["vorbestraft_True", 4.59], ["vorbestraft_einschlaegig_True", 2.53], ["gewerbsmaessig_True", 2.19], ["mehrfach_True", 1.71], ["bandenmaessig_True", 1.09], ["beschaffungskriminalitaet_True", 0.78], ["anstaltentreffen_True", 0.34]]}		\N	\N
+14	betm_rf_regressor_strafmass	pickles/betm_rf_regressor_strafmass.pkl	2024-08-21 10:43:57.678482+00	{"urteilsbasis": 191, "durchschnittlicher_fehler": "Der durchnittliche Strafmassprognosefehler bei einer Prognose jeweils mit dem OOB-leftout beträgt 9.09 Monate.", "merkmalswichtigkeit_fuer_prognose_strafmass": [["Kokain_rein", 29.733], ["Heroin_rein", 21.107], ["rolle_Grosshandel", 11.131], ["bandenmaessig_True", 8.578], ["mengenmaessig_True", 5.301], ["Methamphetamin_rein", 4.837], ["deliktsdauer_in_monaten", 4.418], ["nebenverurteilungsscore", 2.621], ["gewerbsmaessig_True", 1.544], ["mehrfach_True", 1.332], ["deliktsertrag", 1.286], ["Amphetamin_rein", 1.28], ["rolle_Verkauf Konsumeinheiten", 1.138], ["rolle_Handel", 1.086], ["vorbestraft_True", 0.941], ["vorbestraft_einschlaegig_True", 0.87], ["rolle_Transport", 0.672], ["Marihuana_rein", 0.645], ["anstaltentreffen_True", 0.389], ["beschaffungskriminalitaet_True", 0.374], ["rolle_Aufbewahrung/Besitz", 0.362], ["MDMA Pulver_rein", 0.101], ["rolle_Gehilfenschaft", 0.078], ["Haschisch_rein", 0.063], ["rolle_Produktion", 0.04], ["LSD Trips_rein", 0.036], ["MDMA/Ecstasy Pillen_rein", 0.024], ["rolle_Kauf", 0.011], ["Menge Betäubungsmittel", 57.826000000000015]], "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass": [["Menge Betäubungsmittel", 57.83], ["Rolle", 14.52], ["bandenmaessig_True", 8.58], ["mengenmaessig_True", 5.3], ["deliktsdauer_in_monaten", 4.42], ["nebenverurteilungsscore", 2.62], ["gewerbsmaessig_True", 1.54], ["mehrfach_True", 1.33], ["deliktsertrag", 1.29], ["vorbestraft_True", 0.94], ["vorbestraft_einschlaegig_True", 0.87], ["anstaltentreffen_True", 0.39], ["beschaffungskriminalitaet_True", 0.37]]}		\N	\N
+27	betm_strafmass_BE_illegitim	pickles/betm_strafmass_BE_illegitim.pkl	2024-08-21 10:44:07.998023+00	{"urteilsbasis": 64, "durchschnittlicher_fehler": 11.880371085452618, "durchschnittlicher_fehler_string": "Der durchnittliche Strafmassprognosefehler bei einer Prognose jeweils mit dem OOB-leftout beträgt 11.88 Monate.", "merkmalswichtigkeit_fuer_prognose_strafmass": [["Kokain_rein", 28.119], ["bandenmaessig_True", 25.881], ["Heroin_rein", 10.148], ["Methamphetamin_rein", 10.033], ["rolle_Grosshandel", 4.276], ["deliktsdauer_in_monaten", 3.132], ["Amphetamin_rein", 2.998], ["gewerbsmaessig_True", 2.7], ["nebenverurteilungsscore", 1.691], ["nationalitaet_Ausländerin/Ausländer", 1.246], ["rolle_Handel", 1.166], ["nationalitaet_unbekannt", 1.124], ["vorbestraft_True", 1.088], ["anstaltentreffen_True", 0.899], ["geschlecht_weiblich", 0.897], ["vorbestraft_einschlaegig_True", 0.632], ["mehrfach_True", 0.524], ["gericht_Regionalgericht Bern-Mittelland", 0.5], ["deliktsertrag", 0.427], ["rolle_Transport", 0.388], ["MDMA Pulver_rein", 0.364], ["gericht_Regionalgericht Berner Jura-Seeland", 0.334], ["Marihuana_rein", 0.232], ["mengenmaessig_True", 0.231], ["rolle_Verkauf Konsumeinheiten", 0.197], ["beschaffungskriminalitaet_True", 0.19], ["gericht_Regionalgericht Emmental-Oberaargau", 0.128], ["Haschisch_rein", 0.122], ["MDMA/Ecstasy Pillen_rein", 0.116], ["rolle_Gehilfenschaft", 0.099], ["rolle_Produktion", 0.053], ["nationalitaet_Schweizerin/Schweizer", 0.033], ["rolle_Aufbewahrung/Besitz", 0.031], ["gericht_Regionalgericht Oberland", 0.002], ["Menge Betäubungsmittel", 52.13199999999999]], "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass": [["Menge Betäubungsmittel", 52.13], ["bandenmaessig_True", 25.88], ["Rolle", 6.22], ["deliktsdauer_in_monaten", 3.13], ["gewerbsmaessig_True", 2.7], ["Nationalität", 2.4], ["nebenverurteilungsscore", 1.69], ["vorbestraft_True", 1.09], ["Gericht", 0.96], ["anstaltentreffen_True", 0.9], ["geschlecht_weiblich", 0.9], ["vorbestraft_einschlaegig_True", 0.63], ["mehrfach_True", 0.52], ["deliktsertrag", 0.43], ["mengenmaessig_True", 0.23], ["beschaffungskriminalitaet_True", 0.19]]}		\N	\N
+8	rf_regr_all	pickles/random_forest_regressor_all_fts.pkl	2024-07-26 13:15:11.459255+00	{"standardabweichung": 6.43, "beste_prognoseleistung": 0.01, "durchschnittlicher_fehler": 7.0, "standardabweichung_string": "78.65% aller Prognosen weisen einen Fehler zwischen 0.57 und 13.43 Monaten auf", "beste_prognoseleistung_index": 77, "schlechteste_prognoseleistung": 32.55, "schlechteste_prognoseleistung_index": 97}		[[57.57956189247098, "deliktssumme"], [14.558452687681116, "nebenverurteilungsscore"], [9.122795594914036, "gewerbsmaessig_False"], [3.8290667097846023, "vorbestraft_True"], [2.762391555207382, "gewerbsmaessig_True"], [2.5397656758917075, "vorbestraft_einschlaegig_True"], [1.974014303849995, "vorbestraft_False"], [1.9037316065793044, "urteilsjahr"], [1.6955779418561558, "vorbestraft_einschlaegig_False"], [1.3622415732052495, "hauptdelikt_Diebstahl"], [1.103167797660216, "mehrfach_False"], [0.49252024111335907, "hauptdelikt_Betrug"], [0.2846778127568974, "hauptdelikt_Veruntreuung"], [0.24451887518965157, "nationalitaet_Ausländerin/Ausländer"], [0.24313303802861902, "gericht_Bezirksgericht Zürich"], [0.1855760366574839, "nationalitaet_unbekannt"], [0.07395970589187757, "geschlecht_weiblich"], [0.0448469512613767, "mehrfach_True"], [0.0, "hauptdelikt_Sachbeschädigung"], [0.0, "hauptdelikt_betr. Missbrauch DVA"], [0.0, "hauptdelikt_ung. Geschäftsbesorgung"], [0.0, "geschlecht_männlich"], [0.0, "nationalitaet_Schweizerin/Schweizer"], [0.0, "gericht_Bezirksgericht Bülach"], [0.0, "gericht_Bezirksgericht Dielsdorf"], [0.0, "gericht_Bezirksgericht Dietikon"], [0.0, "gericht_Bezirksgericht Hinwil"], [0.0, "gericht_Bezirksgericht Horgen"], [0.0, "gericht_Bezirksgericht Meilen"], [0.0, "gericht_Bezirksgericht Pfäffikon"], [0.0, "gericht_Bezirksgericht Päffikon"], [0.0, "gericht_Bezirksgericht Uster"], [0.0, "gericht_Bezirksgericht Winterthur"], [0.0, "gericht_Bezirksgsgericht Horgen"]]	[[57.57956189247098, "deliktssumme"], [14.558452687681116, "nebenverurteilungsscore"], [11.885187150121418, "gewerbsmaessig"], [5.803081013634598, "vorbestraft"], [4.235343617747864, "einschlaegig_vorbestraft"], [2.139439627075506, "hauptdelikt"], [1.9037316065793044, "urteilsjahr"], [1.1480147489215928, "mehrfach"], [0.43009491184713544, "nationalitaet"], [0.24313303802861902, "gericht"], [0.07395970589187757, "geschlecht"], [0, "bandenmaessig"]]
 \.
 
 
@@ -2665,6 +2831,23 @@ COPY public.database_urteil (id, fall_nr, verfahrensart, geschlecht, mehrfach, g
 229	SB230165	0	0	t	f	10715	f	21	6	t	t	betr. Missbrauch DVA	2	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB230165-O1.pdf	Bezirksgericht Zürich	2	2022-10-06	t	0	0
 230	SB230144	0	1	f	f	100001	f	24	3	t	t	Betrug	0	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB230144-O1.pdf	Bezirksgericht Zürich	1	2022-10-06	t	0	0
 231	SB210468	0	0	t	f	7000	f	15	14	t	f	Diebstahl	0	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB210468-O1.pdf	Bezirksgericht Zürich	1	2021-06-09	t	0	0
+232	SB200210	0	1	f	f	5791	f	0	0	f	f	Betrug	0	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB200210_2020-11-13.pdf	Bezirksgericht Zürich	1	2020-02-18	t	40	1
+233	SB190283	0	0	f	f	100000	f	0	2	f	f	Betrug	0	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB190283_2020-09-03.pdf	Bezirksgericht Dietikon	2	2019-02-06	t	180	1
+234	SB150173	0	0	f	t	270463	f	30	0	f	f	Betrug	1	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB150173_2015-09-10.pdf	Bezirksgericht Zürich	2	2015-02-03	t	0	0
+235	SB170097	0	0	f	f	31000	f	8	0	t	t	Betrug	2	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB170097_2017-07-31.pdf	Bezirksgericht Uster	1	2016-12-15	t	0	0
+236	SB170486	0	0	f	f	5800	f	0	0	f	f	Betrug	0	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB170486_2018-04-09.pdf	Bezirksgericht Dietikon	2	2017-06-21	t	90	1
+237	SB150358	0	0	f	t	100001	f	18	11	t	t	Betrug	0	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB150358_2016-04-04.pdf	Bezirksgericht Hinwil	2	2015-06-11	t	0	0
+238	SB120381	0	0	f	f	750000	f	30	2	f	f	Betrug	1	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB120381_2013-06-27.pdf	Bezirksgericht Zürich	2	2012-07-23	t	0	0
+239	SB160043	0	1	f	t	108341	f	15	0	f	f	Betrug	0	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB160043_2016-05-04.pdf	Bezirksgericht Zürich	2	2015-10-14	t	0	0
+240	SB120547	0	0	f	t	268000	f	27	0	t	t	Betrug	2	https://entscheidsuche.ch/dok/ZH_Obergericht/ZH_OG_002_SB120547_2013-08-16.pdf	Bezirksgericht Zürich	2	2012-12-05	t	0	0
+241	SB220518	0	0	f	t	165000	f	63	7	t	t	Diebstahl	2	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB220518-O2.pdf	Bezirksgericht Uster	1	2022-05-20	t	0	0
+242	SB230224	0	0	f	f	16500	f	0	1	t	t	Betrug	0	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB230224-O1.pdf	Bezirksgericht Winterthur	1	2022-07-11	t	180	1
+243	SB220257	0	0	f	t	27200	f	28	19	t	t	Diebstahl	2	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB220257-O1.pdf	Bezirksgericht Zürich	1	2022-01-25	t	0	0
+244	SB210463	0	0	t	f	786000	f	42	9	f	f	Veruntreuung	2	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB210463-O1.pdf	Bezirksgericht Zürich	2	2021-06-02	t	0	0
+245	SB230498	0	1	t	f	98484	f	9	0	f	f	Betrug	0		Bezirksgericht Zürich	2	2023-02-23	t	0	0
+246	SB210626	0	0	f	t	100001	f	32	9	t	t	Betrug	1	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB210626-O1.pdf	Bezirksgericht Bülach	0	2023-09-28	t	0	0
+247	DG210017	0	0	t	t	3500	f	12	3	t	f	Diebstahl	0	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB230037-O1.pdf	Bezirksgericht Horgen	1	2022-05-16	t	0	0
+248	SB230037	0	0	t	t	3500	f	20	4	t	f	Diebstahl	0	https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/SB230037-O1.pdf	Bezirksgsgericht Horgen	1	2022-05-16	t	0	0
 \.
 
 
@@ -3153,6 +3336,133 @@ COPY public.django_admin_log (id, action_time, object_id, object_repr, action_fl
 478	2024-04-22 07:45:23.729504+00	147	Bezirksgericht Bülach, Urteil vom 26. April 2016 (SB160314)	1	[{"added": {}}]	14	1
 479	2024-04-22 07:47:37.812095+00	188	Kokain, 757g, rein	1	[{"added": {}}]	10	1
 480	2024-04-22 07:50:47.40017+00	148	Bezirksgericht Bülach, Urteil vom 07. May 2014 (SB140324)	1	[{"added": {}}]	14	1
+481	2024-04-24 06:04:06.478+00	66	Regionalgericht Bern-Mittelland, Urteil vom 25. January 2018 (SK 18 158)	2	[{"changed": {"fields": ["Gericht"]}}]	14	1
+482	2024-04-24 06:05:46.820928+00	38	Regionalgericht Bern-Mittelland, Urteil vom 24. April 2019 (SK 19 207)	2	[{"changed": {"fields": ["Gericht"]}}]	14	1
+483	2024-04-24 06:06:18.624428+00	94	Regionalgericht Berner Jura-Seeland, Urteil vom 05. November 2015 (SK 16 62)	2	[{"changed": {"fields": ["Gericht"]}}]	14	1
+484	2024-04-24 06:06:40.587802+00	78	Regionalgericht Bern-Mittelland, Urteil vom 20. December 2016 (SK 17 94+95)	2	[{"changed": {"fields": ["Gericht"]}}]	14	1
+485	2024-04-24 06:06:53.865509+00	77	Regionalgericht Bern-Mittelland, Urteil vom 15. June 2018 (SK 18 345)	2	[{"changed": {"fields": ["Gericht"]}}]	14	1
+486	2024-04-24 06:07:07.969743+00	63	Regionalgericht Berner Jura-Seeland, Urteil vom 23. May 2019 (SK 19 342)	2	[{"changed": {"fields": ["Gericht"]}}]	14	1
+487	2024-04-24 06:09:04.014671+00	52	Regionalgericht Bern-Mittelland, Urteil vom 16. February 2017 (SK 17 149)	2	[{"changed": {"fields": ["Gericht"]}}]	14	1
+488	2024-05-01 20:46:59.653075+00	42	Bezirksgericht Bülach, Urteil vom 06. July 2022 (SB220577)	2	[{"changed": {"fields": ["Gericht"]}}]	14	1
+489	2024-05-06 08:57:44.862352+00	189	Marihuana, 130000g, gemisch	1	[{"added": {}}]	10	1
+490	2024-05-06 09:00:14.657496+00	149	Bezirksgericht Dielsdorf, Urteil vom 05. February 2021 (SB210268)	1	[{"added": {}}]	14	1
+491	2024-05-06 09:07:22.826729+00	190	Heroin, 4000g, rein	1	[{"added": {}}]	10	1
+492	2024-05-06 09:09:08.152951+00	150	Bezirksgericht Zürich, Urteil vom 08. December 2011 (SB120242b)	1	[{"added": {}}]	14	1
+493	2024-05-06 09:10:49.743086+00	191	Heroin, 48000g, rein	1	[{"added": {}}]	10	1
+494	2024-05-06 09:12:55.735174+00	151	Bezirksgericht Zürich, Urteil vom 08. December 2011 (SB120242a)	1	[{"added": {}}]	14	1
+495	2024-05-06 09:14:54.057102+00	192	Kokain, 3334g, rein	1	[{"added": {}}]	10	1
+496	2024-05-06 09:16:49.683553+00	152	Bezirksgericht Bülach, Urteil vom 30. March 2016 (SB160218)	1	[{"added": {}}]	14	1
+497	2024-05-06 09:19:43.764344+00	193	Kokain, 3389g, rein	1	[{"added": {}}]	10	1
+498	2024-05-06 09:20:18.502661+00	153	Bezirksgericht Bülach, Urteil vom 05. November 2014 (SB150110)	1	[{"added": {}}]	14	1
+499	2024-05-06 09:23:09.362453+00	194	Kokain, 12g, rein	1	[{"added": {}}]	10	1
+500	2024-05-06 09:23:42.954745+00	154	Bezirksgericht Zürich, Urteil vom 11. September 2013 (SB130532)	1	[{"added": {}}]	14	1
+501	2024-05-13 07:02:42.891137+00	195	Kokain, 717g, rein	1	[{"added": {}}]	10	1
+502	2024-05-13 07:03:41.209173+00	155	Bezirksgericht Bülach, Urteil vom 17. July 2018 (SB180459)	1	[{"added": {}}]	14	1
+503	2024-05-13 07:08:21.169667+00	196	Kokain, 660g, rein	1	[{"added": {}}]	10	1
+504	2024-05-13 07:10:06.60202+00	156	Bezirksgericht Bülach, Urteil vom 20. June 2012 (SB120390)	1	[{"added": {}}]	14	1
+505	2024-05-13 07:12:41.317537+00	197	Kokain, 1244g, rein	1	[{"added": {}}]	10	1
+506	2024-05-13 07:15:04.691832+00	157	Bezirksgericht Zürich, Urteil vom 19. June 2013 (SB130372)	1	[{"added": {}}]	14	1
+507	2024-05-13 07:15:43.560559+00	157	Bezirksgericht Zürich, Urteil vom 19. June 2013 (SB130372)	2	[{"changed": {"fields": ["Deliktsdauer in monaten"]}}]	14	1
+508	2024-05-13 07:20:01.96824+00	198	Kokain, 767g, rein	1	[{"added": {}}]	10	1
+509	2024-05-13 07:20:56.23958+00	158	Bezirksgericht Dietikon, Urteil vom 12. March 2019 (SB190221)	1	[{"added": {}}]	14	1
+510	2024-05-16 14:37:21.308943+00	199	Kokain, 1299g, rein	1	[{"added": {}}]	10	1
+511	2024-05-16 14:39:47.660928+00	159	Bezirksgericht Bülach, Urteil vom 14. October 2014 (SB140550)	1	[{"added": {}}]	14	1
+512	2024-05-16 14:43:37.592983+00	200	Kokain, 2791g, rein	1	[{"added": {}}]	10	1
+513	2024-05-16 14:43:46.679598+00	201	Kokain, 800g, gemisch	1	[{"added": {}}]	10	1
+514	2024-05-16 14:45:13.446914+00	160	Bezirksgericht Zürich, Urteil vom 21. December 2011 (SB120195)	1	[{"added": {}}]	14	1
+515	2024-05-16 14:47:46.911191+00	202	Kokain, 210042g, rein	1	[{"added": {}}]	10	1
+516	2024-05-16 14:48:56.595814+00	161	Bezirksgericht Zürich, Urteil vom 24. September 2020 (SB210042)	1	[{"added": {}}]	14	1
+517	2024-05-16 14:50:37.716864+00	203	Kokain, 83g, rein	1	[{"added": {}}]	10	1
+518	2024-05-16 14:52:02.04987+00	162	Bezirksgericht Zürich, Urteil vom 04. November 2020 (SB210034)	1	[{"added": {}}]	14	1
+519	2024-05-16 14:54:56.255235+00	204	Kokain, 1195g, gemisch	1	[{"added": {}}]	10	1
+520	2024-05-16 14:56:21.407898+00	163	Bezirksgericht Zürich, Urteil vom 25. February 2011 (SB110360)	1	[{"added": {}}]	14	1
+521	2024-05-16 14:58:09.665373+00	205	Kokain, 186g, rein	1	[{"added": {}}]	10	1
+522	2024-05-16 14:58:38.352071+00	164	Bezirksgericht Zürich, Urteil vom 03. July 2018 (SB180503)	1	[{"added": {}}]	14	1
+523	2024-05-16 15:00:55.111412+00	206	Kokain, 1153g, rein	1	[{"added": {}}]	10	1
+524	2024-05-16 15:02:45.63045+00	165	Bezirksgericht Uster, Urteil vom 08. July 2021 (SB210426)	1	[{"added": {}}]	14	1
+525	2024-05-16 15:04:17.898478+00	207	Heroin, 330g, rein	1	[{"added": {}}]	10	1
+526	2024-05-16 15:05:00.852935+00	166	Bezirksgericht Zürich, Urteil vom 24. November 2015 (SB160175)	1	[{"added": {}}]	14	1
+527	2024-05-16 15:09:00.958219+00	208	Kokain, 2900g, rein	1	[{"added": {}}]	10	1
+528	2024-05-16 15:10:04.490384+00	167	Bezirksgericht Zürich, Urteil vom 23. April 2013 (SB130376)	1	[{"added": {}}]	14	1
+529	2024-05-16 15:11:58.331073+00	209	Kokain, 804g, rein	1	[{"added": {}}]	10	1
+530	2024-05-16 15:13:03.047405+00	168	Bezirksgericht Dietikon, Urteil vom 12. March 2019 (SB190224)	1	[{"added": {}}]	14	1
+531	2024-05-16 15:14:26.130801+00	210	Kokain, 513g, rein	1	[{"added": {}}]	10	1
+532	2024-05-16 15:15:31.223319+00	169	Bezirksgericht Bülach, Urteil vom 08. September 2015 (SB150454)	1	[{"added": {}}]	14	1
+533	2024-05-16 15:17:07.444087+00	211	Kokain, 644g, rein	1	[{"added": {}}]	10	1
+534	2024-05-16 15:18:36.355064+00	170	Bezirksgerichtes Bülach, Urteil vom 18. June 2019 (SB190415)	1	[{"added": {}}]	14	1
+535	2024-05-16 15:20:27.633884+00	212	Kokain, 144g, rein	1	[{"added": {}}]	10	1
+536	2024-05-16 15:21:21.765092+00	171	Bezirksgericht Zürich, Urteil vom 24. September 2020 (SB210015)	1	[{"added": {}}]	14	1
+537	2024-05-16 15:23:07.904551+00	213	Kokain, 1216g, rein	1	[{"added": {}}]	10	1
+538	2024-05-16 15:23:44.529221+00	172	Bezirksgericht Bülach, Urteil vom 21. June 2012 (SB120395)	1	[{"added": {}}]	14	1
+539	2024-05-16 15:25:23.031364+00	214	Kokain, 1305g, rein	1	[{"added": {}}]	10	1
+540	2024-05-16 15:27:01.595301+00	173	Bezirksgericht Uster, Urteil vom 01. April 2021 (SB210385)	1	[{"added": {}}]	14	1
+541	2024-05-16 15:28:31.856512+00	215	Kokain, 664g, rein	1	[{"added": {}}]	10	1
+542	2024-05-16 15:30:19.188478+00	174	Bezirksgericht Zürich, Urteil vom 28. March 2019 (SB190343)	1	[{"added": {}}]	14	1
+543	2024-05-16 15:32:22.366166+00	216	Heroin, 505g, rein	1	[{"added": {}}]	10	1
+544	2024-05-16 15:33:23.869168+00	175	Bezirksgericht Bülach, Urteil vom 07. May 2014 (SB140419)	1	[{"added": {}}]	14	1
+545	2024-05-16 15:36:27.961702+00	217	Heroin, 312g, rein	1	[{"added": {}}]	10	1
+546	2024-05-16 15:38:36.201995+00	176	Bezirksgericht Bülach, Urteil vom 01. July 2014 (SB140402)	1	[{"added": {}}]	14	1
+547	2024-05-17 14:15:40.982053+00	232	Bezirksgericht Zürich, Urteil vom 18. February 2020 (SB200210)	1	[{"added": {}}]	7	1
+548	2024-05-17 14:21:05.637741+00	233	Bezirksgericht Dietikon, Urteil vom 06. February 2019 (SB190283)	1	[{"added": {}}]	7	1
+549	2024-05-17 14:23:50.051268+00	234	Bezirksgericht Zürich, Urteil vom 03. February 2015 (SB150173)	1	[{"added": {}}]	7	1
+550	2024-05-17 14:28:43.071614+00	235	Bezirksgericht Uster, Urteil vom 15. December 2016 (SB170097)	1	[{"added": {}}]	7	1
+551	2024-05-17 14:35:22.925726+00	236	Bezirksgericht Dietikon, Urteil vom 21. June 2017 (SB170486)	1	[{"added": {}}]	7	1
+552	2024-05-17 14:39:37.051698+00	237	Bezirksgericht Hinwil, Urteil vom 11. June 2015 (SB150358)	1	[{"added": {}}]	7	1
+553	2024-05-17 14:42:21.24055+00	238	Bezirksgericht Zürich, Urteil vom 23. July 2012 (SB120381)	1	[{"added": {}}]	7	1
+554	2024-05-17 14:45:20.483485+00	239	Bezirksgericht Zürich, Urteil vom 14. October 2015 (SB160043)	1	[{"added": {}}]	7	1
+555	2024-05-17 14:48:57.57613+00	240	Bezirksgericht Zürich, Urteil vom 05. December 2012 (SB120547)	1	[{"added": {}}]	7	1
+556	2024-05-27 09:22:39.867475+00	218	Methamphetamin, 179g, rein	1	[{"added": {}}]	10	1
+557	2024-05-27 09:23:57.822294+00	177	Bezirksgericht Zürich, Urteil vom 13. December 2022 (SB230294)	1	[{"added": {}}]	14	1
+558	2024-05-28 08:45:24.283598+00	241	Bezirksgericht Uster, Urteil vom 20. May 2022 (SB220518)	1	[{"added": {}}]	7	1
+559	2024-05-28 08:50:22.229683+00	242	Bezirksgericht Winterthur, Urteil vom 11. July 2022 (SB230224)	1	[{"added": {}}]	7	1
+560	2024-05-28 08:53:51.215158+00	219	Kokain, 14g, gemisch	1	[{"added": {}}]	10	1
+561	2024-05-28 08:54:39.049078+00	178	Bezirksgericht Zürich, Urteil vom 20. October 2022 (SB230060)	1	[{"added": {}}]	14	1
+562	2024-05-28 08:57:41.210036+00	220	Kokain, 966g, rein	1	[{"added": {}}]	10	1
+563	2024-05-28 08:59:25.31366+00	179	Bezirksgericht Zürich, Urteil vom 08. February 2021 (SB210249)	1	[{"added": {}}]	14	1
+564	2024-05-28 09:02:33.1951+00	221	Kokain, 5200g, rein	1	[{"added": {}}]	10	1
+565	2024-05-28 09:03:23.91406+00	180	Bezirksgericht Dietikon, Urteil vom 17. November 2021 (SB220454)	1	[{"added": {}}]	14	1
+566	2024-05-28 09:12:26.017787+00	243	Bezirksgericht Zürich, Urteil vom 25. January 2022 (SB220257)	1	[{"added": {}}]	7	1
+567	2024-05-28 09:15:09.837786+00	222	Heroin, 54g, rein	1	[{"added": {}}]	10	1
+568	2024-05-28 09:15:27.387391+00	223	Kokain, 12g, rein	1	[{"added": {}}]	10	1
+569	2024-05-28 09:16:38.820174+00	181	Bezirksgericht Zürich, Urteil vom 31. March 2022 (SB220433)	1	[{"added": {}}]	14	1
+570	2024-05-28 09:19:09.426816+00	224	Kokain, 2099g, rein	1	[{"added": {}}]	10	1
+571	2024-05-28 09:20:27.640865+00	182	Bezirksgericht Bülach, Urteil vom 15. November 2022 (SB220631)	1	[{"added": {}}]	14	1
+572	2024-06-14 14:26:50.709948+00	225	Kokain, 46g, rein	1	[{"added": {}}]	10	1
+573	2024-06-14 14:28:09.763401+00	226	Marihuana, 50g, rein	1	[{"added": {}}]	10	1
+574	2024-06-14 14:28:41.769403+00	183	Bezirksgericht Zürich, Urteil vom 03. March 2022 (SB220350)	1	[{"added": {}}]	14	1
+575	2024-06-14 14:31:31.066535+00	227	Kokain, 1512g, rein	1	[{"added": {}}]	10	1
+576	2024-06-14 14:31:41.988537+00	228	Heroin, 607g, rein	1	[{"added": {}}]	10	1
+577	2024-06-14 14:34:28.06007+00	229	MDMA Pulver, 2567g, gemisch	1	[{"added": {}}]	10	1
+578	2024-06-14 14:34:56.815939+00	230	Marihuana, 11874g, gemisch	1	[{"added": {}}]	10	1
+579	2024-06-14 14:35:15.544444+00	231	Haschisch, 4168g, gemisch	1	[{"added": {}}]	10	1
+580	2024-06-14 14:35:57.037315+00	184	Bezirksgericht Zürich, Urteil vom 07. November 2022 (SB230096)	1	[{"added": {}}]	14	1
+581	2024-06-14 14:39:46.258513+00	232	Marihuana, 184000g, gemisch	1	[{"added": {}}]	10	1
+582	2024-06-14 14:44:09.99709+00	185	Bezirksgericht Zürich, Urteil vom 15. September 2021 (SB210596)	1	[{"added": {}}]	14	1
+583	2024-07-16 14:56:14.965661+00	244	Bezirksgericht Zürich, Urteil vom 02. June 2021 (SB210463)	1	[{"added": {}}]	7	1
+584	2024-07-26 12:36:09.800702+00	233	Kokain, 45g, rein	1	[{"added": {}}]	10	1
+585	2024-07-26 12:37:53.710971+00	186	Bezirksgericht Dietikon, Urteil vom 19. July 2021 (SB220154)	1	[{"added": {}}]	14	1
+586	2024-07-26 12:48:54.011575+00	234	Kokain, 576g, rein	1	[{"added": {}}]	10	1
+587	2024-07-26 12:50:07.894101+00	235	Marihuana, 35000g, rein	1	[{"added": {}}]	10	1
+588	2024-07-26 12:51:28.208657+00	187	Bezirksgericht Zürich, Urteil vom 12. August 2022 (SB230087)	1	[{"added": {}}]	14	1
+589	2024-07-26 12:57:49.655081+00	245	Bezirksgericht Zürich, Urteil vom 23. February 2023 (SB230498)	1	[{"added": {}}]	7	1
+590	2024-07-26 12:59:46.210986+00	236	Kokain, 212g, rein	1	[{"added": {}}]	10	1
+591	2024-07-26 13:00:47.120476+00	188	Bezirksgericht Zürich, Urteil vom 14. July 2022 (SB230053)	1	[{"added": {}}]	14	1
+592	2024-07-26 13:06:47.338013+00	246	Bezirksgericht Bülach, Urteil vom 28. September 2023 (SB210626)	1	[{"added": {}}]	7	1
+593	2024-07-26 13:10:38.526012+00	247	Bezirksgericht Horgen, Urteil vom 16. May 2022 (DG210017)	1	[{"added": {}}]	7	1
+594	2024-07-26 13:12:51.867475+00	248	Bezirksgsgericht Horgen, Urteil vom 16. May 2022 (SB230037)	1	[{"added": {}}]	7	1
+595	2024-08-13 11:47:02.31279+00	140	Bezirksgericht Zürich, Urteil vom 18. March 2008 (SB080533)	2	[{"changed": {"fields": ["Vollzug"]}}]	14	1
+596	2024-08-21 10:26:38.562747+00	237	Kokain, 14740g, rein	1	[{"added": {}}]	10	1
+597	2024-08-21 10:28:02.860189+00	189	Bezirksgericht Zürich, Urteil vom 12. August 2022 (SB220612)	1	[{"added": {}}]	14	1
+598	2024-08-21 10:32:00.586362+00	238	Kokain, 25g, rein	1	[{"added": {}}]	10	1
+599	2024-08-21 10:32:24.649741+00	239	Haschisch, 32g, gemisch	1	[{"added": {}}]	10	1
+600	2024-08-21 10:33:07.006663+00	240	Marihuana, 472g, gemisch	1	[{"added": {}}]	10	1
+601	2024-08-21 10:33:41.60464+00	190	Bezirksgericht Bülach, Urteil vom 10. March 2021 (SB230386)	1	[{"added": {}}]	14	1
+602	2024-08-21 10:34:13.876303+00	189	Bezirksgericht Zürich, Urteil vom 12. August 2022 (SB220612)	2	[{"changed": {"fields": ["Nationalitaet"]}}]	14	1
+603	2024-08-21 10:37:46.439272+00	241	Methamphetamin, 118g, rein	1	[{"added": {}}]	10	1
+604	2024-08-21 10:38:28.144818+00	191	Bezirksgericht Bülach, Urteil vom 12. October 2022 (SB230205)	1	[{"added": {}}]	14	1
+605	2024-08-21 10:41:27.495617+00	242	Kokain, 121g, rein	1	[{"added": {}}]	10	1
+606	2024-08-21 10:41:49.588596+00	243	Kokain, 18g, gemisch	1	[{"added": {}}]	10	1
+607	2024-08-21 10:42:42.201029+00	192	Bezirksgericht Zürich, Urteil vom 04. May 2023 (SB230379)	1	[{"added": {}}]	14	1
 \.
 
 
@@ -3257,6 +3567,7 @@ COPY public.django_migrations (id, app, name, applied) FROM stdin;
 43	database	0024_auto_20231212_0019	2023-12-21 15:48:41.930893+00
 44	database	0025_betmurteil_anzahl_tagessaetze_and_more	2024-01-19 22:41:46.952928+00
 45	database	0026_remove_betmurteil_mengemaessig_and_more	2024-02-09 21:53:17.569322+00
+46	database	0027_alter_kimodelpicklefile_name	2024-04-23 21:57:26.996788+00
 \.
 
 
@@ -3339,6 +3650,15 @@ zrtbc73xc2eo8au5esqagxkmqzsugzn2	.eJxVjEEOwiAQRe_C2hAYhwIu3fcMZIBBqoYmpV0Z765Nut
 a9f4y0f1e39j9e9083nldytw4wt7pzcl	.eJxVjEEOwiAQRe_C2hAYhwIu3fcMZIBBqoYmpV0Z765NutDtf-_9lwi0rTVsnZcwZXERWpx-t0jpwW0H-U7tNss0t3WZotwVedAuxznz83q4fweVev3WYAAp24LJRlRn1kVpJuMYNWhwnoDRKVTIAzljB8zWQ7SYtMeUqIj3B8aCNzo:1rwcqq:kvhJG63ORVmf94D9m1RJ9ST0rEOTQY7B8-R_lnHXflE	2024-04-30 07:03:32.280464+00
 cnxsng4y9e1o7s19beoebwn7zjjny59k	.eJxVjEEOwiAQRe_C2hAYhwIu3fcMZIBBqoYmpV0Z765NutDtf-_9lwi0rTVsnZcwZXERWpx-t0jpwW0H-U7tNss0t3WZotwVedAuxznz83q4fweVev3WYAAp24LJRlRn1kVpJuMYNWhwnoDRKVTIAzljB8zWQ7SYtMeUqIj3B8aCNzo:1rxArz:UqtRzAN2_tTKlj7yGgQjbPvkXCpTE0dQ933XLgnMJwA	2024-05-01 19:22:59.157466+00
 8nii6e0b5rs5aja9u8injc1udl6cy5ah	.eJxVjEEOwiAQRe_C2hAYhwIu3fcMZIBBqoYmpV0Z765NutDtf-_9lwi0rTVsnZcwZXERWpx-t0jpwW0H-U7tNss0t3WZotwVedAuxznz83q4fweVev3WYAAp24LJRlRn1kVpJuMYNWhwnoDRKVTIAzljB8zWQ7SYtMeUqIj3B8aCNzo:1rxO3y:w-p0JRfLt7s6Mx7v-I44GQ3Tz2NCOjXe0awH_SbjyJU	2024-05-02 09:28:14.551715+00
+5mu9xj7t3mextcycxc7d1sd9238p51mc	.eJxVjEEOwiAQRe_C2hAYhwIu3fcMZIBBqoYmpV0Z765NutDtf-_9lwi0rTVsnZcwZXERWpx-t0jpwW0H-U7tNss0t3WZotwVedAuxznz83q4fweVev3WYAAp24LJRlRn1kVpJuMYNWhwnoDRKVTIAzljB8zWQ7SYtMeUqIj3B8aCNzo:1rzO9R:AoRwehiUcgYEoeyaduEQHrUKAatT8XMuYw6CCRekRWc	2024-05-07 21:58:09.825518+00
+rqkoyacba3hijgvmfp6ybjh3ahtaszje	.eJxVjEEOwiAQRe_C2hAYhwIu3fcMZIBBqoYmpV0Z765NutDtf-_9lwi0rTVsnZcwZXERWpx-t0jpwW0H-U7tNss0t3WZotwVedAuxznz83q4fweVev3WYAAp24LJRlRn1kVpJuMYNWhwnoDRKVTIAzljB8zWQ7SYtMeUqIj3B8aCNzo:1rzVjA:A4LMlXG2Rsz6WaDucH3vgPk8GSz0BlmMXntj-ZjwPFQ	2024-05-08 06:03:32.801123+00
+gj0y7igrnxs2vc1jvf26fpxucxw4iwt4	.eJxVjMsOwiAQRf-FtSEwQAGX7v0GMjxGqgaS0q6M_65NutDtPefcFwu4rTVsoyxhzuzMJDv9bhHTo7Qd5Du2W-ept3WZI98VftDBrz2X5-Vw_w4qjvqtBVBOYA1Jr5R2YEAklGBd0WJCHYUHUjJLqaMmp4zKNFnwRhBGZy2x9we2_Dbb:1s2GqH:_7YdlN_SUP5rOFjnULqVgZEjxnBui4ZZbVfU9rDJEUQ	2024-05-15 20:46:17.522577+00
+4gjr6cbhalxoypp319f0p054cfvxp2pn	.eJxVjEEOwiAQRe_C2hAYhwIu3fcMZIBBqoYmpV0Z765NutDtf-_9lwi0rTVsnZcwZXERWpx-t0jpwW0H-U7tNss0t3WZotwVedAuxznz83q4fweVev3WYAAp24LJRlRn1kVpJuMYNWhwnoDRKVTIAzljB8zWQ7SYtMeUqIj3B8aCNzo:1s6Pf5:Gn7LNdpzbD26M1ovTc3CNYUuULjpIuQ4-1hhNqwf7AY	2024-05-27 06:59:51.539745+00
+j34zwtvayjsa0f5lyk4xfjcrlvojfmvk	.eJxVjEEOwiAQRe_C2hAYhwIu3fcMZIBBqoYmpV0Z765NutDtf-_9lwi0rTVsnZcwZXERWpx-t0jpwW0H-U7tNss0t3WZotwVedAuxznz83q4fweVev3WYAAp24LJRlRn1kVpJuMYNWhwnoDRKVTIAzljB8zWQ7SYtMeUqIj3B8aCNzo:1s7c9R:Cxe5bMnyB32Cbk_LuOSNm1aZ-I2bTwKiY0UAVY1yKl0	2024-05-30 14:32:09.493013+00
+gcrq6l33et6mbittnj6retz2qcafffnt	.eJxVjEEOwiAQRe_C2hAYhwIu3fcMZIBBqoYmpV0Z765NutDtf-_9lwi0rTVsnZcwZXERWpx-t0jpwW0H-U7tNss0t3WZotwVedAuxznz83q4fweVev3WYAAp24LJRlRn1kVpJuMYNWhwnoDRKVTIAzljB8zWQ7SYtMeUqIj3B8aCNzo:1sI7rA:PE8ksHX3-Rgyjx1RyF8ljuhvh4wHW2b4II-69sldGYg	2024-06-28 14:24:44.034447+00
+dsfdn6sprnd6mh6sd9rk8ew16zliukmg	.eJxVjEEOwiAQRe_C2hAYhwIu3fcMZIBBqoYmpV0Z765NutDtf-_9lwi0rTVsnZcwZXERWpx-t0jpwW0H-U7tNss0t3WZotwVedAuxznz83q4fweVev3WYAAp24LJRlRn1kVpJuMYNWhwnoDRKVTIAzljB8zWQ7SYtMeUqIj3B8aCNzo:1sTjWI:OROB4RkbGlU6bPZedoRbrGL3BKTK4jeBjL-nj7aFFxg	2024-07-30 14:51:10.49686+00
+5cp3sczedlzm5x3hseyzal4u5f87z4lv	.eJxVjEEOwiAQRe_C2hAYhwIu3fcMZIBBqoYmpV0Z765NutDtf-_9lwi0rTVsnZcwZXERWpx-t0jpwW0H-U7tNss0t3WZotwVedAuxznz83q4fweVev3WYAAp24LJRlRn1kVpJuMYNWhwnoDRKVTIAzljB8zWQ7SYtMeUqIj3B8aCNzo:1sXK8R:nJJJcmXz-JNvWp6UAGOJeq8TLtyxPvoQQY8w8gyR9ps	2024-08-09 12:33:23.843305+00
+z76tdqepz0acwidntxn7sjw4y8djyxds	.eJxVjEEOwiAQRe_C2hAYhwIu3fcMZIBBqoYmpV0Z765NutDtf-_9lwi0rTVsnZcwZXERWpx-t0jpwW0H-U7tNss0t3WZotwVedAuxznz83q4fweVev3WYAAp24LJRlRn1kVpJuMYNWhwnoDRKVTIAzljB8zWQ7SYtMeUqIj3B8aCNzo:1sdpzA:LlWIzAVR_SSjBvv6WEch9JnrE6-fqTfYgpLvMfJoifI	2024-08-27 11:46:44.792583+00
 \.
 
 
@@ -9771,7 +10091,7 @@ SELECT pg_catalog.setval('public.auth_user_user_permissions_id_seq', 1, false);
 -- Name: database_betm_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.database_betm_id_seq', 188, true);
+SELECT pg_catalog.setval('public.database_betm_id_seq', 243, true);
 
 
 --
@@ -9785,14 +10105,14 @@ SELECT pg_catalog.setval('public.database_betmart_id_seq', 12, true);
 -- Name: database_betmurteil_betm_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.database_betmurteil_betm_id_seq', 186, true);
+SELECT pg_catalog.setval('public.database_betmurteil_betm_id_seq', 241, true);
 
 
 --
 -- Name: database_betmurteil_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.database_betmurteil_id_seq', 148, true);
+SELECT pg_catalog.setval('public.database_betmurteil_id_seq', 192, true);
 
 
 --
@@ -9813,7 +10133,7 @@ SELECT pg_catalog.setval('public.database_kanton_id_seq', 3, true);
 -- Name: database_kimodelpicklefile_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.database_kimodelpicklefile_id_seq', 15, true);
+SELECT pg_catalog.setval('public.database_kimodelpicklefile_id_seq', 27, true);
 
 
 --
@@ -9827,14 +10147,14 @@ SELECT pg_catalog.setval('public.database_rolle_id_seq', 9, true);
 -- Name: database_urteil_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.database_urteil_id_seq', 231, true);
+SELECT pg_catalog.setval('public.database_urteil_id_seq', 248, true);
 
 
 --
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.django_admin_log_id_seq', 480, true);
+SELECT pg_catalog.setval('public.django_admin_log_id_seq', 607, true);
 
 
 --
@@ -9855,7 +10175,7 @@ SELECT pg_catalog.setval('public.django_content_type_id_seq', 14, true);
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 45, true);
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 46, true);
 
 
 --

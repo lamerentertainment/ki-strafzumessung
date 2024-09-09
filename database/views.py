@@ -347,6 +347,7 @@ def prognose(request):
                     == form.cleaned_data["vorbestraft_einschlaegig"]
                     else False
                 )
+                nachbarobjekt.zusammenfassung = nachbarobjekt.zusammenfassung
                 return nachbarobjekt
 
             nachbar = differenzengenerator(nachbar, form)
@@ -722,6 +723,7 @@ def betm_prognose(request):
                     nachbarobjekt.deliktsertrag
                     - formobjekt.cleaned_data["deliktsertrag"]
                 )
+                nachbarobjekt.zusammenfassung = nachbarobjekt.zusammenfassung
                 return nachbarobjekt
 
             nachbar1 = differenzengenerator(nachbar1, form)

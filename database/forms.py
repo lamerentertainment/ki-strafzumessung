@@ -61,7 +61,7 @@ class BetmUrteilsEckpunkteAbfrageFormular(forms.Form):
         "wurde, ausgesprochen wurden. + 1 Punkt für "
         "jedes weitere Vergehen. + 2 Punkt für jedes "
         "weitere Verbrechen. + 1 Punkt bei mehrfacher "
-        "Begehung."
+        "Begehung.",
         template_name="database/includes/prognose_form_field.html",
     )
     mehrfach = forms.BooleanField(

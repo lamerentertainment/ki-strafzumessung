@@ -1260,8 +1260,8 @@ def introspection_plot_und_lesehinweis_ausgeben(
             f'{"zutreffend" if gewerbsmaessig is True else "nicht zutreffend"}, </li>'
             f"<li>bandenmässige Tatbegehung: "
             f'{"zutreffend" if bandenmaessig is True else "nicht zutreffend"}, </li>'
-            f"<li>Nebenverurteilungsscore: "
-            f"{str(nebenverurteilungsscore)}, </li>"
+            f"<li>Nebenverurteilungsscore (NVS): "
+            f"{str(nebenverurteilungsscore)} oder {str(nebenverurteilungsscore+6)}, </li>"
             f"<li>Vorbestraft: "
             f'{"zutreffend" if vorbestraft is True else "nicht zutreffend"}, </li>'
             f"<li>Einschlägig vorbestraft: "
@@ -1422,8 +1422,8 @@ def introspection_plot_und_lesehinweis_abspeichern(
             f'{"zutreffend" if gewerbsmaessig is True else "nicht zutreffend"}, </li>'
             f"<li>bandenmässige Tatbegehung: "
             f'{"zutreffend" if bandenmaessig is True else "nicht zutreffend"}, </li>'
-            f"<li>Nebenverurteilungsscore: "
-            f"{str(nebenverurteilungsscore)}, </li>"
+            f"<li>Nebenverurteilungsscore (NVS): "
+            f"{str(nebenverurteilungsscore)} oder {str(nebenverurteilungsscore+6)}, </li>"
             f"<li>Vorbestraft: "
             f'{"zutreffend" if vorbestraft is True else "nicht zutreffend"}, </li>'
             f"<li>Einschlägig vorbestraft: "

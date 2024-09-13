@@ -56,6 +56,12 @@ class BetmUrteilsEckpunkteAbfrageFormular(forms.Form):
     nebenverurteilungsscore = forms.IntegerField(
         initial=0,
         required=False,
+        help_text="Anzahl der Schuldsprüche, welche neben dem "
+        "Delikt, für welches die Einsatzsstrafe gebildet "
+        "wurde, ausgesprochen wurden. + 1 Punkt für "
+        "jedes weitere Vergehen. + 2 Punkt für jedes "
+        "weitere Verbrechen. + 1 Punkt bei mehrfacher "
+        "Begehung."
         template_name="database/includes/prognose_form_field.html",
     )
     mehrfach = forms.BooleanField(

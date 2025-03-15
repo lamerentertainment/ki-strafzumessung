@@ -169,7 +169,7 @@ class Urteil(models.Model):
         return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B %Y')} ({self.fall_nr})"
 
     class Meta:
-        verbose_name_plural = "Urteile"
+        verbose_name_plural = "Vermögensdelikt-Urteile"
         ordering = ["urteilsdatum"]
 
 
@@ -284,7 +284,7 @@ class BetmUrteil(models.Model):
         return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B %Y')} ({self.fall_nr})"
 
     class Meta:
-        verbose_name_plural = "Betäubungsmittel-Urteile"
+        verbose_name_plural = "Betäubungsmitteldelikt-Urteile"
         ordering = ["urteilsdatum"]
 
 
@@ -537,7 +537,7 @@ class SexualdeliktUrteil(models.Model):
         return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B %Y')} ({self.fall_nr})"
 
     class Meta:
-        verbose_name_plural = "Urteile"
+        verbose_name_plural = "Sexualdelikt-Urteile"
         ordering = ["add_time"]
 
 

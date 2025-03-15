@@ -147,6 +147,16 @@ class Urteil(models.Model):
         blank=True,
         help_text="Die Zusammenfassung der massgebenden Erwägungen für die Strafzumessung",
     )
+    add_time = models.DateTimeField(
+        auto_now_add=True,
+        null=True,
+        blank=True,
+    )
+    update_time = models.DateTimeField(
+        auto_now=True,
+        null=True,
+        blank=True,
+    )
 
     # Methoden
     def __str__(self):
@@ -256,6 +266,16 @@ class BetmUrteil(models.Model):
     zusammenfassung = models.TextField(
         blank=True,
         help_text="Die Zusammenfassung der massgebenden Erwägungen für die Strafzumessung",
+    )
+    add_time = models.DateTimeField(
+        auto_now_add=True,
+        null=True,
+        blank=True,
+    )
+    update_time = models.DateTimeField(
+        auto_now=True,
+        null=True,
+        blank=True,
     )
 
     def __str__(self):

@@ -408,7 +408,8 @@ class SexualdeliktUrteil(models.Model):
         ('Elternteil/Kind', 'Elternteil/Kind'),
         ('entfernt verwandt', 'entfernt verwandt'),
         ('Bekannte', 'Bekannte'),
-        ('Unbekannt', 'Unbekannt'),
+        ('Unbekannte', 'Unbekannte'),
+        ('Beziehung unbekannt', 'Beziehung unbekannt'),
     ]
     hauptdelikt_taeter_opfer_beziehung = models.CharField(
         max_length=50,
@@ -542,28 +543,28 @@ class SexualdeliktUrteil(models.Model):
 
 
 class Hauptdelikt(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
 
 
 class HauptdeliktTatmittel(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
 
 
 class ZusaetzlicheSexualdelikte(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return self.name
 
 
 class Besonderheiten(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=200, unique=True)
 
     def __str__(self):
         return self.name

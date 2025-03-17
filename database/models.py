@@ -393,15 +393,17 @@ class SexualdeliktUrteil(models.Model):
     hauptdelikt = models.ForeignKey('Hauptdelikt',
                                     on_delete=models.CASCADE,
                                     related_name='hauptdelikt',
+                                    verbose_name="Hauptdelikt",
                                     help_text='Das Hauptdelikt, für welches die Einsatzstrafe gebildet wird.')
-    hauptdelikt_tatmittel = models.ForeignKey('HauptdeliktTatmittel',
+    hauptdelikt_tatmittel = models.ForeignKey('Tatmittel',
                                               related_name='hauptdelikt_tatmittel',
                                               on_delete=models.CASCADE,
+                                              verbose_name="Tatmittel",
                                               help_text='Das Tatmittel, mit welchem das Hauptdelikt begangen wurde')
     hauptdelikt_mehrfachbegehung = models.BooleanField(
         choices=JA_NEIN_CHOICES,
         default=False,
-        verbose_name="Mehrfachbegehung des Hauptdelikts?",
+        verbose_name="mehrfache Tatbegehung?",
         help_text="Verurteilung wegen mehrfacher Begehung des Hauptdelikts")
     BEZIEHUNG_CHOICES = [
         ('Ehegatte/Partner', 'Ehegatte/Partner'),
@@ -415,7 +417,8 @@ class SexualdeliktUrteil(models.Model):
         max_length=50,
         choices=BEZIEHUNG_CHOICES,
         verbose_name="Täter-Opfer-Beziehung",
-        default='Bekannte')
+        default='Bekannte',
+        help_text="Beziehung zwischen Täter und Opfer")
     OPFERALTER_CHOICES = [
         ('unter_6', 'Unter 6 Jahren'),
         ('unter_10', 'Unter 10 Jahren'),
@@ -423,6 +426,7 @@ class SexualdeliktUrteil(models.Model):
         ('unter_16', 'Unter 16 Jahren'),
         ('unter_18', 'Unter 18 Jahren'),
         ('erwachsen', 'Erwachsen'),
+        ('nicht bekannt', 'nicht bekannt'),
     ]
     hauptdelikt_opferalter = models.CharField(
         max_length=20,
@@ -441,6 +445,10 @@ class SexualdeliktUrteil(models.Model):
         default='unbekannt',
         verbose_name="Sexuelle Vorerfahrung des Opfers?",
         help_text="Ob das Opfer im Tatzeitpunkt sexuelle Vorerfahrungen hatte")
+    hauptdelikt_deliktsdauer_bekannt = models.BooleanField(
+        choices=JA_NEIN_CHOICES,
+        default=False,
+    )
     hautpdelikt_deliktsdauer_einfachbegehung = models.DurationField(
         default=timedelta(minutes=30),
         blank=True,
@@ -455,7 +463,7 @@ class SexualdeliktUrteil(models.Model):
         blank=True,
         null=True,
         verbose_name="Deliktsperiode Hauptdelikt",
-        help_text="Periode, in welcher das Hauptdelikt mehrfach begangen wurde in Tagen")
+        help_text="Periode, in welcher das Hauptdelikt mehrfach begangen wurde, in Tagen")
     sexualdelikte_zusaetzliche = models.ManyToManyField('ZusaetzlicheSexualdelikte',
                                                         related_name='sexualdelikte',
                                                         help_text="weitere Sexualdelikte im Urteilsspruch")
@@ -549,7 +557,7 @@ class Hauptdelikt(models.Model):
         return self.name
 
 
-class HauptdeliktTatmittel(models.Model):
+class Tatmittel(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
     def __str__(self):

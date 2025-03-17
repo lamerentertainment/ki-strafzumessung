@@ -466,7 +466,8 @@ class SexualdeliktUrteil(models.Model):
         help_text="Periode, in welcher das Hauptdelikt mehrfach begangen wurde, in Tagen")
     sexualdelikte_zusaetzliche = models.ManyToManyField('ZusaetzlicheSexualdelikte',
                                                         related_name='sexualdelikte',
-                                                        help_text="weitere Sexualdelikte im Urteilsspruch")
+                                                        help_text="weitere Sexualdelikte im Urteilsspruch",
+                                                        blank=True)
     deliktsscore_uebrige_delikte = models.IntegerField(
         blank=True,
         null=True,

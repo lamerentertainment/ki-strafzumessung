@@ -410,6 +410,7 @@ class SexualdeliktUrteil(models.Model):
         ('Elternteil/Kind', 'Elternteil/Kind'),
         ('entfernt verwandt', 'entfernt verwandt'),
         ('Bekannte', 'Bekannte'),
+        ('flüchtig Bekannt', 'flüchtig Bekannt'),
         ('Unbekannte', 'Unbekannte'),
         ('Beziehung unbekannt', 'Beziehung unbekannt'),
     ]
@@ -418,7 +419,8 @@ class SexualdeliktUrteil(models.Model):
         choices=BEZIEHUNG_CHOICES,
         verbose_name="Täter-Opfer-Beziehung",
         default='Bekannte',
-        help_text="Beziehung zwischen Täter und Opfer")
+        help_text="Beziehung zwischen Täter und Opfer. 'flüchtig bekannt' bedeutet, dass der Täter und das Opfer sich "
+                  "bspw. am selben Abend kennengelernt haben.")
     OPFERALTER_CHOICES = [
         ('unter_6', 'Unter 6 Jahren'),
         ('unter_10', 'Unter 10 Jahren'),
@@ -433,7 +435,7 @@ class SexualdeliktUrteil(models.Model):
         choices=OPFERALTER_CHOICES,
         verbose_name="Opferalter",
         default='erwachsen',
-        help_text="Alter des (jüngsten) Opfers des Hauptdelikts in Jahren."
+        help_text="Alter des (jüngsten) Opfers des Hauptdelikts (erste Begehung) in Jahren."
     )
     OPFERERFAHRUNG_CHOICES = [
         ('Ja', 'Ja'),
@@ -475,14 +477,6 @@ class SexualdeliktUrteil(models.Model):
                   "+ 1 Punkt für jedes weitere Vergehen. + 2 Punkt für jedes weitere Verbrechen. + 1 Punkt bei mehrfacher "
                   "Begehung.",
     )
-    gestaendnisbonus = models.BooleanField(
-        choices=JA_NEIN_CHOICES,
-        default=False,
-        help_text="Ob ein Strafrabatt für ein Geständnis erfolgt."
-    )
-    verletzung_beschleunigung = models.BooleanField(choices=JA_NEIN_CHOICES, default=False,
-                                                    help_text="Ob ein Strafrabatt für die Verletzung des "
-                                                              "Beschleunigungsgebots erfolgt.")
     NATIONALITAET = (
         ("0", "Schweizerin/Schweizer"),
         ("1", "Ausländer/Ausländerin"),
@@ -508,7 +502,7 @@ class SexualdeliktUrteil(models.Model):
         verbose_name="einschlägig vorbestraft",
         help_text="Ob einschlägige Vorverurteilungen bestehen")
     besonderheiten = models.ManyToManyField('Besonderheiten', related_name='besonderheiten')
-    bemerkungen = models.TextField(blank=True, help_text="Individuelle Besonderheiten des Falles")
+    bemerkungen = models.TextField(blank=True, help_text="Besondere Bemerkungen zum Fall")
     zusammenfassung = models.TextField(
         blank=True,
         help_text="Die Zusammenfassung der massgebenden Erwägungen für die Strafzumessung",

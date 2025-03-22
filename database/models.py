@@ -501,7 +501,9 @@ class SexualdeliktUrteil(models.Model):
         default=False,
         verbose_name="einschlägig vorbestraft",
         help_text="Ob einschlägige Vorverurteilungen bestehen")
-    besonderheiten = models.ManyToManyField('Besonderheiten', related_name='besonderheiten')
+    besonderheiten = models.ManyToManyField('Besonderheiten',
+                                            related_name='besonderheiten',
+                                            blank=True)
     bemerkungen = models.TextField(blank=True, help_text="Besondere Bemerkungen zum Fall")
     zusammenfassung = models.TextField(
         blank=True,

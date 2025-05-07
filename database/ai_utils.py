@@ -626,7 +626,7 @@ def formulareingaben_in_abfragesample_konvertieren(cleaned_data_dict):
     return urteilsmerkmale_df_preprocessed
 
 
-def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich=1.2):
+def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich=1.2, n_neighbors=4):
     """nimmt als Input ein Pandas DF der merkmale und der zielwerte"""
     cat_ohe_step = ("ohe", OneHotEncoder(drop="if_binary"))
     cat_steps = [cat_ohe_step]
@@ -677,7 +677,7 @@ def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich
                     imp_ft_tuple[0] * x_transformed_gewichtet[column_name]
                 )
 
-    knn = KNeighborsRegressor()
+    knn = KNeighborsRegressor(n_neighbors=n_neighbors)
     knn.fit(x_transformed_gewichtet, train_y_df)
     urteil_features_df = urteil_features_series.to_frame().transpose()
     urteil_features_df.columns = [
@@ -723,10 +723,14 @@ def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich
     differences, indexes = knn.kneighbors(urteil_features_transformed_df_gewichtet)
     knn_prediction = knn.predict(urteil_features_transformed_df_gewichtet)[0][0]
 
-    nachbar_pk = train_X_df.iloc[indexes[0, 0]].name
-    nachbar_pk2 = train_X_df.iloc[indexes[0, 1]].name
+    # Get primary keys for all neighbors
+    nachbar_pks = [train_X_df.iloc[indexes[0, i]].name for i in range(n_neighbors)]
 
-    return nachbar_pk, nachbar_pk2, knn_prediction
+    # For backward compatibility, return the first two separately
+    nachbar_pk = nachbar_pks[0]
+    nachbar_pk2 = nachbar_pks[1]
+
+    return nachbar_pk, nachbar_pk2, knn_prediction, nachbar_pks, differences[0]
 
 
 def nachbar_mit_sanktionsbewertung_anreichern(

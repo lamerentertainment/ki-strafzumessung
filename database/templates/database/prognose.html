@@ -6,7 +6,7 @@
         <h1>Strafprognose bei Wirtschaftsdelikt vornehmen und Präjudizien anzeigen</h1>
         <p>Die Prognose erfolgt auf Grundlage des folgendem <a href="{% url 'database' %}">Datensatzes</a> und der darauf
             aufbauendem <a href="{% url 'ws_evaluation' %}">KI-Modelle</a>. Die Funktionsweise der KI-Modelle wird <a href="{% url 'text_funktionsweise' %}">hier</a> erklärt.</p>
-    
+
         <p class="{{ display_eingabeformular_button }}">
             <a class="btn btn-primary" 
                type="button" 
@@ -60,7 +60,7 @@
                 <p> Das KI-Modell sagt eine <b>{{ vorhersage_vollzug }}</b> {{ vorhersage_sanktionsart }} <b>
                     {{ vorhersage_strafmass|prognosebereich_angeben_fuer_geldstrafe }}</b>
                     Tagessätzen voraus</p>
-            
+
             {% else %}
                 <p> Das KI-Modell sagt eine <b>{{ vorhersage_vollzug }}</b> {{ vorhersage_sanktionsart }} <b>
                     {{ vorhersage_strafmass|prognosebereich_angeben }}</b>
@@ -79,6 +79,28 @@
                 <div class="col">{% include "database/includes/nachbar.html" with nachbar=nachbar %}</div>
                 <div class="col">{% include "database/includes/nachbar.html" with nachbar=nachbar2 %}</div>
             </div>
+
+            {% if has_more_nachbarn %}
+            <p class="mt-3">
+                <a class="btn btn-primary" 
+                   type="button" 
+                   data-bs-toggle="collapse" 
+                   href="#more-nachbarn" 
+                   role="button" 
+                   aria-expanded="false"
+                   aria-controls="more-nachbarn">Weitere vergleichbare Präjudizien anzeigen</a>
+            </p>
+            <div class="collapse" id="more-nachbarn">
+                <div class="row">
+                    {% if nachbar3 %}
+                    <div class="col">{% include "database/includes/nachbar.html" with nachbar=nachbar3 %}</div>
+                    {% endif %}
+                    {% if nachbar4 %}
+                    <div class="col">{% include "database/includes/nachbar.html" with nachbar=nachbar4 %}</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
         </div>
         {% endif %}
 

@@ -146,11 +146,24 @@
                         {{ nachbar.sanktionsbewertung }}
                     </td>
                 </tr>
+                <tr>
+                    <td colspan="2" class="table-light">
+                        <p>Vergleichbarkeitsscore: 
+                            <span class="badge bg-primary" 
+                                  data-bs-toggle="tooltip" 
+                                  data-bs-placement="top" 
+                                  title="Ein höherer Wert bedeutet eine größere Ähnlichkeit zum Eingabefall.">
+                                {{ nachbar.vergleichbarkeitsscore }}%
+                            </span>
+                        </p>
+                    </td>
+                </tr>
                 {% if nachbar.zusammenfassung %}
                     <tr>
                         <td colspan="2">
-                            <p>Zusammenfassung der massgebenden Erwägungen betreffend die Strafzumessung (LLM-generiert
-                                und ohne Gewähr):</p>
+                            <p>Zusammenfassung der massgebenden Erwägungen betreffend die Strafzumessung durch die
+                                Berufungsinstanz (Achtung, Zumessung der Berufungsinstanz weicht i.d.R. von der
+                                Zumessung durch die Vorinstanz ab, LLM-generiert und ohne Gewähr):</p>
                             {{ nachbar.zusammenfassung|linebreaks }}
                         </td>
                     </tr>

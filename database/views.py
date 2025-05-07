@@ -313,15 +313,26 @@ def prognose(request):
             ]
             urteil_features_series = pd.Series(urteil_features_list)
 
-            nachbar_pk, nachbar_pk2, knn_prediction = knn_pipeline(
+            nachbar_pk, nachbar_pk2, knn_prediction, nachbar_pks, distances = knn_pipeline(
                 x_train_df, y_train_df, urteil_features_series
             )
 
             nachbar = Urteil.objects.get(pk=nachbar_pk)
             nachbar2 = Urteil.objects.get(pk=nachbar_pk2)
 
+            # Get the next two neighbors if available
+            if len(nachbar_pks) > 2:
+                nachbar3 = Urteil.objects.get(pk=nachbar_pks[2])
+                if len(nachbar_pks) > 3:
+                    nachbar4 = Urteil.objects.get(pk=nachbar_pks[3])
+                else:
+                    nachbar4 = None
+            else:
+                nachbar3 = None
+                nachbar4 = None
+
             # differenzen von eingabe und nachbarn berechnen, evt. mal auslagern
-            def differenzengenerator(nachbarobjekt, formobjekt):
+            def differenzengenerator(nachbarobjekt, formobjekt, index=None):
                 """legt im Nachbarobjekt die Differenzen zu den Formulareingaben als Attribute ab"""
                 nachbarobjekt.ds_diff = (
                     nachbarobjekt.deliktssumme - form.cleaned_data["deliktssumme"]
@@ -348,10 +359,30 @@ def prognose(request):
                     else False
                 )
                 nachbarobjekt.zusammenfassung = nachbarobjekt.zusammenfassung
+
+                # Vergleichbarkeitsscore berechnen, wenn index vorhanden
+                if index is not None and len(distances) > 0:
+                    # Distanz des aktuellen Nachbarn
+                    current_distance = distances[index]
+                    # Distanz des am weitesten entfernten Nachbarn
+                    max_distance = max(distances)
+                    # Vergleichbarkeitsscore: 1 - (aktuelle Distanz / maximale Distanz)
+                    # Ein Wert von 1 bedeutet perfekte Übereinstimmung, 0 bedeutet maximale Distanz
+                    if max_distance > 0:  # Vermeidung von Division durch Null
+                        nachbarobjekt.vergleichbarkeitsscore = round((1 - (current_distance / max_distance)) * 100)
+                    else:
+                        nachbarobjekt.vergleichbarkeitsscore = 100  # Wenn alle Distanzen 0 sind
+
                 return nachbarobjekt
 
-            nachbar = differenzengenerator(nachbar, form)
-            nachbar2 = differenzengenerator(nachbar2, form)
+            nachbar = differenzengenerator(nachbar, form, 0)
+            nachbar2 = differenzengenerator(nachbar2, form, 1)
+
+            # Apply differenzengenerator to nachbar3 and nachbar4 if they exist
+            if nachbar3:
+                nachbar3 = differenzengenerator(nachbar3, form, 2)
+            if nachbar4:
+                nachbar4 = differenzengenerator(nachbar4, form, 3)
 
             nachbar = nachbar_mit_sanktionsbewertung_anreichern(
                 nachbar,
@@ -366,6 +397,22 @@ def prognose(request):
                 vollzug_estimator=vollzugs_model,
             )
 
+            # Apply nachbar_mit_sanktionsbewertung_anreichern to nachbar3 and nachbar4 if they exist
+            if nachbar3:
+                nachbar3 = nachbar_mit_sanktionsbewertung_anreichern(
+                    nachbar3,
+                    strafmass_estimator=strafmass_model,
+                    hauptsanktion_estimator=sanktionsart_model,
+                    vollzug_estimator=vollzugs_model,
+                )
+            if nachbar4:
+                nachbar4 = nachbar_mit_sanktionsbewertung_anreichern(
+                    nachbar4,
+                    strafmass_estimator=strafmass_model,
+                    hauptsanktion_estimator=sanktionsart_model,
+                    vollzug_estimator=vollzugs_model,
+                )
+
             return render(
                 request,
                 "database/prognose.html",
@@ -379,6 +426,9 @@ def prognose(request):
                     "knn_prediction": knn_prediction,
                     "nachbar": nachbar,
                     "nachbar2": nachbar2,
+                    "nachbar3": nachbar3,
+                    "nachbar4": nachbar4,
+                    "has_more_nachbarn": nachbar3 is not None,
                 },
             )
 
@@ -647,11 +697,10 @@ def betm_prognose(request):
                 )
             )
 
-            neigh.kneighbors(df_prognosemerkmale_df_preprocessed_scaled_gewichtet)
+            # Get distances and indices
+            distances, indices = neigh.kneighbors(df_prognosemerkmale_df_preprocessed_scaled_gewichtet)
             aehnlichstes_uerteile_gemaess_gewichtetem_kneighbormodell = df_urteile.iloc[
-                neigh.kneighbors(df_prognosemerkmale_df_preprocessed_scaled_gewichtet)[
-                    1
-                ][0]
+                indices[0]
             ]
 
             nachbarliste = (
@@ -660,6 +709,8 @@ def betm_prognose(request):
 
             nachbar1 = BetmUrteil.objects.get(fall_nr=nachbarliste[0])
             nachbar2 = BetmUrteil.objects.get(fall_nr=nachbarliste[1])
+            nachbar3 = BetmUrteil.objects.get(fall_nr=nachbarliste[2])
+            nachbar4 = BetmUrteil.objects.get(fall_nr=nachbarliste[3])
 
             nachbar1 = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
                 nachbar1,
@@ -673,9 +724,21 @@ def betm_prognose(request):
                 hauptsanktion_estimator=hauptsanktions_modell,
                 vollzug_estimator=vollzugs_modell,
             )
+            nachbar3 = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
+                nachbar3,
+                strafmass_estimator=strafmass_modell,
+                hauptsanktion_estimator=hauptsanktions_modell,
+                vollzug_estimator=vollzugs_modell,
+            )
+            nachbar4 = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
+                nachbar4,
+                strafmass_estimator=strafmass_modell,
+                hauptsanktion_estimator=hauptsanktions_modell,
+                vollzug_estimator=vollzugs_modell,
+            )
 
             # differenzen von eingabe und nachbarn berechnen, evt. mal auslagern
-            def differenzengenerator(nachbarobjekt, formobjekt):
+            def differenzengenerator(nachbarobjekt, formobjekt, index=None):
                 """legt im Nachbarobjekt die Differenzen zu den Formulareingaben als Attribute ab"""
                 nachbarobjekt.entsprechung_rolle = (
                     True
@@ -724,10 +787,26 @@ def betm_prognose(request):
                     - formobjekt.cleaned_data["deliktsertrag"]
                 )
                 nachbarobjekt.zusammenfassung = nachbarobjekt.zusammenfassung
+
+                # Vergleichbarkeitsscore berechnen, wenn index vorhanden
+                if index is not None and len(distances) > 0:
+                    # Distanz des aktuellen Nachbarn
+                    current_distance = distances[0][index]
+                    # Distanz des am weitesten entfernten Nachbarn
+                    max_distance = max(distances[0])
+                    # Vergleichbarkeitsscore: 1 - (aktuelle Distanz / maximale Distanz)
+                    # Ein Wert von 1 bedeutet perfekte Übereinstimmung, 0 bedeutet maximale Distanz
+                    if max_distance > 0:  # Vermeidung von Division durch Null
+                        nachbarobjekt.vergleichbarkeitsscore = round((1 - (current_distance / max_distance)) * 100)
+                    else:
+                        nachbarobjekt.vergleichbarkeitsscore = 100  # Wenn alle Distanzen 0 sind
+
                 return nachbarobjekt
 
-            nachbar1 = differenzengenerator(nachbar1, form)
-            nachbar2 = differenzengenerator(nachbar2, form)
+            nachbar1 = differenzengenerator(nachbar1, form, 0)
+            nachbar2 = differenzengenerator(nachbar2, form, 1)
+            nachbar3 = differenzengenerator(nachbar3, form, 2)
+            nachbar4 = differenzengenerator(nachbar4, form, 3)
 
             context = {
                 "form": form,
@@ -738,6 +817,8 @@ def betm_prognose(request):
                 "vorhersage_strafmass": vorhersage_strafmass,
                 "nachbar1": nachbar1,
                 "nachbar2": nachbar2,
+                "nachbar3": nachbar3,
+                "nachbar4": nachbar4,
             }
 
             return render(

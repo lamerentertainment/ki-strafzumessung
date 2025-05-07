@@ -1,6 +1,8 @@
 import pandas as pd
 from django.db import models
 import locale
+from datetime import timedelta
+
 
 
 class DataFrameExporter(models.Manager):
@@ -147,6 +149,16 @@ class Urteil(models.Model):
         blank=True,
         help_text="Die Zusammenfassung der massgebenden Erwägungen für die Strafzumessung",
     )
+    add_time = models.DateTimeField(
+        auto_now_add=True,
+        null=True,
+        blank=True,
+    )
+    update_time = models.DateTimeField(
+        auto_now=True,
+        null=True,
+        blank=True,
+    )
 
     # Methoden
     def __str__(self):
@@ -157,7 +169,7 @@ class Urteil(models.Model):
         return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B %Y')} ({self.fall_nr})"
 
     class Meta:
-        verbose_name_plural = "Urteile"
+        verbose_name_plural = "Vermögensdelikt-Urteile"
         ordering = ["urteilsdatum"]
 
 
@@ -212,13 +224,13 @@ class BetmUrteil(models.Model):
     HAUPTSANKTION = (("0", "Freiheitsstrafe"), ("1", "Geldstrafe"), ("2", "Busse"))
     hauptsanktion = models.CharField(max_length=1, choices=HAUPTSANKTION, default="0")
     freiheitsstrafe_in_monaten = models.IntegerField(
-        default=12, help_text="Die Dauer der ausgesprochenen Sanktion in " "Monaten."
+        default=12, help_text="Die Dauer der ausgesprochenen Sanktion in Monaten."
     )
     anzahl_tagessaetze = models.IntegerField(
         default=0, help_text="Die Zahl der ausgesprochenen Tagessätze der Geldstrafe"
     )
     VOLLZUG = (("0", "bedingt"), ("1", "teilbedingt"), ("2", "unbedingt"))
-    vollzug = models.CharField(max_length=20, choices=VOLLZUG, default="0")
+    vollzug = models.CharField(max_length=20, choices=VOLLZUG, default="2")
     nebenverurteilungsscore = models.IntegerField(
         default=0,
         help_text="Anzahl der Schuldsprüche, welche neben dem "
@@ -257,12 +269,22 @@ class BetmUrteil(models.Model):
         blank=True,
         help_text="Die Zusammenfassung der massgebenden Erwägungen für die Strafzumessung",
     )
+    add_time = models.DateTimeField(
+        auto_now_add=True,
+        null=True,
+        blank=True,
+    )
+    update_time = models.DateTimeField(
+        auto_now=True,
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
         return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B %Y')} ({self.fall_nr})"
 
     class Meta:
-        verbose_name_plural = "Betäubungsmittel-Urteile"
+        verbose_name_plural = "Betäubungsmitteldelikt-Urteile"
         ordering = ["urteilsdatum"]
 
 
@@ -336,6 +358,218 @@ class DiagrammSVG(models.Model):
     file = models.ImageField(upload_to="diagramme/")
     lesehinweis = models.CharField(max_length=1000, blank=True, null=True)
     last_updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+class SexualdeliktUrteil(models.Model):
+    fall_nr = models.CharField(
+        max_length=15,
+        unique=True,
+        help_text="Die Verfahrensnummer des Urteils, dem die Informationen entnommen sind.",
+    )
+    url_link = models.URLField(
+        blank=True,
+        help_text="Der URL-Link zum PDF des Urteils, dem die Informationen entnommen sind.",
+    )
+    gericht = models.CharField(
+        max_length=50,
+        help_text="Das Gericht, welches das Urteil gefällt hat.",
+        default="n/a",
+    )
+    urteilsdatum = models.DateField(
+        blank=True,
+        null=True,
+        help_text="Das Datum, an welchem das Gericht das Urteil gefällt hat.",
+    )
+    kanton = models.ForeignKey("Kanton", on_delete=models.CASCADE)
+
+    JA_NEIN_CHOICES = [
+        (True, 'Ja'),
+        (False, 'Nein'),
+    ]
+
+    hauptdelikt = models.ForeignKey('Hauptdelikt',
+                                    on_delete=models.CASCADE,
+                                    related_name='hauptdelikt',
+                                    verbose_name="Hauptdelikt",
+                                    help_text='Das Hauptdelikt, für welches die Einsatzstrafe gebildet wird.')
+    hauptdelikt_tatmittel = models.ForeignKey('Tatmittel',
+                                              related_name='hauptdelikt_tatmittel',
+                                              on_delete=models.CASCADE,
+                                              verbose_name="Tatmittel",
+                                              help_text='Das Tatmittel, mit welchem das Hauptdelikt begangen wurde')
+    hauptdelikt_mehrfachbegehung = models.BooleanField(
+        choices=JA_NEIN_CHOICES,
+        default=False,
+        verbose_name="mehrfache Tatbegehung?",
+        help_text="Verurteilung wegen mehrfacher Begehung des Hauptdelikts")
+    BEZIEHUNG_CHOICES = [
+        ('Ehegatte/Partner', 'Ehegatte/Partner'),
+        ('Elternteil/Kind', 'Elternteil/Kind'),
+        ('entfernt verwandt', 'entfernt verwandt'),
+        ('Bekannte', 'Bekannte'),
+        ('flüchtig Bekannt', 'flüchtig Bekannt'),
+        ('Unbekannte', 'Unbekannte'),
+        ('Beziehung unbekannt', 'Beziehung unbekannt'),
+    ]
+    hauptdelikt_taeter_opfer_beziehung = models.CharField(
+        max_length=50,
+        choices=BEZIEHUNG_CHOICES,
+        verbose_name="Täter-Opfer-Beziehung",
+        default='Bekannte',
+        help_text="Beziehung zwischen Täter und Opfer. 'flüchtig bekannt' bedeutet, dass der Täter und das Opfer sich "
+                  "bspw. am selben Abend kennengelernt haben.")
+    OPFERALTER_CHOICES = [
+        ('unter_6', 'Unter 6 Jahren'),
+        ('unter_10', 'Unter 10 Jahren'),
+        ('unter_14', 'Unter 14 Jahren'),
+        ('unter_16', 'Unter 16 Jahren'),
+        ('unter_18', 'Unter 18 Jahren'),
+        ('erwachsen', 'Erwachsen'),
+        ('nicht bekannt', 'nicht bekannt'),
+    ]
+    hauptdelikt_opferalter = models.CharField(
+        max_length=20,
+        choices=OPFERALTER_CHOICES,
+        verbose_name="Opferalter",
+        default='erwachsen',
+        help_text="Alter des (jüngsten) Opfers des Hauptdelikts (erste Begehung) in Jahren."
+    )
+    OPFERERFAHRUNG_CHOICES = [
+        ('Ja', 'Ja'),
+        ('Nein', 'Nein'),
+        ('unbekannt', 'unbekannt'),
+    ]
+    hauptdelikt_opfer_vorerfahrung = models.CharField(
+        choices=OPFERERFAHRUNG_CHOICES,
+        default='unbekannt',
+        verbose_name="Sexuelle Vorerfahrung des Opfers?",
+        help_text="Ob das Opfer im Tatzeitpunkt sexuelle Vorerfahrungen hatte")
+    hauptdelikt_deliktsdauer_bekannt = models.BooleanField(
+        choices=JA_NEIN_CHOICES,
+        default=False,
+    )
+    hautpdelikt_deliktsdauer_einfachbegehung = models.DurationField(
+        default=timedelta(minutes=30),
+        blank=True,
+        null=True,
+        verbose_name="Deliktsdauer Hauptdelikt (min)",
+        help_text="Die Deliktsdauer des Hauptdelikts in Minuten, soweit bekannt.")
+    hauptdelikt_mehrfachbegehung_anzahl = models.IntegerField(blank=True,
+                                                              null=True,
+                                                              help_text="Anzahl der Vollendungen des Hauptdelikts")
+    hauptdelikt_mehrfachbegehung_deliktsperiode = models.DurationField(
+        default=timedelta(days=345),
+        blank=True,
+        null=True,
+        verbose_name="Deliktsperiode Hauptdelikt",
+        help_text="Periode, in welcher das Hauptdelikt mehrfach begangen wurde, in Tagen")
+    sexualdelikte_zusaetzliche = models.ManyToManyField('ZusaetzlicheSexualdelikte',
+                                                        related_name='sexualdelikte',
+                                                        help_text="weitere Sexualdelikte im Urteilsspruch",
+                                                        blank=True)
+    deliktsscore_uebrige_delikte = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text="Anzahl der Schuldsprüche, welche neben den Sexualdelikten ausgesprochen wurden. "
+                  "+ 1 Punkt für jedes weitere Vergehen. + 2 Punkt für jedes weitere Verbrechen. + 1 Punkt bei mehrfacher "
+                  "Begehung.",
+    )
+    NATIONALITAET = (
+        ("0", "Schweizerin/Schweizer"),
+        ("1", "Ausländer/Ausländerin"),
+        ("2", "unbekannt"),
+    )
+    GESCHLECHT = (("0", "männlich"), ("1", "weiblich"))
+    geschlecht = models.CharField(max_length=2,
+                                  choices=GESCHLECHT,
+                                  default="0",
+                                  help_text="Geschlecht des Täters")
+    nationalitaet = models.CharField(max_length=2,
+                                     choices=NATIONALITAET,
+                                     default="2",
+                                     help_text="Nationalität des Täters")
+    vorbestraft = models.BooleanField(
+        choices=JA_NEIN_CHOICES,
+        default=False,
+        verbose_name="vorbestraft",
+        help_text="Ob Vorstrafen bestehen")
+    vorbestraft_einschlaegig = models.BooleanField(
+        choices=JA_NEIN_CHOICES,
+        default=False,
+        verbose_name="einschlägig vorbestraft",
+        help_text="Ob einschlägige Vorverurteilungen bestehen")
+    besonderheiten = models.ManyToManyField('Besonderheiten',
+                                            related_name='besonderheiten',
+                                            blank=True)
+    bemerkungen = models.TextField(blank=True, help_text="Besondere Bemerkungen zum Fall")
+    zusammenfassung = models.TextField(
+        blank=True,
+        help_text="Die Zusammenfassung der massgebenden Erwägungen für die Strafzumessung",
+    )
+
+    HAUPTSANKTION = (("0", "Freiheitsstrafe"), ("1", "Geldstrafe"), ("2", "Busse"))
+    hauptsanktion = models.CharField(max_length=1, choices=HAUPTSANKTION, default="0")
+    freiheitsstrafe_in_monaten = models.IntegerField(
+        default=12, help_text="Die Dauer der ausgesprochenen Sanktion in Monaten."
+    )
+    anzahl_tagessaetze = models.IntegerField(
+        default=0, help_text="Die Zahl der ausgesprochenen Tagessätze der Geldstrafe"
+    )
+    VOLLZUG = (("0", "bedingt"), ("1", "teilbedingt"), ("2", "unbedingt"))
+    vollzug = models.CharField(max_length=20, choices=VOLLZUG, default="2")
+
+    VERFAHRENSART = (("0", "ordentlich"), ("1", "abgekürzt"))
+    verfahrensart = models.CharField(max_length=2, choices=VERFAHRENSART, default="0")
+
+    add_time = models.DateTimeField(
+        auto_now_add=True,
+        null=True,
+        blank=True,
+    )
+    update_time = models.DateTimeField(
+        auto_now=True,
+        null=True,
+        blank=True,
+    )
+
+    def __str__(self):
+        try:
+            locale.setlocale(locale.LC_TIME, "de_CH")
+        except:
+            locale.setlocale(locale.LC_ALL, "")
+        return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B %Y')} ({self.fall_nr})"
+
+    class Meta:
+        verbose_name_plural = "Sexualdelikt-Urteile"
+        ordering = ["add_time"]
+
+
+class Hauptdelikt(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Tatmittel(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class ZusaetzlicheSexualdelikte(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class Besonderheiten(models.Model):
+    name = models.CharField(max_length=200, unique=True)
 
     def __str__(self):
         return self.name

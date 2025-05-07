@@ -34,4 +34,6 @@ CSRF_TRUSTED_ORIGINS = ["https://stagingstrafzumessung.applikuapp.com",
                         "https://strafzumessung.ch",
                         "https://www.strafzumessung.ch",
                         "https://ki.strafzumessung.ch",
-                        "https://www.ki.strafzumessung.ch"]
+                        "https://www.ki.strafzumessung.ch",
+                        "https://kistrafzumessung.applikuapp.com",
+                        "https://www.kistrafzumessung.applikuapp.com",]

@@ -4,18 +4,36 @@ from .models import (Urteil, KIModelPickleFile, DiagrammSVG, BetmUrteil, BetmArt
 
 @admin.register(BetmUrteil)
 class BetmUrteilAdmin(admin.ModelAdmin):
-    list_display = ["fall_nr", "add_time", "urteilsdatum", "gericht", "freiheitsstrafe_in_monaten",
-                    "anzahl_tagessaetze"]
+    list_display = ["fall_nr", "update_time", "urteilsdatum", "gericht", "freiheitsstrafe_in_monaten",
+                    "anzahl_tagessaetze", "has_zusammenfassung"]
+    ordering = ["-update_time"]
+
+    def has_zusammenfassung(self, obj):
+        return bool(obj.zusammenfassung)
+    has_zusammenfassung.boolean = True
+    has_zusammenfassung.short_description = "Zusammenfassung vorhanden"
 
 @admin.register(Urteil)
 class UrteilAdmin(admin.ModelAdmin):
-    list_display = ["fall_nr", "add_time", "urteilsdatum", "gericht", "freiheitsstrafe_in_monaten",
-                    "anzahl_tagessaetze"]
+    list_display = ["fall_nr", "update_time", "urteilsdatum", "gericht", "freiheitsstrafe_in_monaten",
+                    "anzahl_tagessaetze", "has_zusammenfassung"]
+    ordering = ["-update_time"]
+
+    def has_zusammenfassung(self, obj):
+        return bool(obj.zusammenfassung)
+    has_zusammenfassung.boolean = True
+    has_zusammenfassung.short_description = "Zusammenfassung vorhanden"
 
 @admin.register(SexualdeliktUrteil)
 class SexualdeliktUrteilAdmin(admin.ModelAdmin):
-    list_display = ["fall_nr", "add_time", "urteilsdatum", "gericht", "freiheitsstrafe_in_monaten",
-                    "anzahl_tagessaetze"]
+    list_display = ["fall_nr", "update_time", "urteilsdatum", "gericht", "freiheitsstrafe_in_monaten",
+                    "anzahl_tagessaetze", "has_zusammenfassung"]
+    ordering = ["-update_time"]
+
+    def has_zusammenfassung(self, obj):
+        return bool(obj.zusammenfassung)
+    has_zusammenfassung.boolean = True
+    has_zusammenfassung.short_description = "Zusammenfassung vorhanden"
 
 # Register your models here.
 admin.site.register(KIModelPickleFile)

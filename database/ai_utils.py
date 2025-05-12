@@ -723,6 +723,17 @@ def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich
     differences, indexes = knn.kneighbors(urteil_features_transformed_df_gewichtet)
     knn_prediction = knn.predict(urteil_features_transformed_df_gewichtet)[0][0]
 
+    # für den Vergleichbarkeitsscore die Differenz zum unähnlichsten Urteil erheben
+
+    # Zweiter Pass mit allen Trainingsdaten als Nachbarn, um die Distanz zum am weitesten entfernten Sample zu ermitteln
+    total_samples = len(train_X_df)
+    all_neighbors_knn = KNeighborsRegressor(n_neighbors=total_samples)
+    all_neighbors_knn.fit(x_transformed_gewichtet, train_y_df)
+    all_differences, all_indexes = all_neighbors_knn.kneighbors(urteil_features_transformed_df_gewichtet)
+
+    # Distanz zum am weitesten entfernten Sample im gesamten Trainingsdatensatz
+    furthest_sample_distance = all_differences[:, -1]
+
     # Get primary keys for all neighbors
     nachbar_pks = [train_X_df.iloc[indexes[0, i]].name for i in range(n_neighbors)]
 
@@ -730,7 +741,7 @@ def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich
     nachbar_pk = nachbar_pks[0]
     nachbar_pk2 = nachbar_pks[1]
 
-    return nachbar_pk, nachbar_pk2, knn_prediction, nachbar_pks, differences[0]
+    return nachbar_pk, nachbar_pk2, knn_prediction, nachbar_pks, differences[0], furthest_sample_distance
 
 
 def nachbar_mit_sanktionsbewertung_anreichern(

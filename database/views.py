@@ -313,7 +313,7 @@ def prognose(request):
             ]
             urteil_features_series = pd.Series(urteil_features_list)
 
-            nachbar_pk, nachbar_pk2, knn_prediction, nachbar_pks, distances = knn_pipeline(
+            nachbar_pk, nachbar_pk2, knn_prediction, nachbar_pks, distances, last_neighbor_distance = knn_pipeline(
                 x_train_df, y_train_df, urteil_features_series
             )
 
@@ -365,11 +365,11 @@ def prognose(request):
                     # Distanz des aktuellen Nachbarn
                     current_distance = distances[index]
                     # Distanz des am weitesten entfernten Nachbarn
-                    max_distance = max(distances)
+                    max_distance = last_neighbor_distance[0]
                     # Vergleichbarkeitsscore: 1 - (aktuelle Distanz / maximale Distanz)
                     # Ein Wert von 1 bedeutet perfekte Übereinstimmung, 0 bedeutet maximale Distanz
                     if max_distance > 0:  # Vermeidung von Division durch Null
-                        nachbarobjekt.vergleichbarkeitsscore = round((1 - (current_distance / max_distance)) * 100)
+                        nachbarobjekt.vergleichbarkeitsscore = round((1 - current_distance/(max_distance/100)) * 100)
                     else:
                         nachbarobjekt.vergleichbarkeitsscore = 100  # Wenn alle Distanzen 0 sind
 
@@ -788,16 +788,27 @@ def betm_prognose(request):
                 )
                 nachbarobjekt.zusammenfassung = nachbarobjekt.zusammenfassung
 
+                # Zweiter Pass mit allen Trainingsdaten als Nachbarn, um die Distanz zum am weitesten entfernten Sample zu ermitteln
+                total_samples = len(
+                    df_x_onehot_scaled_gewichtet)  # Verwende die bereits transformierten und gewichteten Trainingsdaten
+                all_neighbors_knn = KNeighborsRegressor(n_neighbors=total_samples)
+                all_neighbors_knn.fit(df_x_onehot_scaled_gewichtet,
+                                      y_strafmass)  # Diese Variablen sind bereits definiert
+                all_differences, all_indexes = all_neighbors_knn.kneighbors(
+                    df_prognosemerkmale_df_preprocessed_scaled_gewichtet)  # Verwende die transformierten Features der aktuellen Anfrage
+                # Distanz zum am weitesten entfernten Sample im gesamten Trainingsdatensatz
+                furthest_sample_distance = all_differences[:, -1][0]
                 # Vergleichbarkeitsscore berechnen, wenn index vorhanden
                 if index is not None and len(distances) > 0:
                     # Distanz des aktuellen Nachbarn
                     current_distance = distances[0][index]
                     # Distanz des am weitesten entfernten Nachbarn
-                    max_distance = max(distances[0])
+                    max_distance = furthest_sample_distance
                     # Vergleichbarkeitsscore: 1 - (aktuelle Distanz / maximale Distanz)
                     # Ein Wert von 1 bedeutet perfekte Übereinstimmung, 0 bedeutet maximale Distanz
                     if max_distance > 0:  # Vermeidung von Division durch Null
-                        nachbarobjekt.vergleichbarkeitsscore = round((1 - (current_distance / max_distance)) * 100)
+                        nachbarobjekt.vergleichbarkeitsscore = round((1 - (current_distance / (max_distance/50))) *
+                                                                     100)
                     else:
                         nachbarobjekt.vergleichbarkeitsscore = 100  # Wenn alle Distanzen 0 sind
 

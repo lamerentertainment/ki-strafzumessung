@@ -807,8 +807,8 @@ def betm_prognose(request):
                     # Vergleichbarkeitsscore: 1 - (aktuelle Distanz / maximale Distanz)
                     # Ein Wert von 1 bedeutet perfekte Übereinstimmung, 0 bedeutet maximale Distanz
                     if max_distance > 0:  # Vermeidung von Division durch Null
-                        nachbarobjekt.vergleichbarkeitsscore = round((1 - (current_distance / (max_distance/50))) *
-                                                                     100)
+                        nachbarobjekt.vergleichbarkeitsscore = (
+                            round((1 - (current_distance / (max_distance/20))) * 100))
                     else:
                         nachbarobjekt.vergleichbarkeitsscore = 100  # Wenn alle Distanzen 0 sind
 

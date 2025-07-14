@@ -11,7 +11,9 @@ from .forms import (
     UrteilsEckpunkteAbfrageFormular,
     CeteribusParibusFormular,
     BetmUrteilsEckpunkteAbfrageFormular,
+    StrafrechtlicherSachverhaltFormular,
 )
+
 from django.views import generic
 from django.urls import reverse_lazy
 from .ai_utils import (
@@ -1810,3 +1812,77 @@ def csv_erstellen(request):
     csv_in_notebooks_speichern(Urteil)
     messages.success(request, "neues csv-file in notebooks abgespeichert")
     return redirect("dev")
+
+
+def strafrechtlicher_sachverhalt(request):
+    """
+    View für die Eingabe eines strafrechtlichen Sachverhalts und die Suche nach vergleichbaren Urteilen
+    mittels Google GenAI API.
+    """
+    if request.method == 'POST':
+        form = StrafrechtlicherSachverhaltFormular(request.POST)
+        if form.is_valid():
+            # Eingabe aus dem Formular extrahieren
+            sachverhalt = form.cleaned_data['sachverhalt']
+
+            # Alle Urteile aus der Datenbank als Kontext holen
+            urteile = []
+
+            # Vermögensdelikte
+            for urteil in Urteil.objects.all():
+                urteile.append({'id': urteil.id, 'fall_nr': urteil.fall_nr, 'gericht': urteil.gericht,
+                    'urteilsdatum': urteil.urteilsdatum, 'hauptdelikt': urteil.hauptdelikt,
+                    'deliktssumme': urteil.deliktssumme, 'mehrfach': urteil.mehrfach,
+                    'gewerbsmaessig': urteil.gewerbsmaessig, 'bandenmaessig': urteil.bandenmaessig,
+                    'nebenverurteilungsscore': urteil.nebenverurteilungsscore, 'vorbestraft': urteil.vorbestraft,
+                    'vorbestraft_einschlaegig': urteil.vorbestraft_einschlaegig,
+                    'freiheitsstrafe_in_monaten': urteil.freiheitsstrafe_in_monaten,
+                    'zusammenfassung': urteil.zusammenfassung, })
+
+            # Betäubungsmitteldelikte
+            for urteil in BetmUrteil.objects.all():
+                urteile.append({'id': urteil.id, 'fall_nr': urteil.fall_nr, 'gericht': urteil.gericht,
+                    'urteilsdatum': urteil.urteilsdatum, 'mengenmaessig': urteil.mengenmaessig,
+                    'bandenmaessig': urteil.bandenmaessig, 'gewerbsmaessig': urteil.gewerbsmaessig,
+                    'mehrfach': urteil.mehrfach, 'nebenverurteilungsscore': urteil.nebenverurteilungsscore,
+                    'vorbestraft': urteil.vorbestraft, 'vorbestraft_einschlaegig': urteil.vorbestraft_einschlaegig,
+                    'freiheitsstrafe_in_monaten': urteil.freiheitsstrafe_in_monaten,
+                    'zusammenfassung': urteil.zusammenfassung, })
+
+            # Prompt für die Google GenAI API erstellen
+            prompt = f"""
+            Gegeben ist folgender strafrechtlicher Sachverhalt:
+
+            {sachverhalt}
+
+            Bitte suche in der folgenden Liste von Urteilen insb. bezüglich des Sachverhalts nach vergleichbaren Fällen 
+            und identifiziere diejenigen, welche am ähnlichsten sind. 
+            Berücksichtige dabei allenfalls die Eckwerte des Sachverhalts wie Deliktsart, Deliktssumme, 
+            Mehrfachbegehung, gewerbsmäsige oder bandenmäsige Begehung, Vorstrafen und andere relevante Faktoren.
+            
+            Mach dann eine Liste mit drei relevantesten Urteilen und erkläre und begründe in Fliesstext, warum diese 
+            Urteil ähnlich sind wie der eingegebene Sachverhalt. Gib schlussendlich an, mit welcher Strafe die 
+            beschuldigte Person im Präjudiz bestraft worden ist.
+
+            Urteile:
+            {urteile}
+            """
+
+            try:
+                # Google GenAI API Client erstellen und Aufruf
+                from google import genai
+                client = genai.Client()  # Verwendet GOOGLE_API_KEY Umgebungsvariable
+
+                response = client.models.generate_content(model='gemini-2.5-flash-lite-preview-06-17', contents=prompt)
+                vergleichbare_urteile = response.text
+            except Exception as e:
+                # Fehlerbehandlung für den Fall, dass die API nicht verfügbar ist
+                vergleichbare_urteile = f"Fehler bei der Abfrage der Google GenAI API: {str(e)}\n\nBitte stellen Sie sicher, dass die API korrekt konfiguriert ist und ein gültiger API-Key verwendet wird."
+
+            context = {'form': form, 'sachverhalt': sachverhalt, 'vergleichbare_urteile': vergleichbare_urteile, }
+            return render(request, 'database/strafrechtlicher_sachverhalt.html', context)
+    else:
+        form = StrafrechtlicherSachverhaltFormular()
+
+    context = {'form': form, }
+    return render(request, 'database/strafrechtlicher_sachverhalt.html', context)

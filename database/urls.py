@@ -56,4 +56,9 @@ urlpatterns = [
         views.BetmUrteilDetailView.as_view(),
         name="betmurteil_detail",
     ),
+    path(
+        "strafrechtlicher_sachverhalt",
+        views.strafrechtlicher_sachverhalt,
+        name="strafrechtlicher_sachverhalt",
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

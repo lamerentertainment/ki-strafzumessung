@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.generic import ListView, DetailView
 from django.core.files.base import ContentFile
-from .models import Urteil, BetmUrteil, BetmArt, KIModelPickleFile, DiagrammSVG
+from .models import Urteil, BetmUrteil, SexualdeliktUrteil, BetmArt, KIModelPickleFile, DiagrammSVG
 from .forms import (
     UrteilModelForm,
     UrteilsEckpunkteAbfrageFormular,
@@ -1830,56 +1830,126 @@ def strafrechtlicher_sachverhalt(request):
 
             # Vermögensdelikte
             for urteil in Urteil.objects.all():
-                urteile.append({'id': urteil.id, 'fall_nr': urteil.fall_nr, 'gericht': urteil.gericht,
-                    'urteilsdatum': urteil.urteilsdatum, 'hauptdelikt': urteil.hauptdelikt,
-                    'deliktssumme': urteil.deliktssumme, 'mehrfach': urteil.mehrfach,
-                    'gewerbsmaessig': urteil.gewerbsmaessig, 'bandenmaessig': urteil.bandenmaessig,
-                    'nebenverurteilungsscore': urteil.nebenverurteilungsscore, 'vorbestraft': urteil.vorbestraft,
-                    'vorbestraft_einschlaegig': urteil.vorbestraft_einschlaegig,
-                    'freiheitsstrafe_in_monaten': urteil.freiheitsstrafe_in_monaten,
-                    'zusammenfassung': urteil.zusammenfassung, })
+                urteile.append(
+                    {'typ': 'Vermögensdelikt', 'id': urteil.id, 'fall_nr': urteil.fall_nr, 'url_link': urteil.url_link,
+                     # URL hinzugefügt
+                     'gericht': urteil.gericht, 'urteilsdatum': urteil.urteilsdatum, 'hauptdelikt': urteil.hauptdelikt,
+                     'deliktssumme': urteil.deliktssumme, 'mehrfach': urteil.mehrfach,
+                     'gewerbsmaessig': urteil.gewerbsmaessig, 'bandenmaessig': urteil.bandenmaessig,
+                     'nebenverurteilungsscore': urteil.nebenverurteilungsscore, 'vorbestraft': urteil.vorbestraft,
+                     'vorbestraft_einschlaegig': urteil.vorbestraft_einschlaegig,
+                     'hauptsanktion': urteil.get_hauptsanktion_display(),
+                     'freiheitsstrafe_in_monaten': urteil.freiheitsstrafe_in_monaten,
+                     'anzahl_tagessaetze': urteil.anzahl_tagessaetze, 'vollzug': urteil.get_vollzug_display(),
+                     'verfahrensart': urteil.get_verfahrensart_display(), 'geschlecht': urteil.get_geschlecht_display(),
+                     'nationalitaet': urteil.get_nationalitaet_display(), 'zusammenfassung': urteil.zusammenfassung, })
 
             # Betäubungsmitteldelikte
             for urteil in BetmUrteil.objects.all():
-                urteile.append({'id': urteil.id, 'fall_nr': urteil.fall_nr, 'gericht': urteil.gericht,
-                    'urteilsdatum': urteil.urteilsdatum, 'mengenmaessig': urteil.mengenmaessig,
-                    'bandenmaessig': urteil.bandenmaessig, 'gewerbsmaessig': urteil.gewerbsmaessig,
-                    'mehrfach': urteil.mehrfach, 'nebenverurteilungsscore': urteil.nebenverurteilungsscore,
-                    'vorbestraft': urteil.vorbestraft, 'vorbestraft_einschlaegig': urteil.vorbestraft_einschlaegig,
-                    'freiheitsstrafe_in_monaten': urteil.freiheitsstrafe_in_monaten,
-                    'zusammenfassung': urteil.zusammenfassung, })
+                # Betäubungsmittel-Informationen sammeln
+                betm_info = []
+                for betm in urteil.betm.all():
+                    betm_info.append(
+                        {'name': betm.art.name if betm.art else None, 'art': betm.art.name if betm.art else None,
+                         'menge': betm.menge_in_g, 'reinheit': betm.rein, 'verkehrswert': None, })
+
+                urteile.append({'typ': 'Betäubungsmitteldelikt', 'id': urteil.id, 'fall_nr': urteil.fall_nr,
+                                'url_link': urteil.url_link,  # URL hinzugefügt
+                                'gericht': urteil.gericht, 'urteilsdatum': urteil.urteilsdatum,
+                                'kanton': urteil.kanton.abk if urteil.kanton else None,
+                                'mengenmaessig': urteil.mengenmaessig, 'bandenmaessig': urteil.bandenmaessig,
+                                'gewerbsmaessig': urteil.gewerbsmaessig, 'anstaltentreffen': urteil.anstaltentreffen,
+                                'mehrfach': urteil.mehrfach,
+                                'beschaffungskriminalitaet': urteil.beschaffungskriminalitaet,
+                                'hauptsanktion': urteil.get_hauptsanktion_display(),
+                                'freiheitsstrafe_in_monaten': urteil.freiheitsstrafe_in_monaten,
+                                'anzahl_tagessaetze': urteil.anzahl_tagessaetze,
+                                'vollzug': urteil.get_vollzug_display(),
+                                'nebenverurteilungsscore': urteil.nebenverurteilungsscore,
+                                'verfahrensart': urteil.get_verfahrensart_display(),
+                                'geschlecht': urteil.get_geschlecht_display(),
+                                'nationalitaet': urteil.get_nationalitaet_display(),
+                                'rolle': urteil.rolle.name if urteil.rolle else None,
+                                'deliktsertrag': urteil.deliktsertrag,
+                                'deliktsdauer_in_monaten': urteil.deliktsdauer_in_monaten,
+                                'vorbestraft': urteil.vorbestraft,
+                                'vorbestraft_einschlaegig': urteil.vorbestraft_einschlaegig,
+                                'betaeuungsmittel': betm_info, 'zusammenfassung': urteil.zusammenfassung, })
+
+            # Sexualdelikte
+            for urteil in SexualdeliktUrteil.objects.all():
+                # Zusätzliche Sexualdelikte sammeln
+                zusaetzliche_delikte = []
+                for zusatz in urteil.sexualdelikte_zusaetzliche.all():
+                    zusaetzliche_delikte.append({'delikt': zusatz.name, 'mehrfach': False, 'anzahl': None, })
+
+                # Besonderheiten sammeln
+                besonderheiten = []
+                for besonderheit in urteil.besonderheiten.all():
+                    besonderheiten.append({'name': besonderheit.name, 'beschreibung': '', })
+
+                urteile.append(
+                    {'typ': 'Sexualdelikt', 'id': urteil.id, 'fall_nr': urteil.fall_nr, 'url_link': urteil.url_link,
+                     # URL hinzugefügt
+                     'gericht': urteil.gericht, 'urteilsdatum': urteil.urteilsdatum,
+                     'kanton': urteil.kanton.abk if urteil.kanton else None,
+                     'hauptdelikt': urteil.hauptdelikt.name if urteil.hauptdelikt else None,
+                     'hauptdelikt_tatmittel': urteil.hauptdelikt_tatmittel.name if urteil.hauptdelikt_tatmittel else None,
+                     'hauptdelikt_mehrfachbegehung': urteil.hauptdelikt_mehrfachbegehung,
+                     'hauptdelikt_taeter_opfer_beziehung': urteil.hauptdelikt_taeter_opfer_beziehung,
+                     'hauptdelikt_opferalter': urteil.hauptdelikt_opferalter,
+                     'hauptdelikt_opfer_vorerfahrung': urteil.hauptdelikt_opfer_vorerfahrung,
+                     'hauptdelikt_deliktsdauer_bekannt': urteil.hauptdelikt_deliktsdauer_bekannt,
+                     'hautpdelikt_deliktsdauer_einfachbegehung': urteil.hautpdelikt_deliktsdauer_einfachbegehung,
+                     'hauptdelikt_mehrfachbegehung_anzahl': urteil.hauptdelikt_mehrfachbegehung_anzahl,
+                     'zusaetzliche_sexualdelikte': zusaetzliche_delikte, 'besonderheiten': besonderheiten,
+                     'zusammenfassung': getattr(urteil, 'zusammenfassung', None), })
 
             # Prompt für die Google GenAI API erstellen
             prompt = f"""
-            Gegeben ist folgender strafrechtlicher Sachverhalt:
+            Gegeben ist folgender strafrechtlicher Sachverhalt, den der Benutzer als Input eingegeben hat:
 
-            {sachverhalt}
+            <user_input>{sachverhalt}</user_input>
 
             Bitte suche in der folgenden Liste von Urteilen insb. bezüglich des Sachverhalts nach vergleichbaren Fällen 
-            und identifiziere diejenigen, welche am ähnlichsten sind. 
+            und identifiziere diejenigen, welche dem user_input am ähnlichsten sind. 
             Berücksichtige dabei allenfalls die Eckwerte des Sachverhalts wie Deliktsart, Deliktssumme, 
-            Mehrfachbegehung, gewerbsmäsige oder bandenmäsige Begehung, Vorstrafen und andere relevante Faktoren.
-            
+            Mehrfachbegehung, gewerbsmässige oder bandenmäsige Begehung, Vorstrafen und andere relevante Faktoren.
+
             Mach dann eine Liste mit drei relevantesten Urteilen und erkläre und begründe in Fliesstext, warum diese 
             Urteil ähnlich sind wie der eingegebene Sachverhalt. Gib schlussendlich an, mit welcher Strafe die 
-            beschuldigte Person im Präjudiz bestraft worden ist.
+            beschuldigte Person im Präjudiz jeweils bestraft worden ist.
+
+            Formatiere die Bezeichnungen der Urteile als hyperlinks mit den vorhandenen url_link
+
+            Wenn der User einen Sachverhalt eingegeben hat, welcher nichts mit Strafrecht zu tun hat, und wenn keine 
+            Vermögens-, Betäubungsmittel- oder Sexualdelikte angegeben worden sind, teile dem Benutzer mit, 
+            dass Du ihm nicht helfen kannst.
 
             Urteile:
             {urteile}
             """
 
+            # Initialize variables to ensure they exist in all code paths
+            vergleichbare_urteile_html = ""
+
             try:
                 # Google GenAI API Client erstellen und Aufruf
                 from google import genai
+                import markdown
                 client = genai.Client()  # Verwendet GOOGLE_API_KEY Umgebungsvariable
 
-                response = client.models.generate_content(model='gemini-2.5-flash-lite-preview-06-17', contents=prompt)
+                response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
                 vergleichbare_urteile = response.text
+                vergleichbare_urteile_html = markdown.markdown(vergleichbare_urteile)
             except Exception as e:
                 # Fehlerbehandlung für den Fall, dass die API nicht verfügbar ist
                 vergleichbare_urteile = f"Fehler bei der Abfrage der Google GenAI API: {str(e)}\n\nBitte stellen Sie sicher, dass die API korrekt konfiguriert ist und ein gültiger API-Key verwendet wird."
+                # Convert the error message to HTML as well
+                import markdown
+                vergleichbare_urteile_html = markdown.markdown(vergleichbare_urteile)
 
-            context = {'form': form, 'sachverhalt': sachverhalt, 'vergleichbare_urteile': vergleichbare_urteile, }
+            context = {'form': form, 'sachverhalt': sachverhalt, 'vergleichbare_urteile': vergleichbare_urteile_html, }
             return render(request, 'database/strafrechtlicher_sachverhalt.html', context)
     else:
         form = StrafrechtlicherSachverhaltFormular()

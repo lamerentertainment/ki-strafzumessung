@@ -61,4 +61,9 @@ urlpatterns = [
         views.strafrechtlicher_sachverhalt,
         name="strafrechtlicher_sachverhalt",
     ),
+    path(
+        "urteil/<int:pk>",
+        views.VMUrteilDetailView.as_view(),
+        name="vmurteil_detail",
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

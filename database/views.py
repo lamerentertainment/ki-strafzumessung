@@ -112,6 +112,11 @@ class BetmUrteilDetailView(DetailView):
     template_name = "database/betmurteil_detail.html"
 
 
+class VMUrteilDetailView(DetailView):
+    model = Urteil
+    template_name = "database/vmurteil_detail.html"
+
+
 # KI-Model Views:
 def ws_evaluation(request):
     if request.method == "POST":

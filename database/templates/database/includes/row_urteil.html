@@ -1,10 +1,11 @@
 <tr>
     <td>
-        {% if urteil.url_link %}
-            <a href="{{ urteil.url_link }}">{{ urteil.fall_nr }}</a>
-        {% else %}
-           {{ urteil.fall_nr }}
-        {% endif %}
+        <div class="d-flex flex-column">
+            <a href="{% url 'vmurteil_detail' pk=urteil.pk %}" class="fw-semibold">{{ urteil.fall_nr }}</a>
+            {% if urteil.url_link %}
+                <a href="{{ urteil.url_link }}" target="_blank" rel="noopener" class="link-secondary small">PDF öffnen</a>
+            {% endif %}
+        </div>
     </td>
     <td>
         {{ urteil.gericht }}

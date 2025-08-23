@@ -62,7 +62,7 @@ urlpatterns = [
         name="strafrechtlicher_sachverhalt",
     ),
     path(
-        "urteil/<int:pk>",
+        "vmurteil/<int:pk>",
         views.VMUrteilDetailView.as_view(),
         name="vmurteil_detail",
     ),

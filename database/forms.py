@@ -155,3 +155,12 @@ class CeteribusParibusFormular(ModelForm):
             "vorbestraft",
             "vorbestraft_einschlaegig",
         ]
+
+
+class StrafrechtlicherSachverhaltFormular(forms.Form):
+    sachverhalt = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 10, 'cols': 80}),
+        label="Strafrechtlicher Sachverhalt",
+        help_text="Bitte geben Sie hier die Eckwerte des strafrechtlichen Sachverhalts ein.",
+        required=True,
+    )

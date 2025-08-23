@@ -1981,7 +1981,10 @@ def strafrechtlicher_sachverhalt(request):
             Urteil ähnlich sind wie der eingegebene Sachverhalt. Gib schlussendlich an, mit welcher Strafe die
             beschuldigte Person im Präjudiz jeweils bestraft worden ist.
 
-            Formatiere die Bezeichnungen der Urteile als hyperlinks mit den vorhandenen url_link
+            Formatiere die Bezeichnungen der Urteile als hyperlinks auf die entsprechende detailseite des Urteils: 
+            Bei Betäubungsmittelkriminalität ist es so definiert: "https://ki.strafzumessung.ch/betmurteil/<pk>", 
+            bei vermögenskriminalität: "https://ki.strafzumessung.ch/vmrteil/<pk>", bei sexualdelikten verwende den 
+            mitgelieferten url_link
 
             Wenn der User einen Sachverhalt eingegeben hat, welcher nichts mit Strafrecht zu tun hat, und wenn keine
             Vermögens-, Betäubungsmittel- oder Sexualdelikte angegeben worden sind, teile dem Benutzer mit,

@@ -1,0 +1,84 @@
+{% extends './base.html' %}
+
+{% block body %}
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h3 mb-0">Fall {{ object.fall_nr }}</h1>
+      <div class="btn-group">
+        <a href="{% url 'database' %}" class="btn btn-outline-secondary btn-sm">Zurück zur Liste</a>
+        {% if object.url_link %}
+          <a href="{{ object.url_link }}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">PDF öffnen</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-lg-8">
+        <div class="card h-100">
+          <div class="card-header">Meta-Informationen</div>
+          <div class="card-body">
+            <div class="row row-cols-1 row-cols-md-2 gy-2">
+              <div class="col"><strong>Gericht:</strong> {{ object.gericht }}</div>
+              <div class="col"><strong>Urteilsdatum:</strong> {{ object.urteilsdatum|date:'d.m.Y' }}</div>
+              <div class="col"><strong>Verfahrensart:</strong> {{ object.get_verfahrensart_display }}</div>
+              <div class="col"><strong>Geschlecht:</strong> {{ object.get_geschlecht_display }}</div>
+              <div class="col"><strong>Nationalität:</strong> {{ object.get_nationalitaet_display }}</div>
+              <div class="col"><strong>Hauptdelikt:</strong> {{ object.hauptdelikt }}</div>
+              <div class="col"><strong>Mehrfach:</strong> {{ object.mehrfach|yesno:'Ja,Nein' }}</div>
+              <div class="col"><strong>Gewerbsmässig/qualifiziert:</strong> {{ object.gewerbsmaessig|yesno:'Ja,Nein' }}</div>
+              <div class="col"><strong>Bandenmässig:</strong> {{ object.bandenmaessig|yesno:'Ja,Nein' }}</div>
+              <div class="col"><strong>Deliktssumme:</strong> {{ object.deliktssumme }}</div>
+              <div class="col"><strong>Nebenverurteilungsscore:</strong> {{ object.nebenverurteilungsscore }}</div>
+              <div class="col"><strong>Vorbestraft:</strong> {{ object.vorbestraft|yesno:'Ja,Nein' }}</div>
+              <div class="col"><strong>Einschlägig vorbestraft:</strong> {{ object.vorbestraft_einschlaegig|yesno:'Ja,Nein' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card h-100">
+          <div class="card-header">Sanktion</div>
+          <div class="card-body">
+            <p class="mb-2"><strong>Hauptsanktion:</strong> {{ object.get_hauptsanktion_display }}</p>
+            {% if object.hauptsanktion == '0' %}
+              <p class="mb-2"><strong>Dauer:</strong> {{ object.freiheitsstrafe_in_monaten }} Monate</p>
+            {% elif object.hauptsanktion == '1' %}
+              <p class="mb-2"><strong>Anzahl Tagessätze:</strong> {{ object.anzahl_tagessaetze }}</p>
+            {% else %}
+              <p class="mb-2"><strong>Busse:</strong> –</p>
+            {% endif %}
+            <p class="mb-0"><strong>Vollzug:</strong> {{ object.get_vollzug_display }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if object.zusammenfassung %}
+      <div class="card my-3">
+        <div class="card-header">Zusammenfassung</div>
+        <div class="card-body">
+          <p class="mb-0" style="white-space: pre-line;">{{ object.zusammenfassung }}</p>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="card my-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Urteil (PDF)</span>
+        {% if object.url_link %}
+          <a class="btn btn-sm btn-outline-primary" href="{{ object.url_link }}" target="_blank" rel="noopener">In neuem Tab öffnen</a>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        {% if object.url_link %}
+          <div class="ratio ratio-16x9">
+            <iframe src="{{ object.url_link }}" title="Urteil PDF" loading="lazy"></iframe>
+          </div>
+        {% else %}
+          <div class="alert alert-warning mb-0">Kein PDF-Link vorhanden.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

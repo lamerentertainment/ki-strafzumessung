@@ -1818,6 +1818,7 @@ import markdown
 from google import genai
 
 
+@login_required
 def strafrechtlicher_sachverhalt(request):
     """
     View für die Eingabe eines strafrechtlichen Sachverhalts und die Suche nach vergleichbaren Urteilen

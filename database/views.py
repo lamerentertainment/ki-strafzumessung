@@ -683,7 +683,9 @@ def betm_prognose(request):
 
             from sklearn.neighbors import KNeighborsRegressor
 
-            neigh = KNeighborsRegressor(n_neighbors=5)
+            total_samples_for_knn = len(df_x_onehot_scaled_gewichtet)
+            neighbors_to_fetch = min(total_samples_for_knn, 200)
+            neigh = KNeighborsRegressor(n_neighbors=neighbors_to_fetch)
             neigh.fit(df_x_onehot_scaled_gewichtet, y_strafmass)
             prognosemerkmale_df_preprocessed_scaled = scaler.transform(
                 prognosemerkmale_df_preprocessed
@@ -705,39 +707,51 @@ def betm_prognose(request):
                 indices[0]
             ]
 
-            nachbarliste = (
+            orig_nachbarliste = (
                 aehnlichstes_uerteile_gemaess_gewichtetem_kneighbormodell.index.tolist()
             )
+            # combine with distances and original positions
+            neighbors_info = [
+                (fall_nr, float(distances[0][i]), i) for i, fall_nr in enumerate(orig_nachbarliste)
+            ]
 
-            nachbar1 = BetmUrteil.objects.get(fall_nr=nachbarliste[0])
-            nachbar2 = BetmUrteil.objects.get(fall_nr=nachbarliste[1])
-            nachbar3 = BetmUrteil.objects.get(fall_nr=nachbarliste[2])
-            nachbar4 = BetmUrteil.objects.get(fall_nr=nachbarliste[3])
+            # Optional filtering: only neighbors with same Betäubungsmittelart wie Betm1
+            selected_neighbors = neighbors_info
+            try:
+                gleiche_kat = bool(form.cleaned_data.get("gleiche_kategorie_betm1"))
+            except Exception:
+                gleiche_kat = False
+            if gleiche_kat:
+                try:
+                    selected_betm1_name = getattr(form.cleaned_data.get("betm1"), "name", None)
+                except Exception:
+                    selected_betm1_name = None
+                if selected_betm1_name:
+                    filtered = []
+                    for fall_nr, dist, orig_pos in neighbors_info:
+                        if BetmUrteil.objects.filter(fall_nr=fall_nr, betm__art__name=selected_betm1_name).exists():
+                            filtered.append((fall_nr, dist, orig_pos))
+                    # If we have at least 4, use them; otherwise, fall back to unfiltered list
+                    if len(filtered) >= 4:
+                        selected_neighbors = filtered
+                # else: keep unfiltered list
 
-            nachbar1 = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
-                nachbar1,
-                strafmass_estimator=strafmass_modell,
-                hauptsanktion_estimator=hauptsanktions_modell,
-                vollzug_estimator=vollzugs_modell,
-            )
-            nachbar2 = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
-                nachbar2,
-                strafmass_estimator=strafmass_modell,
-                hauptsanktion_estimator=hauptsanktions_modell,
-                vollzug_estimator=vollzugs_modell,
-            )
-            nachbar3 = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
-                nachbar3,
-                strafmass_estimator=strafmass_modell,
-                hauptsanktion_estimator=hauptsanktions_modell,
-                vollzug_estimator=vollzugs_modell,
-            )
-            nachbar4 = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
-                nachbar4,
-                strafmass_estimator=strafmass_modell,
-                hauptsanktion_estimator=hauptsanktions_modell,
-                vollzug_estimator=vollzugs_modell,
-            )
+            # take the first 4 neighbors from the chosen list
+            chosen_four = selected_neighbors[:4]
+            nachbarliste = [item[0] for item in chosen_four]
+            nachbarposliste = [item[2] for item in chosen_four]
+
+            # Build neighbor BetmUrteil objects up to 4
+            nachbar_objs = []
+            for idx in range(min(4, len(nachbarliste))):
+                obj = BetmUrteil.objects.get(fall_nr=nachbarliste[idx])
+                obj = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
+                    obj,
+                    strafmass_estimator=strafmass_modell,
+                    hauptsanktion_estimator=hauptsanktions_modell,
+                    vollzug_estimator=vollzugs_modell,
+                )
+                nachbar_objs.append(obj)
 
             # differenzen von eingabe und nachbarn berechnen, evt. mal auslagern
             def differenzengenerator(nachbarobjekt, formobjekt, index=None):
@@ -816,10 +830,10 @@ def betm_prognose(request):
 
                 return nachbarobjekt
 
-            nachbar1 = differenzengenerator(nachbar1, form, 0)
-            nachbar2 = differenzengenerator(nachbar2, form, 1)
-            nachbar3 = differenzengenerator(nachbar3, form, 2)
-            nachbar4 = differenzengenerator(nachbar4, form, 3)
+            nachbar1 = differenzengenerator(nachbar_objs[0], form, nachbarposliste[0])
+            nachbar2 = differenzengenerator(nachbar_objs[1], form, nachbarposliste[1])
+            nachbar3 = differenzengenerator(nachbar_objs[2], form, nachbarposliste[2])
+            nachbar4 = differenzengenerator(nachbar_objs[3], form, nachbarposliste[3])
 
             context = {
                 "form": form,

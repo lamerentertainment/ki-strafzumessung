@@ -688,7 +688,9 @@ def betm_prognose(request):
 
             from sklearn.neighbors import KNeighborsRegressor
 
-            neigh = KNeighborsRegressor(n_neighbors=5)
+            total_samples_for_knn = len(df_x_onehot_scaled_gewichtet)
+            neighbors_to_fetch = min(total_samples_for_knn, 200)
+            neigh = KNeighborsRegressor(n_neighbors=neighbors_to_fetch)
             neigh.fit(df_x_onehot_scaled_gewichtet, y_strafmass)
             prognosemerkmale_df_preprocessed_scaled = scaler.transform(
                 prognosemerkmale_df_preprocessed
@@ -710,39 +712,104 @@ def betm_prognose(request):
                 indices[0]
             ]
 
-            nachbarliste = (
+            orig_nachbarliste = (
                 aehnlichstes_uerteile_gemaess_gewichtetem_kneighbormodell.index.tolist()
             )
+            # combine with distances and original positions
+            neighbors_info = [
+                (fall_nr, float(distances[0][i]), i) for i, fall_nr in enumerate(orig_nachbarliste)
+            ]
 
-            nachbar1 = BetmUrteil.objects.get(fall_nr=nachbarliste[0])
-            nachbar2 = BetmUrteil.objects.get(fall_nr=nachbarliste[1])
-            nachbar3 = BetmUrteil.objects.get(fall_nr=nachbarliste[2])
-            nachbar4 = BetmUrteil.objects.get(fall_nr=nachbarliste[3])
+            # Optional filtering: only neighbors with same Betäubungsmittelart wie Betm1 und/oder gleiche Rolle
+            selected_neighbors = neighbors_info
+            # Flags und Auswahlwerte vorbereiten
+            try:
+                gleiche_kat = bool(form.cleaned_data.get("gleiche_kategorie_betm1"))
+            except Exception:
+                gleiche_kat = False
+            try:
+                gleiche_rolle = bool(form.cleaned_data.get("gleiche_rolle"))
+            except Exception:
+                gleiche_rolle = False
 
-            nachbar1 = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
-                nachbar1,
-                strafmass_estimator=strafmass_modell,
-                hauptsanktion_estimator=hauptsanktions_modell,
-                vollzug_estimator=vollzugs_modell,
-            )
-            nachbar2 = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
-                nachbar2,
-                strafmass_estimator=strafmass_modell,
-                hauptsanktion_estimator=hauptsanktions_modell,
-                vollzug_estimator=vollzugs_modell,
-            )
-            nachbar3 = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
-                nachbar3,
-                strafmass_estimator=strafmass_modell,
-                hauptsanktion_estimator=hauptsanktions_modell,
-                vollzug_estimator=vollzugs_modell,
-            )
-            nachbar4 = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
-                nachbar4,
-                strafmass_estimator=strafmass_modell,
-                hauptsanktion_estimator=hauptsanktions_modell,
-                vollzug_estimator=vollzugs_modell,
-            )
+            selected_betm1_name = None
+            selected_role = None
+
+            # Filter nach Betäubungsmittelart anwenden (falls gewählt)
+            if gleiche_kat:
+                try:
+                    selected_betm1_name = getattr(form.cleaned_data.get("betm1"), "name", None)
+                except Exception:
+                    selected_betm1_name = None
+                if selected_betm1_name:
+                    filtered = []
+                    for fall_nr, dist, orig_pos in selected_neighbors:
+                        if BetmUrteil.objects.filter(fall_nr=fall_nr, betm__art__name=selected_betm1_name).exists():
+                            filtered.append((fall_nr, dist, orig_pos))
+                    # Filter strikt anwenden (kein Fallback auf ungefilterte Nachbarn)
+                    selected_neighbors = filtered
+
+            # Filter nach Rolle anwenden (falls gewählt)
+            if gleiche_rolle:
+                selected_role = form.cleaned_data.get("rolle", None)
+                if selected_role is not None:
+                    filtered_role = []
+                    for fall_nr, dist, orig_pos in selected_neighbors:
+                        if BetmUrteil.objects.filter(fall_nr=fall_nr, rolle=selected_role).exists():
+                            filtered_role.append((fall_nr, dist, orig_pos))
+                    # Filter strikt anwenden (kein Fallback)
+                    selected_neighbors = filtered_role
+
+            # Wenn Filter aktiv sind und es weniger als 4 passende Präjudizien gibt, Fehlermeldung anzeigen und keine Präjudizien rendern
+            filter_aktiv = (gleiche_kat and selected_betm1_name is not None) or (gleiche_rolle and selected_role is not None)
+            if filter_aktiv and len(selected_neighbors) < 4:
+                # Fehlermeldung konstruieren
+                kriterien_liste = []
+                if gleiche_kat and selected_betm1_name:
+                    kriterien_liste.append(f"Betäubungsmittelart: {selected_betm1_name}")
+                if gleiche_rolle and selected_role is not None:
+                    rolle_name = getattr(selected_role, "name", str(selected_role))
+                    kriterien_liste.append(f"Rolle: {rolle_name}")
+                if kriterien_liste:
+                    kriterien_text = "\n".join([f"• {k}" for k in kriterien_liste])
+                else:
+                    kriterien_text = "(keine Kriterien erkannt)"
+                praejudizien_error_message = (
+                    "Nicht genügend (mind. 4) Präjudizen mit folgenden Kriterien vorhanden:\n"
+                    f"{kriterien_text}\n"
+                    "Um Präjudizien anzuzeigen, deaktivieren Sie entsprechende Filterfunktionen."
+                )
+                context = {
+                    "form": form,
+                    "display_eingabeformular_button": "d-inline-flex",
+                    "eingabeformular_anzeigen": "",
+                    "vorhersage_vollzug": vorhersage_vollzug,
+                    "vorhersage_hauptsanktion": vorhersage_hauptsanktion,
+                    "vorhersage_strafmass": vorhersage_strafmass,
+                    "praejudizien_error_message": praejudizien_error_message,
+                }
+                return render(
+                    request,
+                    "database/betm_prognose.html",
+                    context=context,
+                )
+
+            # take the first 4 neighbors from the chosen list
+            chosen_four = selected_neighbors[:4]
+            nachbarliste = [item[0] for item in chosen_four]
+            nachbarposliste = [item[2] for item in chosen_four]
+
+            # Build neighbor BetmUrteil objects up to 4
+            nachbar_objs = []
+            for idx in range(min(4, len(nachbarliste))):
+                obj = BetmUrteil.objects.get(fall_nr=nachbarliste[idx])
+                obj = betm_nachbarobjekt_mit_sanktionsbewertung_anreichern(
+                    obj,
+                    strafmass_estimator=strafmass_modell,
+                    hauptsanktion_estimator=hauptsanktions_modell,
+                    vollzug_estimator=vollzugs_modell,
+                )
+                nachbar_objs.append(obj)
 
             # differenzen von eingabe und nachbarn berechnen, evt. mal auslagern
             def differenzengenerator(nachbarobjekt, formobjekt, index=None):
@@ -821,10 +888,10 @@ def betm_prognose(request):
 
                 return nachbarobjekt
 
-            nachbar1 = differenzengenerator(nachbar1, form, 0)
-            nachbar2 = differenzengenerator(nachbar2, form, 1)
-            nachbar3 = differenzengenerator(nachbar3, form, 2)
-            nachbar4 = differenzengenerator(nachbar4, form, 3)
+            nachbar1 = differenzengenerator(nachbar_objs[0], form, nachbarposliste[0])
+            nachbar2 = differenzengenerator(nachbar_objs[1], form, nachbarposliste[1])
+            nachbar3 = differenzengenerator(nachbar_objs[2], form, nachbarposliste[2])
+            nachbar4 = differenzengenerator(nachbar_objs[3], form, nachbarposliste[3])
 
             context = {
                 "form": form,

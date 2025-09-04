@@ -736,6 +736,22 @@ def betm_prognose(request):
                         selected_neighbors = filtered
                 # else: keep unfiltered list
 
+            # Optional filtering: only neighbors with same Rolle
+            try:
+                gleiche_rolle = bool(form.cleaned_data.get("gleiche_rolle"))
+            except Exception:
+                gleiche_rolle = False
+            if gleiche_rolle:
+                selected_role = form.cleaned_data.get("rolle", None)
+                if selected_role is not None:
+                    filtered_role = []
+                    for fall_nr, dist, orig_pos in selected_neighbors:
+                        if BetmUrteil.objects.filter(fall_nr=fall_nr, rolle=selected_role).exists():
+                            filtered_role.append((fall_nr, dist, orig_pos))
+                    if len(filtered_role) >= 4:
+                        selected_neighbors = filtered_role
+                # else: keep current selection
+
             # take the first 4 neighbors from the chosen list
             chosen_four = selected_neighbors[:4]
             nachbarliste = [item[0] for item in chosen_four]

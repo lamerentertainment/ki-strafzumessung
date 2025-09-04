@@ -149,6 +149,13 @@ class BetmUrteilsEckpunkteAbfrageFormular(forms.Form):
                   "das primäre Betäubungsmittel angezeigt,.",
         template_name="database/includes/prognose_form_field.html",
     )
+    gleiche_rolle = forms.BooleanField(
+        initial=False,
+        required=False,
+        label="Nur Präjudizen anzeigen, bei denen die Rolle mit der gewählten Rolle übereinstimmt",
+        help_text="Wenn aktiviert, werden nur Präjudizien mit derselben Rolle wie im Formular ausgewählt angezeigt.",
+        template_name="database/includes/prognose_form_field.html",
+    )
 
 
 class CeteribusParibusFormular(ModelForm):

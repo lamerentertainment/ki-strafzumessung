@@ -142,11 +142,11 @@ class BetmUrteilsEckpunkteAbfrageFormular(forms.Form):
                                     required=False,
                                     template_name="database/includes/prognose_form_field.html")
     gleiche_kategorie_betm1 = forms.BooleanField(
-        initial=False,
+        initial=True,
         required=False,
         label="Nur Präjudizen anzeigen, die gleiche Betäubungsmittelart wie primäres Betäubungsmittel aufweisen",
         help_text="Wenn aktiviert, werden nur Präjudizien betreffend die gleiche Betäubungsmittelart wie "
-                  "das primäre Betäubungsmittel angezeigt,.",
+                  "das primäre Betäubungsmittel angezeigt.",
         template_name="database/includes/prognose_form_field.html",
     )
     gleiche_rolle = forms.BooleanField(

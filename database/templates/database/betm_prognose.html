@@ -98,23 +98,29 @@
                 {% comment %}
                 <p>knn_prediction: {{ knn_prediction }} Monate</p>
                 {% endcomment %}
-            <div class="row">
-                <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar1 %}</div>
-                <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar2 %}</div>
-            </div>
-
-            <div class="text-center mt-3 mb-3">
-                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#moreNachbarn" aria-expanded="false" aria-controls="moreNachbarn">
-                    Zeige weitere vergleichbare Präjudizien
-                </button>
-            </div>
-
-            <div class="collapse" id="moreNachbarn">
-                <div class="row">
-                    <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar3 %}</div>
-                    <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar4 %}</div>
+            {% if praejudizien_error_message %}
+                <div class="alert alert-warning" role="alert">
+                    {{ praejudizien_error_message|linebreaksbr }}
                 </div>
-            </div>
+            {% else %}
+                <div class="row">
+                    <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar1 %}</div>
+                    <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar2 %}</div>
+                </div>
+
+                <div class="text-center mt-3 mb-3">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#moreNachbarn" aria-expanded="false" aria-controls="moreNachbarn">
+                        Zeige weitere vergleichbare Präjudizien
+                    </button>
+                </div>
+
+                <div class="collapse" id="moreNachbarn">
+                    <div class="row">
+                        <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar3 %}</div>
+                        <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar4 %}</div>
+                    </div>
+                </div>
+            {% endif %}
         </div>
         {% endif %}
 

@@ -715,12 +715,22 @@ def betm_prognose(request):
                 (fall_nr, float(distances[0][i]), i) for i, fall_nr in enumerate(orig_nachbarliste)
             ]
 
-            # Optional filtering: only neighbors with same Betäubungsmittelart wie Betm1
+            # Optional filtering: only neighbors with same Betäubungsmittelart wie Betm1 und/oder gleiche Rolle
             selected_neighbors = neighbors_info
+            # Flags und Auswahlwerte vorbereiten
             try:
                 gleiche_kat = bool(form.cleaned_data.get("gleiche_kategorie_betm1"))
             except Exception:
                 gleiche_kat = False
+            try:
+                gleiche_rolle = bool(form.cleaned_data.get("gleiche_rolle"))
+            except Exception:
+                gleiche_rolle = False
+
+            selected_betm1_name = None
+            selected_role = None
+
+            # Filter nach Betäubungsmittelart anwenden (falls gewählt)
             if gleiche_kat:
                 try:
                     selected_betm1_name = getattr(form.cleaned_data.get("betm1"), "name", None)
@@ -728,19 +738,13 @@ def betm_prognose(request):
                     selected_betm1_name = None
                 if selected_betm1_name:
                     filtered = []
-                    for fall_nr, dist, orig_pos in neighbors_info:
+                    for fall_nr, dist, orig_pos in selected_neighbors:
                         if BetmUrteil.objects.filter(fall_nr=fall_nr, betm__art__name=selected_betm1_name).exists():
                             filtered.append((fall_nr, dist, orig_pos))
-                    # If we have at least 4, use them; otherwise, fall back to unfiltered list
-                    if len(filtered) >= 4:
-                        selected_neighbors = filtered
-                # else: keep unfiltered list
+                    # Filter strikt anwenden (kein Fallback auf ungefilterte Nachbarn)
+                    selected_neighbors = filtered
 
-            # Optional filtering: only neighbors with same Rolle
-            try:
-                gleiche_rolle = bool(form.cleaned_data.get("gleiche_rolle"))
-            except Exception:
-                gleiche_rolle = False
+            # Filter nach Rolle anwenden (falls gewählt)
             if gleiche_rolle:
                 selected_role = form.cleaned_data.get("rolle", None)
                 if selected_role is not None:
@@ -748,9 +752,42 @@ def betm_prognose(request):
                     for fall_nr, dist, orig_pos in selected_neighbors:
                         if BetmUrteil.objects.filter(fall_nr=fall_nr, rolle=selected_role).exists():
                             filtered_role.append((fall_nr, dist, orig_pos))
-                    if len(filtered_role) >= 4:
-                        selected_neighbors = filtered_role
-                # else: keep current selection
+                    # Filter strikt anwenden (kein Fallback)
+                    selected_neighbors = filtered_role
+
+            # Wenn Filter aktiv sind und es weniger als 4 passende Präjudizien gibt, Fehlermeldung anzeigen und keine Präjudizien rendern
+            filter_aktiv = (gleiche_kat and selected_betm1_name is not None) or (gleiche_rolle and selected_role is not None)
+            if filter_aktiv and len(selected_neighbors) < 4:
+                # Fehlermeldung konstruieren
+                kriterien_liste = []
+                if gleiche_kat and selected_betm1_name:
+                    kriterien_liste.append(f"Betäubungsmittelart: {selected_betm1_name}")
+                if gleiche_rolle and selected_role is not None:
+                    rolle_name = getattr(selected_role, "name", str(selected_role))
+                    kriterien_liste.append(f"Rolle: {rolle_name}")
+                if kriterien_liste:
+                    kriterien_text = "\n".join([f"• {k}" for k in kriterien_liste])
+                else:
+                    kriterien_text = "(keine Kriterien erkannt)"
+                praejudizien_error_message = (
+                    "Nicht genügend (mind. 4) Präjudizen mit folgenden Kriterien vorhanden:\n"
+                    f"{kriterien_text}\n"
+                    "Um Präjudizien anzuzeigen, deaktivieren Sie entsprechende Filterfunktionen."
+                )
+                context = {
+                    "form": form,
+                    "display_eingabeformular_button": "d-inline-flex",
+                    "eingabeformular_anzeigen": "",
+                    "vorhersage_vollzug": vorhersage_vollzug,
+                    "vorhersage_hauptsanktion": vorhersage_hauptsanktion,
+                    "vorhersage_strafmass": vorhersage_strafmass,
+                    "praejudizien_error_message": praejudizien_error_message,
+                }
+                return render(
+                    request,
+                    "database/betm_prognose.html",
+                    context=context,
+                )
 
             # take the first 4 neighbors from the chosen list
             chosen_four = selected_neighbors[:4]

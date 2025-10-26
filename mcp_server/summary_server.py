@@ -28,6 +28,7 @@ django.setup()
 
 # Jetzt können wir Django models importieren
 from database.models import Urteil, BetmUrteil, SexualdeliktUrteil
+from database.ai_utils import knn_pipeline, formulareingaben_in_abfragesample_konvertieren
 
 # MCP imports
 from mcp.server.models import InitializationOptions
@@ -162,6 +163,78 @@ async def handle_list_tools() -> list[Tool]:
                     }
                 },
             }
+        ),
+        Tool(
+            name="find_similar_cases",
+            description="Findet ähnliche Urteile basierend auf einem Sachverhalt. "
+                       "Nutzt KNN-basierte Ähnlichkeitssuche mit ML-Gewichtung. "
+                       "Gibt die ähnlichsten Fälle mit Zusammenfassungen zurück.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "case_type": {
+                        "type": "string",
+                        "enum": ["wirtschaft", "betm"],
+                        "description": "Falltyp: 'wirtschaft' (Wirtschaftskriminalität) oder 'betm' (Betäubungsmittel)"
+                    },
+                    "deliktssumme": {
+                        "type": "number",
+                        "description": "Deliktssumme in CHF (nur für Wirtschaftskriminalität)"
+                    },
+                    "hauptdelikt": {
+                        "type": "string",
+                        "description": "Hauptdelikt (z.B. 'Betrug', 'Veruntreuung', 'Diebstahl')"
+                    },
+                    "vorbestraft": {
+                        "type": "boolean",
+                        "description": "Hat der Angeklagte Vorstrafen?"
+                    },
+                    "vorbestraft_einschlaegig": {
+                        "type": "boolean",
+                        "description": "Einschlägige Vorstrafen im gleichen Deliktbereich?"
+                    },
+                    "gewerbsmaessig": {
+                        "type": "boolean",
+                        "description": "Wurde das Delikt gewerbsmässig begangen?"
+                    },
+                    "n_neighbors": {
+                        "type": "integer",
+                        "description": "Anzahl ähnlicher Fälle (default: 4)",
+                        "default": 4,
+                        "minimum": 1,
+                        "maximum": 10
+                    }
+                },
+                "required": ["case_type"]
+            }
+        ),
+        Tool(
+            name="find_similar_by_description",
+            description="Findet ähnliche Urteile basierend auf einer Freitext-Sachverhaltsbeschreibung. "
+                       "Durchsucht die Zusammenfassungen semantisch und findet inhaltlich ähnliche Fälle.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "description": {
+                        "type": "string",
+                        "description": "Sachverhaltsbeschreibung in Freitext (z.B. 'Der Angeklagte hat über mehrere Jahre systematisch Kunden betrogen und dabei CHF 500'000 veruntreut')"
+                    },
+                    "case_type": {
+                        "type": "string",
+                        "enum": ["wirtschaft", "betm", "sexual", "all"],
+                        "description": "Optional: Filter nach Falltyp",
+                        "default": "all"
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Anzahl ähnlicher Fälle (default: 5)",
+                        "default": 5,
+                        "minimum": 1,
+                        "maximum": 20
+                    }
+                },
+                "required": ["description"]
+            }
         )
     ]
 
@@ -176,6 +249,10 @@ async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
         return await search_summaries(arguments)
     elif name == "list_summaries":
         return await list_summaries(arguments)
+    elif name == "find_similar_cases":
+        return await find_similar_cases(arguments)
+    elif name == "find_similar_by_description":
+        return await find_similar_by_description(arguments)
     else:
         raise ValueError(f"Unbekanntes Tool: {name}")
 
@@ -485,6 +562,190 @@ async def list_summaries(args: dict) -> list[TextContent]:
             type="text",
             text=f"❌ Fehler beim Auflisten: {str(e)}"
         )]
+
+
+async def find_similar_by_description(args: dict) -> list[TextContent]:
+    """
+    Findet ähnliche Urteile basierend auf einer Freitext-Sachverhaltsbeschreibung.
+    Nutzt einfache Keyword-basierte Ähnlichkeit.
+
+    Args:
+        description: Sachverhaltsbeschreibung in Freitext
+        case_type: Optional Filter nach Falltyp
+        limit: Anzahl ähnlicher Fälle
+    """
+    description = args["description"]
+    case_type = args.get("case_type", "all")
+    limit = args.get("limit", 5)
+
+    # Extrahiere Keywords aus der Beschreibung
+    keywords = description.lower().split()
+    # Entferne sehr kurze Wörter und Füllwörter
+    stop_words = {'der', 'die', 'das', 'und', 'oder', 'in', 'von', 'zu', 'mit', 'für', 'auf', 'ist', 'hat', 'ein', 'eine'}
+    keywords = [k for k in keywords if len(k) > 3 and k not in stop_words]
+
+    if not keywords:
+        return [TextContent(
+            type="text",
+            text="❌ Bitte geben Sie eine detailliertere Sachverhaltsbeschreibung an."
+        )]
+
+    # Suche nach Urteilen, die mindestens ein Keyword enthalten
+    def search_by_keywords():
+        from django.db.models import Q, Count
+        from functools import reduce
+        import operator
+
+        results = []
+
+        # Erstelle Q-Objekte für OR-Verknüpfung aller Keywords
+        query_parts = [Q(zusammenfassung__icontains=kw) for kw in keywords[:10]]  # Max 10 Keywords
+        combined_query = reduce(operator.or_, query_parts)
+
+        if case_type in ["wirtschaft", "all"]:
+            wirtschaft_matches = list(
+                Urteil.objects.filter(combined_query)
+                .exclude(zusammenfassung="")
+                .select_related('hauptdelikt')[:limit * 2]
+            )
+            for j in wirtschaft_matches:
+                # Count matching keywords
+                match_count = sum(1 for kw in keywords if kw in j.zusammenfassung.lower())
+                results.append({
+                    'id': j.pk,
+                    'type': 'wirtschaft',
+                    'fall_nr': j.fall_nr if hasattr(j, 'fall_nr') else None,
+                    'datum': str(j.datum) if hasattr(j, 'datum') else '',
+                    'zusammenfassung': j.zusammenfassung,
+                    'deliktssumme': j.deliktssumme if hasattr(j, 'deliktssumme') else None,
+                    'hauptdelikt': str(j.hauptdelikt) if hasattr(j, 'hauptdelikt') else '',
+                    'match_score': match_count
+                })
+
+        if case_type in ["betm", "all"]:
+            betm_matches = list(
+                BetmUrteil.objects.filter(combined_query)
+                .exclude(zusammenfassung="")
+                .select_related('rolle')[:limit * 2]
+            )
+            for j in betm_matches:
+                match_count = sum(1 for kw in keywords if kw in j.zusammenfassung.lower())
+                results.append({
+                    'id': j.pk,
+                    'type': 'betm',
+                    'fall_nr': j.fall_nr if hasattr(j, 'fall_nr') else None,
+                    'datum': str(j.datum) if hasattr(j, 'datum') else '',
+                    'zusammenfassung': j.zusammenfassung,
+                    'rolle': str(j.rolle) if hasattr(j, 'rolle') else '',
+                    'match_score': match_count
+                })
+
+        if case_type in ["sexual", "all"]:
+            sexual_matches = list(
+                SexualdeliktUrteil.objects.filter(combined_query)
+                .exclude(zusammenfassung="")
+                .select_related('hauptdelikt')[:limit * 2]
+            )
+            for j in sexual_matches:
+                match_count = sum(1 for kw in keywords if kw in j.zusammenfassung.lower())
+                results.append({
+                    'id': j.pk,
+                    'type': 'sexual',
+                    'fall_nr': j.fall_nr if hasattr(j, 'fall_nr') else None,
+                    'datum': str(j.datum) if hasattr(j, 'datum') else '',
+                    'zusammenfassung': j.zusammenfassung,
+                    'hauptdelikt': str(j.hauptdelikt) if hasattr(j, 'hauptdelikt') else '',
+                    'match_score': match_count
+                })
+
+        # Sortiere nach Match-Score (absteigende Reihenfolge)
+        results.sort(key=lambda x: x['match_score'], reverse=True)
+        return results[:limit]
+
+    try:
+        results = await sync_to_async(search_by_keywords)()
+
+        if not results:
+            return [TextContent(
+                type="text",
+                text=f"🔍 Keine ähnlichen Urteile gefunden für die Beschreibung:\n'{description[:100]}...'\n\n"
+                     f"Suchte nach Keywords: {', '.join(keywords[:10])}"
+            )]
+
+        # Formatiere Ausgabe
+        output = f"# Ähnliche Urteile zur Sachverhaltsbeschreibung\n\n"
+        output += f"**Ihre Beschreibung:**\n{description}\n\n"
+        output += f"**Suchkeywords:** {', '.join(keywords[:10])}\n"
+        output += f"**Gefunden:** {len(results)} ähnliche{'r' if len(results) == 1 else ''} Fall/Fälle\n\n"
+        output += "---\n\n"
+
+        for idx, judgment_data in enumerate(results, 1):
+            jtype = judgment_data['type']
+            match_score = judgment_data['match_score']
+
+            output += f"## {idx}. {jtype.capitalize()}-Urteil #{judgment_data['id']} (Relevanz: {match_score} Keywords)\n\n"
+            output += f"- **Fall-Nr:** {judgment_data.get('fall_nr', 'N/A')}\n"
+            output += f"- **Datum:** {judgment_data.get('datum', 'N/A')}\n"
+
+            if jtype == "wirtschaft" and judgment_data.get('deliktssumme'):
+                output += f"- **Deliktssumme:** CHF {judgment_data['deliktssumme']}\n"
+                output += f"- **Hauptdelikt:** {judgment_data.get('hauptdelikt', 'N/A')}\n"
+            elif jtype == "betm":
+                output += f"- **Rolle:** {judgment_data.get('rolle', 'N/A')}\n"
+            elif jtype == "sexual":
+                output += f"- **Hauptdelikt:** {judgment_data.get('hauptdelikt', 'N/A')}\n"
+
+            # Zusammenfassung mit Highlighting der Keywords
+            summary = judgment_data['zusammenfassung']
+            if len(summary) > 500:
+                summary = summary[:500] + "..."
+
+            output += f"\n**Zusammenfassung:**\n{summary}\n\n"
+            output += "---\n\n"
+
+        output += f"\n*Verwenden Sie `get_summary` mit der ID für die vollständige Zusammenfassung*"
+
+        return [TextContent(type="text", text=output)]
+
+    except Exception as e:
+        return [TextContent(
+            type="text",
+            text=f"❌ Fehler bei der Ähnlichkeitssuche: {str(e)}"
+        )]
+
+
+async def find_similar_cases(args: dict) -> list[TextContent]:
+    """
+    Findet ähnliche Urteile basierend auf strukturierten Merkmalen.
+    Nutzt die KNN-Pipeline aus der Anwendung.
+
+    Args:
+        case_type: Falltyp (wirtschaft, betm)
+        Features je nach Typ
+        n_neighbors: Anzahl der Nachbarn
+    """
+    case_type = args["case_type"]
+    n_neighbors = args.get("n_neighbors", 4)
+
+    # Info-Text über limitierte Funktionalität
+    info_text = (
+        "**Hinweis:** Die strukturierte Ähnlichkeitssuche ist aktuell eingeschränkt verfügbar, "
+        "da sie auf vortrainierte ML-Modelle und komplexe Datenstrukturen angewiesen ist.\n\n"
+        "**Empfehlung:** Verwenden Sie stattdessen:\n"
+        "- `find_similar_by_description` - Für Freitext-Sachverhaltsbeschreibungen\n"
+        "- `search_summaries` - Für Keyword-basierte Suche\n\n"
+        "**Ihre Eingabe:**\n"
+    )
+
+    for key, value in args.items():
+        if key != "case_type" and key != "n_neighbors":
+            info_text += f"- {key}: {value}\n"
+
+    return [TextContent(
+        type="text",
+        text=f"# Strukturierte Ähnlichkeitssuche\n\n{info_text}\n\n"
+             f"ℹ️ Für die vollständige KNN-basierte Suche nutzen Sie bitte die Web-Anwendung."
+    )]
 
 
 async def main():

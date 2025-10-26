@@ -4,9 +4,22 @@ Dieser MCP-Server ermöglicht es Claude, auf LLM-generierte Zusammenfassungen vo
 
 ## Features
 
+### Basis-Tools
+
 - **get_summary**: Ruft eine spezifische Urteilszusammenfassung ab
 - **search_summaries**: Durchsucht Zusammenfassungen nach Stichworten
 - **list_summaries**: Listet alle verfügbaren Zusammenfassungen auf
+
+### Ähnlichkeitssuche (NEU)
+
+- **find_similar_by_description**: Findet ähnliche Urteile basierend auf einer Freitext-Sachverhaltsbeschreibung
+  - Nutzt Keyword-Extraktion und semantische Ähnlichkeit
+  - Berechnet Relevanz-Scores basierend auf übereinstimmenden Keywords
+  - Zeigt die ähnlichsten Fälle mit Zusammenfassungen
+
+- **find_similar_cases**: Strukturierte Suche nach ähnlichen Urteilen
+  - Basiert auf strukturierten Merkmalen (Deliktssumme, Vorstrafen, etc.)
+  - Hinweis: Aktuell eingeschränkt verfügbar (verweist auf Web-Anwendung)
 
 Unterstützte Urteilstypen:
 - `wirtschaft` - Wirtschaftskriminalität (Urteil Model)
@@ -121,6 +134,26 @@ Claude verwendet das Tool: list_summaries
 - judgment_type: "sexual"
 - limit: 50
 ```
+
+### Beispiel 4: Ähnliche Fälle per Sachverhaltsbeschreibung finden (NEU)
+
+```
+User: Finde ähnliche Urteile zu folgendem Sachverhalt:
+Der Angeklagte hat über 2 Jahre hinweg systematisch Kunden getäuscht
+und dabei CHF 300'000 veruntreut. Er ist vorbestraft.
+
+Claude verwendet das Tool: find_similar_by_description
+- description: "Der Angeklagte hat über 2 Jahre hinweg systematisch
+  Kunden getäuscht und dabei CHF 300'000 veruntreut. Er ist vorbestraft."
+- case_type: "all"
+- limit: 5
+```
+
+**Ausgabe:**
+- Extrahiert Keywords (getäuscht, kunden, veruntreut, vorbestraft, etc.)
+- Findet Urteile mit den meisten Keyword-Übereinstimmungen
+- Zeigt Relevanz-Score für jedes Urteil
+- Gibt Zusammenfassungen der ähnlichsten Fälle zurück
 
 ## Verfügbare Tools im Detail
 

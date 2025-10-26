@@ -15,12 +15,13 @@ import os
 import sys
 import asyncio
 from typing import Any
+from asgiref.sync import sync_to_async
 
 # Django Setup - muss vor MCP imports erfolgen
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, project_root)
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'strafzumessung.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'strafbemessung.settings.base_settings')
 
 import django
 django.setup()
@@ -198,7 +199,8 @@ async def get_summary(args: dict) -> list[TextContent]:
         )]
 
     try:
-        judgment = model.objects.get(pk=judgment_id)
+        # Django ORM-Aufruf in async Context - nutze sync_to_async
+        judgment = await sync_to_async(model.objects.get)(pk=judgment_id)
 
         # Prüfe ob Zusammenfassung vorhanden
         if not judgment.zusammenfassung or judgment.zusammenfassung.strip() == "":
@@ -273,32 +275,36 @@ async def search_summaries(args: dict) -> list[TextContent]:
 
     results = []
 
-    def search_model(model, type_name):
-        """Sucht in einem Model nach dem Query-String."""
-        return list(model.objects.filter(
+    def search_model_wirtschaft():
+        """Sucht in Wirtschaft-Urteilen."""
+        return list(Urteil.objects.filter(
             zusammenfassung__icontains=query
-        ).exclude(
-            zusammenfassung=""
-        ).values_list('pk', flat=False)[:limit])
+        ).exclude(zusammenfassung="")[:limit])
+
+    def search_model_betm():
+        """Sucht in Betm-Urteilen."""
+        return list(BetmUrteil.objects.filter(
+            zusammenfassung__icontains=query
+        ).exclude(zusammenfassung="")[:limit])
+
+    def search_model_sexual():
+        """Sucht in Sexual-Urteilen."""
+        return list(SexualdeliktUrteil.objects.filter(
+            zusammenfassung__icontains=query
+        ).exclude(zusammenfassung="")[:limit])
 
     try:
-        # Suche in den entsprechenden Models
+        # Suche in den entsprechenden Models - async wrapped
         if judgment_type in ["wirtschaft", "all"]:
-            wirtschaft_results = Urteil.objects.filter(
-                zusammenfassung__icontains=query
-            ).exclude(zusammenfassung="")[:limit]
+            wirtschaft_results = await sync_to_async(search_model_wirtschaft)()
             results.extend([(j, "wirtschaft") for j in wirtschaft_results])
 
         if judgment_type in ["betm", "all"]:
-            betm_results = BetmUrteil.objects.filter(
-                zusammenfassung__icontains=query
-            ).exclude(zusammenfassung="")[:limit]
+            betm_results = await sync_to_async(search_model_betm)()
             results.extend([(j, "betm") for j in betm_results])
 
         if judgment_type in ["sexual", "all"]:
-            sexual_results = SexualdeliktUrteil.objects.filter(
-                zusammenfassung__icontains=query
-            ).exclude(zusammenfassung="")[:limit]
+            sexual_results = await sync_to_async(search_model_sexual)()
             results.extend([(j, "sexual") for j in sexual_results])
 
         # Keine Ergebnisse
@@ -357,18 +363,30 @@ async def list_summaries(args: dict) -> list[TextContent]:
 
     results = []
 
+    def list_wirtschaft():
+        """Liste Wirtschaft-Urteile."""
+        return list(Urteil.objects.exclude(zusammenfassung="")[:limit])
+
+    def list_betm():
+        """Liste Betm-Urteile."""
+        return list(BetmUrteil.objects.exclude(zusammenfassung="")[:limit])
+
+    def list_sexual():
+        """Liste Sexual-Urteile."""
+        return list(SexualdeliktUrteil.objects.exclude(zusammenfassung="")[:limit])
+
     try:
-        # Sammle Urteile mit Zusammenfassungen
+        # Sammle Urteile mit Zusammenfassungen - async wrapped
         if judgment_type in ["wirtschaft", "all"]:
-            wirtschaft = Urteil.objects.exclude(zusammenfassung="")[:limit]
+            wirtschaft = await sync_to_async(list_wirtschaft)()
             results.extend([(j, "wirtschaft") for j in wirtschaft])
 
         if judgment_type in ["betm", "all"]:
-            betm = BetmUrteil.objects.exclude(zusammenfassung="")[:limit]
+            betm = await sync_to_async(list_betm)()
             results.extend([(j, "betm") for j in betm])
 
         if judgment_type in ["sexual", "all"]:
-            sexual = SexualdeliktUrteil.objects.exclude(zusammenfassung="")[:limit]
+            sexual = await sync_to_async(list_sexual)()
             results.extend([(j, "sexual") for j in sexual])
 
         if not results:

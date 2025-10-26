@@ -1,0 +1,8 @@
+# MCP Server Dependencies
+mcp>=1.0.0
+
+# Django (sollte bereits im Hauptprojekt installiert sein)
+django>=4.2
+
+# PostgreSQL Adapter (sollte bereits installiert sein)
+psycopg2-binary>=2.9.0

@@ -275,37 +275,67 @@ async def search_summaries(args: dict) -> list[TextContent]:
 
     results = []
 
-    def search_model_wirtschaft():
-        """Sucht in Wirtschaft-Urteilen."""
-        return list(Urteil.objects.filter(
+    def search_and_serialize_wirtschaft():
+        """Sucht in Wirtschaft-Urteilen und serialisiert."""
+        judgments = list(Urteil.objects.filter(
             zusammenfassung__icontains=query
-        ).exclude(zusammenfassung="")[:limit])
+        ).exclude(zusammenfassung="").select_related('hauptdelikt')[:limit])
 
-    def search_model_betm():
-        """Sucht in Betm-Urteilen."""
-        return list(BetmUrteil.objects.filter(
-            zusammenfassung__icontains=query
-        ).exclude(zusammenfassung="")[:limit])
+        # Extrahiere alle Daten im sync context
+        return [{
+            'id': j.pk,
+            'type': 'wirtschaft',
+            'fall_nr': j.fall_nr if hasattr(j, 'fall_nr') else None,
+            'datum': str(j.datum) if hasattr(j, 'datum') else '',
+            'zusammenfassung': j.zusammenfassung,
+            'deliktssumme': j.deliktssumme if hasattr(j, 'deliktssumme') else None,
+            'hauptdelikt': str(j.hauptdelikt) if hasattr(j, 'hauptdelikt') else '',
+        } for j in judgments]
 
-    def search_model_sexual():
-        """Sucht in Sexual-Urteilen."""
-        return list(SexualdeliktUrteil.objects.filter(
+    def search_and_serialize_betm():
+        """Sucht in Betm-Urteilen und serialisiert."""
+        judgments = list(BetmUrteil.objects.filter(
             zusammenfassung__icontains=query
-        ).exclude(zusammenfassung="")[:limit])
+        ).exclude(zusammenfassung="").select_related('rolle')[:limit])
+
+        return [{
+            'id': j.pk,
+            'type': 'betm',
+            'fall_nr': j.fall_nr if hasattr(j, 'fall_nr') else None,
+            'datum': str(j.datum) if hasattr(j, 'datum') else '',
+            'zusammenfassung': j.zusammenfassung,
+            'rolle': str(j.rolle) if hasattr(j, 'rolle') else '',
+        } for j in judgments]
+
+    def search_and_serialize_sexual():
+        """Sucht in Sexual-Urteilen und serialisiert."""
+        judgments = list(SexualdeliktUrteil.objects.filter(
+            zusammenfassung__icontains=query
+        ).exclude(zusammenfassung="").select_related('hauptdelikt')[:limit])
+
+        return [{
+            'id': j.pk,
+            'type': 'sexual',
+            'fall_nr': j.fall_nr if hasattr(j, 'fall_nr') else None,
+            'datum': str(j.datum) if hasattr(j, 'datum') else '',
+            'zusammenfassung': j.zusammenfassung,
+            'hauptdelikt': str(j.hauptdelikt) if hasattr(j, 'hauptdelikt') else '',
+            'opferalter': j.opferalter if hasattr(j, 'opferalter') else None,
+        } for j in judgments]
 
     try:
         # Suche in den entsprechenden Models - async wrapped
         if judgment_type in ["wirtschaft", "all"]:
-            wirtschaft_results = await sync_to_async(search_model_wirtschaft)()
-            results.extend([(j, "wirtschaft") for j in wirtschaft_results])
+            wirtschaft_results = await sync_to_async(search_and_serialize_wirtschaft)()
+            results.extend(wirtschaft_results)
 
         if judgment_type in ["betm", "all"]:
-            betm_results = await sync_to_async(search_model_betm)()
-            results.extend([(j, "betm") for j in betm_results])
+            betm_results = await sync_to_async(search_and_serialize_betm)()
+            results.extend(betm_results)
 
         if judgment_type in ["sexual", "all"]:
-            sexual_results = await sync_to_async(search_model_sexual)()
-            results.extend([(j, "sexual") for j in sexual_results])
+            sexual_results = await sync_to_async(search_and_serialize_sexual)()
+            results.extend(sexual_results)
 
         # Keine Ergebnisse
         if not results:
@@ -324,15 +354,15 @@ async def search_summaries(args: dict) -> list[TextContent]:
         output += f"**Filter:** {judgment_type}\n\n"
         output += "---\n\n"
 
-        for judgment, jtype in results:
-            metadata = format_judgment_metadata(judgment, jtype)
+        for judgment_data in results:
+            jtype = judgment_data['type']
 
-            output += f"## {jtype.capitalize()} #{judgment.pk}\n\n"
-            output += f"- **Fall-Nr:** {metadata.get('fall_nr', 'N/A')}\n"
-            output += f"- **Datum:** {metadata.get('datum', 'N/A')}\n"
+            output += f"## {jtype.capitalize()} #{judgment_data['id']}\n\n"
+            output += f"- **Fall-Nr:** {judgment_data.get('fall_nr', 'N/A')}\n"
+            output += f"- **Datum:** {judgment_data.get('datum', 'N/A')}\n"
 
             # Gekürzte Vorschau der Zusammenfassung
-            summary = judgment.zusammenfassung.strip()
+            summary = judgment_data['zusammenfassung'].strip()
             if len(summary) > 300:
                 summary = summary[:300] + "..."
 
@@ -363,31 +393,51 @@ async def list_summaries(args: dict) -> list[TextContent]:
 
     results = []
 
-    def list_wirtschaft():
-        """Liste Wirtschaft-Urteile."""
-        return list(Urteil.objects.exclude(zusammenfassung="")[:limit])
+    def list_and_serialize_wirtschaft():
+        """Liste Wirtschaft-Urteile und serialisiere."""
+        judgments = list(Urteil.objects.exclude(zusammenfassung="").select_related('hauptdelikt')[:limit])
+        return [{
+            'id': j.pk,
+            'type': 'wirtschaft',
+            'fall_nr': j.fall_nr if hasattr(j, 'fall_nr') else None,
+            'datum': str(j.datum) if hasattr(j, 'datum') else '',
+            'deliktssumme': j.deliktssumme if hasattr(j, 'deliktssumme') else None,
+        } for j in judgments]
 
-    def list_betm():
-        """Liste Betm-Urteile."""
-        return list(BetmUrteil.objects.exclude(zusammenfassung="")[:limit])
+    def list_and_serialize_betm():
+        """Liste Betm-Urteile und serialisiere."""
+        judgments = list(BetmUrteil.objects.exclude(zusammenfassung="").select_related('rolle')[:limit])
+        return [{
+            'id': j.pk,
+            'type': 'betm',
+            'fall_nr': j.fall_nr if hasattr(j, 'fall_nr') else None,
+            'datum': str(j.datum) if hasattr(j, 'datum') else '',
+            'rolle': str(j.rolle) if hasattr(j, 'rolle') else '',
+        } for j in judgments]
 
-    def list_sexual():
-        """Liste Sexual-Urteile."""
-        return list(SexualdeliktUrteil.objects.exclude(zusammenfassung="")[:limit])
+    def list_and_serialize_sexual():
+        """Liste Sexual-Urteile und serialisiere."""
+        judgments = list(SexualdeliktUrteil.objects.exclude(zusammenfassung="")[:limit])
+        return [{
+            'id': j.pk,
+            'type': 'sexual',
+            'fall_nr': j.fall_nr if hasattr(j, 'fall_nr') else None,
+            'datum': str(j.datum) if hasattr(j, 'datum') else '',
+        } for j in judgments]
 
     try:
         # Sammle Urteile mit Zusammenfassungen - async wrapped
         if judgment_type in ["wirtschaft", "all"]:
-            wirtschaft = await sync_to_async(list_wirtschaft)()
-            results.extend([(j, "wirtschaft") for j in wirtschaft])
+            wirtschaft = await sync_to_async(list_and_serialize_wirtschaft)()
+            results.extend(wirtschaft)
 
         if judgment_type in ["betm", "all"]:
-            betm = await sync_to_async(list_betm)()
-            results.extend([(j, "betm") for j in betm])
+            betm = await sync_to_async(list_and_serialize_betm)()
+            results.extend(betm)
 
         if judgment_type in ["sexual", "all"]:
-            sexual = await sync_to_async(list_sexual)()
-            results.extend([(j, "sexual") for j in sexual])
+            sexual = await sync_to_async(list_and_serialize_sexual)()
+            results.extend(sexual)
 
         if not results:
             return [TextContent(
@@ -406,23 +456,22 @@ async def list_summaries(args: dict) -> list[TextContent]:
         # Gruppiere nach Typ
         from collections import defaultdict
         by_type = defaultdict(list)
-        for judgment, jtype in results:
-            by_type[jtype].append(judgment)
+        for judgment_data in results:
+            by_type[judgment_data['type']].append(judgment_data)
 
         for jtype, judgments in sorted(by_type.items()):
             output += f"\n## {jtype.capitalize()}-Urteile ({len(judgments)})\n\n"
 
-            for judgment in judgments:
-                metadata = format_judgment_metadata(judgment, jtype)
-                output += f"- **#{judgment.pk}** - "
-                output += f"Fall {metadata.get('fall_nr', 'N/A')} "
-                output += f"({metadata.get('datum', 'N/A')})"
+            for judgment_data in judgments:
+                output += f"- **#{judgment_data['id']}** - "
+                output += f"Fall {judgment_data.get('fall_nr', 'N/A')} "
+                output += f"({judgment_data.get('datum', 'N/A')})"
 
                 # Zusätzliche Info je nach Typ
-                if jtype == "wirtschaft" and metadata.get('deliktssumme'):
-                    output += f" - CHF {metadata['deliktssumme']}"
-                elif jtype == "betm" and metadata.get('rolle'):
-                    output += f" - {metadata['rolle']}"
+                if jtype == "wirtschaft" and judgment_data.get('deliktssumme'):
+                    output += f" - CHF {judgment_data['deliktssumme']}"
+                elif jtype == "betm" and judgment_data.get('rolle'):
+                    output += f" - {judgment_data['rolle']}"
 
                 output += "\n"
 

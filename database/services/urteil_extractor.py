@@ -95,20 +95,13 @@ def extract_urteil_data(volltext: str) -> dict:
         ValueError: Wenn die API-Konfiguration fehlt
         Exception: Bei API-Fehlern
     """
-    # API Key prüfen
-    api_key = getattr(settings, 'GOOGLE_API_KEY', None)
-    if not api_key:
-        raise ValueError(
-            "GOOGLE_API_KEY ist nicht in den Django Settings konfiguriert. "
-            "Bitte fügen Sie GOOGLE_API_KEY in settings.py oder .env hinzu."
-        )
-
     try:
         # Gemini API Client initialisieren
+        # Der Client holt sich automatisch den API Key aus der Umgebungsvariable GOOGLE_API_KEY
         from google import genai
         from google.genai import types
 
-        client = genai.Client(api_key=api_key)
+        client = genai.Client()
 
         # Prompt für die Extraktion
         prompt = f"""Du bist ein Experte für Schweizer Strafrecht und spezialisiert auf die Analyse von Gerichtsurteilen.
@@ -153,7 +146,15 @@ Extrahiere alle Informationen gemäss dem Schema."""
             "Bitte installieren Sie es mit: pip install google-genai"
         )
     except Exception as e:
-        raise Exception(f"Fehler bei der Gemini API-Anfrage: {str(e)}")
+        error_message = str(e)
+        # Spezielle Behandlung für API Key Fehler
+        if 'API key' in error_message or 'authentication' in error_message.lower():
+            raise ValueError(
+                "GOOGLE_API_KEY ist nicht konfiguriert oder ungültig. "
+                "Bitte setzen Sie die Umgebungsvariable GOOGLE_API_KEY mit Ihrem Google AI API Key. "
+                "Sie können einen Key unter https://ai.google.dev/ erhalten."
+            )
+        raise Exception(f"Fehler bei der Gemini API-Anfrage: {error_message}")
 
 
 def validate_extracted_data(data: dict) -> tuple[bool, list[str]]:

@@ -82,6 +82,64 @@ class UrteilExtraction(BaseModel):
     )
 
 
+def _preprocess_urteil_text(volltext: str, max_length: int = 40000) -> str:
+    """
+    Preprocessed den Urteilstext und extrahiert relevante Teile.
+
+    Args:
+        volltext: Der Volltext des Urteils
+        max_length: Maximale Länge in Zeichen
+
+    Returns:
+        Verkürzter Text mit den relevantesten Teilen
+    """
+    # Wenn Text kurz genug ist, direkt zurückgeben
+    if len(volltext) <= max_length:
+        return volltext
+
+    # Wichtige Schlüsselwörter für relevante Abschnitte
+    relevante_abschnitte = []
+
+    # Suche nach Dispositivziffern (enthalten die Strafe)
+    import re
+
+    # Versuche Dispositiv/Urteil-Abschnitt zu finden
+    dispositiv_match = re.search(
+        r'(Es wird erkannt:|Dispositiv|URTEIL|wird .* bestraft mit)(.*?)(?=Schriftliche Mitteilung|Gegen diesen Entscheid|$)',
+        volltext,
+        re.IGNORECASE | re.DOTALL
+    )
+    if dispositiv_match:
+        relevante_abschnitte.append(dispositiv_match.group(0))
+
+    # Suche nach Strafzumessungs-Erwägungen
+    strafzumessung_match = re.search(
+        r'(Strafzumessung|VII\.|VIII\.)(.*?)(?=VIII\.|IX\.|X\.|Landesverweisung|$)',
+        volltext,
+        re.IGNORECASE | re.DOTALL
+    )
+    if strafzumessung_match:
+        relevante_abschnitte.append(strafzumessung_match.group(0)[:5000])  # Max 5000 Zeichen
+
+    # Suche nach Grunddaten (Gericht, Datum, Geschäfts-Nr)
+    header_match = re.search(
+        r'^.*?(?=Anklage:|Sachverhalt|I\.|Es wird erkannt)',
+        volltext,
+        re.IGNORECASE | re.DOTALL
+    )
+    if header_match:
+        relevante_abschnitte.append(header_match.group(0)[:2000])  # Max 2000 Zeichen
+
+    # Kombiniere die Abschnitte
+    processed_text = '\n\n'.join(relevante_abschnitte)
+
+    # Falls immer noch zu lang, schneide am Ende ab
+    if len(processed_text) > max_length:
+        processed_text = processed_text[:max_length] + "\n\n[Text gekürzt...]"
+
+    return processed_text if processed_text else volltext[:max_length]
+
+
 def extract_urteil_data(volltext: str) -> dict:
     """
     Extrahiert Urteilsdaten aus einem Volltext mittels Google Gemini API.
@@ -93,9 +151,24 @@ def extract_urteil_data(volltext: str) -> dict:
         Dictionary mit extrahierten Urteilsdaten
 
     Raises:
-        ValueError: Wenn die API-Konfiguration fehlt
+        ValueError: Wenn die API-Konfiguration fehlt oder Text zu lang
         Exception: Bei API-Fehlern
     """
+    # Längenlimit prüfen
+    MAX_LENGTH = 50000  # Absolute Obergrenze
+
+    if len(volltext) > MAX_LENGTH:
+        raise ValueError(
+            f"Der Urteilstext ist zu lang ({len(volltext):,} Zeichen). "
+            f"Maximale Länge: {MAX_LENGTH:,} Zeichen.\n\n"
+            "Bitte fügen Sie nur die relevanten Teile ein:\n"
+            "- Kopf des Urteils (Gericht, Datum, Geschäftsnummer)\n"
+            "- Dispositiv/Urteilsspruch (Strafe, Vollzug)\n"
+            "- Strafzumessungs-Erwägungen\n\n"
+            "Sie können unwichtige Teile wie ausführliche Sachverhalts-Darstellungen, "
+            "Beweismittel-Listen, oder Kostenverlegungen weglassen."
+        )
+
     try:
         # Gemini API Client initialisieren
         # Der Client holt sich automatisch den API Key aus der Umgebungsvariable GOOGLE_API_KEY
@@ -103,6 +176,9 @@ def extract_urteil_data(volltext: str) -> dict:
         from google.genai import types
 
         client = genai.Client()
+
+        # Text vorverarbeiten, wenn er lang ist
+        processed_text = _preprocess_urteil_text(volltext, max_length=40000)
 
         # Prompt für die Extraktion
         prompt = f"""Du bist ein Experte für Schweizer Strafrecht und spezialisiert auf die Analyse von Gerichtsurteilen.
@@ -124,9 +200,10 @@ WICHTIGE HINWEISE ZUR EXTRAKTION:
 - Bei Geldstrafen: gib die Anzahl der Tagessätze an
 - Datum im Format YYYY-MM-DD (z.B. 2023-05-15)
 - Falls Informationen nicht im Text sind: verwende sinnvolle Defaults
+- Bei mehreren Beschuldigten: extrahiere die Daten für die beschuldigte Person, die die Hauptstrafe erhält
 
 URTEILSTEXT:
-{volltext}
+{processed_text}
 
 Extrahiere alle Informationen gemäss dem Schema. Verwende die numerischen Codes wie oben angegeben!"""
 
@@ -171,17 +248,25 @@ Extrahiere alle Informationen gemäss dem Schema. Verwende die numerischen Codes
 
         # Spezielle Behandlung für Pattern-Matching Fehler
         if 'did not match the expected pattern' in error_message.lower():
+            text_length = len(volltext)
             raise Exception(
-                "Die KI konnte das Urteil nicht im erwarteten Format extrahieren. "
+                f"Die KI konnte das Urteil nicht im erwarteten Format extrahieren.\n\n"
+                f"Ihr Text hat {text_length:,} Zeichen. "
+                f"{'✗ Das ist sehr lang und kann zu Problemen führen!' if text_length > 30000 else '✓ Die Länge ist ok.'}\n\n"
                 "Mögliche Ursachen:\n"
-                "- Der Text ist zu komplex oder unstrukturiert\n"
-                "- Es fehlen wichtige Informationen im Urteil\n"
-                "- Der Text ist zu lang (max. ~100.000 Zeichen)\n\n"
-                "Versuchen Sie:\n"
-                "1. Nur die relevanten Teile des Urteils einzufügen (Sachverhalt, Strafzumessung)\n"
-                "2. Den Text auf Formatierungsfehler zu prüfen\n"
-                "3. Ein kürzeres Urteil zu testen\n\n"
-                f"Detaillierter Fehler: {error_message}"
+                "- Der Text ist zu komplex oder enthält zu viele irrelevante Details\n"
+                "- Es fehlen wichtige Informationen (Gericht, Datum, Strafe)\n"
+                "- Bei sehr langen Texten: automatische Kürzung hat wichtige Teile entfernt\n\n"
+                "💡 LÖSUNG - Fügen Sie NUR diese Teile ein:\n"
+                "1. KOPF: Gericht, Datum, Geschäftsnummer (z.B. erste 20 Zeilen)\n"
+                "2. DISPOSITIV/URTEILSSPRUCH: \"Es wird erkannt:\" oder \"Der Beschuldigte wird bestraft mit...\"\n"
+                "3. STRAFZUMESSUNG: Abschnitt \"VII. Strafzumessung\" (falls vorhanden)\n\n"
+                "⚠️ WEGLASSEN können Sie:\n"
+                "- Ausführliche Sachverhalts-Darstellungen\n"
+                "- Beweismittel-Listen und Aktenverzeichnisse\n"
+                "- Zivilforderungen und Kostenverlegungen\n"
+                "- Prozessuale Erwägungen\n\n"
+                f"Technischer Fehler: {error_message}"
             )
 
         raise Exception(f"Fehler bei der Gemini API-Anfrage: {error_message}")

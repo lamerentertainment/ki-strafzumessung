@@ -1,6 +1,10 @@
 # MCP Server für Urteilszusammenfassungen
 
-Dieser MCP-Server ermöglicht es Claude, auf LLM-generierte Zusammenfassungen von Strafurteilen aus der ki-strafzumessung Datenbank zuzugreifen.
+Dieser MCP-Server ermöglicht es Claude und anderen Clients, auf LLM-generierte Zusammenfassungen von Strafurteilen aus der ki-strafzumessung Datenbank zuzugreifen.
+
+**Verfügbar in zwei Varianten:**
+- **stdio** (`summary_server.py`) - Für lokale Claude Desktop Integration
+- **HTTP** (`http_summary_server.py`) - Öffentlicher Server für jedermann
 
 ## Features
 
@@ -42,6 +46,80 @@ pip install -r requirements.txt
 source /pfad/zu/venv/bin/activate
 pip install -r requirements.txt
 ```
+
+## Nutzung
+
+### Option A: HTTP-Server (Öffentlich, für jedermann)
+
+Der HTTP-Server ermöglicht es, die MCP-Tools über HTTP/JSON Public API zu nutzen.
+
+#### Lokal starten:
+
+```bash
+cd /home/user/ki-strafzumessung
+python -m uvicorn mcp_server.http_summary_server:app --host 0.0.0.0 --port 8000
+```
+
+Server läuft dann unter: `http://localhost:8000`
+
+**Verfügbare Endpoints:**
+
+- `GET /` - Server-Informationen
+- `GET /health` - Health Check
+- `GET /docs` - API Dokumentation (Swagger UI)
+- `GET /tools` - Liste aller Tools
+- `POST /tools/call` - Tool-Aufruf mit JSON Body
+- `GET /summary/{judgment_type}/{judgment_id}` - Zusammenfassung abrufen (shortcut)
+- `GET /search?q=...&type=...` - Suchfunktion (shortcut)
+
+**Beispiele:**
+
+```bash
+# Health Check
+curl http://localhost:8000/health
+
+# Zusammenfassung abrufen
+curl http://localhost:8000/summary/betm/42
+
+# Suche
+curl "http://localhost:8000/search?q=Kokain&type=betm&limit=5"
+
+# Tool-Aufruf (JSON)
+curl -X POST http://localhost:8000/tools/call \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "get_summary",
+    "arguments": {"judgment_type": "betm", "judgment_id": 42}
+  }'
+```
+
+#### Deployment (Production):
+
+Der Server ist stateless und kann überall deployed werden:
+
+**Heroku:**
+```bash
+# Procfile
+web: python -m uvicorn mcp_server.http_summary_server:app --host 0.0.0.0 --port $PORT
+```
+
+**Docker:**
+```dockerfile
+FROM python:3.11
+WORKDIR /app
+COPY . .
+RUN pip install -r mcp_server/requirements.txt
+CMD ["python", "-m", "uvicorn", "mcp_server.http_summary_server:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+**AWS/Google Cloud/DigitalOcean:**
+Deployed as standard Python ASGI app (uvicorn)
+
+---
+
+### Option B: Stdio-Server (Lokal mit Claude Desktop)
+
+Für lokale Integration mit Claude Desktop.
 
 ### 2. Claude Desktop konfigurieren
 
@@ -342,6 +420,54 @@ Bei Problemen:
 2. Testen Sie den Server manuell
 3. Prüfen Sie Claude Desktop Logs
 4. Verifizieren Sie Django-Setup mit `python manage.py check`
+
+## Sicherheit
+
+### Read-Only Garantie
+
+Der HTTP-Server bietet **garantierten Read-Only Zugriff** auf die Datenbank:
+
+✅ **Schreibvorgänge sind technisch unmöglich:**
+- Alle Tools verwenden Django ORM SELECT-Queries (`.get()`, `.filter()`, `.exclude()`)
+- Keine `INSERT`, `UPDATE` oder `DELETE` Operationen implementiert
+- Django ORM schützt vor SQL Injection
+- Keine Raw-SQL Queries
+
+✅ **Datenbankebene (zusätzlich empfohlen):**
+```sql
+-- Optional: Create read-only database user
+CREATE ROLE judgment_reader WITH LOGIN PASSWORD 'secure_password';
+GRANT CONNECT ON DATABASE ki_strafzumessung TO judgment_reader;
+GRANT USAGE ON SCHEMA public TO judgment_reader;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO judgment_reader;
+```
+
+Dann in `DJANGO_SETTINGS_MODULE` den `judgment_reader` User konfigurieren.
+
+### Öffentlicher Zugriff (CORS)
+
+Der HTTP-Server aktiviert CORS für öffentlichen Zugriff:
+- Jeder kann die API aufrufen (keine Authentifizierung nötig)
+- CORS erlaubt Requests von überall (`allow_origins=["*"]`)
+- Ideal für öffentliche Urteile/Zusammenfassungen
+- Keine sensitiven Daten preisgeben!
+
+### Rate-Limiting (Empfohlen für Production)
+
+Für Production sollte Rate-Limiting hinzugefügt werden:
+
+```python
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+
+@app.post("/tools/call")
+@limiter.limit("30/minute")  # 30 Requests pro Minute
+async def call_tool(request: ToolCallRequest):
+    ...
+```
 
 ## Lizenz
 

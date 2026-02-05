@@ -6,3 +6,11 @@ django>=4.2
 
 # PostgreSQL Adapter (sollte bereits installiert sein)
 psycopg2-binary>=2.9.0
+
+# HTTP Server
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+httpx>=0.25.0
+
+# Async support
+asgiref>=3.7.0

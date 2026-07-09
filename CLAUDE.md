@@ -13,11 +13,15 @@ Hinweise für Claude Code bei der Arbeit in diesem Repo.
 
 ## Task: Urteil eigenständig aus einem PDF-Link in die DB eintragen
 
-Wenn der Nutzer einen Link zu einem Urteil (i.d.R. Obergericht Zürich,
+Wenn der Nutzer einen Link zu einem Urteil (i.d.R. Zürcher Gerichte,
 `https://www.gerichte-zh.ch/fileadmin/user_upload/entscheide/oeffentlich/*.pdf`)
-schickt und einen neuen DB-Eintrag verlangt, gilt folgender Ablauf. Dieser Task betrifft
-aktuell ausschliesslich das Modell `database.models.Urteil` (Vermögensdelikte) –
-nicht `BetmUrteil` oder `SexualdeliktUrteil`.
+schickt und einen neuen DB-Eintrag verlangt, gilt folgender Ablauf. Er gilt analog für
+alle drei Deliktsmodelle – `database.models.Urteil` (Vermögensdelikte),
+`BetmUrteil` (Betäubungsmitteldelikte) und `SexualdeliktUrteil` (Sexualdelikte) –,
+das Vorgehen (PDF lesen statt Gemini-Extraktion, Vorinstanz-Prinzip, Duplikat-Check,
+`full_clean()` vor `save()`) ist modellunabhängig. Nur die konkrete Feldliste/Choices
+unterscheiden sich; siehe Abschnitt 4 sowie Abschnitt 8 für die Besonderheiten von
+`BetmUrteil` und `SexualdeliktUrteil`.
 
 ### 1. Nicht zuerst die Gemini-Auto-Extraktion versuchen
 
@@ -36,7 +40,15 @@ curl -sL "<url>" -o <scratchpad>/<fall_nr>-O1.pdf
 ```
 
 Dann mit dem `Read`-Tool auslesen (max. 20 Seiten pro Aufruf, ggf. in Blöcken
-1-20, 21-40, ... durchgehen). Relevante Abschnitte eines Obergerichtsurteils:
+1-20, 21-40, ... durchgehen). Manchmal ist das verlinkte PDF selbst bereits das
+erstinstanzliche Urteil (z.B. eines Bezirksgerichts), nicht ein Obergerichtsurteil —
+das erkennt man am Rubrum (kein "Obergericht des Kantons Zürich", kein Hinweis auf
+Vorinstanz/Berufung im Text) bzw. daran, dass am Ende evtl. erst noch eine Berufung
+angemeldet wurde, aber der Endentscheid dieses Urteils selbst der erstinstanzliche ist.
+In diesem Fall entfällt Abschnitt 3 (keine Vorinstanz-Unterscheidung nötig) und man
+trägt schlicht die Angaben aus diesem einen Urteil ein; `fall_nr` = dessen eigene
+Geschäfts-Nr., `url_link` = der Link zu genau diesem PDF. Relevante Abschnitte eines
+Obergerichtsurteils (falls doch ein Berufungsurteil vorliegt):
 
 - S. 1-2: Rubrum (Geschäfts-Nr., Datum, Parteien, Vorinstanz + deren Fall-Nr./Datum)
 - S. ~3-6: Dispositiv der Vorinstanz (Schuldsprüche, Strafe, Vollzug) — das ist die
@@ -169,6 +181,63 @@ Kurz auflisten: Fall-Nr., Vorinstanz+Datum, Geschlecht/Nationalität, Hauptdelik
 Deliktssumme, Nebenverurteilungsscore mit Begründung, Vorstrafen, Hauptsanktion +
 Vollzug, und jede Besonderheit, bei der Obergericht von der Vorinstanz abgewichen ist
 (Freisprüche, Landesverweisung, Verschlechterungsverbot).
+
+### 8. Besonderheiten von `BetmUrteil` und `SexualdeliktUrteil`
+
+Beide Modelle teilen `gericht`, `urteilsdatum`, `fall_nr`, `url_link`, `geschlecht`,
+`nationalitaet`, `hauptsanktion`/`freiheitsstrafe_in_monaten`/`anzahl_tagessaetze`/
+`vollzug`, `verfahrensart`, `vorbestraft`/`vorbestraft_einschlaegig` und
+`zusammenfassung` mit denselben Codierungen wie `Urteil` (siehe Abschnitt 4) und dieselbe
+Vorinstanz-Logik (Abschnitt 3). Vor dem Insert immer `fall_nr` auf Duplikate prüfen
+(Abschnitt 5, analog mit dem jeweiligen Modell statt `Urteil`).
+
+**`BetmUrteil`** (`database.models.BetmUrteil`):
+
+- Kein `hauptdelikt`-Feld; das Hauptdelikt ergibt sich implizit aus dem Betäubungsmittel,
+  auf das die Einsatzstrafe abgestützt wird.
+- `mengenmaessig` / `bandenmaessig` / `gewerbsmaessig` / `anstaltentreffen` / `mehrfach`
+  beziehen sich nur auf das Hauptdelikt (Art. 19 Abs. 2 lit. a–c bzw. Abs. 1 BetmG).
+- `beschaffungskriminalitaet` = `True` nur, wenn dem Täter im Urteil explizit ein
+  Suchtdruck/eigene Konsumabhängigkeit attestiert wird (nicht selbst herleiten).
+- `betm` (M2M zu `Betm`, das wiederum auf `BetmArt` verweist): pro sichergestellter/
+  gehandelter Substanz einen `Betm`-Datensatz anlegen (`menge_in_g` als Integer runden,
+  `rein=True` nur wenn die Menge als reine Wirkstoffmenge gutachterlich festgestellt
+  wurde, sonst `rein=False` für Bruttomenge). Existierende `BetmArt`-Werte vorher prüfen
+  (`BetmArt.objects.values_list('name', flat=True)`), nicht neue Substanznamen erfinden.
+- `rolle` (FK zu `Rolle`): existierende Werte prüfen (`Rolle.objects.values_list('name',
+  flat=True)`, z.B. "Verkauf Konsumeinheiten", "Grosshandel", "Transport",
+  "Aufbewahrung/Besitz") und den zur Tatbeteiligung passenden auswählen.
+- `deliktsertrag` = Erlös/Vermögensvorteil aus dem Handel (subsidiär die vom Gericht
+  festgesetzte Ersatzforderung, falls kein expliziter Ertrag beziffert wird).
+- `deliktsdauer_in_monaten` = Zeitraum der (Haupt-)Deliktsbegehung gemäss Sachverhalt.
+- `nebenverurteilungsscore`-Berechnung identisch zu `Urteil` (Abschnitt 4), bezogen auf
+  alle Schuldsprüche ausser dem Hauptdelikt (z.B. weitere BetmG-Tatbestände, HMG-Vergehen).
+- `kanton` ist FK zu `Kanton` (Feld `abk`, nicht `name`, z.B. `Kanton.objects.get(abk='ZH')`).
+
+**`SexualdeliktUrteil`** (`database.models.SexualdeliktUrteil`):
+
+- `hauptdelikt` (FK zu `Hauptdelikt`) und `hauptdelikt_tatmittel` (FK zu `Tatmittel`):
+  existierende Werte prüfen, nicht neue Bezeichnungen erfinden, ausser der Fall erfordert
+  es klar.
+- `hauptdelikt_mehrfachbegehung` / `hauptdelikt_mehrfachbegehung_anzahl` /
+  `hauptdelikt_mehrfachbegehung_deliktsperiode`: nur befüllen, wenn das Hauptdelikt
+  mehrfach begangen wurde; sonst Default (`False`/`None`) belassen.
+- `hauptdelikt_deliktsdauer_bekannt` / `hautpdelikt_deliktsdauer_einfachbegehung`
+  (Dauer einer einzelnen Tatbegehung als `timedelta`) nur setzen, wenn die Dauer im
+  Urteil konkret beziffert wird.
+- `hauptdelikt_taeter_opfer_beziehung` und `hauptdelikt_opferalter` exakt aus den
+  Choices im Modell wählen (nicht raten, wenn das Urteil "unbekannt"/keine Angabe macht
+  → entsprechende Choice wie `'Beziehung unbekannt'`/`'nicht bekannt'` verwenden).
+- `hauptdelikt_opfer_vorerfahrung`: `'Ja'`/`'Nein'`/`'unbekannt'` — nur auf `'Ja'`/`'Nein'`
+  setzen, wenn das Urteil das explizit feststellt.
+- `sexualdelikte_zusaetzliche` (M2M zu `ZusaetzlicheSexualdelikte`) und `besonderheiten`
+  (M2M zu `Besonderheiten`): existierende Werte verwenden, nach dem Speichern des
+  Hauptobjekts per `.set([...])` zuweisen (M2M-Felder können nicht im Konstruktor
+  gesetzt werden).
+- `deliktsscore_uebrige_delikte` entspricht `nebenverurteilungsscore` bei `Urteil`/
+  `BetmUrteil` (gleiche Berechnungslogik, Abschnitt 4), bezogen auf alle Schuldsprüche
+  ausser den Sexualdelikten.
+- Kein separates `deliktssumme`-Feld.
 
 ## Repo-Hygiene
 

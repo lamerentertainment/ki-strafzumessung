@@ -352,10 +352,6 @@ def validate_extracted_data(data: dict) -> tuple[bool, list[str]]:
     if data.get('hauptsanktion') == '1' and data.get('anzahl_tagessaetze', 0) == 0:
         errors.append("Bei Geldstrafe (Code '1') muss die Anzahl Tagessätze angegeben werden")
 
-    # Vorbestraft einschlägig kann nur true sein, wenn vorbestraft auch true ist
-    if data.get('vorbestraft_einschlaegig') and not data.get('vorbestraft'):
-        errors.append("Vorbestraft einschlägig kann nur gesetzt sein, wenn auch vorbestraft gesetzt ist")
-
     # Datum validieren (optional, aber wenn vorhanden, dann korrekt)
     if data.get('urteilsdatum'):
         import re
@@ -363,3 +359,282 @@ def validate_extracted_data(data: dict) -> tuple[bool, list[str]]:
             errors.append("Urteilsdatum muss im Format YYYY-MM-DD sein")
 
     return (len(errors) == 0, errors)
+
+
+class BetmUrteilExtraction(BaseModel):
+    """
+    Pydantic Model für strukturierte Extraktion von Urteilsdaten im Bereich Betäubungsmittelstrafrecht.
+    """
+    fall_nr: str = Field(
+        description="Die Verfahrensnummer des obergerichtlichen Urteils, dem die Informationen entnommen sind (z.B. 'SB190145')."
+    )
+    gericht: str = Field(
+        description="Das vorinstanzliche Gericht, welches das vorinstanzliche Urteil gefällt hat (z.B. 'Bezirksgericht Zürich', 'Strafgericht Basel')."
+    )
+    urteilsdatum: Optional[str] = Field(
+        default=None,
+        description="Das Datum, an welchem das vorinstanzliche Gericht das Urteil gefällt hat im Format DD.MM.YYYY."
+    )
+    kanton: str = Field(
+        description="Abkürzung des Kantons, in welchem das vorinstanzliche Gericht sich befindet (z.B. 'ZH', 'BE', 'AG', 'SG')."
+    )
+    mengenmaessig: bool = Field(
+        description="ob eine Verurteilung nach Art. 19 Abs. 2 lit. a BetmG vorliegt."
+    )
+    bandenmaessig: bool = Field(
+        description="ob eine Verurteilung nach Art. 19 Abs. 2 lit. b BetmG vorliegt."
+    )
+    gewerbsmaessig: bool = Field(
+        description="ob eine Verurteilung nach Art. 19 Abs. 2 lit. c BetmG vorliegt."
+    )
+    anstaltentreffen: bool = Field(
+        description="ob zur ganzen oder einer gewissen Menge Betm lediglich Anstalten getroffen wurden."
+    )
+    mehrfach: bool = Field(
+        description="ob Schuldspruch wegen mehrfacher Begehung vorliegt."
+    )
+    beschaffungskriminalitaet: bool = Field(
+        description="ob dem Täter in der Begründung ein Suchtdruck attestiert wird. Die Anwendung des Privilegierungsgrunds in Art. 19 Abs. 3 lit. b BetmG ist nicht erforderlich."
+    )
+    hauptsanktion: str = Field(
+        description="Hauptsanktion, welche die Vorinstanz ausgesprochen hat. EXAKTE Werte: '0' für Freiheitsstrafe, '1' für Geldstrafe, '2' für Busse."
+    )
+    freiheitsstrafe_in_monaten: int = Field(
+        default=0,
+        description="Die Dauer der von der Vorinstanz ausgesprochenen Sanktion in Monaten, sofern eine Freiheitsstrafe ausgesprochen wurde (Die von der Vorinstanz ausgefällte Strafe steht in der Regel am Anfang des obergerichtlichen Urteils)."
+    )
+    anzahl_tagessaetze: int = Field(
+        default=0,
+        description="Die Zahl der von der Vorinstanz ausgesprochenen Tagessätze der Geldstrafe (sofern eine ausgesprochen wurde)."
+    )
+    vollzug: str = Field(
+        description="Vollzug der Hauptstrafe (Urteil der Vorinstanz). EXAKTE Werte: '0' für bedingt, '1' für teilbedingt, '2' für unbedingt."
+    )
+    nebenverurteilungsscore: int = Field(
+        default=0,
+        description="Anzahl der Schuldsprüche, welche neben dem Delikt, für welches die Einsatzsstrafe gebildet wurde, ausgesprochen wurden. + 1 Punkt für jedes weitere Vergehen. + 2 Punkte für jedes weitere Verbrechen. + 1 Punkt bei mehrfacher Begehung."
+    )
+    verfahrensart: str = Field(
+        description="Die angewandte Verfahrensart. EXAKTE Werte: '0' für ordentlich, '1' für abgekürzt."
+    )
+    geschlecht: str = Field(
+        description="Geschlecht der beschuldigten Person. EXAKTE Werte: '0' für männlich, '1' für weiblich."
+    )
+    nationalitaet: str = Field(
+        description="Nationalität der beschuldigten Person. EXAKTE Werte: '0' für Schweizerin/Schweizer, '1' für Ausländer/Ausländerin (auch wenn Landesverweisung ausgesprochen wurde), '2' für unbekannt."
+    )
+    betm: str = Field(
+        description="Art und Menge des Betäubungsmittels, welches gehandelt wurde."
+    )
+    rolle: str = Field(
+        description="Die Rolle der beschuldigten Person. EXAKTE Werte: 'Transport', 'Kauf', 'Produktion', 'Handel', 'Handel von Konsumeinheiten', 'Handel von Grossmengen', 'Besitz/Aufbewahrung', 'Gehilfenschaft'."
+    )
+    deliktsertrag: Optional[int] = Field(
+        default=None,
+        description="Der Deliktsertrag (in CHF, falls im Urteil angegeben)."
+    )
+    deliktsdauer_in_monaten: Optional[int] = Field(
+        default=None,
+        description="Die Deliktsdauer in Monaten."
+    )
+    vorbestraft: bool = Field(
+        description="Ob die verurteilte Person vorbestraft ist."
+    )
+    vorbestraft_einschlaegig: bool = Field(
+        description="Ob die verurteilte Person einschlägig vorbestraft ist."
+    )
+    zusammenfassung: str = Field(
+        description="Zusammenfassung des Vorwurfs und der massgebenden Erwägungen der Strafzumessung (durch die Rechtsmittelinstanz, wobei die Strafzumessung der Rechtsmittelinstanz von derjenigen der Vorinstanz abweichen kann) in wenigen Absätzen."
+    )
+    in_ki_modell: bool = Field(
+        default=True,
+        description="Soll dieses Urteil im KI-Modell verwendet werden? (Standard: true)"
+    )
+
+
+def extract_betm_urteil_data(volltext: str = "", pdf_url: str = "") -> dict:
+    """
+    Extrahiert Urteilsdaten für Betäubungsmittelstrafrecht aus einem Volltext oder einer PDF-URL
+    mittels Google Gemini API mit Structured Output.
+    """
+    pdf_bytes = None
+    if pdf_url:
+        import requests
+        try:
+            response = requests.get(pdf_url, timeout=20)
+            response.raise_for_status()
+            pdf_bytes = response.content
+            if not pdf_bytes.startswith(b'%PDF'):
+                raise ValueError("Die heruntergeladene Datei ist kein gültiges PDF.")
+        except Exception as e:
+            raise ValueError(f"Fehler beim Herunterladen des PDFs von '{pdf_url}': {str(e)}")
+    else:
+        MAX_LENGTH = 50000  # Absolute Obergrenze
+        if len(volltext) > MAX_LENGTH:
+            raise ValueError(
+                f"Der Urteilstext ist zu lang ({len(volltext):,} Zeichen). "
+                f"Maximale Länge: {MAX_LENGTH:,} Zeichen.\n\n"
+                "Bitte fügen Sie nur die relevanten Teile ein."
+            )
+
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client()
+
+        # Prompt für die Extraktion gemäss Vorgabe
+        prompt = """Du bist ein Experte für Schweizer Strafrecht und spezialisiert auf die Analyse von Gerichtsurteilen im Bereich Betäubungsmittelstrafrecht.
+
+Nachfolgend bekommst du den text eines Gerichtsurteils.
+
+Extrahiere zunächst folgende Daten aus dem Urteil (nur soweit das Urteil Angaben dazu enthält) und fülle das Schema aus.
+Wichtig: Beziehe dich bei allen Werten konkret auf den Beschuldigten A.
+
+Feldbeschreibungen und genaue Formate:
+- fall_nr: Die Verfahrensnummer des obergerichtlichen Urteils, dem die Informationen entnommen sind.
+- gericht: Das vorinstanzliche Gericht, welches das vorinstanzliche Urteil gefällt hat.
+- urteilsdatum: Das Datum, an welchem das vorinstanzliche Gericht das Urteil gefällt hat (im Format: DD.MM.YYYY).
+- kanton: Abkürzung des Kantons, in welchem das vorinstanzliche Gericht sich befindet.
+- mengenmaessig: ob Verurteilung nach Art. 19 Abs. 2 lit. a BetmG vorliegt.
+- bandenmaessig: ob Verurteilung nach Art. 19 Abs. 2 lit. b BetmG vorliegt.
+- gewerbsmaessig: ob Verurteilung nach Art. 19 Abs. 2 lit. c BetmG vorliegt.
+- anstaltentreffen: ob zur ganzen oder einen gewissen Menge Betm lediglich Anstalten getroffen wurden.
+- mehrfach: ob Schuldspruch wegen mehrfacher Begehung vorliegt.
+- beschaffungskriminalitaet: ob dem Täter in der Begründung ein Suchtdruck attestiert wird. Die Anwendung des Privilegierungsgrunds in Art. 19 Abs. 3 lit. b BetmG ist nicht erforderlich.
+- hauptsanktion: Freiheitsstrafe oder Geldstrafe, es geht um die Hauptsanktion, welche die Vorinstanz ausgesprochen hat ('0' = Freiheitsstrafe, '1' = Geldstrafe, '2' = Busse).
+- freiheitsstrafe_in_monaten: Die Dauer der von der Vorinstanz ausgesprochenen Sanktion in Monaten, sofern eine Freiheitsstrafe ausgesprochen wurde (Die von der Vorinstanz ausgefällte Strafe steht in der Regel am Anfang des obergerichtlichen Urteils).
+- anzahl_tagessaetze: Die Zahl der von der Vorinstanz ausgesprochenen Tagessätze der Geldstrafe (sofern eine ausgesprochen wurde).
+- vollzug: ob bedingt, teilbedingt oder unbedingt (Urteil der Vorinstanz). Codes: '0' für bedingt, '1' für teilbedingt, '2' für unbedingt.
+- nebenverurteilungsscore: Anzahl der Schuldsprüche, welche neben dem Delikt, für welches die Einsatzsstrafe gebildet wurde, ausgesprochen wurden. + 1 Punkt für jedes weitere Vergehen. + 2 Punkt für jedes weitere Verbrechen. + 1 Punkt bei mehrfacher Begehung.
+- verfahrensart: ordentlich oder abgekürzt. Codes: '0' für ordentlich, '1' für abgekürzt.
+- geschlecht: Codes: '0' für männlich, '1' für weiblich.
+- nationalitaet: Codes: '0' für Schweizerin/Schweizer, '1' für Ausländer/Ausländerin (wenn Landesverweisung ausgesprochen wurde, besteht ausländische Nationalität), '2' für unbekannt.
+- betm: Art und Menge des Betäubungsmittels, welches gehandelt wurde.
+- rolle: EXAKTE Werte: 'Transport', 'Kauf', 'Produktion', 'Handel', 'Handel von Konsumeinheiten', 'Handel von Grossmengen', 'Besitz/Aufbewahrung', 'Gehilfenschaft'.
+- deliktsertrag: Der Deliktsertrag.
+- deliktsdauer_in_monaten: Die Deliktsdauer in Monaten.
+- vorbestraft: Ob die verurteilte Person vorbestraft ist.
+- vorbestraft_einschlaegig: Ob die verurteilte Person einschlägig vorbestraft ist.
+
+Fasse danach den Vorwurf und die massgebenden Erwägungen der Strafzumessung (durch die Rechtsmittelinstanz, wobei die Strafzumessung der Rechtsmittelinstanz von derjenigen der Vorinstanz abweichen kann) in wenigen Absätzen zusammen (zusammenfassung).
+"""
+
+        if pdf_bytes:
+            prompt += "\nBitte analysiere das angehängte PDF-Dokument."
+            contents = [
+                types.Part.from_bytes(
+                    data=pdf_bytes,
+                    mime_type='application/pdf'
+                ),
+                prompt
+            ]
+        else:
+            processed_text = _preprocess_urteil_text(volltext, max_length=40000)
+            prompt += f"\n\nURTEILSTEXT:\n{processed_text}\n\nExtrahiere alle Informationen gemäss dem Schema. Verwende die numerischen Codes wie oben angegeben!"
+            contents = prompt
+
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=contents,
+            config=types.GenerateContentConfig(
+                response_mime_type='application/json',
+                response_schema=BetmUrteilExtraction,
+                temperature=0.2,
+            )
+        )
+
+        try:
+            extracted_data = json.loads(response.text)
+        except json.JSONDecodeError as e:
+            raise Exception(
+                f"Die API-Antwort konnte nicht als JSON geparst werden. "
+                f"Fehler: {str(e)}. Antwort: {response.text[:500]}"
+            )
+
+        # Konvertiere das Datum von DD.MM.YYYY zu YYYY-MM-DD für Django
+        if extracted_data.get('urteilsdatum'):
+            import re
+            date_str = extracted_data['urteilsdatum']
+            match = re.match(r'^(\d{2})\.(\d{2})\.(\d{4})$', date_str.strip())
+            if match:
+                extracted_data['urteilsdatum'] = f"{match.group(3)}-{match.group(2)}-{match.group(1)}"
+
+        if pdf_url and not extracted_data.get('url_link'):
+            extracted_data['url_link'] = pdf_url
+
+        return extracted_data
+
+    except ImportError:
+        raise ImportError(
+            "Das 'google-genai' Paket ist nicht installiert. "
+            "Bitte installieren Sie es mit: pip install google-genai"
+        )
+    except Exception as e:
+        error_message = str(e)
+        if 'API key' in error_message or 'authentication' in error_message.lower():
+            raise ValueError(
+                "GOOGLE_API_KEY ist nicht konfiguriert oder ungültig."
+            )
+        raise Exception(f"Fehler bei der Gemini API-Anfrage: {error_message}")
+
+
+def validate_betm_extracted_data(data: dict) -> tuple[bool, list[str]]:
+    """
+    Validiert die extrahierten BetmUrteil-Daten.
+    """
+    errors = []
+
+    # Pflichtfelder prüfen
+    required_fields = ['gericht', 'fall_nr', 'geschlecht',
+                       'nationalitaet', 'hauptsanktion', 'vollzug', 'verfahrensart', 'kanton', 'rolle']
+
+    for field in required_fields:
+        value = data.get(field)
+        if value is None or (isinstance(value, str) and not value.strip()):
+            errors.append(f"Pflichtfeld '{field}' fehlt oder ist leer")
+
+    # Geschlecht validieren
+    if data.get('geschlecht') not in ['0', '1']:
+        errors.append(f"Geschlecht muss '0' oder '1' sein, ist: {data.get('geschlecht')}")
+
+    # Nationalität validieren
+    if data.get('nationalitaet') not in ['0', '1', '2']:
+        errors.append(f"Nationalität muss '0', '1' oder '2' sein, ist: {data.get('nationalitaet')}")
+
+    # Hauptsanktion validieren
+    if data.get('hauptsanktion') not in ['0', '1', '2']:
+        errors.append(f"Hauptsanktion muss '0', '1' oder '2' sein, ist: {data.get('hauptsanktion')}")
+
+    # Vollzug validieren
+    if data.get('vollzug') not in ['0', '1', '2']:
+        errors.append(f"Vollzug muss '0', '1' oder '2' sein, ist: {data.get('vollzug')}")
+
+    # Verfahrensart validieren
+    if data.get('verfahrensart') not in ['0', '1']:
+        errors.append(f"Verfahrensart muss '0' oder '1' sein, ist: {data.get('verfahrensart')}")
+
+    # Rolle validieren
+    valid_rollen = ['Transport', 'Kauf', 'Produktion', 'Handel', 'Handel von Konsumeinheiten',
+                    'Handel von Grossmengen', 'Besitz/Aufbewahrung', 'Gehilfenschaft']
+    if data.get('rolle') not in valid_rollen:
+        errors.append(f"Rolle muss eine der folgenden sein: {', '.join(valid_rollen)}")
+
+    # Logik-Checks
+    if data.get('hauptsanktion') == '0' and data.get('freiheitsstrafe_in_monaten', 0) == 0:
+        errors.append("Bei Freiheitsstrafe (Code '0') muss die Dauer in Monaten angegeben werden")
+
+    if data.get('hauptsanktion') == '1' and data.get('anzahl_tagessaetze', 0) == 0:
+        errors.append("Bei Geldstrafe (Code '1') muss die Anzahl Tagessätze angegeben werden")
+
+    if data.get('vorbestraft_einschlaegig') and not data.get('vorbestraft'):
+        errors.append("Vorbestraft einschlägig kann nur gesetzt sein, wenn auch vorbestraft gesetzt ist")
+
+    # Datum validieren
+    if data.get('urteilsdatum'):
+        import re
+        if not re.match(r'^\d{4}-\d{2}-\d{2}$', data.get('urteilsdatum', '')):
+            errors.append("Urteilsdatum muss im Format YYYY-MM-DD sein")
+
+    return (len(errors) == 0, errors)
+

@@ -1,4 +1,6 @@
 from io import BytesIO, StringIO
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd

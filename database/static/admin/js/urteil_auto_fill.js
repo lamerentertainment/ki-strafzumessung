@@ -10,8 +10,10 @@
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Urteil Auto-Fill JavaScript geladen');
 
-        // Volltext Input Feld finden
+        // Volltext und PDF-Link Input Felder finden
         const volltextField = document.getElementById('id_volltext_input');
+        const pdfUrlField = document.getElementById('id_pdf_url_input');
+
         if (!volltextField) {
             console.warn('Volltext Input Feld nicht gefunden');
             return;
@@ -26,8 +28,9 @@
         autoFillButton.innerHTML = '🤖 Formular automatisch ausfüllen';
         autoFillButton.id = 'auto-fill-button';
 
-        // Button nach dem Textarea einfügen
-        volltextField.parentNode.insertBefore(autoFillButton, volltextField.nextSibling);
+        // Button nach dem entsprechenden Feld einfügen (bevorzugt nach dem PDF-Link Feld)
+        const insertAfterField = pdfUrlField || volltextField;
+        insertAfterField.parentNode.insertBefore(autoFillButton, insertAfterField.nextSibling);
 
         // Loading Spinner erstellen
         const loadingSpinner = document.createElement('div');
@@ -46,14 +49,15 @@
         // Click Handler für Auto-Fill Button
         autoFillButton.addEventListener('click', async function() {
             const volltext = volltextField.value.trim();
+            const pdfUrl = pdfUrlField ? pdfUrlField.value.trim() : '';
 
             // Validation
-            if (!volltext) {
-                showMessage('Bitte fügen Sie zuerst den Volltext des Urteils ein.', 'error');
+            if (!volltext && !pdfUrl) {
+                showMessage('Bitte fügen Sie den Volltext ein ODER geben Sie einen PDF-Link an.', 'error');
                 return;
             }
 
-            if (volltext.length < 100) {
+            if (volltext && volltext.length < 100) {
                 showMessage('Der Text ist zu kurz. Bitte fügen Sie den kompletten Urteilstext ein.', 'error');
                 return;
             }
@@ -61,11 +65,21 @@
             // UI State
             autoFillButton.disabled = true;
             loadingSpinner.style.display = 'block';
+            if (pdfUrl && !volltext) {
+                loadingSpinner.querySelector('span').innerHTML = '⏳ Lade PDF herunter und analysiere mit KI... Bitte warten...';
+            } else {
+                loadingSpinner.querySelector('span').innerHTML = '⏳ Analysiere Urteil mit KI... Bitte warten...';
+            }
             messageContainer.innerHTML = '';
 
             try {
                 // CSRF Token holen
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                // Payload erstellen
+                const payload = {};
+                if (volltext) payload.volltext = volltext;
+                if (pdfUrl) payload.pdf_url = pdfUrl;
 
                 // API Call
                 const response = await fetch('/admin/database/urteil/auto-fill/', {
@@ -74,7 +88,7 @@
                         'Content-Type': 'application/json',
                         'X-CSRFToken': csrfToken
                     },
-                    body: JSON.stringify({ volltext: volltext })
+                    body: JSON.stringify(payload)
                 });
 
                 const result = await response.json();

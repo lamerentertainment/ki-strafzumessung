@@ -14,67 +14,67 @@ class UrteilExtraction(BaseModel):
     Entspricht dem database.models.Urteil Model mit numerischen Codes für Choices.
     """
     gericht: str = Field(
-        description="Name des Gerichts (z.B. 'Bezirksgericht Zürich', 'Obergericht Bern')"
+        description="Das vorinstanzliche/erstinstanzliche Gericht, welches das vorinstanzliche Urteil gefällt hat (z.B. 'Bezirksgericht Zürich', 'Strafgericht Basel')."
     )
     urteilsdatum: Optional[str] = Field(
         default=None,
-        description="Datum des Urteils im Format YYYY-MM-DD (oder None wenn nicht gefunden)"
+        description="Das Datum, an welchem das vorinstanzliche Gericht das Urteil gefällt hat, im Format YYYY-MM-DD."
     )
     fall_nr: str = Field(
-        description="Geschäftsnummer/Fallnummer (z.B. 'SB190145', 'SK.2019.12')"
+        description="Die Verfahrensnummer des obergerichtlichen Urteils, aus welchem die Informationen entstammen (z.B. 'SB190145')."
     )
     url_link: str = Field(
         default="",
-        description="URL zum PDF des Urteils (leer lassen wenn nicht vorhanden)"
+        description="URL zum PDF des Urteils (leer lassen wenn nicht vorhanden)."
     )
     geschlecht: str = Field(
-        description="Geschlecht der beschuldigten Person: '0' für männlich, '1' für weiblich"
+        description="Geschlecht der beschuldigten Person: '0' für männlich, '1' für weiblich."
     )
     nationalitaet: str = Field(
-        description="Nationalität: '0' für Schweizerin/Schweizer, '1' für Ausländer/Ausländerin, '2' für unbekannt"
+        description="Nationalität der beschuldigten Person: '0' für Schweizerin/Schweizer, '1' für Ausländer/Ausländerin, '2' für unbekannt."
     )
     hauptdelikt: str = Field(
-        description="Art des Hauptdelikts. EXAKTE Werte: 'Betrug', 'Veruntreuung', 'ung. Geschäftsbesorgung', 'betr. Missbrauch DVA', 'Diebstahl', 'Sachbeschädigung'"
+        description="Die Deliktsart, für welches die Einsatzstrafe gebildet wurde (z.B. Betrug, ungetreue Geschäftsbesorgung). EXAKTE Werte: 'Betrug', 'Veruntreuung', 'ung. Geschäftsbesorgung', 'betr. Missbrauch DVA', 'Diebstahl', 'Sachbeschädigung'."
     )
     mehrfach: bool = Field(
-        description="Wurde das Delikt mehrfach begangen? (Art. 47 StGB)"
+        description="Ob das Delikt, für welches die Einsatzstrafe gebildet wurde, mehrfach begangen wurde (erkennbar daran, dass der vorinstanzliche Schuldspruch z.B. so lautet: Der Beschuldigte ist schuldig des mehrfachen Diebstahls)."
     )
     gewerbsmaessig: bool = Field(
-        description="Wurde das Delikt gewerbsmässig begangen?"
+        description="Ob das Delikt, für welches die Einsatzstrafe gebildet wurde, gewerbsmässig bzw. (bei der Veruntreuung) qualifiziert begangen wurde."
     )
     bandenmaessig: bool = Field(
-        description="Wurde das Delikt bandenmässig begangen?"
+        description="Ob das Delikt, für welches die Einsatzstrafe gebildet wurde, bandenmässig begangen wurde."
     )
     deliktssumme: int = Field(
-        description="Deliktssumme in CHF (Schadenssumme). Falls nicht bekannt: 0"
+        description="Die mit dem Delikt, für welches die Einsatzstrafe gebildet wurde, erzielte Deliktssumme. Subsidiär die gesamthaft, mit allen Straftaten, erzielte Deliktssumme."
     )
     nebenverurteilungsscore: int = Field(
         default=0,
-        description="Score für Nebenverurteilungen (0-100). Berechnung: Anzahl Nebendelikte * Faktor je nach Schwere"
+        description="Anzahl der Schuldsprüche, welche die Vorinstanz neben dem Delikt, für welches die Einsatzstrafe gebildet wurde, ausgesprochen hat. + 1 Punkt für jedes weitere Vergehen. + 2 Punkte für jedes weitere Verbrechen. + 1 Punkt bei mehrfacher Begehung."
     )
     vorbestraft: bool = Field(
-        description="Ist die Person vorbestraft?"
+        description="Ob die verurteilte Person vorbestraft ist."
     )
     vorbestraft_einschlaegig: bool = Field(
-        description="Ist die Person einschlägig vorbestraft (gleichartiges Delikt)?"
+        description="Ob die verurteilte Person einschlägig vorbestraft ist."
     )
     hauptsanktion: str = Field(
-        description="Art der Hauptsanktion: '0' für Freiheitsstrafe, '1' für Geldstrafe, '2' für Busse"
+        description="Art der Hauptsanktion, vorinstanzlich angeordnet: '0' für Freiheitsstrafe, '1' für Geldstrafe, '2' für Busse."
     )
     freiheitsstrafe_in_monaten: int = Field(
         default=0,
-        description="Dauer der Freiheitsstrafe in Monaten (0 wenn keine Freiheitsstrafe). Bei Jahren umrechnen: 1 Jahr = 12 Monate"
+        description="Die Dauer der vorinstanzlich ausgesprochenen Freiheitsstrafe in Monaten (sofern dies überhaupt der Fall ist)."
     )
     anzahl_tagessaetze: int = Field(
         default=0,
-        description="Anzahl Tagessätze bei Geldstrafe (0 wenn keine Geldstrafe)"
+        description="Die Zahl der vorinstanzlich ausgesprochenen Tagessätze der Geldstrafe (sofern dies der Fall ist)."
     )
     vollzug: str = Field(
-        description="Art des Vollzugs: '0' für bedingt, '1' für teilbedingt, '2' für unbedingt"
+        description="Ob die Vorinstanz den bedingten ('0'), teilbedingten ('1') oder unbedingten ('2') Vollzug der Hauptstrafe angeordnet hat."
     )
     zusammenfassung: str = Field(
         default="",
-        description="Zusammenfassung der Strafzumessungserwägungen aus dem Urteil"
+        description="Zusammenfassung des a) Anklagevorwurfs und b) der massgebenden Erwägungen für die Strafzumessung (erwähne unbedingt, wenn das Obergericht bezüglich Strafzumessung zu einem anderen Ergebnis gelangt als die Vorinstanz)."
     )
     in_ki_modell: bool = Field(
         default=False,
@@ -140,34 +140,48 @@ def _preprocess_urteil_text(volltext: str, max_length: int = 40000) -> str:
     return processed_text if processed_text else volltext[:max_length]
 
 
-def extract_urteil_data(volltext: str) -> dict:
+def extract_urteil_data(volltext: str = "", pdf_url: str = "") -> dict:
     """
-    Extrahiert Urteilsdaten aus einem Volltext mittels Google Gemini API.
+    Extrahiert Urteilsdaten aus einem Volltext oder einer PDF-URL mittels Google Gemini API.
 
     Args:
         volltext: Der Volltext des Urteils
+        pdf_url: Die URL zu einem PDF-Dokument des Urteils
 
     Returns:
         Dictionary mit extrahierten Urteilsdaten
 
     Raises:
-        ValueError: Wenn die API-Konfiguration fehlt oder Text zu lang
+        ValueError: Wenn die API-Konfiguration fehlt, Text zu lang oder Download-Fehler
         Exception: Bei API-Fehlern
     """
-    # Längenlimit prüfen
-    MAX_LENGTH = 50000  # Absolute Obergrenze
+    pdf_bytes = None
+    if pdf_url:
+        import requests
+        try:
+            response = requests.get(pdf_url, timeout=20)
+            response.raise_for_status()
+            pdf_bytes = response.content
+            # Einfacher Check auf PDF Header
+            if not pdf_bytes.startswith(b'%PDF'):
+                raise ValueError("Die heruntergeladene Datei ist kein gültiges PDF.")
+        except Exception as e:
+            raise ValueError(f"Fehler beim Herunterladen des PDFs von '{pdf_url}': {str(e)}")
+    else:
+        # Längenlimit prüfen
+        MAX_LENGTH = 50000  # Absolute Obergrenze
 
-    if len(volltext) > MAX_LENGTH:
-        raise ValueError(
-            f"Der Urteilstext ist zu lang ({len(volltext):,} Zeichen). "
-            f"Maximale Länge: {MAX_LENGTH:,} Zeichen.\n\n"
-            "Bitte fügen Sie nur die relevanten Teile ein:\n"
-            "- Kopf des Urteils (Gericht, Datum, Geschäftsnummer)\n"
-            "- Dispositiv/Urteilsspruch (Strafe, Vollzug)\n"
-            "- Strafzumessungs-Erwägungen\n\n"
-            "Sie können unwichtige Teile wie ausführliche Sachverhalts-Darstellungen, "
-            "Beweismittel-Listen, oder Kostenverlegungen weglassen."
-        )
+        if len(volltext) > MAX_LENGTH:
+            raise ValueError(
+                f"Der Urteilstext ist zu lang ({len(volltext):,} Zeichen). "
+                f"Maximale Länge: {MAX_LENGTH:,} Zeichen.\n\n"
+                "Bitte fügen Sie nur die relevanten Teile ein:\n"
+                "- Kopf des Urteils (Gericht, Datum, Geschäftsnummer)\n"
+                "- Dispositiv/Urteilsspruch (Strafe, Vollzug)\n"
+                "- Strafzumessungs-Erwägungen\n\n"
+                "Sie können unwichtige Teile wie ausführliche Sachverhalts-Darstellungen, "
+                "Beweismittel-Listen, oder Kostenverlegungen weglassen."
+            )
 
     try:
         # Gemini API Client initialisieren
@@ -177,41 +191,53 @@ def extract_urteil_data(volltext: str) -> dict:
 
         client = genai.Client()
 
-        # Text vorverarbeiten, wenn er lang ist
-        processed_text = _preprocess_urteil_text(volltext, max_length=40000)
-
         # Prompt für die Extraktion
-        prompt = f"""Du bist ein Experte für Schweizer Strafrecht und spezialisiert auf die Analyse von Gerichtsurteilen.
+        prompt = """Du bist ein Experte für Schweizer Strafrecht und spezialisiert auf die Analyse von Gerichtsurteilen.
 
 Analysiere das folgende Gerichtsurteil und extrahiere alle relevanten Informationen gemäss dem vorgegebenen Schema.
 
-WICHTIGE HINWEISE ZU DEN CODES:
-1. Geschlecht: '0' = männlich, '1' = weiblich
-2. Nationalität: '0' = Schweizerin/Schweizer, '1' = Ausländer/Ausländerin, '2' = unbekannt
-3. Hauptdelikt (EXAKT SO schreiben): 'Betrug', 'Veruntreuung', 'ung. Geschäftsbesorgung', 'betr. Missbrauch DVA', 'Diebstahl', 'Sachbeschädigung'
-4. Hauptsanktion: '0' = Freiheitsstrafe, '1' = Geldstrafe, '2' = Busse
-5. Vollzug: '0' = bedingt, '1' = teilbedingt, '2' = unbedingt
-
 WICHTIGE HINWEISE ZUR EXTRAKTION:
-- Das Urteil betrifft Vermögensdelikte (Betrug, Veruntreuung, Diebstahl, etc.)
-- Achte besonders auf die Strafzumessungserwägungen
-- Extrahiere die Deliktssumme präzise (Schadensbetrag in CHF). Falls nicht im Text: 0
-- Bei Freiheitsstrafen: gib die Dauer in Monaten an (z.B. 2 Jahre = 24 Monate, 1.5 Jahre = 18 Monate)
-- Bei Geldstrafen: gib die Anzahl der Tagessätze an
-- Datum im Format YYYY-MM-DD (z.B. 2023-05-15)
-- Falls Informationen nicht im Text sind: verwende sinnvolle Defaults
-- Bei mehreren Beschuldigten: extrahiere die Daten für die beschuldigte Person, die die Hauptstrafe erhält
+- Fokussiere auf die/den Beschuldigte/n 1, wenn es mehrere Beschuldigte gibt.
+- Gericht: Das vorinstanzliche Gericht, welches das vorinstanzliche Urteil gefällt hat.
+- Urteilsdatum: Das Datum, an welchem das vorinstanzliche Gericht das Urteil gefällt hat. Bitte im Format YYYY-MM-DD extrahieren.
+- Fall nr: Die Verfahrensnummer des obergerichtlichen Urteils, aus welchem die Informationen entstammen.
+- Geschlecht: der beschuldigten Person ('0' = männlich, '1' = weiblich).
+- Nationalität: der beschuldigten Person ('0' = Schweizerin/Schweizer, '1' = Ausländer/Ausländerin, '2' = unbekannt).
+- Hauptdelikt: Die Deliktsart, für welches die Einsatzstrafe gebildet wurde (z.B. Betrug, ungetreue Geschäftsbesorgung). EXAKTE Werte: 'Betrug', 'Veruntreuung', 'ung. Geschäftsbesorgung', 'betr. Missbrauch DVA', 'Diebstahl', 'Sachbeschädigung'.
+- Mehrfach: Ob das Delikt, für welches die Einsatzstrafe gebildet wurde, mehrfach begangen wurde (erkennbar daran, dass der vorinstanzliche Schuldspruch z.B. so lautet: Der Beschuldigte ist schuldig des mehrfachen Diebstahls).
+- Gewerbsmässig/qualifizierte Begehungsweise: Ob das Delikt, für welches die Einsatzstrafe gebildet wurde, gewerbsmässig bzw. (bei der Veruntreuung) qualifiziert begangen wurde.
+- Bandenmässig: Ob das Delikt, für welches die Einsatzstrafe gebildet wurde, bandenmässig begangen wurde.
+- Deliktssumme: Die mit dem Delikt, für welches die Einsatzstrafe gebildet wurde, erzielte Deliktssumme. Subsidiär die gesamthaft, mit allen Straftaten, erzielte Deliktssumme.
+- Nebenverurteilungsscore: Anzahl der Schuldsprüche, welche die Vorinstanz neben dem Delikt, für welches die Einsatzstrafe gebildet wurde, ausgesprochen hat. Berechne wie folgt: + 1 Punkt für jedes weitere Vergehen. + 2 Punkte für jedes weitere Verbrechen. + 1 Punkt bei mehrfacher Begehung.
+- Vorbestraft: Ob die verurteilte Person vorbestraft ist.
+- Einschlägig vorbestraft: Ob die verurteilte Person einschlägig vorbestraft ist.
+- Hauptsanktion: Freiheitsstrafe ('0') oder Geldstrafe ('1'), vorinstanzlich angeordnet.
+- Freiheitsstrafe in Monaten: Die Dauer der vorinstanzlich ausgesprochenen Freiheitsstrafe in Monaten (sofern dies überhaupt der Fall ist).
+- Anzahl Tagessätze: Die Zahl der vorinstanzlich ausgesprochenen Tagessätze der Geldstrafe.
+- Vollzug: Ob die Vorinstanz den bedingten ('0'), teilbedingten ('1') oder unbedingten ('2') Vollzug der Hauptstrafe angeordnet hat.
+- Zusammenfassung: Fasse den a) Anklagevorwurf und b) die massgebenden Erwägungen für die Strafzumessung zusammen. Erwähne unbedingt, wenn das Obergericht bezüglich Strafzumessung zu einem anderen Ergebnis gelangt als die Vorinstanz.
+"""
 
-URTEILSTEXT:
-{processed_text}
-
-Extrahiere alle Informationen gemäss dem Schema. Verwende die numerischen Codes wie oben angegeben!"""
+        if pdf_bytes:
+            prompt += "\nBitte analysiere das angehängte PDF-Dokument."
+            contents = [
+                types.Part.from_bytes(
+                    data=pdf_bytes,
+                    mime_type='application/pdf'
+                ),
+                prompt
+            ]
+        else:
+            # Text vorverarbeiten, wenn er lang ist
+            processed_text = _preprocess_urteil_text(volltext, max_length=40000)
+            prompt += f"\n\nURTEILSTEXT:\n{processed_text}\n\nExtrahiere alle Informationen gemäss dem Schema. Verwende die numerischen Codes wie oben angegeben!"
+            contents = prompt
 
         # API Call mit Structured Output
         # Verwende gemini-2.5-flash (stabil und im Projekt bereits verwendet)
         response = client.models.generate_content(
             model='gemini-2.5-flash',
-            contents=prompt,
+            contents=contents,
             config=types.GenerateContentConfig(
                 response_mime_type='application/json',
                 response_schema=UrteilExtraction,
@@ -227,6 +253,10 @@ Extrahiere alle Informationen gemäss dem Schema. Verwende die numerischen Codes
                 f"Die API-Antwort konnte nicht als JSON geparst werden. "
                 f"Fehler: {str(e)}. Antwort: {response.text[:500]}"
             )
+
+        # Falls url_link nicht extrahiert wurde, verwenden wir die Eingabe-URL als Fallback
+        if pdf_url and not extracted_data.get('url_link'):
+            extracted_data['url_link'] = pdf_url
 
         return extracted_data
 

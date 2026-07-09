@@ -3,6 +3,7 @@ from django import forms
 from django.urls import path
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.utils.decorators import method_decorator
 import json
 from .models import (Urteil, KIModelPickleFile, DiagrammSVG, BetmUrteil, BetmArt, Betm, Rolle, Kanton,
                      SexualdeliktUrteil, Besonderheiten, Hauptdelikt, ZusaetzlicheSexualdelikte, Tatmittel)
@@ -35,6 +36,17 @@ class UrteilAdminForm(forms.ModelForm):
         help_text='Fügen Sie den kompletten Urteilstext ein. Die KI wird automatisch alle Felder analysieren und ausfüllen.'
     )
 
+    pdf_url_input = forms.URLField(
+        required=False,
+        label='🤖 KI-Assistenz: PDF-Link des Urteils',
+        help_text='Geben Sie die URL zu einem PDF-Dokument des Urteils ein (z. B. von bger.ch).',
+        widget=forms.URLInput(attrs={
+            'placeholder': 'https://example.com/urteil.pdf',
+            'class': 'vTextField',
+            'style': 'width: 600px;'
+        })
+    )
+
     class Meta:
         model = Urteil
         fields = '__all__'
@@ -53,9 +65,9 @@ class UrteilAdmin(admin.ModelAdmin):
     # Fieldsets für bessere Übersicht
     fieldsets = (
         ('🤖 KI-Assistenz', {
-            'fields': ('volltext_input',),
+            'fields': ('volltext_input', 'pdf_url_input'),
             'classes': ('wide',),
-            'description': 'Fügen Sie hier den Volltext des Urteils ein und klicken Sie auf "Formular automatisch ausfüllen".'
+            'description': 'Fügen Sie entweder den Volltext ein ODER geben Sie einen PDF-Link an und klicken Sie auf "Formular automatisch ausfüllen".'
         }),
         ('Grunddaten', {
             'fields': ('fall_nr', 'url_link', 'gericht', 'urteilsdatum'),
@@ -88,22 +100,29 @@ class UrteilAdmin(admin.ModelAdmin):
         ]
         return custom_urls + urls
 
-    @require_http_methods(["POST"])
+    @method_decorator(require_http_methods(["POST"]))
     def auto_fill_view(self, request):
         """API-Endpoint für automatisches Ausfüllen des Formulars."""
         try:
             # Request Body parsen
             data = json.loads(request.body)
             volltext = data.get('volltext', '')
+            pdf_url = data.get('pdf_url', '')
 
-            if not volltext or len(volltext.strip()) < 100:
+            if not volltext and not pdf_url:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Bitte geben Sie entweder den Volltext ein oder geben Sie einen PDF-Link an.'
+                }, status=400)
+
+            if volltext and len(volltext.strip()) < 100:
                 return JsonResponse({
                     'success': False,
                     'error': 'Der Volltext ist zu kurz. Bitte fügen Sie den kompletten Urteilstext ein.'
                 }, status=400)
 
             # Daten extrahieren
-            extracted_data = extract_urteil_data(volltext)
+            extracted_data = extract_urteil_data(volltext, pdf_url)
 
             # Validieren
             is_valid, errors = validate_extracted_data(extracted_data)

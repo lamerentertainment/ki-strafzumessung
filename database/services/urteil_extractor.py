@@ -638,3 +638,342 @@ def validate_betm_extracted_data(data: dict) -> tuple[bool, list[str]]:
 
     return (len(errors) == 0, errors)
 
+
+class SexualdeliktUrteilExtraction(BaseModel):
+    """
+    Pydantic Model für strukturierte Extraktion von Urteilsdaten im Bereich Sexualdelikte.
+    """
+    fall_nr: str = Field(
+        description="Die Verfahrensnummer des Urteils, dem die Informationen entnommen sind."
+    )
+    gericht: str = Field(
+        description="Das Gericht, welches das vorinstanzliche Urteil gefällt hat."
+    )
+    urteilsdatum: Optional[str] = Field(
+        default=None,
+        description="Das Datum, an welchem das vorinstanzliche Gericht das Urteil gefällt hat (im Format DD.MM.YYYY)."
+    )
+    kanton: str = Field(
+        description="Abkürzung des Kantons, in welchem sich die befassten Gerichte befinden (z.B. 'ZH', 'BE', 'AG', 'SG')."
+    )
+    hauptdelikt: str = Field(
+        description="Das Hauptdelikt, für welches die Einsatzstrafe gebildet wurde."
+    )
+    tatmittel: str = Field(
+        description="Das Tatmittel, mit welchem das Hauptdelikt begangen wurde (bsp. Gewalt, Nötigung, psychischer Druck)."
+    )
+    mehrfache_tatbegehung: bool = Field(
+        description="Ob die Verurteilung wegen mehrfacher Begehung des Hauptdelikts erfolgte (mehrfache Tatbegehung?)."
+    )
+    taeter_opfer_beziehung: str = Field(
+        description="Beziehung zwischen Täter und Opfer. EXAKTE Werte: 'Ehegatte/Partner', 'Elternteil/Kind', 'entfernt verwandt', 'Bekannte', 'flüchtig Bekannt', 'Unbekannte', 'Beziehung unbekannt'."
+    )
+    opferalter: str = Field(
+        description="Alter des (jüngsten) Opfers des Hauptdelikts (erste Begehung) in Jahren. EXAKTE Werte: 'unter 6', 'unter 10', 'unter 14', 'unter 16', 'unter 18', 'erwachsen', 'nicht bekannt'."
+    )
+    opfer_vorerfahrung: str = Field(
+        description="Ob das Opfer im Tatzeitpunkt sexuelle Vorerfahrungen hatte. EXAKTE Werte: 'Ja', 'Nein', 'unbekannt'."
+    )
+    deliktsdauer_bekannt: bool = Field(
+        description="Ob die Deliktsdauer des Hauptdelikts bekannt ist."
+    )
+    deliktsdauer_hauptdelikt_min: Optional[int] = Field(
+        default=None,
+        description="Die Deliktsdauer des Hauptdelikts in Minuten, soweit bekannt."
+    )
+    anzahl_vollendungen_hauptdelikt: Optional[int] = Field(
+        default=None,
+        description="Anzahl der Vollendungen des Hauptdelikts, sofern mehrfach begangen."
+    )
+    deliktsperiode_hauptdelikt_days: Optional[int] = Field(
+        default=None,
+        description="Periode, in welcher das Hauptdelikt mehrfach begangen wurde, in Tagen."
+    )
+    weitere_sexualdelikte: str = Field(
+        description="Ob/Welche weiteren Sexualdelikte nebst dem Hauptdelikt im vorinstanzlichen Urteilsspruch verurteilte wurden."
+    )
+    nebenverurteilungsscore: int = Field(
+        default=0,
+        description="Anzahl der Schuldsprüche, welche die Vorinstanz neben den Sexualdelikten (Hauptdelikt und allfällige weitere Sexualdelikte) ausgesprochen hat. + 1 Punkt für jedes weitere Vergehen. + 2 Punkte für jedes weitere Verbrechen. + 1 Punkt bei mehrfacher Begehung."
+    )
+    geschlecht: str = Field(
+        description="Geschlecht des Täters. EXAKTE Werte: '0' für männlich, '1' für weiblich."
+    )
+    nationalitaet: str = Field(
+        description="Nationalität des Täters. EXAKTE Werte: '0' für Schweizerin/Schweizer, '1' für Ausländer/Ausländerin, '2' für unbekannt."
+    )
+    vorbestraft: bool = Field(
+        description="Ob Vorstrafen bestehen."
+    )
+    vorbestraft_einschlaegig: bool = Field(
+        description="Ob einschlägige Vorverurteilungen bestehen."
+    )
+    besonderheiten: str = Field(
+        description="Weitere für die Strafzumessung relevante Informationen/Umstände im Urteil (z.B. Strafrabatt wegen Geständnis oder Verletzung Beschleunigungsgebot)."
+    )
+    hauptsanktion: str = Field(
+        description="Hauptsanktion, welche die Vorinstanz ausgesprochen hat. EXAKTE Werte: '0' für Freiheitsstrafe, '1' für Geldstrafe, '2' für Busse."
+    )
+    freiheitsstrafe_in_monaten: int = Field(
+        default=0,
+        description="Die Dauer der von der Vorinstanz ausgesprochenen Sanktion in Monaten, sofern eine Freiheitsstrafe ausgesprochen wurde."
+    )
+    anzahl_tagessaetze: int = Field(
+        default=0,
+        description="Die Zahl der von der Vorinstanz ausgesprochenen Tagessätze der Geldstrafe (sofern eine ausgesprochen wurde)."
+    )
+    vollzug: str = Field(
+        description="Vollzugsart, welche von der Vorinstanz verhängt wurde. EXAKTE Werte: '0' für bedingt, '1' für teilbedingt, '2' für unbedingt."
+    )
+    verfahrensart: str = Field(
+        description="Verfahrensart. EXAKTE Werte: '0' für ordentlich, '1' für abgekürzt."
+    )
+    zusammenfassung: str = Field(
+        description="Zusammenfassung des Vorwurfs und der massgebenden Erwägungen der Strafzumessung in wenigen Absätzen (Erwähne besonders, wenn das Obergericht bezüglich der Strafzumessung zu anderen Ergebnissen gelangt, als die Vorinstanz)."
+    )
+
+
+def extract_sexualdelikt_urteil_data(volltext: str = "", pdf_url: str = "") -> dict:
+    """
+    Extrahiert Urteilsdaten für Sexualdelikte aus einem Volltext oder einer PDF-URL
+    mittels Google Gemini API mit Structured Output.
+    """
+    pdf_bytes = None
+    if pdf_url:
+        import requests
+        try:
+            response = requests.get(pdf_url, timeout=20)
+            response.raise_for_status()
+            pdf_bytes = response.content
+            if not pdf_bytes.startswith(b'%PDF'):
+                raise ValueError("Die heruntergeladene Datei ist kein gültiges PDF.")
+        except Exception as e:
+            raise ValueError(f"Fehler beim Herunterladen des PDFs von '{pdf_url}': {str(e)}")
+    else:
+        MAX_LENGTH = 50000  # Absolute Obergrenze
+        if len(volltext) > MAX_LENGTH:
+            raise ValueError(
+                f"Der Urteilstext ist zu lang ({len(volltext):,} Zeichen). "
+                f"Maximale Länge: {MAX_LENGTH:,} Zeichen.\n\n"
+                "Bitte fügen Sie nur die relevanten Teile ein."
+            )
+
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client()
+
+        # Prompt für die Extraktion gemäss Vorgabe
+        prompt = """Du bist ein Experte für Schweizer Strafrecht und spezialisiert auf die Analyse von Gerichtsurteilen im Bereich Sexualdelikte.
+
+Nachfolgend bekommst du den Text eines Gerichtsurteils.
+
+1. Extrahiere zunächst folgende Daten aus dem Urteil (nur soweit das Urteil Angaben dazu enthält) und fülle das Schema aus:
+- fall_nr: Die Verfahrensnummer des Urteils, dem die Informationen entnommen sind.
+- gericht: Das Gericht, welches das vorinstanzliche Urteil gefällt hat.
+- urteilsdatum: Das Datum, an welchem das vorinstanzliche Gericht das Urteil gefällt hat (im Format DD.MM.YYYY).
+- kanton: Abkürzung des Kantons, in welchem sich die befassten Gerichte befinden.
+- hauptdelikt: Das Hauptdelikt, für welches die Einsatzstrafe gebildet wurde.
+- tatmittel: Das Tatmittel, mit welchem das Hauptdelikt begangen wurde (bsp. Gewalt, Nötigung, psychischer Druck).
+- mehrfache_tatbegehung: Ob die Verurteilung wegen mehrfacher Begehung des Hauptdelikts erfolgte (mehrfache Tatbegehung?).
+- taeter_opfer_beziehung: Beziehung zwischen Täter und Opfer (Ehegatte/Partner, Elternteil/Kind, entfernt verwandt, Bekannte, flüchtig Bekannt, Unbekannte, Beziehung unbekannt).
+- opferalter: Alter des (jüngsten) Opfers des Hauptdelikts (erste Begehung) in Jahren (unter 6, unter 10, unter 14, unter 16, unter 18, erwachsen, nicht bekannt).
+- opfer_vorerfahrung: Ob das Opfer im Tatzeitpunkt sexuelle Vorerfahrungen hatte (Ja, Nein, unbekannt).
+- deliktsdauer_bekannt: Ob die Deliktsdauer des Hauptdelikts bekannt ist.
+- deliktsdauer_hauptdelikt_min: Die Deliktsdauer des Hauptdelikts in Minuten, soweit bekannt.
+- anzahl_vollendungen_hauptdelikt: Anzahl der Vollendungen des Hauptdelikts, sofern mehrfach begangen.
+- deliktsperiode_hauptdelikt_days: Periode, in welcher das Hauptdelikt mehrfach begangen wurde, in Tagen.
+- weitere_sexualdelikte: Ob/Welche weiteren Sexualdelikte im vorinstanzlichen Urteilsspruch nebst dem Hauptdelikt verurteilte wurden.
+- nebenverurteilungsscore: Anzahl der Schuldsprüche, welche die Vorinstanz neben den Sexualdelikten (Hauptdelikt und allfällige weitere Sexualdelikte) ausgesprochen hat. + 1 Punkt für jedes weitere Vergehen. + 2 Punkt für jedes weitere Verbrechen. + 1 Punkt bei mehrfacher Begehung.
+- geschlecht: Geschlecht des Täters. Codes: '0' für männlich, '1' für weiblich.
+- nationalitaet: Nationalität des Täters. Codes: '0' für Schweizerin/Schweizer, '1' für Ausländer/Ausländerin, '2' für unbekannt.
+- vorbestraft: Ob Vorstrafen bestehen.
+- vorbestraft_einschlaegig: Ob einschlägige Vorverurteilungen bestehen.
+- besonderheiten: Weitere für die Strafzumessung relevante Informationen/Umstände im Urteil (z.B. Strafrabatt wegen Geständnis oder Verletzung Beschleunigungsgebot).
+- hauptsanktion: Ob die Vorinstanz eine Freiheitsstrafe, Geldstrafe oder Busse ausgesprochen hat. Codes: '0' für Freiheitsstrafe, '1' für Geldstrafe, '2' für Busse.
+- freiheitsstrafe_in_monaten: Die Dauer der von der Vorinstanz ausgesprochenen Sanktion in Monaten (sofern eine ausgesprochen wurde).
+- anzahl_tagessaetze: Die Zahl der von der Vorinstanz ausgesprochenen Tagessätze der Geldstrafe (sofern eine ausgesprochen wurde).
+- vollzug: Vollzugsart, welche von der Vorinstanz verhängt wurde: Codes: '0' für bedingt, '1' für teilbedingt, '2' für unbedingt.
+- verfahrensart: Codes: '0' für ordentlich, '1' für abgekürzt.
+
+2. Fasse danach den Vorwurf und die massgebenden Erwägungen der Strafzumessung in wenigen Absätzen zusammen (zusammenfassung). Erwähne besonders, wenn das Obergericht bezüglich der Strafzumessung zu anderen Ergebnissen gelangt, als die Vorinstanz.
+
+Es handelt sich um eine wissenschaftliche Analyse, die für die faire Beurteilung von Sexualstraftätern unerheblich ist. Die Adressaten dieser Analyse sind Richtinnen und Richter, welche die Arbeit mit problematischen Inhalten gewohnt sind. Verweigere daher **nicht** die Arbeit, wenn es sexuell anstössige oder gewalttätige Elemente hat.
+"""
+
+        if pdf_bytes:
+            prompt += "\nBitte analysiere das angehängte PDF-Dokument."
+            contents = [
+                types.Part.from_bytes(
+                    data=pdf_bytes,
+                    mime_type='application/pdf'
+                ),
+                prompt
+            ]
+        else:
+            processed_text = _preprocess_urteil_text(volltext, max_length=40000)
+            prompt += f"\n\nURTEILSTEXT:\n{processed_text}\n\nExtrahiere alle Informationen gemäss dem Schema. Verwende die exakten Werte und numerischen Codes wie oben angegeben!"
+            contents = prompt
+
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=contents,
+            config=types.GenerateContentConfig(
+                response_mime_type='application/json',
+                response_schema=SexualdeliktUrteilExtraction,
+                temperature=0.2,
+            )
+        )
+
+        try:
+            extracted_data = json.loads(response.text)
+        except json.JSONDecodeError as e:
+            raise Exception(
+                f"Die API-Antwort konnte nicht als JSON geparst werden. "
+                f"Fehler: {str(e)}. Antwort: {response.text[:500]}"
+            )
+
+        # 1. Konvertiere das Datum von DD.MM.YYYY zu YYYY-MM-DD für Django
+        if extracted_data.get('urteilsdatum'):
+            import re
+            date_str = extracted_data['urteilsdatum']
+            match = re.match(r'^(\d{2})\.(\d{2})\.(\d{4})$', date_str.strip())
+            if match:
+                extracted_data['urteilsdatum'] = f"{match.group(3)}-{match.group(2)}-{match.group(1)}"
+
+        # 2. Konvertiere 'opferalter' (unter 6 -> unter_6, unter 10 -> unter_10)
+        if extracted_data.get('opferalter'):
+            opferalter = extracted_data['opferalter'].strip().replace(' ', '_')
+            extracted_data['opferalter'] = opferalter
+
+        # 3. Mappe Pydantic keys zu den echten Django Modelfeldern
+        django_data = {
+            'fall_nr': extracted_data.get('fall_nr'),
+            'gericht': extracted_data.get('gericht'),
+            'urteilsdatum': extracted_data.get('urteilsdatum'),
+            'kanton': extracted_data.get('kanton'),
+            'hauptdelikt': extracted_data.get('hauptdelikt'),
+            'hauptdelikt_tatmittel': extracted_data.get('tatmittel'),
+            'hauptdelikt_mehrfachbegehung': extracted_data.get('mehrfache_tatbegehung'),
+            'hauptdelikt_taeter_opfer_beziehung': extracted_data.get('taeter_opfer_beziehung'),
+            'hauptdelikt_opferalter': extracted_data.get('opferalter'),
+            'hauptdelikt_opfer_vorerfahrung': extracted_data.get('opfer_vorerfahrung'),
+            'hauptdelikt_deliktsdauer_bekannt': extracted_data.get('deliktsdauer_bekannt'),
+            'hauptdelikt_mehrfachbegehung_anzahl': extracted_data.get('anzahl_vollendungen_hauptdelikt'),
+            'deliktsscore_uebrige_delikte': extracted_data.get('nebenverurteilungsscore'),
+            'geschlecht': extracted_data.get('geschlecht'),
+            'nationalitaet': extracted_data.get('nationalitaet'),
+            'vorbestraft': extracted_data.get('vorbestraft'),
+            'vorbestraft_einschlaegig': extracted_data.get('vorbestraft_einschlaegig'),
+            'hauptsanktion': extracted_data.get('hauptsanktion'),
+            'freiheitsstrafe_in_monaten': extracted_data.get('freiheitsstrafe_in_monaten'),
+            'anzahl_tagessaetze': extracted_data.get('anzahl_tagessaetze'),
+            'vollzug': extracted_data.get('vollzug'),
+            'verfahrensart': extracted_data.get('verfahrensart'),
+            'zusammenfassung': extracted_data.get('zusammenfassung'),
+            # ManyToMany Text-Zwischenspeicher (für JS Messageboxen)
+            'weitere_sexualdelikte': extracted_data.get('weitere_sexualdelikte'),
+            'besonderheiten': extracted_data.get('besonderheiten'),
+        }
+
+        # 4. Formatiere Durations (timedelta in Django)
+        if extracted_data.get('deliktsdauer_hauptdelikt_min') is not None:
+            mins = int(extracted_data['deliktsdauer_hauptdelikt_min'])
+            hours = mins // 60
+            remaining_mins = mins % 60
+            django_data['hautpdelikt_deliktsdauer_einfachbegehung'] = f"{hours:02d}:{remaining_mins:02d}:00"
+
+        if extracted_data.get('deliktsperiode_hauptdelikt_days') is not None:
+            days = int(extracted_data['deliktsperiode_hauptdelikt_days'])
+            django_data['hauptdelikt_mehrfachbegehung_deliktsperiode'] = f"{days} 00:00:00"
+
+        if pdf_url and not django_data.get('url_link'):
+            django_data['url_link'] = pdf_url
+
+        return django_data
+
+    except ImportError:
+        raise ImportError(
+            "Das 'google-genai' Paket ist nicht installiert."
+        )
+    except Exception as e:
+        error_message = str(e)
+        if 'API key' in error_message or 'authentication' in error_message.lower():
+            raise ValueError(
+                "GOOGLE_API_KEY ist nicht konfiguriert oder ungültig."
+            )
+        raise Exception(f"Fehler bei der Gemini API-Anfrage: {error_message}")
+
+
+def validate_sexualdelikt_extracted_data(data: dict) -> tuple[bool, list[str]]:
+    """
+    Validiert die extrahierten SexualdeliktUrteil-Daten.
+    """
+    errors = []
+
+    # Pflichtfelder prüfen
+    required_fields = ['gericht', 'fall_nr', 'geschlecht',
+                       'nationalitaet', 'hauptsanktion', 'vollzug', 'verfahrensart', 'kanton',
+                       'hauptdelikt', 'hauptdelikt_tatmittel', 'hauptdelikt_taeter_opfer_beziehung',
+                       'hauptdelikt_opferalter', 'hauptdelikt_opfer_vorerfahrung']
+
+    for field in required_fields:
+        value = data.get(field)
+        if value is None or (isinstance(value, str) and not value.strip()):
+            errors.append(f"Pflichtfeld '{field}' fehlt oder ist leer")
+
+    # Geschlecht validieren
+    if data.get('geschlecht') not in ['0', '1']:
+        errors.append(f"Geschlecht muss '0' oder '1' sein, ist: {data.get('geschlecht')}")
+
+    # Nationalität validieren
+    if data.get('nationalitaet') not in ['0', '1', '2']:
+        errors.append(f"Nationalität muss '0', '1' oder '2' sein, ist: {data.get('nationalitaet')}")
+
+    # Hauptsanktion validieren
+    if data.get('hauptsanktion') not in ['0', '1', '2']:
+        errors.append(f"Hauptsanktion muss '0', '1' oder '2' sein, ist: {data.get('hauptsanktion')}")
+
+    # Vollzug validieren
+    if data.get('vollzug') not in ['0', '1', '2']:
+        errors.append(f"Vollzug muss '0', '1' oder '2' sein, ist: {data.get('vollzug')}")
+
+    # Verfahrensart validieren
+    if data.get('verfahrensart') not in ['0', '1']:
+        errors.append(f"Verfahrensart muss '0' oder '1' sein, ist: {data.get('verfahrensart')}")
+
+    # Beziehung validieren
+    valid_beziehungen = ['Ehegatte/Partner', 'Elternteil/Kind', 'entfernt verwandt', 'Bekannte',
+                         'flüchtig Bekannt', 'Unbekannte', 'Beziehung unbekannt']
+    if data.get('hauptdelikt_taeter_opfer_beziehung') not in valid_beziehungen:
+        errors.append(f"Beziehung muss eine der folgenden sein: {', '.join(valid_beziehungen)}")
+
+    # Opferalter validieren
+    valid_alter = ['unter_6', 'unter_10', 'unter_14', 'unter_16', 'unter_18', 'erwachsen', 'nicht_bekannt', 'nicht bekannt']
+    if data.get('hauptdelikt_opferalter') not in valid_alter:
+        errors.append(f"Opferalter muss eines der folgenden sein: {', '.join(valid_alter)}")
+
+    # Opfer Vorerfahrung
+    if data.get('hauptdelikt_opfer_vorerfahrung') not in ['Ja', 'Nein', 'unbekannt']:
+        errors.append(f"Sexuelle Vorerfahrung muss 'Ja', 'Nein' oder 'unbekannt' sein")
+
+    # Logik-Checks
+    if data.get('hauptsanktion') == '0' and data.get('freiheitsstrafe_in_monaten', 0) == 0:
+        errors.append("Bei Freiheitsstrafe (Code '0') muss die Dauer in Monaten angegeben werden")
+
+    if data.get('hauptsanktion') == '1' and data.get('anzahl_tagessaetze', 0) == 0:
+        errors.append("Bei Geldstrafe (Code '1') muss die Anzahl Tagessätze angegeben werden")
+
+    if data.get('vorbestraft_einschlaegig') and not data.get('vorbestraft'):
+        errors.append("Vorbestraft einschlägig kann nur gesetzt sein, wenn auch vorbestraft gesetzt ist")
+
+    # Datum validieren
+    if data.get('urteilsdatum'):
+        import re
+        if not re.match(r'^\d{4}-\d{2}-\d{2}$', data.get('urteilsdatum', '')):
+            errors.append("Urteilsdatum muss im Format YYYY-MM-DD sein")
+
+    return (len(errors) == 0, errors)
+
+

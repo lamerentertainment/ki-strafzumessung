@@ -6,7 +6,8 @@ from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
 import json
 from .models import (Urteil, KIModelPickleFile, DiagrammSVG, BetmUrteil, BetmArt, Betm, Rolle, Kanton,
-                     SexualdeliktUrteil, Besonderheiten, Hauptdelikt, ZusaetzlicheSexualdelikte, Tatmittel)
+                     SexualdeliktUrteil, Besonderheiten, Hauptdelikt, ZusaetzlicheSexualdelikte, Tatmittel,
+                     GewaltdeliktUrteil)
 from .services.urteil_extractor import (
     extract_urteil_data, validate_extracted_data,
     extract_betm_urteil_data, validate_betm_extracted_data,
@@ -412,6 +413,41 @@ class SexualdeliktUrteilAdmin(admin.ModelAdmin):
                 'success': False,
                 'error': f'Fehler bei der Verarbeitung: {str(e)}'
             }, status=500)
+
+@admin.register(GewaltdeliktUrteil)
+class GewaltdeliktUrteilAdmin(admin.ModelAdmin):
+    list_display = ["fall_nr", "update_time", "urteilsdatum", "gericht", "hauptdelikt",
+                    "freiheitsstrafe_in_monaten", "has_zusammenfassung"]
+    ordering = ["-update_time"]
+
+    fieldsets = (
+        ('Grunddaten', {
+            'fields': ('fall_nr', 'url_link', 'gericht', 'urteilsdatum', 'kanton'),
+        }),
+        ('Person', {
+            'fields': ('geschlecht', 'nationalitaet', 'vorbestraft', 'vorbestraft_einschlaegig'),
+        }),
+        ('Delikt', {
+            'fields': ('hauptdelikt', 'versuch', 'vorsatzform', 'tatmittel',
+                       'waffe_gefaehrlicher_gegenstand', 'bandenmaessig',
+                       'besondere_gefaehrlichkeit', 'lebensgefahr', 'mehrfach',
+                       'opferzahl', 'taeter_opfer_beziehung', 'verletzungsfolge',
+                       'angegriffenes_koerperteil', 'substanzeinfluss', 'deliktssumme',
+                       'deliktsscore_uebrige_delikte', 'besonderheiten'),
+        }),
+        ('Sanktion', {
+            'fields': ('hauptsanktion', 'freiheitsstrafe_in_monaten', 'anzahl_tagessaetze', 'vollzug', 'verfahrensart'),
+        }),
+        ('Weitere Informationen', {
+            'fields': ('zusammenfassung', 'bemerkungen', 'in_ki_modell'),
+        }),
+    )
+
+    def has_zusammenfassung(self, obj):
+        return bool(obj.zusammenfassung)
+    has_zusammenfassung.boolean = True
+    has_zusammenfassung.short_description = "Zusammenfassung vorhanden"
+
 
 # Register your models here.
 admin.site.register(KIModelPickleFile)

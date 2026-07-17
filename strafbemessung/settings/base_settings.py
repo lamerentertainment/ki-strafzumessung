@@ -153,3 +153,6 @@ AWS_QUERYSTRING_AUTH = False
 
 # Google Gemini API für KI-gestützte Urteilserfassung
 GOOGLE_API_KEY = env('GOOGLE_API_KEY', default=None)
+
+# Authentication redirects
+LOGIN_REDIRECT_URL = '/admin/'

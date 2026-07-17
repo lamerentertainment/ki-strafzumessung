@@ -146,7 +146,8 @@ def random_forest_regressor_erstellen(x, y):
         max_depth=110,
         min_samples_split=2,
         min_samples_leaf=4,
-        n_estimators=10,
+        n_estimators=100,
+        oob_score=True,
     )
     random_forest_regressor.fit(x, y)
     return random_forest_regressor
@@ -260,29 +261,26 @@ def sortierte_koeff_list_erstellen(instanziiertes_lr_kimodel):
 
 
 def prognoseleistung_dict_ausgeben(instanziertes_kimodel, x, y):
-    loo = LeaveOneOut()
+    """Berechnet die Prognoseleistung pro Urteil. Random Forests liefern die
+    Out-of-Bag-Prognosen des bereits gefitteten Modells (kein erneutes Training
+    nötig); für alle übrigen Estimatoren wird Leave-One-Out gerechnet."""
+    if hasattr(instanziertes_kimodel, "oob_prediction_"):
+        vorhersagen = instanziertes_kimodel.oob_prediction_
+    else:
+        loo = LeaveOneOut()
+        vorhersagen = np.empty(len(y), dtype=float)
+        for train, test in loo.split(x):
+            instanziertes_kimodel.fit(x.iloc[train], y[train])
+            vorhersagen[test] = instanziertes_kimodel.predict(x.iloc[test])
+        # nach der LOO-Schleife wieder auf dem vollen Datensatz fitten, damit das
+        # abgespeicherte Modell nicht auf dem letzten LOO-Split stehen bleibt
+        instanziertes_kimodel.fit(x, y)
     prognoseleistung_dict = {}
-    liste_der_abweichungen = []
-    beste_prognoseleistung_index = None
-    schlechteste_prognoseleistung_index = None
-    for train, test in loo.split(x):
-        instanziertes_kimodel.fit(x.iloc[train], y[train])
-        vorhersage = instanziertes_kimodel.predict(x.iloc[test])
-        tatsächliches_strafmass = y[test]
-        differenz = abs(vorhersage[0] - tatsächliches_strafmass)
-        liste_der_abweichungen.append(differenz)
-        if (
-            beste_prognoseleistung_index is None
-            or differenz < liste_der_abweichungen[beste_prognoseleistung_index]
-        ):
-            beste_prognoseleistung_index = (
-                len(liste_der_abweichungen) - 1
-            )  # store new index
-        if (
-            schlechteste_prognoseleistung_index is None
-            or differenz > liste_der_abweichungen[schlechteste_prognoseleistung_index]
-        ):
-            schlechteste_prognoseleistung_index = len(liste_der_abweichungen) - 1
+    liste_der_abweichungen = [
+        abs(vorhersage - zielwert) for vorhersage, zielwert in zip(vorhersagen, y)
+    ]
+    beste_prognoseleistung_index = int(np.argmin(liste_der_abweichungen))
+    schlechteste_prognoseleistung_index = int(np.argmax(liste_der_abweichungen))
     durchschnittlicher_fehler = np.mean(liste_der_abweichungen)
     standardabweichung = np.std(liste_der_abweichungen)
     prognoseleistung_dict["durchschnittlicher_fehler"] = round(
@@ -341,7 +339,10 @@ def kimodelle_neu_kalibrieren_und_abspeichern():
     )
 
     # urteils df generieren, um mit erzieltem index bestes und schlechtes hervorgesagtes Urteil zu finden
-    df = pd.DataFrame.from_records(Urteil.objects.all().values())
+    # (gleicher Filter wie in onehotx_und_y_erstellen, damit die Indizes übereinstimmen)
+    df = pd.DataFrame.from_records(
+        Urteil.objects.filter(in_ki_modell=True).values()
+    )
     prognoseleistung_dict["beste_prognoseleistung_urteil"] = df.loc[
         prognoseleistung_dict["beste_prognoseleistung_index"]
     ].fall_nr
@@ -567,9 +568,10 @@ def preprocessing_x(pd_df_x):
     return pd_df_x
 
 
-def formulareingaben_in_abfragesample_konvertieren(cleaned_data_dict):
+def formulareingaben_in_abfragesample_konvertieren(cleaned_data_dict, encoder=None):
     """nimmt die Formulareingaben, erstellt davon ein pandas dataframe und macht das preprocessing, um ein
-    estimate abfragesample zu generieren"""
+    estimate abfragesample zu generieren; der OneHotEncoder kann übergeben werden, damit er bei
+    wiederholten Aufrufen nicht jedes Mal neu aus dem AWS-Bucket geladen wird"""
     cat_fts = [
         "hauptdelikt",
         "mehrfach",
@@ -616,9 +618,10 @@ def formulareingaben_in_abfragesample_konvertieren(cleaned_data_dict):
     urteilsmerkmale_als_pandas_df = vermoegensstrafrechts_urteile_codes_aufloesen(
         urteilsmerkmale_als_pandas_df
     )
-    encoder = kimodell_von_pickle_file_aus_aws_bucket_laden(
-        "encoders/one_hot_encoder_fuer_rf_regr_val.pkl"
-    )
+    if encoder is None:
+        encoder = kimodell_von_pickle_file_aus_aws_bucket_laden(
+            "encoders/one_hot_encoder_fuer_rf_regr_val.pkl"
+        )
     cat_fts_onehot = encoder.transform(urteilsmerkmale_als_pandas_df[cat_fts])
     enc_cat_fts_names = encoder.get_feature_names_out(cat_fts)
     df_cat_fts = pd.DataFrame(cat_fts_onehot, columns=enc_cat_fts_names)
@@ -1395,6 +1398,11 @@ def introspection_plot_und_lesehinweis_abspeichern(
     strafmass_model = kimodell_von_pickle_file_aus_aws_bucket_laden(
         "pickles/random_forest_regressor_val_fts.pkl"
     )
+    # encoder einmalig laden und an alle Prognoseaufrufe durchreichen, statt ihn
+    # pro Prognosepunkt neu aus dem AWS-Bucket zu holen
+    encoder = kimodell_von_pickle_file_aus_aws_bucket_laden(
+        "encoders/one_hot_encoder_fuer_rf_regr_val.pkl"
+    )
 
     step = xlim / 25
 
@@ -1413,7 +1421,7 @@ def introspection_plot_und_lesehinweis_abspeichern(
                 "hauptdelikt": hauptdelikt,
             }
             urteilsmerkmale_als_pandas_df_ohe = (
-                formulareingaben_in_abfragesample_konvertieren(fts_dict)
+                formulareingaben_in_abfragesample_konvertieren(fts_dict, encoder=encoder)
             )
             vorhersage_strafmass = strafmass_model.predict(
                 urteilsmerkmale_als_pandas_df_ohe

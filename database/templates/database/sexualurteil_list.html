@@ -1,0 +1,59 @@
+{% extends './base.html' %}
+
+{% block body %}
+  <div class="col-12">
+    <h1 class="h3">Sexualdelikt-Urteile ({{ object_list|length }})</h1>
+    <div class="table-responsive">
+      <table class="table table-sm table-striped table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Fall-Nr.</th>
+            <th>Gericht/Urteilsdatum</th>
+            <th>Hauptdelikt</th>
+            <th>Tatmittel</th>
+            <th>Sanktion</th>
+            <th>Dauer/Höhe</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for urteil in object_list %}
+            <tr>
+              <td>
+                <div class="d-flex flex-column">
+                  <a href="{% url 'sexualurteil_detail' pk=urteil.pk %}" class="fw-semibold">{{ urteil.fall_nr }}</a>
+                  {% if urteil.url_link %}
+                    <a href="{{ urteil.url_link }}" target="_blank" rel="noopener" class="link-secondary small">PDF öffnen</a>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                <div>Urteil des {{ urteil.gericht }}s</div>
+                <div class="text-body-secondary small">vom {{ urteil.urteilsdatum|date:'d.m.Y' }}</div>
+              </td>
+              <td>{{ urteil.hauptdelikt }}</td>
+              <td>{{ urteil.hauptdelikt_tatmittel }}</td>
+              {% if urteil.hauptsanktion == '0' %}
+                <td><span class="badge text-bg-primary">Freiheitsstrafe</span></td>
+                <td>{{ urteil.freiheitsstrafe_in_monaten }} Monate</td>
+              {% elif urteil.hauptsanktion == '1' %}
+                <td><span class="badge text-bg-success">Geldstrafe</span></td>
+                <td>{{ urteil.anzahl_tagessaetze }} Tagessätze</td>
+              {% else %}
+                <td>Busse</td>
+                <td>–</td>
+              {% endif %}
+              <td>
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'sexualurteil_detail' pk=urteil.pk %}">Details</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7">Keine Sexualdelikt-Urteile gefunden.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

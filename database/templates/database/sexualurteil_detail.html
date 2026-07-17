@@ -1,0 +1,121 @@
+{% extends './base.html' %}
+
+{% block body %}
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h3 mb-0">Fall {{ object.fall_nr }}</h1>
+      <div class="btn-group">
+        <a href="{% url 'sexualdatabase' %}" class="btn btn-outline-secondary btn-sm">Zurück zur Liste</a>
+        {% if object.url_link %}
+          <a href="{{ object.url_link }}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">PDF öffnen</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-lg-8">
+        <div class="card h-100">
+          <div class="card-header">
+            Meta-Informationen
+          </div>
+          <div class="card-body">
+            <div class="row row-cols-1 row-cols-md-2 gy-2">
+              <div class="col"><strong>Gericht:</strong> {{ object.gericht }}</div>
+              <div class="col"><strong>Urteilsdatum:</strong> {{ object.urteilsdatum|date:'d.m.Y' }}</div>
+              <div class="col"><strong>Kanton:</strong> {{ object.kanton }}</div>
+              <div class="col"><strong>Verfahrensart:</strong> {{ object.get_verfahrensart_display }}</div>
+              <div class="col"><strong>Geschlecht:</strong> {{ object.get_geschlecht_display }}</div>
+              <div class="col"><strong>Nationalität:</strong> {{ object.get_nationalitaet_display }}</div>
+              <div class="col"><strong>Deliktsscore übrige Delikte:</strong> {% if object.deliktsscore_uebrige_delikte is not None %}{{ object.deliktsscore_uebrige_delikte }}{% else %}–{% endif %}</div>
+              <div class="col"><strong>Vorbestraft:</strong> {{ object.vorbestraft|yesno:'Ja,Nein' }}</div>
+              <div class="col"><strong>Einschlägig vorbestraft:</strong> {{ object.vorbestraft_einschlaegig|yesno:'Ja,Nein' }}</div>
+            </div>
+
+            <hr />
+            <div class="mb-2"><strong>Hauptdelikt:</strong> {{ object.hauptdelikt }}</div>
+            <div class="row row-cols-1 row-cols-md-2 gy-2">
+              <div class="col"><strong>Tatmittel:</strong> {{ object.hauptdelikt_tatmittel }}</div>
+              <div class="col"><strong>Mehrfache Begehung:</strong> {{ object.hauptdelikt_mehrfachbegehung|yesno:'Ja,Nein' }}</div>
+              <div class="col"><strong>Anzahl Tatbegehungen:</strong> {% if object.hauptdelikt_mehrfachbegehung_anzahl is not None %}{{ object.hauptdelikt_mehrfachbegehung_anzahl }}{% else %}–{% endif %}</div>
+              <div class="col"><strong>Deliktsperiode:</strong> {% if object.hauptdelikt_mehrfachbegehung_deliktsperiode %}{{ object.hauptdelikt_mehrfachbegehung_deliktsperiode.days }} Tage{% else %}–{% endif %}</div>
+              <div class="col"><strong>Deliktsdauer Einzeltat:</strong> {% if object.hautpdelikt_deliktsdauer_einfachbegehung %}{{ object.hautpdelikt_deliktsdauer_einfachbegehung }}{% else %}–{% endif %}</div>
+              <div class="col"><strong>Täter-Opfer-Beziehung:</strong> {{ object.get_hauptdelikt_taeter_opfer_beziehung_display }}</div>
+              <div class="col"><strong>Opferalter:</strong> {{ object.get_hauptdelikt_opferalter_display }}</div>
+              <div class="col"><strong>Sexuelle Vorerfahrung des Opfers:</strong> {{ object.get_hauptdelikt_opfer_vorerfahrung_display }}</div>
+            </div>
+
+            <hr />
+            <div class="mb-2"><strong>Zusätzliche Sexualdelikte:</strong></div>
+            <ul class="mb-3">
+              {% for zusatzdelikt in object.sexualdelikte_zusaetzliche.all %}
+                <li>{{ zusatzdelikt }}</li>
+              {% empty %}
+                <li>Keine</li>
+              {% endfor %}
+            </ul>
+
+            <div class="mb-2"><strong>Besonderheiten:</strong></div>
+            <ul class="mb-0">
+              {% for besonderheit in object.besonderheiten.all %}
+                <li>{{ besonderheit }}</li>
+              {% empty %}
+                <li>Keine</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="card h-100">
+          <div class="card-header">Sanktion</div>
+          <div class="card-body">
+            <p class="mb-2"><strong>Hauptsanktion:</strong> {{ object.get_hauptsanktion_display }}</p>
+            {% if object.hauptsanktion == '0' %}
+              <p class="mb-2"><strong>Dauer:</strong> {{ object.freiheitsstrafe_in_monaten }} Monate</p>
+            {% elif object.hauptsanktion == '1' %}
+              <p class="mb-2"><strong>Anzahl Tagessätze:</strong> {{ object.anzahl_tagessaetze }}</p>
+            {% endif %}
+            <p class="mb-0"><strong>Vollzug:</strong> {{ object.get_vollzug_display }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if object.bemerkungen %}
+      <div class="card my-3">
+        <div class="card-header">Bemerkungen</div>
+        <div class="card-body">
+          <p class="mb-0" style="white-space: pre-line;">{{ object.bemerkungen }}</p>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if object.zusammenfassung %}
+      <div class="card my-3">
+        <div class="card-header">Zusammenfassung</div>
+        <div class="card-body">
+          <p class="mb-0" style="white-space: pre-line;">{{ object.zusammenfassung }}</p>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="card my-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Urteil (PDF)</span>
+        {% if object.url_link %}
+          <a class="btn btn-sm btn-outline-primary" href="{{ object.url_link }}" target="_blank" rel="noopener">In neuem Tab öffnen</a>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        {% if object.url_link %}
+          <div class="ratio ratio-16x9">
+            <iframe src="{{ object.url_link }}" title="Urteil PDF" loading="lazy"></iframe>
+          </div>
+        {% else %}
+          <div class="alert alert-warning mb-0">Kein PDF-Link vorhanden.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

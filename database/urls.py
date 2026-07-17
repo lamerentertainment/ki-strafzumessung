@@ -63,6 +63,16 @@ urlpatterns = [
         name="betmurteil_detail",
     ),
     path(
+        "sexualdatabase",
+        views.SexualdeliktUrteilListView.as_view(),
+        name="sexualdatabase",
+    ),
+    path(
+        "sexualurteil/<int:pk>",
+        views.SexualdeliktUrteilDetailView.as_view(),
+        name="sexualurteil_detail",
+    ),
+    path(
         "strafrechtlicher_sachverhalt",
         views.strafrechtlicher_sachverhalt,
         name="strafrechtlicher_sachverhalt",

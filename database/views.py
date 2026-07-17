@@ -124,6 +124,17 @@ class VMUrteilDetailView(DetailView):
     template_name = "database/vmurteil_detail.html"
 
 
+class SexualdeliktUrteilListView(ListView):
+    model = SexualdeliktUrteil
+    context_object_name = "sexualdelikt_urteile"
+    template_name = "database/sexualurteil_list.html"
+
+
+class SexualdeliktUrteilDetailView(DetailView):
+    model = SexualdeliktUrteil
+    template_name = "database/sexualurteil_detail.html"
+
+
 # KI-Model Views:
 def ws_evaluation(request):
     if request.method == "POST":

@@ -28,6 +28,11 @@ from .models import (
     Rolle,
     KIModelPickleFile,
     DiagrammSVG,
+    SexualdeliktUrteil,
+    Hauptdelikt,
+    Tatmittel,
+    ZusaetzlicheSexualdelikte,
+    Besonderheiten,
 )
 
 
@@ -1791,3 +1796,257 @@ def merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
         ) in _sortierte_zusammengefasste_merkmalswichtigkeitsliste
     ]
     return _sortierte_zusammengefasste_merkmalswichtigkeitsliste
+
+
+# Sexualdelikt-Pipeline
+# Prognosemerkmale, auf welche die Prädiktoren abstützen dürfen (gemeinsam von Training und Prognose genutzt).
+# Die Multi-hot-Spalten (zusatzdelikt_* / besonderheit_*) werden zur Laufzeit an die numerische Liste angehängt,
+# analog zu liste_aller_ohe_betm_spalten in der Betm-Pipeline.
+SEXUAL_KATEGORIALE_PROGNOSEMERKMALE = [
+    "hauptdelikt",
+    "hauptdelikt_tatmittel",
+    "hauptdelikt_mehrfachbegehung",
+    "hauptdelikt_taeter_opfer_beziehung",
+    "hauptdelikt_opferalter",
+    "hauptdelikt_opfer_vorerfahrung",
+    "geschlecht",
+    "nationalitaet",
+    "vorbestraft",
+    "vorbestraft_einschlaegig",
+]
+SEXUAL_NUMERISCHE_PROGNOSEMERKMALE = [
+    "hauptdelikt_mehrfachbegehung_anzahl",
+    "deliktsperiode_in_tagen",
+    "deliktsdauer_in_minuten",
+    "deliktsscore_uebrige_delikte",
+]
+
+
+def sexualurteile_multihot_encoding(pd_df):
+    """Multi-hot-Encoding der M2M-Felder (Pendant zu betmurteile_onehotencoding).
+
+    Erzeugt pro ZusaetzlicheSexualdelikte-Wert eine Spalte 'zusatzdelikt_{name}' und pro
+    Besonderheiten-Wert eine Spalte 'besonderheit_{name}' (jeweils 0/1). Die Zuordnung erfolgt
+    über die M2M-Through-Tabellen; der pd_df-Index muss dabei noch die SexualdeliktUrteil-id sein.
+
+    Es werden Spalten für *alle* existierenden ZusaetzlicheSexualdelikte-/Besonderheiten-Objekte
+    erstellt (nicht nur die im df vorkommenden), damit Training und Prognose deckungsgleiche
+    Spalten haben. Rückgabe: (pd_df, liste_aller_multihot_spalten).
+    """
+    liste_aller_multihot_spalten = []
+
+    zusatz_map = {z.id: z.name for z in ZusaetzlicheSexualdelikte.objects.all()}
+    besonderheit_map = {b.id: b.name for b in Besonderheiten.objects.all()}
+
+    for name in zusatz_map.values():
+        spalte = f"zusatzdelikt_{name}"
+        pd_df[spalte] = 0
+        liste_aller_multihot_spalten.append(spalte)
+    for name in besonderheit_map.values():
+        spalte = f"besonderheit_{name}"
+        pd_df[spalte] = 0
+        liste_aller_multihot_spalten.append(spalte)
+
+    for row in SexualdeliktUrteil.sexualdelikte_zusaetzliche.through.objects.values():
+        urteil_id = row["sexualdelikturteil_id"]
+        zusatz_id = row["zusaetzlichesexualdelikte_id"]
+        if urteil_id in pd_df.index and zusatz_id in zusatz_map:
+            pd_df.at[urteil_id, f"zusatzdelikt_{zusatz_map[zusatz_id]}"] = 1
+    for row in SexualdeliktUrteil.besonderheiten.through.objects.values():
+        urteil_id = row["sexualdelikturteil_id"]
+        besonderheit_id = row["besonderheiten_id"]
+        if urteil_id in pd_df.index and besonderheit_id in besonderheit_map:
+            pd_df.at[urteil_id, f"besonderheit_{besonderheit_map[besonderheit_id]}"] = 1
+
+    return pd_df, liste_aller_multihot_spalten
+
+
+def sexual_urteile_dataframe_erzeugen():
+    """Erzeugt ein pandas Datenframe mit den in SexualdeliktUrteil abgelegten Daten.
+
+    Pendant zu betm_urteile_dataframe_erzeugen. Rückgabe: (df_urteile, liste_aller_multihot_spalten).
+    Der Index des zurückgegebenen df ist die fall_nr (der KNN-Teil liest die Nachbarn über den Index).
+    """
+    df = pd.DataFrame.from_records(SexualdeliktUrteil.objects.values(), index="id")
+
+    # FK-IDs -> Namen
+    hauptdelikt_map = {h.id: h.name for h in Hauptdelikt.objects.all()}
+    tatmittel_map = {t.id: t.name for t in Tatmittel.objects.all()}
+    df["hauptdelikt"] = df["hauptdelikt_id"].map(hauptdelikt_map)
+    df["hauptdelikt_tatmittel"] = df["hauptdelikt_tatmittel_id"].map(tatmittel_map)
+
+    # Multi-hot-Spalten anhängen (solange Index noch die id ist)
+    df, liste_aller_multihot_spalten = sexualurteile_multihot_encoding(df)
+
+    # Codes (geschlecht, nationalitaet, hauptsanktion, vollzug) in Klartext auflösen
+    df = urteilcodes_aufloesen(df)
+
+    # DurationFields in Integer konvertieren
+    df["deliktsperiode_in_tagen"] = df[
+        "hauptdelikt_mehrfachbegehung_deliktsperiode"
+    ].apply(lambda x: x.days if pd.notnull(x) else np.nan)
+    df["deliktsdauer_in_minuten"] = df[
+        "hautpdelikt_deliktsdauer_einfachbegehung"
+    ].apply(lambda x: x.total_seconds() / 60 if pd.notnull(x) else np.nan)
+
+    # fehlende Numerik mit 1 auffüllen (identisch Training/Prognose)
+    df = betmurteile_fehlende_werte_auffuellen(
+        df, spalten_mit_fehlenden_werten=SEXUAL_NUMERISCHE_PROGNOSEMERKMALE
+    )
+
+    # Index auf fall_nr setzen
+    df.index = df["fall_nr"]
+
+    return df, liste_aller_multihot_spalten
+
+
+def sexual_prognosemerkmale_preprocessen(df):
+    """Preprocesst ein (Prognose-)Datenframe deckungsgleich zu den Trainingsdaten.
+
+    Lädt den gespeicherten Encoder, liest die Featurelisten aus dem Vollzugs-KIModelPickleFile und
+    gibt das 1hot-encodete + numerische Featureframe zurück. Zentral, damit die Prognose-View und
+    die Nachbar-Anreicherung dieselbe Vorverarbeitung nutzen.
+    """
+    encoder = kimodell_von_pickle_file_aus_aws_bucket_laden(
+        "encoders/sexual_encoder.pkl"
+    )
+    liste_kategoriale_prognosemerkmale = KIModelPickleFile.objects.get(
+        name="sexual_rf_classifier_vollzugsart"
+    ).prognoseleistung_dict["liste_kategoriale_prognosemerkmale"]
+    liste_numerische_prognosemerkmale = KIModelPickleFile.objects.get(
+        name="sexual_rf_classifier_vollzugsart"
+    ).prognoseleistung_dict["liste_numerische_prognosemerkmale"]
+
+    cat_fts_onehot = encoder.transform(df[liste_kategoriale_prognosemerkmale])
+    enc_cat_fts_names = encoder.get_feature_names_out(
+        liste_kategoriale_prognosemerkmale
+    )
+    df_cat_fts = pd.DataFrame(cat_fts_onehot, columns=enc_cat_fts_names)
+
+    df_num_fts = df[liste_numerische_prognosemerkmale].reset_index(drop=True)
+
+    return pd.concat([df_cat_fts, df_num_fts], axis=1)
+
+
+def sexual_nachbarobjekt_mit_sanktionsbewertung_anreichern(
+    nachbarobjekt, strafmass_estimator, hauptsanktion_estimator, vollzug_estimator
+):
+    """Reichert ein SexualdeliktUrteil-Nachbarobjekt mit den drei KI-Prognosen und der
+    Sanktionsbewertung an (Spiegel von betm_nachbarobjekt_mit_sanktionsbewertung_anreichern)."""
+
+    def _duration_to_days(value):
+        return value.days if pd.notnull(value) else 1
+
+    def _duration_to_minutes(value):
+        return value.total_seconds() / 60 if pd.notnull(value) else 1
+
+    prognosemerkmale = {
+        "hauptdelikt": nachbarobjekt.hauptdelikt.name,
+        "hauptdelikt_tatmittel": nachbarobjekt.hauptdelikt_tatmittel.name,
+        "hauptdelikt_mehrfachbegehung": nachbarobjekt.hauptdelikt_mehrfachbegehung,
+        "hauptdelikt_taeter_opfer_beziehung": nachbarobjekt.hauptdelikt_taeter_opfer_beziehung,
+        "hauptdelikt_opferalter": nachbarobjekt.hauptdelikt_opferalter,
+        "hauptdelikt_opfer_vorerfahrung": nachbarobjekt.hauptdelikt_opfer_vorerfahrung,
+        "geschlecht": nachbarobjekt.geschlecht,
+        "nationalitaet": nachbarobjekt.nationalitaet,
+        "vorbestraft": nachbarobjekt.vorbestraft,
+        "vorbestraft_einschlaegig": nachbarobjekt.vorbestraft_einschlaegig,
+        "hauptdelikt_mehrfachbegehung_anzahl": nachbarobjekt.hauptdelikt_mehrfachbegehung_anzahl
+        if nachbarobjekt.hauptdelikt_mehrfachbegehung_anzahl is not None
+        else 1,
+        "deliktsperiode_in_tagen": _duration_to_days(
+            nachbarobjekt.hauptdelikt_mehrfachbegehung_deliktsperiode
+        ),
+        "deliktsdauer_in_minuten": _duration_to_minutes(
+            nachbarobjekt.hautpdelikt_deliktsdauer_einfachbegehung
+        ),
+        "deliktsscore_uebrige_delikte": nachbarobjekt.deliktsscore_uebrige_delikte
+        if nachbarobjekt.deliktsscore_uebrige_delikte is not None
+        else 1,
+    }
+
+    for name in ZusaetzlicheSexualdelikte.objects.values_list("name", flat=True):
+        prognosemerkmale[f"zusatzdelikt_{name}"] = 0
+    for name in Besonderheiten.objects.values_list("name", flat=True):
+        prognosemerkmale[f"besonderheit_{name}"] = 0
+    for zusatzdelikt in nachbarobjekt.sexualdelikte_zusaetzliche.all():
+        prognosemerkmale[f"zusatzdelikt_{zusatzdelikt.name}"] = 1
+    for besonderheit in nachbarobjekt.besonderheiten.all():
+        prognosemerkmale[f"besonderheit_{besonderheit.name}"] = 1
+
+    df_prognosemerkmale = pd.DataFrame([prognosemerkmale])
+    # geschlecht/nationalitaet-Codes deckungsgleich zu den Trainingsdaten auflösen
+    df_prognosemerkmale = urteilcodes_aufloesen(df_prognosemerkmale)
+
+    prognosemerkmale_df_preprocessed = sexual_prognosemerkmale_preprocessen(
+        df_prognosemerkmale
+    )
+
+    # Prognose Hauptsanktion
+    vorhersage_hauptsanktion = hauptsanktion_estimator.predict(
+        prognosemerkmale_df_preprocessed
+    )[0]
+    if vorhersage_hauptsanktion == "0":
+        vorhersage_hauptsanktion = "Freiheitsstrafe"
+    elif vorhersage_hauptsanktion == "1":
+        vorhersage_hauptsanktion = "Geldstrafe"
+    elif vorhersage_hauptsanktion == "2":
+        vorhersage_hauptsanktion = "Busse"
+    nachbarobjekt.vorhersage_hauptsanktion = vorhersage_hauptsanktion
+
+    # Prognose Vollzug
+    vorhersage_vollzug = vollzug_estimator.predict(prognosemerkmale_df_preprocessed)[0]
+    if vorhersage_vollzug == "bedingt":
+        vorhersage_vollzug = "bedingte"
+    elif vorhersage_vollzug == "teilbedingt":
+        vorhersage_vollzug = "teilbedingte"
+    elif vorhersage_vollzug == "unbedingt":
+        vorhersage_vollzug = "unbedingte"
+    nachbarobjekt.vorhersage_vollzug = vorhersage_vollzug
+
+    # Prognose Strafmass
+    vorhersage_strafmass = strafmass_estimator.predict(
+        prognosemerkmale_df_preprocessed
+    )[0]
+    nachbarobjekt.vorhersage_strafmass = vorhersage_strafmass
+
+    # Prognose basierend auf erste Nachkommaziffer auf Bereich ausweiten
+    def _erste_ziffer_nach_dem_komma(zahl):
+        zahl = float(zahl)
+        nachkommastelle = abs(zahl) % 1
+        if nachkommastelle == 0:
+            return 0
+        else:
+            nachkommastelle *= 10
+            return int(nachkommastelle)
+
+    if _erste_ziffer_nach_dem_komma(vorhersage_strafmass) in [1, 2]:
+        prognosebereich_start = math.floor(vorhersage_strafmass - 2)
+        prognosebereich_ende = math.ceil(vorhersage_strafmass)
+    elif _erste_ziffer_nach_dem_komma(vorhersage_strafmass) in [3, 4, 5, 6, 7]:
+        prognosebereich_start = math.floor(vorhersage_strafmass - 1)
+        prognosebereich_ende = math.ceil(vorhersage_strafmass + 1)
+    elif _erste_ziffer_nach_dem_komma(vorhersage_strafmass) == 0:
+        prognosebereich_start = round(vorhersage_strafmass - 1.5, 2)
+        prognosebereich_ende = round(vorhersage_strafmass + 1.5, 2)
+    elif _erste_ziffer_nach_dem_komma(vorhersage_strafmass) in [8, 9]:
+        prognosebereich_start = math.floor(vorhersage_strafmass)
+        prognosebereich_ende = math.ceil(vorhersage_strafmass + 2)
+
+    if nachbarobjekt.hauptsanktion == "0":
+        nachbarobjekt_sanktion = nachbarobjekt.freiheitsstrafe_in_monaten
+    elif nachbarobjekt.hauptsanktion == "1":
+        nachbarobjekt_sanktion = nachbarobjekt.anzahl_tagessaetze / 30
+    else:
+        nachbarobjekt_sanktion = nachbarobjekt.freiheitsstrafe_in_monaten
+
+    nachbarobjekt = sanktionsbewertungs_string_erstellen(
+        nachbarobjekt=nachbarobjekt,
+        nachbarobjekt_sanktion=nachbarobjekt_sanktion,
+        prognosebereich_ende=prognosebereich_ende,
+        prognosebereich_start=prognosebereich_start,
+        vorhersage_hauptsanktion=vorhersage_hauptsanktion,
+        vorhersage_vollzug=vorhersage_vollzug,
+    )
+
+    return nachbarobjekt

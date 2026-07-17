@@ -12,6 +12,7 @@ from .forms import (
     CeteribusParibusFormular,
     BetmUrteilsEckpunkteAbfrageFormular,
     StrafrechtlicherSachverhaltFormular,
+    SexualdeliktUrteilsEckpunkteAbfrageFormular,
 )
 
 from django.views import generic
@@ -35,6 +36,12 @@ from .ai_utils import (
     merkmale_in_merkmalswichtigkeitsliste_zusammenfassen,
     betm_urteile_dataframe_erzeugen,
     nachbar_mit_sanktionsbewertung_anreichern,
+    sexual_urteile_dataframe_erzeugen,
+    sexual_prognosemerkmale_preprocessen,
+    sexual_nachbarobjekt_mit_sanktionsbewertung_anreichern,
+    urteilcodes_aufloesen,
+    SEXUAL_KATEGORIALE_PROGNOSEMERKMALE,
+    SEXUAL_NUMERISCHE_PROGNOSEMERKMALE,
 )
 from .db_utils import (
     kategorie_scatterplot_erstellen,
@@ -925,6 +932,395 @@ def betm_prognose(request):
     return render(request, "database/betm_prognose.html", context=context)
 
 
+def sexual_prognose(request):
+    if request.method == "POST":
+        form = SexualdeliktUrteilsEckpunkteAbfrageFormular(request.POST)
+        if form.is_valid():
+            # Formulareingaben in ein 1-Zeilen-Prognosesample konvertieren
+            prognosemerkmale = {
+                "hauptdelikt": form.cleaned_data["hauptdelikt"].name,
+                "hauptdelikt_tatmittel": form.cleaned_data["hauptdelikt_tatmittel"].name,
+                "hauptdelikt_mehrfachbegehung": form.cleaned_data[
+                    "hauptdelikt_mehrfachbegehung"
+                ],
+                "hauptdelikt_taeter_opfer_beziehung": form.cleaned_data[
+                    "hauptdelikt_taeter_opfer_beziehung"
+                ],
+                "hauptdelikt_opferalter": form.cleaned_data["hauptdelikt_opferalter"],
+                "hauptdelikt_opfer_vorerfahrung": form.cleaned_data[
+                    "hauptdelikt_opfer_vorerfahrung"
+                ],
+                "geschlecht": form.cleaned_data["geschlecht"],
+                "nationalitaet": form.cleaned_data["nationalitaet"],
+                "vorbestraft": form.cleaned_data["vorbestraft"],
+                "vorbestraft_einschlaegig": form.cleaned_data[
+                    "vorbestraft_einschlaegig"
+                ],
+                "hauptdelikt_mehrfachbegehung_anzahl": form.cleaned_data[
+                    "hauptdelikt_mehrfachbegehung_anzahl"
+                ]
+                if form.cleaned_data["hauptdelikt_mehrfachbegehung_anzahl"] is not None
+                else 1,
+                "deliktsperiode_in_tagen": form.cleaned_data["deliktsperiode_in_tagen"]
+                if form.cleaned_data["deliktsperiode_in_tagen"] is not None
+                else 1,
+                "deliktsdauer_in_minuten": form.cleaned_data["deliktsdauer_in_minuten"]
+                if form.cleaned_data["deliktsdauer_in_minuten"] is not None
+                else 1,
+                "deliktsscore_uebrige_delikte": form.cleaned_data[
+                    "deliktsscore_uebrige_delikte"
+                ]
+                if form.cleaned_data["deliktsscore_uebrige_delikte"] is not None
+                else 1,
+            }
+
+            # Multi-hot-Spalten aus den M2M-Auswahlen (alle Spalten anlegen, gewählte auf 1)
+            from .models import ZusaetzlicheSexualdelikte, Besonderheiten
+
+            for name in ZusaetzlicheSexualdelikte.objects.values_list(
+                "name", flat=True
+            ):
+                prognosemerkmale[f"zusatzdelikt_{name}"] = 0
+            for name in Besonderheiten.objects.values_list("name", flat=True):
+                prognosemerkmale[f"besonderheit_{name}"] = 0
+            for zusatzdelikt in form.cleaned_data["sexualdelikte_zusaetzliche"]:
+                prognosemerkmale[f"zusatzdelikt_{zusatzdelikt.name}"] = 1
+            for besonderheit in form.cleaned_data["besonderheiten"]:
+                prognosemerkmale[f"besonderheit_{besonderheit.name}"] = 1
+
+            df_prognosemerkmale = pd.DataFrame([prognosemerkmale])
+            # geschlecht/nationalitaet-Codes deckungsgleich zu den Trainingsdaten auflösen
+            df_prognosemerkmale = urteilcodes_aufloesen(df_prognosemerkmale)
+
+            try:
+                prognosemerkmale_df_preprocessed = sexual_prognosemerkmale_preprocessen(
+                    df_prognosemerkmale
+                )
+            except ValueError:
+                form.add_error(
+                    None,
+                    "Für die eingegebene Merkmalskombination fehlen dem KI-Modell die Trainingsdaten "
+                    "(unbekannte Kategorie). Bitte wählen Sie ein anderes Hauptdelikt bzw. Tatmittel.",
+                )
+                context = {
+                    "form": form,
+                    "display_eingabeformular_button": "d-none",
+                    "eingabeformular_anzeigen": "show",
+                }
+                return render(request, "database/sexual_prognose.html", context=context)
+
+            # Hauptsanktion-Prädiktor laden und Prognose machen
+            hauptsanktions_modell = kimodell_von_pickle_file_aus_aws_bucket_laden(
+                "pickles/sexual_rf_classifier_sanktion.pkl"
+            )
+            vorhersage_hauptsanktion = hauptsanktions_modell.predict(
+                prognosemerkmale_df_preprocessed
+            )[0]
+            if vorhersage_hauptsanktion == "0":
+                vorhersage_hauptsanktion = "Freiheitsstrafe"
+            elif vorhersage_hauptsanktion == "1":
+                vorhersage_hauptsanktion = "Geldstrafe"
+            elif vorhersage_hauptsanktion == "2":
+                vorhersage_hauptsanktion = "Busse"
+
+            # Vollzugs-Prädiktor laden und Prognose machen
+            vollzugs_modell = kimodell_von_pickle_file_aus_aws_bucket_laden(
+                "pickles/sexual_rf_classifier_vollzugsart.pkl"
+            )
+            vorhersage_vollzug = vollzugs_modell.predict(
+                prognosemerkmale_df_preprocessed
+            )[0]
+            if vorhersage_vollzug == "bedingt":
+                vorhersage_vollzug = "bedingte"
+            elif vorhersage_vollzug == "teilbedingt":
+                vorhersage_vollzug = "teilbedingte"
+            elif vorhersage_vollzug == "unbedingt":
+                vorhersage_vollzug = "unbedingte"
+
+            # Strafmass-Prädiktor laden und Prognose machen
+            strafmass_modell = kimodell_von_pickle_file_aus_aws_bucket_laden(
+                "pickles/sexual_rf_regressor_strafmass.pkl"
+            )
+            vorhersage_strafmass = strafmass_modell.predict(
+                prognosemerkmale_df_preprocessed
+            )[0]
+
+            # nearest neighbors
+            df_urteile, liste_aller_multihot_spalten = (
+                sexual_urteile_dataframe_erzeugen()
+            )
+
+            liste_kategoriale_prognosemerkmale = list(
+                SEXUAL_KATEGORIALE_PROGNOSEMERKMALE
+            )
+            liste_numerische_prognosemerkmale = list(SEXUAL_NUMERISCHE_PROGNOSEMERKMALE)
+            liste_numerische_prognosemerkmale.extend(liste_aller_multihot_spalten)
+
+            X_ohe, y_strafmass = onehotx_und_y_erstellen_from_dataframe(
+                pandas_dataframe=df_urteile,
+                categorial_ft_dbfields=liste_kategoriale_prognosemerkmale,
+                numerical_ft_dbfields=liste_numerische_prognosemerkmale,
+                target_dbfields=["freiheitsstrafe_in_monaten"],
+                return_encoder=False,
+            )
+
+            y_strafmass = (
+                (df_urteile["anzahl_tagessaetze"] / 30)
+                .where(
+                    df_urteile["freiheitsstrafe_in_monaten"] == 0,
+                    df_urteile["freiheitsstrafe_in_monaten"],
+                )
+                .values.ravel()
+            )
+
+            from sklearn.preprocessing import MinMaxScaler
+
+            scaler = MinMaxScaler()
+            x_onehot_scaled = scaler.fit_transform(X_ohe)
+            df_X_ohe_scaled = pd.DataFrame(
+                x_onehot_scaled, columns=scaler.feature_names_in_
+            )
+
+            def gewichte_dict_ausgeben(liste_mit_prognosekriterium_wichtigkeits_tuples):
+                gewichtungs_dict = {}
+                for t in liste_mit_prognosekriterium_wichtigkeits_tuples:
+                    gewichtungs_dict[t[0]] = t[1]
+                return gewichtungs_dict
+
+            prognoseleistung_dict_strafmass = KIModelPickleFile.objects.get(
+                name="sexual_rf_regressor_strafmass"
+            ).prognoseleistung_dict
+
+            merkmalswichtigkeit_fuer_prognose_strafmass = (
+                prognoseleistung_dict_strafmass[
+                    "merkmalswichtigkeit_fuer_prognose_strafmass"
+                ]
+            )
+
+            gewichtungs_dict_strafmass_regressor = gewichte_dict_ausgeben(
+                merkmalswichtigkeit_fuer_prognose_strafmass
+            )
+
+            def pandas_df_mit_gewichtungs_dict_gewichten(pd_df, gewichtungs_dict):
+                for prognosemerkmal, gewichtung in gewichtungs_dict.items():
+                    if prognosemerkmal in pd_df.columns:
+                        pd_df[prognosemerkmal] = pd_df[prognosemerkmal] * gewichtung
+                return pd_df
+
+            df_x_onehot_scaled_gewichtet = pandas_df_mit_gewichtungs_dict_gewichten(
+                df_X_ohe_scaled, gewichtungs_dict_strafmass_regressor
+            )
+
+            from sklearn.neighbors import KNeighborsRegressor
+
+            total_samples_for_knn = len(df_x_onehot_scaled_gewichtet)
+            neighbors_to_fetch = min(total_samples_for_knn, 200)
+            neigh = KNeighborsRegressor(n_neighbors=neighbors_to_fetch)
+            neigh.fit(df_x_onehot_scaled_gewichtet, y_strafmass)
+            prognosemerkmale_df_preprocessed_scaled = scaler.transform(
+                prognosemerkmale_df_preprocessed
+            )
+            df_prognosemerkmale_df_preprocessed_scaled = pd.DataFrame(
+                prognosemerkmale_df_preprocessed_scaled,
+                columns=scaler.feature_names_in_,
+            )
+            df_prognosemerkmale_df_preprocessed_scaled_gewichtet = (
+                pandas_df_mit_gewichtungs_dict_gewichten(
+                    df_prognosemerkmale_df_preprocessed_scaled,
+                    gewichtungs_dict_strafmass_regressor,
+                )
+            )
+
+            distances, indices = neigh.kneighbors(
+                df_prognosemerkmale_df_preprocessed_scaled_gewichtet
+            )
+            aehnlichstes_uerteile_gemaess_gewichtetem_kneighbormodell = df_urteile.iloc[
+                indices[0]
+            ]
+
+            orig_nachbarliste = (
+                aehnlichstes_uerteile_gemaess_gewichtetem_kneighbormodell.index.tolist()
+            )
+            neighbors_info = [
+                (fall_nr, float(distances[0][i]), i)
+                for i, fall_nr in enumerate(orig_nachbarliste)
+            ]
+
+            # Optionaler Filter: nur Nachbarn mit demselben Hauptdelikt
+            selected_neighbors = neighbors_info
+            try:
+                gleiches_hauptdelikt = bool(
+                    form.cleaned_data.get("gleiches_hauptdelikt")
+                )
+            except Exception:
+                gleiches_hauptdelikt = False
+
+            selected_hauptdelikt_name = None
+            if gleiches_hauptdelikt:
+                selected_hauptdelikt_name = getattr(
+                    form.cleaned_data.get("hauptdelikt"), "name", None
+                )
+                if selected_hauptdelikt_name:
+                    filtered = []
+                    for fall_nr, dist, orig_pos in selected_neighbors:
+                        if SexualdeliktUrteil.objects.filter(
+                            fall_nr=fall_nr, hauptdelikt__name=selected_hauptdelikt_name
+                        ).exists():
+                            filtered.append((fall_nr, dist, orig_pos))
+                    selected_neighbors = filtered
+
+            filter_aktiv = gleiches_hauptdelikt and selected_hauptdelikt_name is not None
+            if filter_aktiv and len(selected_neighbors) < 4:
+                praejudizien_error_message = (
+                    "Nicht genügend (mind. 4) Präjudizen mit folgenden Kriterien vorhanden:\n"
+                    f"• Hauptdelikt: {selected_hauptdelikt_name}\n"
+                    "Um Präjudizien anzuzeigen, deaktivieren Sie entsprechende Filterfunktionen."
+                )
+                context = {
+                    "form": form,
+                    "display_eingabeformular_button": "d-inline-flex",
+                    "eingabeformular_anzeigen": "",
+                    "vorhersage_vollzug": vorhersage_vollzug,
+                    "vorhersage_hauptsanktion": vorhersage_hauptsanktion,
+                    "vorhersage_strafmass": vorhersage_strafmass,
+                    "praejudizien_error_message": praejudizien_error_message,
+                }
+                return render(
+                    request, "database/sexual_prognose.html", context=context
+                )
+
+            chosen_four = selected_neighbors[:4]
+            nachbarliste = [item[0] for item in chosen_four]
+            nachbarposliste = [item[2] for item in chosen_four]
+
+            nachbar_objs = []
+            for idx in range(min(4, len(nachbarliste))):
+                obj = SexualdeliktUrteil.objects.get(fall_nr=nachbarliste[idx])
+                obj = sexual_nachbarobjekt_mit_sanktionsbewertung_anreichern(
+                    obj,
+                    strafmass_estimator=strafmass_modell,
+                    hauptsanktion_estimator=hauptsanktions_modell,
+                    vollzug_estimator=vollzugs_modell,
+                )
+                nachbar_objs.append(obj)
+
+            def differenzengenerator(nachbarobjekt, formobjekt, index=None):
+                """legt im Nachbarobjekt die Differenzen zu den Formulareingaben als Attribute ab"""
+                nachbarobjekt.entsprechung_hauptdelikt = (
+                    nachbarobjekt.hauptdelikt == formobjekt.cleaned_data["hauptdelikt"]
+                )
+                nachbarobjekt.entsprechung_hauptdelikt_tatmittel = (
+                    nachbarobjekt.hauptdelikt_tatmittel
+                    == formobjekt.cleaned_data["hauptdelikt_tatmittel"]
+                )
+                nachbarobjekt.entsprechung_mehrfachbegehung = (
+                    nachbarobjekt.hauptdelikt_mehrfachbegehung
+                    == formobjekt.cleaned_data["hauptdelikt_mehrfachbegehung"]
+                )
+                nachbarobjekt.entsprechung_taeter_opfer_beziehung = (
+                    nachbarobjekt.hauptdelikt_taeter_opfer_beziehung
+                    == formobjekt.cleaned_data["hauptdelikt_taeter_opfer_beziehung"]
+                )
+                nachbarobjekt.entsprechung_opferalter = (
+                    nachbarobjekt.hauptdelikt_opferalter
+                    == formobjekt.cleaned_data["hauptdelikt_opferalter"]
+                )
+                nachbarobjekt.entsprechung_vorbestraft_einschlaegig = (
+                    nachbarobjekt.vorbestraft_einschlaegig
+                    == formobjekt.cleaned_data["vorbestraft_einschlaegig"]
+                )
+
+                nachbar_anzahl = (
+                    nachbarobjekt.hauptdelikt_mehrfachbegehung_anzahl
+                    if nachbarobjekt.hauptdelikt_mehrfachbegehung_anzahl is not None
+                    else 0
+                )
+                form_anzahl = formobjekt.cleaned_data["hauptdelikt_mehrfachbegehung_anzahl"] or 0
+                nachbarobjekt.anzahl_diff = nachbar_anzahl - form_anzahl
+
+                nachbar_periode = (
+                    nachbarobjekt.hauptdelikt_mehrfachbegehung_deliktsperiode.days
+                    if nachbarobjekt.hauptdelikt_mehrfachbegehung_deliktsperiode
+                    is not None
+                    else 0
+                )
+                form_periode = formobjekt.cleaned_data["deliktsperiode_in_tagen"] or 0
+                nachbarobjekt.deliktsperiode_tage = nachbar_periode
+                nachbarobjekt.deliktsperiode_diff = nachbar_periode - form_periode
+
+                nachbar_dauer = (
+                    round(
+                        nachbarobjekt.hautpdelikt_deliktsdauer_einfachbegehung.total_seconds()
+                        / 60
+                    )
+                    if nachbarobjekt.hautpdelikt_deliktsdauer_einfachbegehung is not None
+                    else 0
+                )
+                form_dauer = formobjekt.cleaned_data["deliktsdauer_in_minuten"] or 0
+                nachbarobjekt.deliktsdauer_minuten = nachbar_dauer
+                nachbarobjekt.deliktsdauer_diff = nachbar_dauer - form_dauer
+
+                nachbar_score = (
+                    nachbarobjekt.deliktsscore_uebrige_delikte
+                    if nachbarobjekt.deliktsscore_uebrige_delikte is not None
+                    else 0
+                )
+                form_score = formobjekt.cleaned_data["deliktsscore_uebrige_delikte"] or 0
+                nachbarobjekt.deliktsscore_diff = nachbar_score - form_score
+
+                # Zweiter Pass mit allen Trainingsdaten als Nachbarn, um die Distanz zum am weitesten
+                # entfernten Sample zu ermitteln
+                total_samples = len(df_x_onehot_scaled_gewichtet)
+                all_neighbors_knn = KNeighborsRegressor(n_neighbors=total_samples)
+                all_neighbors_knn.fit(df_x_onehot_scaled_gewichtet, y_strafmass)
+                all_differences, all_indexes = all_neighbors_knn.kneighbors(
+                    df_prognosemerkmale_df_preprocessed_scaled_gewichtet
+                )
+                furthest_sample_distance = all_differences[:, -1][0]
+                if index is not None and len(distances) > 0:
+                    current_distance = distances[0][index]
+                    max_distance = furthest_sample_distance
+                    if max_distance > 0:
+                        nachbarobjekt.vergleichbarkeitsscore = round(
+                            (1 - (current_distance / (max_distance / 20))) * 100
+                        )
+                    else:
+                        nachbarobjekt.vergleichbarkeitsscore = 100
+
+                return nachbarobjekt
+
+            nachbar1 = differenzengenerator(nachbar_objs[0], form, nachbarposliste[0])
+            nachbar2 = differenzengenerator(nachbar_objs[1], form, nachbarposliste[1])
+            nachbar3 = differenzengenerator(nachbar_objs[2], form, nachbarposliste[2])
+            nachbar4 = differenzengenerator(nachbar_objs[3], form, nachbarposliste[3])
+
+            context = {
+                "form": form,
+                "display_eingabeformular_button": "d-inline-flex",
+                "eingabeformular_anzeigen": "",
+                "vorhersage_vollzug": vorhersage_vollzug,
+                "vorhersage_hauptsanktion": vorhersage_hauptsanktion,
+                "vorhersage_strafmass": vorhersage_strafmass,
+                "nachbar1": nachbar1,
+                "nachbar2": nachbar2,
+                "nachbar3": nachbar3,
+                "nachbar4": nachbar4,
+            }
+
+            return render(request, "database/sexual_prognose.html", context=context)
+
+    else:
+        form = SexualdeliktUrteilsEckpunkteAbfrageFormular()
+
+    context = {
+        "form": form,
+        "display_eingabeformular_button": "d-none",
+        "eingabeformular_anzeigen": "show",
+    }
+
+    return render(request, "database/sexual_prognose.html", context=context)
+
+
 # Dev views
 @login_required
 def dev(request):
@@ -1182,6 +1578,214 @@ def betm_kimodelle_neu_generieren(request):
         request, "Die KI-Modelle für Betm-Strafrecht wurden erfolgreich aktualisiert."
     )
     return redirect("betm_dev")
+
+
+@login_required
+def sexual_kimodelle_neu_generieren(request):
+    df_urteile, liste_aller_multihot_spalten = sexual_urteile_dataframe_erzeugen()
+
+    liste_kategoriale_prognosemerkmale = list(SEXUAL_KATEGORIALE_PROGNOSEMERKMALE)
+    liste_numerische_prognosemerkmale = list(SEXUAL_NUMERISCHE_PROGNOSEMERKMALE)
+    liste_numerische_prognosemerkmale.extend(liste_aller_multihot_spalten)
+
+    X_ohe, y_vollzugsart, encoder = onehotx_und_y_erstellen_from_dataframe(
+        pandas_dataframe=df_urteile,
+        categorial_ft_dbfields=liste_kategoriale_prognosemerkmale,
+        numerical_ft_dbfields=liste_numerische_prognosemerkmale,
+        target_dbfields=["vollzug"],
+        return_encoder=True,
+    )
+
+    from sklearn.ensemble import RandomForestClassifier
+
+    # Classifier für HAUPTSANKTION-Prognose (degeneriert, da fast ausschliesslich Freiheitsstrafen;
+    # aus Symmetriegründen zur Betm-Pipeline trotzdem gebaut)
+    classifier_fuer_hauptsanktion = RandomForestClassifier(oob_score=True)
+    y_hauptsanktion = df_urteile[["hauptsanktion"]].values.ravel()
+    classifier_fuer_hauptsanktion.fit(X_ohe, y_hauptsanktion)
+
+    merkmalswichtigkeit_fuer_prognose_hauptsanktion = (
+        merkmalswichtigkeitslistegenerator(classifier_fuer_hauptsanktion)
+    )
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_hauptsanktion = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            merkmalswichtigkeit_fuer_prognose_hauptsanktion,
+            liste_mit_zusammenfassenden_merkmalen=[
+                s for s in liste_aller_multihot_spalten if s.startswith("zusatzdelikt_")
+            ],
+            neuer_merkmalsname="zusätzliche Sexualdelikte",
+        )
+    )
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_hauptsanktion = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            zusammengefasste_merkmalswichtigkeit_fuer_prognose_hauptsanktion,
+            liste_mit_zusammenfassenden_merkmalen=[
+                s for s in liste_aller_multihot_spalten if s.startswith("besonderheit_")
+            ],
+            neuer_merkmalsname="Besonderheiten",
+        )
+    )
+
+    oob_score_hauptsanktion = (
+        f"OOB-Score für Hauptsanktion-Prädiktor: "
+        f"{round(classifier_fuer_hauptsanktion.oob_score_ * 100, 1)}%"
+    )
+
+    prognoseleistung_dict_hauptsanktion = dict()
+    prognoseleistung_dict_hauptsanktion[
+        "oob_score_class_hauptsanktion"
+    ] = oob_score_hauptsanktion
+    prognoseleistung_dict_hauptsanktion[
+        "merkmalswichtigkeit_fuer_prognose_hauptsanktion"
+    ] = zusammengefasste_merkmalswichtigkeit_fuer_prognose_hauptsanktion
+    prognoseleistung_dict_hauptsanktion[
+        "liste_kategoriale_prognosemerkmale"
+    ] = liste_kategoriale_prognosemerkmale
+    prognoseleistung_dict_hauptsanktion[
+        "liste_numerische_prognosemerkmale"
+    ] = liste_numerische_prognosemerkmale
+
+    ki_modell_als_pickle_file_speichern(
+        instanziertes_kimodel=classifier_fuer_hauptsanktion,
+        name="sexual_rf_classifier_sanktion",
+        filename="sexual_rf_classifier_sanktion.pkl",
+        prognoseleistung_dict=prognoseleistung_dict_hauptsanktion,
+    )
+
+    # Classifier für VOLLZUGSART-Prognose
+    classifier_fuer_vollzugsart = RandomForestClassifier(oob_score=True)
+    classifier_fuer_vollzugsart.fit(X_ohe, y_vollzugsart)
+
+    merkmalswichtigkeit_fuer_prognose_vollzugsart = merkmalswichtigkeitslistegenerator(
+        classifier_fuer_vollzugsart
+    )
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_vollzugsart = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            merkmalswichtigkeit_fuer_prognose_vollzugsart,
+            liste_mit_zusammenfassenden_merkmalen=[
+                s for s in liste_aller_multihot_spalten if s.startswith("zusatzdelikt_")
+            ],
+            neuer_merkmalsname="zusätzliche Sexualdelikte",
+        )
+    )
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_vollzugsart = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            zusammengefasste_merkmalswichtigkeit_fuer_prognose_vollzugsart,
+            liste_mit_zusammenfassenden_merkmalen=[
+                s for s in liste_aller_multihot_spalten if s.startswith("besonderheit_")
+            ],
+            neuer_merkmalsname="Besonderheiten",
+        )
+    )
+
+    oob_score = (
+        f"OOB-Score für Vollzugsart-Prädiktor: "
+        f"{round(classifier_fuer_vollzugsart.oob_score_ * 100, 1)}%"
+    )
+
+    prognoseleistung_dict = dict()
+    prognoseleistung_dict["oob_score_class_vollzugsart"] = oob_score
+    prognoseleistung_dict[
+        "merkmalswichtigkeit_fuer_prognose_vollzugsart"
+    ] = zusammengefasste_merkmalswichtigkeit_fuer_prognose_vollzugsart
+    prognoseleistung_dict[
+        "liste_kategoriale_prognosemerkmale"
+    ] = liste_kategoriale_prognosemerkmale
+    prognoseleistung_dict[
+        "liste_numerische_prognosemerkmale"
+    ] = liste_numerische_prognosemerkmale
+
+    ki_modell_als_pickle_file_speichern(
+        instanziertes_kimodel=classifier_fuer_vollzugsart,
+        name="sexual_rf_classifier_vollzugsart",
+        filename="sexual_rf_classifier_vollzugsart.pkl",
+        prognoseleistung_dict=prognoseleistung_dict,
+    )
+
+    # Regressor für STRAFMASS-Prognose
+    y_strafmass = (
+        (df_urteile["anzahl_tagessaetze"] / 30)
+        .where(
+            df_urteile["freiheitsstrafe_in_monaten"] == 0,
+            df_urteile["freiheitsstrafe_in_monaten"],
+        )
+        .values.ravel()
+    )
+
+    from sklearn.ensemble import RandomForestRegressor
+
+    regressor_fuer_strafmass = RandomForestRegressor(oob_score=True)
+    regressor_fuer_strafmass.fit(X_ohe, y_strafmass)
+
+    def durchschnittlicher_fehler_berechnen(regressor, y):
+        liste_mit_zielwert_prognose_tuples = list(zip(y, regressor.oob_prediction_))
+        liste_mit_fehler = []
+        for t in liste_mit_zielwert_prognose_tuples:
+            fehler = abs(t[0] - t[1])
+            liste_mit_fehler.append(fehler)
+        durchschnittswert = sum(liste_mit_fehler) / len(liste_mit_fehler)
+        return durchschnittswert
+
+    durchschnittlicher_fehler = durchschnittlicher_fehler_berechnen(
+        regressor_fuer_strafmass, y_strafmass
+    )
+    prognoseleistung_dict_regressor = dict()
+    prognoseleistung_dict_regressor["durchschnittlicher_fehler"] = (
+        f"Der durchnittliche Strafmassprognosefehler bei einer Prognose jeweils mit dem "
+        f"OOB-leftout beträgt {round(durchschnittlicher_fehler, 2)} Monate."
+    )
+
+    # unzusammengefasste Merkmalswichtigkeit -> dient als KNN-Gewichte in der Prognose-View
+    merkmalswichtigkeit_fuer_prognose_strafmass = merkmalswichtigkeitslistegenerator(
+        regressor_fuer_strafmass
+    )
+    prognoseleistung_dict_regressor[
+        "merkmalswichtigkeit_fuer_prognose_strafmass"
+    ] = merkmalswichtigkeit_fuer_prognose_strafmass
+
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            merkmalswichtigkeit_fuer_prognose_strafmass,
+            liste_mit_zusammenfassenden_merkmalen=[
+                s for s in liste_aller_multihot_spalten if s.startswith("zusatzdelikt_")
+            ],
+            neuer_merkmalsname="zusätzliche Sexualdelikte",
+        )
+    )
+    zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass = (
+        merkmale_in_merkmalswichtigkeitsliste_zusammenfassen(
+            zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass,
+            liste_mit_zusammenfassenden_merkmalen=[
+                s for s in liste_aller_multihot_spalten if s.startswith("besonderheit_")
+            ],
+            neuer_merkmalsname="Besonderheiten",
+        )
+    )
+    prognoseleistung_dict_regressor[
+        "zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass"
+    ] = zusammengefasste_merkmalswichtigkeit_fuer_prognose_strafmass
+
+    prognoseleistung_dict_regressor["urteilsbasis"] = len(y_strafmass)
+
+    ki_modell_als_pickle_file_speichern(
+        instanziertes_kimodel=regressor_fuer_strafmass,
+        name="sexual_rf_regressor_strafmass",
+        filename="sexual_rf_regressor_strafmass.pkl",
+        prognoseleistung_dict=prognoseleistung_dict_regressor,
+    )
+
+    # den OneHotEncoder für den späteren transform der Eingabewerte abspeichern
+    kimodell = KIModelPickleFile.objects.get(name="sexual_rf_classifier_vollzugsart")
+    content = pickle.dumps(encoder)
+    content_file = ContentFile(content)
+    kimodell.encoder.save("sexual_encoder.pkl", content_file)
+    content_file.close()
+
+    messages.success(
+        request,
+        "Die KI-Modelle für Sexualdelikt-Strafrecht wurden erfolgreich aktualisiert.",
+    )
+    return redirect("sexual_prognose")
 
 
 @login_required

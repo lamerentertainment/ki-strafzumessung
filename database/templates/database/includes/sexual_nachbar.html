@@ -1,0 +1,184 @@
+{% load humanize %}
+
+<div class="card">
+    <h5 class="card-header">Präjudiz: <a href="{{ nachbar.url_link }}">{{ nachbar }}</a></h5>
+    <div class="card-body">
+        <table class="table table-sm table-bordered">
+            <thead class="table-light">
+                <tr>
+                    <td><p><b>Merkmale des Präjudiz</b></p></td>
+                    <td><p><b>Differenzen</b></p></td>
+                </tr>
+            </thead>
+            <tbody class="table-group-divider">
+                <tr>
+                    <td><p>Hauptdelikt: {{ nachbar.hauptdelikt }}</p></td>
+                    <td {% if nachbar.entsprechung_hauptdelikt %} class="bg-success p-2 text-dark bg-opacity-25"
+                    {% else %} class="bg-danger p-2 text-dark bg-opacity-25" {% endif %}
+                    ><p>
+                        {% if nachbar.entsprechung_hauptdelikt %}Entspricht Eingabe {% else %} Entspricht nicht
+                            Eingabe {% endif %}
+                    </p></td>
+                </tr>
+                <tr>
+                    <td><p>Tatmittel: {{ nachbar.hauptdelikt_tatmittel }}</p></td>
+                    <td {% if nachbar.entsprechung_hauptdelikt_tatmittel %} class="bg-success p-2 text-dark bg-opacity-25"
+                    {% else %} class="bg-danger p-2 text-dark bg-opacity-25" {% endif %}
+                    ><p>
+                        {% if nachbar.entsprechung_hauptdelikt_tatmittel %}Entspricht Eingabe {% else %} Entspricht nicht
+                            Eingabe {% endif %}
+                    </p></td>
+                </tr>
+                <tr>
+                    <td><p>Mehrfache Begehung: {% if nachbar.hauptdelikt_mehrfachbegehung %} Ja {% else %} Nein {% endif %} </p></td>
+                    <td {% if nachbar.entsprechung_mehrfachbegehung %} class="bg-success p-2 text-dark bg-opacity-25"
+                    {% else %} class="bg-danger p-2 text-dark bg-opacity-25" {% endif %}
+                    ><p>
+                        {% if nachbar.entsprechung_mehrfachbegehung %}Entspricht Eingabe {% else %} Entspricht nicht
+                            Eingabe {% endif %}
+                    </p></td>
+                </tr>
+                <tr>
+                    <td><p>Täter-Opfer-Beziehung: {{ nachbar.hauptdelikt_taeter_opfer_beziehung }}</p></td>
+                    <td {% if nachbar.entsprechung_taeter_opfer_beziehung %} class="bg-success p-2 text-dark bg-opacity-25"
+                    {% else %} class="bg-danger p-2 text-dark bg-opacity-25" {% endif %}
+                    ><p>
+                        {% if nachbar.entsprechung_taeter_opfer_beziehung %}Entspricht Eingabe {% else %} Entspricht nicht
+                            Eingabe {% endif %}
+                    </p></td>
+                </tr>
+                <tr>
+                    <td><p>Opferalter: {{ nachbar.get_hauptdelikt_opferalter_display }}</p></td>
+                    <td {% if nachbar.entsprechung_opferalter %} class="bg-success p-2 text-dark bg-opacity-25"
+                    {% else %} class="bg-danger p-2 text-dark bg-opacity-25" {% endif %}
+                    ><p>
+                        {% if nachbar.entsprechung_opferalter %}Entspricht Eingabe {% else %} Entspricht nicht
+                            Eingabe {% endif %}
+                    </p></td>
+                </tr>
+                <tr>
+                    <td><p>einschlägige Vorstrafe: {% if nachbar.vorbestraft_einschlaegig %} Ja {% else %}
+                        Nein {% endif %} </p></td>
+                    <td {% if nachbar.entsprechung_vorbestraft_einschlaegig %}
+                        class="bg-success p-2 text-dark bg-opacity-25"
+                    {% else %} class="bg-danger p-2 text-dark bg-opacity-25" {% endif %}
+                    ><p>
+                        {% if nachbar.entsprechung_vorbestraft_einschlaegig %}Entspricht Eingabe {% else %} Entspricht
+                            nicht Eingabe {% endif %}
+                    </p></td>
+                </tr>
+                <tr>
+                    <td><p>Anzahl Tatbegehungen: {{ nachbar.hauptdelikt_mehrfachbegehung_anzahl }}</p></td>
+                    {% if nachbar.anzahl_diff > 0 %}
+                    <td class="bg-success p-2 text-dark bg-opacity-10"><p>Differenz: + {{ nachbar.anzahl_diff }}</p></td>
+                    {% else %}
+                    <td {% if nachbar.anzahl_diff == 0 %} class="bg-success p-2 text-dark bg-opacity-25" {% endif %}
+                    ><p>Differenz: {{ nachbar.anzahl_diff }}</p></td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td><p>Deliktsperiode (Tage): {{ nachbar.deliktsperiode_tage }}</p></td>
+                    {% if nachbar.deliktsperiode_diff > 0 %}
+                    <td class="bg-success p-2 text-dark bg-opacity-10"><p>Differenz: + {{ nachbar.deliktsperiode_diff }}</p></td>
+                    {% else %}
+                    <td {% if nachbar.deliktsperiode_diff == 0 %} class="bg-success p-2 text-dark bg-opacity-25" {% endif %}
+                    ><p>Differenz: {{ nachbar.deliktsperiode_diff }}</p></td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td><p>Deliktsdauer (Minuten): {{ nachbar.deliktsdauer_minuten }}</p></td>
+                    {% if nachbar.deliktsdauer_diff > 0 %}
+                    <td class="bg-success p-2 text-dark bg-opacity-10"><p>Differenz: + {{ nachbar.deliktsdauer_diff }}</p></td>
+                    {% else %}
+                    <td {% if nachbar.deliktsdauer_diff == 0 %} class="bg-success p-2 text-dark bg-opacity-25" {% endif %}
+                    ><p>Differenz: {{ nachbar.deliktsdauer_diff }}</p></td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td><p>Deliktsscore übrige Delikte: {{ nachbar.deliktsscore_uebrige_delikte }}</p></td>
+                    {% if nachbar.deliktsscore_diff > 0 %}
+                    <td class="bg-success p-2 text-dark bg-opacity-10"><p>Differenz: + {{ nachbar.deliktsscore_diff }}</p></td>
+                    {% else %}
+                    <td {% if nachbar.deliktsscore_diff == 0 %} class="bg-success p-2 text-dark bg-opacity-25" {% endif %}
+                    ><p>Differenz: {{ nachbar.deliktsscore_diff }}</p></td>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <p>zusätzliche Sexualdelikte:</p>
+                        {% for zusatzdelikt in nachbar.sexualdelikte_zusaetzliche.all %}
+                            <li>{{ zusatzdelikt }}</li>
+                        {% empty %}
+                            <li>keine</li>
+                        {% endfor %}
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <p>Besonderheiten:</p>
+                        {% for besonderheit in nachbar.besonderheiten.all %}
+                            <li>{{ besonderheit }}</li>
+                        {% empty %}
+                            <li>keine</li>
+                        {% endfor %}
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="table-light">
+                        <p>
+                            Sanktion:
+                            <b>
+                                {% if nachbar.hauptsanktion == '0' %}
+                                    {% if nachbar.vollzug == '0' %}
+                                    bedingte
+                                    {% elif nachbar.vollzug == '1' %}
+                                    teilbedingte
+                                    {% elif nachbar.vollzug == '2' %}
+                                    unbedingte
+                                    {% endif %}
+                                    Freiheitsstrafe von {{ nachbar.freiheitsstrafe_in_monaten }} Monaten.
+                                {% elif nachbar.hauptsanktion == '1' %}
+                                    {% if nachbar.vollzug == '0' %}
+                                    bedingte
+                                    {% elif nachbar.vollzug == '1' %}
+                                    teilbedingte
+                                    {% elif nachbar.vollzug == '2' %}
+                                    unbedingte
+                                    {% endif %}
+                                    Geldstrafe von {{ nachbar.anzahl_tagessaetze }} Tagessätzen.
+                                {% endif %}
+                            </b>
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        Sanktionsbewertung durch die KI:
+                        {{ nachbar.sanktionsbewertung }}
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="table-light">
+                        <p>Vergleichbarkeitsscore:
+                            <span class="badge bg-primary"
+                                  data-bs-toggle="tooltip"
+                                  data-bs-placement="top"
+                                  title="Ein höherer Wert bedeutet eine grössere Ähnlichkeit zu den eingegebenen Sachverhalts-Eckwerten.">
+                                {{ nachbar.vergleichbarkeitsscore }}%
+                            </span>
+                        </p>
+                    </td>
+                </tr>
+                {% if nachbar.zusammenfassung %}
+                    <tr>
+                        <td colspan="2">
+                            <p>Zusammenfassung der massgebenden Erwägungen betreffend die Strafzumessung (LLM-generiert
+                                und ohne Gewähr):</p>
+                            {{ nachbar.zusammenfassung|linebreaks }}
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>

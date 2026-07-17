@@ -1,0 +1,115 @@
+{% extends "./base.html" %}
+{% load prognoseformatierung %}
+
+{% block body %}
+
+        <h1>Strafprognose bei Sexualdelikt vornehmen und Präjudizien anzeigen</h1>
+        <p>Die Prognose erfolgt auf Grundlage des Datensatzes der Sexualdelikt-Urteile und der darauf
+            aufbauendem KI-Modelle.
+            Die Funktionsweise der KI-Modelle wird <a href="{% url 'text_funktionsweise' %}">hier</a> erklärt.</p>
+
+        <p class="{{ display_eingabeformular_button }}">
+            <a class="btn btn-primary"
+               type="button"
+               data-bs-toggle="collapse"
+               href="#eingabeformular"
+               role="button"
+               aria-expanded="true"
+           aria-controls="eingabeformular">Eingabeformular und Prognosedaten wieder anzeigen</a>
+        </p>
+        <div class="row collapse {{ eingabeformular_anzeigen }}"  id="eingabeformular">
+            <form action="" method="post">
+                    {% csrf_token %}
+
+                    {{ form.non_field_errors }}
+
+                    <div class="row g-1">
+                        <div class="col col-sm-9 col-lg-6">
+                            <table class="table border rounded">
+                                    <legend>Schuldspruch/Dispositiv</legend>
+                                    {{ form.hauptdelikt.as_field_group }}
+                                    {{ form.hauptdelikt_tatmittel.as_field_group }}
+                                    {{ form.hauptdelikt_mehrfachbegehung.as_field_group }}
+                                    {{ form.hauptdelikt_mehrfachbegehung_anzahl.as_field_group }}
+                                    {{ form.deliktsperiode_in_tagen.as_field_group }}
+                                    {{ form.deliktsdauer_in_minuten.as_field_group }}
+                                    {{ form.deliktsscore_uebrige_delikte.as_field_group }}
+                            </table>
+                            <table class="table border">
+                                    <legend>Strafzumessungsfaktoren</legend>
+                                    {{ form.hauptdelikt_taeter_opfer_beziehung.as_field_group }}
+                                    {{ form.hauptdelikt_opferalter.as_field_group }}
+                                    {{ form.hauptdelikt_opfer_vorerfahrung.as_field_group }}
+                                    {{ form.geschlecht.as_field_group }}
+                                    {{ form.nationalitaet.as_field_group }}
+                                    {{ form.vorbestraft.as_field_group }}
+                                    {{ form.vorbestraft_einschlaegig.as_field_group }}
+                            </table>
+                        </div>
+                        <div class="col col-sm-9 col-lg-6">
+                            <div id="zusatzdelikte">
+                                <table class="table border rounded">
+                                    <legend>zusätzliche Sexualdelikte</legend>
+                                    {{ form.sexualdelikte_zusaetzliche.as_field_group }}
+                                </table>
+                            </div>
+                            <div id="besonderheiten">
+                                <table class="table border rounded">
+                                    <legend>Besonderheiten</legend>
+                                    {{ form.besonderheiten.as_field_group }}
+                                </table>
+                            </div>
+                            <div id="praejudizfilter">
+                                <table class="table border rounded">
+                                    <legend>Präjudizien filtern</legend>
+                                    {{ form.gleiches_hauptdelikt.as_field_group }}
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="submit" class="btn btn-primary" value="Strafmass und Vollzugsform prognostizieren">
+
+            </form>
+        </div>
+
+        {% if form.is_valid %}
+        <section>
+            <h1>Vorhersage</h1>
+            {% if vorhersage_hauptsanktion == 'Freiheitsstrafe' %}
+                <p>Das KI-Modell sagt eine <strong>{{ vorhersage_vollzug }} {{ vorhersage_hauptsanktion }} {{ vorhersage_strafmass|prognosebereich_angeben }} Monaten </strong>  voraus.</p>
+            {% elif vorhersage_hauptsanktion == 'Geldstrafe' %}
+                <p>Das KI-Modell sagt eine <strong>{{ vorhersage_vollzug }} {{ vorhersage_hauptsanktion }} {{ vorhersage_strafmass|prognosebereich_angeben_fuer_geldstrafe }} Tagessätzen </strong> voraus.</p>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        {% if form.is_valid %}
+        <div>
+            <h1>Vergleichbare Präjudizien</h1>
+            {% if praejudizien_error_message %}
+                <div class="alert alert-warning" role="alert">
+                    {{ praejudizien_error_message|linebreaksbr }}
+                </div>
+            {% else %}
+                <div class="row">
+                    <div class="col">{% include "database/includes/sexual_nachbar.html" with nachbar=nachbar1 %}</div>
+                    <div class="col">{% include "database/includes/sexual_nachbar.html" with nachbar=nachbar2 %}</div>
+                </div>
+
+                <div class="text-center mt-3 mb-3">
+                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#moreNachbarn" aria-expanded="false" aria-controls="moreNachbarn">
+                        Zeige weitere vergleichbare Präjudizien
+                    </button>
+                </div>
+
+                <div class="collapse" id="moreNachbarn">
+                    <div class="row">
+                        <div class="col">{% include "database/includes/sexual_nachbar.html" with nachbar=nachbar3 %}</div>
+                        <div class="col">{% include "database/includes/sexual_nachbar.html" with nachbar=nachbar4 %}</div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+{% endblock %}

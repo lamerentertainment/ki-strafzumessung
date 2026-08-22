@@ -67,6 +67,11 @@ urlpatterns = [
         name="kommentar_buchfuehrung",
     ),
     path(
+        "kommentar/art-163-stgb",
+        views.kommentar_pfaendungsbetrug,
+        name="kommentar_pfaendungsbetrug",
+    ),
+    path(
         "kommentar/art-164-stgb",
         views.kommentar_glaeubigerschaedigung,
         name="kommentar_glaeubigerschaedigung",

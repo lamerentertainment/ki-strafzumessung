@@ -1,0 +1,471 @@
+{% extends './base.html' %}
+{% load static %}
+
+{% block body %}
+
+    <div class="kommentar container">
+        <div class="row">
+            <div class="col-md-11 mx-auto">
+
+                <header class="kommentar-kopf">
+                    <p class="kommentar-eyebrow">Kommentar zur Strafzumessung</p>
+                    <h1 class="kommentar-titel">Misswirtschaft</h1>
+                    <p class="kommentar-norm">Art. 165 Ziff. 1 StGB &ndash; Freiheitsstrafe bis zu f&uuml;nf Jahren oder Geldstrafe</p>
+                    <div class="kommentar-meta">
+                        <span>Auswertungsstand <b>21.08.2026</b></span>
+                        <span>Ausgewertete Entscheide <b>25</b></span>
+                        <span>Belegte Einzelstrafen <b>15</b></span>
+                        <span>Status <b>Prototyp</b></span>
+                    </div>
+                </header>
+
+                <section class="kommentar-methode">
+                    <h2>Grundlage und Grenzen dieser Auswertung</h2>
+                    <p>Ausgangspunkt ist eine Volltextrecherche &uuml;ber den Bestand publizierter Schweizer Entscheide.
+                        286 Entscheide nennen &laquo;Art.&nbsp;165 StGB&raquo; w&ouml;rtlich; 98 enthalten die Schuldspruch- bzw.
+                        Anklageformel &laquo;der Misswirtschaft im Sinne von Art.&nbsp;165&raquo;, davon 60 allein am Obergericht
+                        Z&uuml;rich. Aus diesem Pool wurden 25 Sachurteile im Volltext ausgewertet &ndash; solche mit einem
+                        Schuldspruch <em>und</em> einer bezifferten Einzel- oder Einsatzstrafe f&uuml;r Art.&nbsp;165 StGB.</p>
+                    <p>S&auml;mtliche genannten Zahlenangaben wurden maschinell gegen den Urteilstext r&uuml;ckgepr&uuml;ft.
+                        Nicht eindeutig zuordenbare F&auml;lle &ndash; etwa Obergericht Zug S1 2024 23, wo Schuldspruch und
+                        Freispruch mehrere Gesellschaften betreffen &ndash; sind aus den Tabellen ausgeschieden und nur im
+                        Quellenverzeichnis gef&uuml;hrt. Alle Entscheide sind auf
+                        <a href="https://entscheidsuche.ch/" target="_blank" rel="noopener">entscheidsuche.ch</a> verlinkt.</p>
+                    <p><strong>Grenzen:</strong> Die Auswahl ist deutschsprachig und deckt die franz&ouml;sische und
+                        italienische Praxis (<em>gestion fautive</em>, <em>cattiva gestione</em>) nicht ab. Sie ist zudem nach
+                        Publikationswahrscheinlichkeit verzerrt &ndash; erstinstanzliche Urteile ohne Berufung erscheinen kaum.
+                        Die Befunde beschreiben eine Tendenz in den ausgewerteten Entscheiden, nicht eine repr&auml;sentative
+                        Gesamtstatistik.</p>
+                </section>
+
+                <h2 class="kommentar-teil"><span class="pn">A</span>Einordnung: Wann Art. 165 StGB die Strafe pr&auml;gt</h2>
+
+                <div class="rz"><span class="n">N 1</span>
+                    <p>Die Misswirtschaft ist in der Praxis fast nie ein Einzeldelikt. Sie erscheint im B&uuml;ndel mit der
+                        Unterlassung der Buchf&uuml;hrung (Art.&nbsp;166 StGB), der Gl&auml;ubigersch&auml;digung durch
+                        Verm&ouml;gensminderung (Art.&nbsp;164 StGB), der ungetreuen Gesch&auml;ftsbesorgung (Art.&nbsp;158 StGB),
+                        dem Betrug (Art.&nbsp;146 StGB) und der Urkundenf&auml;lschung (Art.&nbsp;251 StGB). F&uuml;r die
+                        Strafzumessung ist deshalb nicht die Gesamtstrafe aussagekr&auml;ftig, sondern die <strong>Einzelstrafe
+                        oder Einsatzstrafe, die das Gericht dem Tatbestand der Misswirtschaft zuweist</strong>. Nur diese
+                        Gr&ouml;sse ist zwischen F&auml;llen vergleichbar.</p></div>
+
+                <div class="rz"><span class="n">N 2</span>
+                    <p>Entgegen einer verbreiteten Erwartung ist Art.&nbsp;165 StGB dabei h&auml;ufig das <em>schwerste</em>
+                        Delikt des B&uuml;ndels und tr&auml;gt die Einsatzstrafe. Der Grund ist der Strafrahmen: Ziff.&nbsp;1
+                        droht Freiheitsstrafe bis zu f&uuml;nf Jahren an und &uuml;bertrifft damit sowohl Art.&nbsp;166 StGB als
+                        auch Art.&nbsp;158 Ziff.&nbsp;1 Abs.&nbsp;1 StGB (je bis drei Jahre). In acht der f&uuml;nfzehn
+                        ausgewerteten F&auml;lle bildete die Misswirtschaft die Einsatzstrafe.</p></div>
+
+                <blockquote>Da vorliegend die Misswirtschaft verschuldensm&auml;ssig leicht st&auml;rker ins Gewicht
+                    f&auml;llt, ist bei der Strafzumessung von jener auszugehen.
+                    <cite><a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB190038_2019-06-06.pdf" target="_blank" rel="noopener">Obergericht Z&uuml;rich SB190038 vom 06.06.2019</a></cite></blockquote>
+
+                <div class="rz"><span class="n">N 3</span>
+                    <p>Trifft Art.&nbsp;165 StGB mit einem Delikt gleicher oder h&ouml;herer Strafandrohung zusammen, wird die
+                        Misswirtschaft zum asperierten Nebendelikt. Die Zuschl&auml;ge bewegen sich dann in einer engen Spanne
+                        &ndash; sie liegen in den ausgewerteten F&auml;llen bei 20 Tagess&auml;tzen bis 6 Monaten, unabh&auml;ngig
+                        davon, wie hoch die isolierte Einzelstrafe ausgefallen w&auml;re (vgl. N&nbsp;14&nbsp;ff.).</p></div>
+
+                <h2 class="kommentar-teil"><span class="pn">B</span>Die strafzumessungsrelevanten Merkmale</h2>
+
+                <p class="kommentar-lead">Nachstehend die Merkmale, welche die ausgewerteten Gerichte der objektiven und
+                    subjektiven Tatschwere der Misswirtschaft zugrunde legen &ndash; in der Reihenfolge ihres belegten
+                    Gewichts.</p>
+
+                <h3>I. Die Verschleppungsdauer</h3>
+
+                <div class="rz"><span class="n">N 4</span>
+                    <p>Die Dauer der Konkursverschleppung &ndash; der Zeitraum zwischen dem Eintritt der begr&uuml;ndeten
+                        Besorgnis einer &Uuml;berschuldung und der Benachrichtigung des Gerichts &ndash; ist das Merkmal, das die
+                        objektive Tatschwere am unmittelbarsten tr&auml;gt. Belegt sind: rund <strong>8 Monate</strong>
+                        Verschleppung bei &laquo;eher leichtem&raquo; Verschulden und 120 Tagess&auml;tzen
+                        (<a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB230442_2024-03-26.pdf" target="_blank" rel="noopener">OG ZH SB230442</a>);
+                        rund <strong>2,5 Jahre</strong> bei &laquo;leichtem bis noch leichtem&raquo; Verschulden und 10 Monaten
+                        Freiheitsstrafe
+                        (<a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240109_2025-04-03.pdf" target="_blank" rel="noopener">OG ZH SB240109</a>).</p></div>
+
+                <div class="rz"><span class="n">N 5</span>
+                    <p>Das Obergericht Zug f&uuml;hrt den tragenden Gedanken aus: Die Sanierungshoffnung sch&uuml;tzt nicht
+                        unbegrenzt, sondern verliert mit fortschreitender Zeit ihr Gewicht. Das ist zugleich der Grund, weshalb
+                        die Dauer und nicht der Betrag das prim&auml;re Mass der Pflichtverletzung ist: Vorgeworfen wird das
+                        Zuwarten, nicht der Markterfolg.</p></div>
+
+                <blockquote>Je l&auml;nger indessen die erfolglose Sanierung andauert, umso klarer m&uuml;ssen die
+                    Vorschriften zum Schutze der Gl&auml;ubiger in den Vordergrund treten.
+                    <cite><a href="https://entscheidsuche.ch/docs/ZG_Obergericht/ZG_OG_002_S-2021-28_2022-07-11.pdf" target="_blank" rel="noopener">Obergericht Zug S 2021 28 vom 11.07.2022</a></cite></blockquote>
+
+                <h3>II. Der Verschleppungsschaden</h3>
+
+                <div class="rz"><span class="n">N 6</span>
+                    <p>Der <em>Verschleppungsschaden</em> &ndash; die Zunahme der &Uuml;berschuldung im Verschleppungszeitraum
+                        &ndash; ist die Kennzahl, die die Anklage regelm&auml;ssig in den Vordergrund stellt. F&uuml;r die
+                        Strafh&ouml;he erweist sie sich als &uuml;berraschend schwaches Merkmal. Die ausgewerteten F&auml;lle
+                        ordnen sich, nach Schadensh&ouml;he sortiert, nahezu gegenl&auml;ufig zum Ergebnis:</p></div>
+
+                <div class="tabelle-wrap">
+                    <table class="table table-sm kommentar-tabelle">
+                        <caption>Schadensh&ouml;he gegen benannten Verschuldensgrad</caption>
+                        <thead><tr><th>Schaden</th><th>Benannter Grad</th><th>Strafe</th><th>Entscheid</th></tr></thead>
+                        <tbody>
+                        <tr><td class="num">32'525</td><td><span class="sev"><span class="dot s2"></span>nicht mehr leicht</span></td><td class="num">235 TS</td><td class="ent"><a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB160382_2017-09-12.pdf" target="_blank" rel="noopener">OG ZH SB160382</a></td></tr>
+                        <tr><td class="num">69'467</td><td>&mdash;</td><td class="num">20 TS <span class="src">(Asperation)</span></td><td class="ent"><a href="https://entscheidsuche.ch/docs/SZ_Gerichte/SZ_KG_003_STK-2024-34_2025-08-05.pdf" target="_blank" rel="noopener">KG SZ STK 2024 34</a></td></tr>
+                        <tr><td class="num">165'000</td><td><span class="sev"><span class="dot s2"></span>nicht mehr leicht</span></td><td>&mdash;</td><td class="ent"><a href="https://entscheidsuche.ch/docs/ZG_Obergericht/ZG_OG_002_S-2021-28_2022-07-11.pdf" target="_blank" rel="noopener">OG ZG S 2021 28</a></td></tr>
+                        <tr><td class="num">215'000</td><td><span class="sev"><span class="dot s1"></span>leicht bis noch leicht</span></td><td class="num">10 Monate</td><td class="ent"><a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240109_2025-04-03.pdf" target="_blank" rel="noopener">OG ZH SB240109</a></td></tr>
+                        <tr><td class="num">346'873</td><td><span class="sev"><span class="dot s1"></span>noch leicht</span></td><td class="num">12 Monate</td><td class="ent"><a href="https://entscheidsuche.ch/docs/SZ_Gerichte/SZ_KG_003_STK-2022-50_2023-09-12.pdf" target="_blank" rel="noopener">KG SZ STK 2022 50</a></td></tr>
+                        <tr><td class="num">&gt; 500'000</td><td>&mdash;</td><td class="num">100 TS</td><td class="ent"><a href="https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_005_SK-2015-166_2016-10-18.pdf" target="_blank" rel="noopener">OG BE SK 2015 166</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="befund">
+                    <span class="tag">Befund</span>
+                    <p>Ein Schaden von rund <strong>CHF 32'500 f&uuml;hrte zu &laquo;nicht mehr leichtem&raquo;
+                        Verschulden</strong>, ein Schaden von <strong>CHF 346'873 nur zu &laquo;noch leichtem&raquo;</strong>.
+                        Wer die Strafh&ouml;he aus der Schadenssumme prognostizieren will, liegt bei Art.&nbsp;165 StGB
+                        systematisch falsch.</p>
+                    <p>Die Gerichte nennen daf&uuml;r zwei Gr&uuml;nde. Erstens den Vergleichsmassstab innerhalb des weiten
+                        Strafrahmens. Zweitens &ndash; und praktisch bedeutsamer &ndash; die <strong>Zurechenbarkeit</strong>:
+                        Der Konkursverlust der Gl&auml;ubiger ist nicht identisch mit dem strafrechtlich vorwerfbaren
+                        Schaden.</p>
+                </div>
+
+                <blockquote>Es kann zwar festgestellt werden, dass die 2.- und 3.-Klassgl&auml;ubiger einen Verlust von
+                    &uuml;ber CHF 500'000.00 erlitten, was zweifellos sehr viel ist. Gerade der vorliegende Fall zeigt jedoch
+                    auch, dass nicht der gesamte Verlust der Gl&auml;ubiger den strafbaren Fehlhandlungen des Beschuldigten
+                    angelastet werden kann, sondern dass verschiedene Faktoren &ndash; v.a. nicht strafbares, aber
+                    wirtschaftlich unkluges Handeln, aber auch die Abh&auml;ngigkeit von anderen Gesellschaften und von
+                    Markteinfl&uuml;ssen &ndash; zu derart hohen Konkursverlusten f&uuml;hrten.
+                    <cite><a href="https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_005_SK-2015-166_2016-10-18.pdf" target="_blank" rel="noopener">Obergericht Bern SK 2015 166 vom 18.10.2016</a></cite></blockquote>
+
+                <div class="rz"><span class="n">N 7</span>
+                    <p>F&uuml;r die Verteidigung folgt daraus der ergiebigste Ansatz: nicht die H&ouml;he des Konkursverlusts
+                        bestreiten, sondern dessen <strong>Kausalzusammenhang mit den pflichtwidrigen Unterlassungen</strong>.
+                        Das Kantonsgericht Schwyz formuliert denselben Gedanken aus der Gegenrichtung, indem es die
+                        Betr&auml;ge am oberen Ende des Tatbestands misst: Im Rahmen einer Misswirtschaft seien &laquo;auch
+                        leichtsinnige Darlehensgew&auml;hrungen sowie daraus folgende Verluste von Gl&auml;ubigern im Bereich
+                        von jeweils mehreren Millionen Franken m&ouml;glich&raquo;
+                        (<a href="https://entscheidsuche.ch/docs/SZ_Gerichte/SZ_KG_003_STK-2022-50_2023-09-12.pdf" target="_blank" rel="noopener">KG SZ STK 2022 50</a>).</p></div>
+
+                <div class="rz"><span class="n">N 8</span>
+                    <p>Zu beachten ist ferner, dass die Anklage den Verschleppungsschaden h&auml;ufig als Bruttogr&ouml;sse
+                        beziffert, w&auml;hrend die Gerichte den strafzumessungsrelevanten Anteil daraus erst herausl&ouml;sen.
+                        Die in Anklageschriften genannten Betr&auml;ge sind deshalb kein taugliches Vergleichsmass zwischen
+                        Verfahren.</p></div>
+
+                <h3>III. Motivlage: Rettungsversuch oder Firmenbestattung</h3>
+
+                <div class="rz"><span class="n">N 9</span>
+                    <p>Das sch&auml;rfste verschuldenserh&ouml;hende Merkmal ist nicht wirtschaftlicher, sondern
+                        motivationaler Natur. Die Gerichte unterscheiden konsequent zwischen dem Gesch&auml;ftsf&uuml;hrer, der
+                        die Gesellschaft <em>retten</em> wollte, und demjenigen, der die marode Gesellschaft als
+                        <em>Instrument</em> benutzte.</p></div>
+
+                <div class="rz"><span class="n">N 10</span>
+                    <p>Auf der entlastenden Seite steht die ernsthafte Sanierungsabsicht. Das Obergericht Glarus h&auml;lt
+                        fest, der Beweggrund, die Gesellschaft retten zu wollen, &laquo;k&ouml;nnte grunds&auml;tzlich
+                        verschuldensmindernd ber&uuml;cksichtigt werden&raquo;
+                        (<a href="https://entscheidsuche.ch/docs/GL_Omni/GL_OG_001_OG-2022-00017_2023-11-03.html" target="_blank" rel="noopener">OG GL OG.2022.00017</a>)
+                        &ndash; der Konjunktiv signalisiert, dass die Absicht belegt und plausibel sein muss.</p></div>
+
+                <div class="rz"><span class="n">N 11</span>
+                    <p>Auf der belastenden Seite steht die <strong>Firmenbestattung</strong>. Wo das Gericht feststellt, dass
+                        Gesellschaften eigens gegr&uuml;ndet oder &uuml;bernommen wurden, um sie geordnet untergehen zu lassen,
+                        springt die Verschuldensbewertung. Das Obergericht Z&uuml;rich taxierte das Verschulden als &laquo;nicht
+                        mehr leicht&raquo;, weil der Beschuldigte &laquo;die Firmengr&uuml;ndungen lediglich vornahm, um auf
+                        unredliche Weise an Geld zu kommen&raquo;
+                        (<a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB200039_2020-10-20.pdf" target="_blank" rel="noopener">OG ZH SB200039</a>).
+                        In <a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB230442_2024-03-26.pdf" target="_blank" rel="noopener">SB230442</a>
+                        wirkte bereits die Entsch&auml;digung als Indiz:</p></div>
+
+                <blockquote>Die an sich ausbezahlte Entlohnung von Fr. 20'000.&ndash; erscheint sodann sehr hoch und findet in
+                    den Leistungen des Beschuldigten kein entsprechendes &Auml;quivalent, was Elemente einer entsch&auml;digten
+                    Firmenbestattung mit entsprechender krimineller Energie enth&auml;lt. Immerhin missbrauchte der
+                    Beschuldigte die marode Gesellschaft nicht gleichzeitig f&uuml;r weitere Bereicherungshandlungen, was die
+                    kriminelle Energie wiederum ein wenig relativiert.
+                    <cite><a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB230442_2024-03-26.pdf" target="_blank" rel="noopener">Obergericht Z&uuml;rich SB230442 vom 26.03.2024</a></cite></blockquote>
+
+                <div class="befund">
+                    <span class="tag">Praxishinweis</span>
+                    <p>Eine Entl&ouml;hnung ohne erkennbare Gegenleistung ist ein eigenst&auml;ndiges Verschuldensmerkmal
+                        &ndash; auch dann, wenn sie betragsm&auml;ssig unbedeutend bleibt. Sie belegt, dass das Organ f&uuml;r
+                        den Untergang bezahlt wurde, nicht f&uuml;r die F&uuml;hrung.</p>
+                </div>
+
+                <h3>IV. Stellung und F&uuml;hrungsanteil</h3>
+
+                <div class="rz"><span class="n">N 12</span>
+                    <p>Da Art.&nbsp;165 StGB ein Sonderdelikt ist, folgt die Strafzumessung nicht der formellen
+                        Organstellung, sondern dem tats&auml;chlichen Einfluss. Wer &laquo;nicht federf&uuml;hrend&raquo; war,
+                        erh&auml;lt einen sp&uuml;rbaren Abschlag &ndash; in
+                        <a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240109_2025-04-03.pdf" target="_blank" rel="noopener">SB240109</a>
+                        hielt dieses Merkmal, zusammen mit dem Eventualvorsatz, die Bewertung trotz eines
+                        Gl&auml;ubigerverlusts von CHF 215'000 und 2,5 Jahren Verschleppung bei &laquo;zwischen leicht und noch
+                        leicht&raquo;. Umgekehrt wirkt die Mehrfachbegehung &uuml;ber mehrere Gesellschaften hinweg deutlich
+                        erh&ouml;hend; sie wird als eigenst&auml;ndige Einzelstrafe je Gesellschaft abgebildet und anschliessend
+                        asperiert.</p></div>
+
+                <h3>V. Vorsatzform</h3>
+
+                <div class="rz"><span class="n">N 13</span>
+                    <p>Der Eventualvorsatz &ndash; der praktische Regelfall bei der Konkursverschleppung &ndash; entlastet nur
+                        beschr&auml;nkt. Das Obergericht Z&uuml;rich formuliert die Grenze deutlich: Der festgestellte
+                        Eventualvorsatz verm&ouml;ge &laquo;das Verschulden nicht in einem wesentlich milderen Licht erscheinen
+                        zu lassen&raquo;
+                        (<a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB230442_2024-03-26.pdf" target="_blank" rel="noopener">SB230442</a>).
+                        Wer aus Bequemlichkeit und Gleichg&uuml;ltigkeit unt&auml;tig bleibt, nimmt nach der Z&uuml;rcher Formel
+                        &laquo;nicht nur die Konkursverschleppung, sondern letztlich auch die Sch&auml;digung der
+                        Gl&auml;ubiger in Kauf&raquo;
+                        (<a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240415_2025-09-16.pdf" target="_blank" rel="noopener">SB240415</a>,
+                        <a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240416_2025-09-16.pdf" target="_blank" rel="noopener">SB240416</a>).</p></div>
+
+                <h2 class="kommentar-teil"><span class="pn">C</span>Asperation: der Konnex zu Art. 166 StGB</h2>
+
+                <div class="rz"><span class="n">N 14</span>
+                    <p>Praktisch am folgenreichsten ist eine Regel, die in keiner Verschuldensskala auftaucht: Der Vorwurf
+                        der unterlassenen Buchf&uuml;hrung <strong>geht teilweise bereits im Schuldspruch wegen Misswirtschaft
+                        auf</strong>. Die mangelhafte Buchf&uuml;hrung ist zugleich eine der in Art.&nbsp;165 StGB genannten
+                        Begehungsweisen. Der Gesamtschuldbeitrag von Art.&nbsp;166 StGB f&auml;llt deshalb geringer aus, was die
+                        Asperation d&auml;mpft.</p></div>
+
+                <blockquote>In Anbetracht der Tatsache, dass der Tatvorwurf der nicht gef&uuml;hrten B&uuml;cher zumindest
+                    teilweise bereits im Schuldspruch wegen Misswirtschaft aufgeht und der Gesamtschuldbeitrag somit geringer
+                    ausf&auml;llt, ist im Rahmen der Asperation eine Erh&ouml;hung der Einsatzstrafe um 6 Monate vorzunehmen.
+                    <cite><a href="https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2022-90_2022-11-22.pdf" target="_blank" rel="noopener">Obergericht Aargau SST.2022.90 vom 22.11.2022</a></cite></blockquote>
+
+                <div class="rz"><span class="n">N 15</span>
+                    <p>Dieselbe &Uuml;berlegung greift beim engen zeitlich-sachlichen Zusammenhang. Das Obergericht Aargau
+                        erh&ouml;hte eine Einsatzstrafe von 120 Tagess&auml;tzen um lediglich 40 Tagess&auml;tze, weil der enge
+                        Konnex &laquo;den Gesamtschuldbeitrag als geringer erscheinen l&auml;sst&raquo;
+                        (<a href="https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2021-198_2022-04-08.pdf" target="_blank" rel="noopener">SST.2021.198</a>).
+                        Das Kantonsgericht Schwyz beziffert den Abschlag sogar generell: Asperation &laquo;um einen Drittel der
+                        Einzelstrafe&raquo;
+                        (<a href="https://entscheidsuche.ch/docs/SZ_Gerichte/SZ_KG_003_STK-2024-34_2025-08-05.pdf" target="_blank" rel="noopener">STK 2024 34</a>).</p></div>
+
+                <div class="rz"><span class="n">N 16</span>
+                    <p>Dem steht eine gegenl&auml;ufige Z&uuml;rcher Linie gegen&uuml;ber, die dieselbe &Uuml;berschneidung als
+                        <strong>Doppelverwertungsverbot</strong> formuliert &ndash; und damit den Ausgleich nicht bei der
+                        Asperation, sondern schon bei der Verschuldensbewertung der Misswirtschaft vornimmt. Wer mit dem
+                        Aargauer Argument einen Asperationsabschlag verlangt, muss deshalb pr&uuml;fen, ob die
+                        &Uuml;berschneidung nicht bereits in der Einsatzstrafe ber&uuml;cksichtigt wurde; beides zusammen
+                        w&auml;re eine doppelte Entlastung.</p></div>
+
+                <blockquote>[Es ist zu beanstanden, dass die Vorinstanz] die unterbliebene Buchhaltung in die
+                    Verschuldensbewertung miteinbezog, hat dieser Umstand doch allein im Rahmen der Strafzumessung f&uuml;r den
+                    Schuldspruch wegen mehrfacher Unterlassung der Buchf&uuml;hrung seinen Niederschlag zu finden, damit er dem
+                    Beschuldigten nicht doppelt angelastet wird.
+                    <cite><a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB230383_2024-04-26.pdf" target="_blank" rel="noopener">Obergericht Z&uuml;rich SB230383 vom 26.04.2024</a></cite></blockquote>
+
+                <h2 class="kommentar-teil"><span class="pn">D</span>Strafart und Vollzug</h2>
+
+                <div class="rz"><span class="n">N 17</span>
+                    <p>Die Wahl zwischen Geldstrafe und Freiheitsstrafe folgt bei Art.&nbsp;165 StGB einer klaren Schwelle.
+                        Das Obergericht Glarus formuliert sie ausdr&uuml;cklich: &laquo;Eine Geldstrafe k&auml;me bei der
+                        Misswirtschaft allerdings nur bei einem leichten Verschulden in Frage&raquo;
+                        (<a href="https://entscheidsuche.ch/docs/GL_Omni/GL_OG_001_OG-2022-00017_2023-11-03.html" target="_blank" rel="noopener">OG GL OG.2022.00017</a>).
+                        Die Kontrolltabelle in Abschnitt&nbsp;G best&auml;tigt das &ndash; s&auml;mtliche Geldstrafen liegen bei
+                        &laquo;leichtem&raquo;, &laquo;eher leichtem&raquo; oder &laquo;nicht mehr nur leichtem&raquo;
+                        Verschulden, s&auml;mtliche Freiheitsstrafen ab &laquo;noch leicht&raquo; aufw&auml;rts.</p></div>
+
+                <div class="rz"><span class="n">N 18</span>
+                    <p>Praktisch bedeutet das: Die Schwelle zwischen &laquo;eher leicht&raquo; und &laquo;noch leicht&raquo;
+                        ist keine blosse Abstufung, sondern ein <strong>Strafartwechsel</strong>. Wer die Verteidigung auf die
+                        Merkmale der Tatschwere ausrichtet &ndash; k&uuml;rzere Verschleppungsdauer, fehlende Bereicherung,
+                        untergeordnete Rolle &ndash;, verteidigt an dieser Schwelle zugleich die Strafart.</p></div>
+
+                <div class="rz"><span class="n">N 19</span>
+                    <p>Ein praktischer Nebenaspekt: Fehlen dem Beschuldigten Einkommen und Verm&ouml;gen, schliessen die
+                        Gerichte die Geldstrafe auch dort aus, wo die Verschuldensbewertung sie zuliesse &ndash; die Geldstrafe
+                        &laquo;k&ouml;nnte nicht vollzogen werden&raquo;
+                        (<a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240109_2025-04-03.pdf" target="_blank" rel="noopener">OG ZH SB240109</a>).
+                        Bei Konkursdelikten ist das eher die Regel als die Ausnahme.</p></div>
+
+                <h2 class="kommentar-teil"><span class="pn">E</span>T&auml;terkomponente</h2>
+
+                <div class="rz"><span class="n">N 20</span>
+                    <p>Die einschl&auml;gige Vorstrafe ist bei Art.&nbsp;165 StGB besonders trennscharf, weil Konkursdelikte
+                        typischerweise wiederholt begangen werden. Als einschl&auml;gig gilt bereits ein <em>Strafbefehl</em>
+                        wegen Gl&auml;ubigersch&auml;digung, Misswirtschaft und Unterlassung der Buchf&uuml;hrung; das
+                        Obergericht Z&uuml;rich erh&ouml;hte in zwei Parallelf&auml;llen die tatangemessene Freiheitsstrafe
+                        gest&uuml;tzt darauf um je 3 Monate
+                        (<a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240415_2025-09-16.pdf" target="_blank" rel="noopener">SB240415</a>,
+                        <a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240416_2025-09-16.pdf" target="_blank" rel="noopener">SB240416</a>).</p></div>
+
+                <div class="rz"><span class="n">N 21</span>
+                    <p>Verschuldensbezeichnung und gew&auml;hltes Strafmass m&uuml;ssen zusammenpassen, damit die
+                        Angemessenheit &uuml;berpr&uuml;fbar bleibt
+                        (<a href="https://entscheidsuche.ch/docs/CH_BGE/CH_BGE_006_BGE-136-IV-55_2010-03-08.html" target="_blank" rel="noopener">BGE 136 IV 55</a>
+                        E.&nbsp;5.7). Das Obergericht Aargau begr&uuml;ndet die Formulierung &laquo;mittelschwer bis
+                        schwer&raquo; denn auch ausdr&uuml;cklich damit, dass sie &laquo;im begrifflichen Einklang&raquo; mit dem
+                        im mittleren Bereich des Strafrahmens angesiedelten Strafmass stehen m&uuml;sse
+                        (<a href="https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2023-198_2024-08-23.pdf" target="_blank" rel="noopener">SST.2023.198</a>,
+                        unter Hinweis auf
+                        <a href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-1044-2019_2020-02-17.html" target="_blank" rel="noopener">BGer 6B_1044/2019</a>).</p></div>
+
+                <h2 class="kommentar-teil"><span class="pn">F</span>Dogmatischer Rahmen</h2>
+
+                <div class="rz"><span class="n">N 22</span>
+                    <p>F&uuml;r die Strafzumessung erheblich sind vor allem die Entscheide zur objektiven
+                        Strafbarkeitsbedingung, weil sie dar&uuml;ber bestimmen, ob &uuml;berhaupt eine Strafe zuzumessen ist.
+                        Nach
+                        <a href="https://entscheidsuche.ch/docs/CH_BGE/CH_BGE_006_BGE-144-IV-52_2018.html" target="_blank" rel="noopener"><strong>BGE 144 IV 52</strong></a>
+                        ist eine Verurteilung wegen Misswirtschaft auch nach einer Konkurser&ouml;ffnung gest&uuml;tzt auf
+                        Art.&nbsp;33 BankG m&ouml;glich. Nach
+                        <a href="https://entscheidsuche.ch/docs/CH_BGE/CH_BGE_006_BGE-148-IV-170_2022-04-07.html" target="_blank" rel="noopener"><strong>BGE 148 IV 170</strong></a>
+                        erf&uuml;llt umgekehrt die Anordnung einer Konkursliquidation wegen Organisationsmangels nach
+                        Art.&nbsp;731b Abs.&nbsp;1<sup>bis</sup> Ziff.&nbsp;3 OR f&uuml;r sich allein die objektive
+                        Strafbarkeitsbedingung der Art.&nbsp;163&ndash;167 StGB <em>nicht</em>.</p></div>
+
+                <div class="rz"><span class="n">N 23</span>
+                    <p>Zum gesch&uuml;tzten Rechtsgut &ndash; massgeblich f&uuml;r die Konkurrenzfrage und damit f&uuml;r die
+                        Asperation &ndash; halten die ausgewerteten Entscheide fest, dass Art.&nbsp;165 StGB neben dem
+                        Gl&auml;ubigerverm&ouml;gen auch das Zwangsvollstreckungsverfahren als solches sch&uuml;tzt (so das
+                        Obergericht Aargau
+                        <a href="https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2021-198_2022-04-08.pdf" target="_blank" rel="noopener">SST.2021.198</a>
+                        unter Hinweis auf
+                        <a href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-1279-2018_2019-03-26.html" target="_blank" rel="noopener">BGer 6B_1279/2018</a>).
+                        Das Obergericht Z&uuml;rich leitet daraus ab, dass die Konkursdelikte gegen&uuml;ber Betrug und
+                        ungetreuer Gesch&auml;ftsbesorgung &laquo;ein weitergehendes bzw. teilweise abweichendes Unrecht unter
+                        Strafe stellen und entsprechend auch bei der Strafzumessung straferh&ouml;hend zu ber&uuml;cksichtigen
+                        sind&raquo;
+                        (<a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB200039_2020-10-20.pdf" target="_blank" rel="noopener">SB200039</a>).
+                        Eine Gl&auml;ubigersch&auml;digung ist nach der von den kantonalen Gerichten herangezogenen
+                        Rechtsprechung nicht erforderlich
+                        (<a href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-765-2011_2012-05-24.html" target="_blank" rel="noopener">BGer 6B_765/2011</a>);
+                        zum Kausalit&auml;tserfordernis vgl.
+                        <a href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-244-2021_2023-04-17.html" target="_blank" rel="noopener">BGer 6B_244/2021</a>.</p></div>
+
+                <h2 class="kommentar-teil"><span class="pn">G</span>Pr&uuml;fraster und Kontrolltabelle</h2>
+
+                <div class="tabelle-wrap">
+                    <table class="table table-sm kommentar-tabelle">
+                        <caption>Merkmale der Tatschwere in der Reihenfolge ihres belegten Gewichts</caption>
+                        <thead><tr><th>Merkmal</th><th>Richtung</th><th>Belegte Wirkung</th></tr></thead>
+                        <tbody>
+                        <tr><td>Firmenbestattung / Gesellschaft als Instrument</td><td>erh&ouml;hend</td><td>tr&auml;gt allein den Sprung auf &laquo;nicht mehr leicht&raquo;</td></tr>
+                        <tr><td>Verschleppungsdauer</td><td>erh&ouml;hend</td><td>8 Mt. &rarr; leicht; 2,5 J. &rarr; noch leicht</td></tr>
+                        <tr><td>Entl&ouml;hnung ohne Gegenleistung</td><td>erh&ouml;hend</td><td>eigenst&auml;ndiges Indiz krimineller Energie</td></tr>
+                        <tr><td>Einschl&auml;gige Vorstrafe (auch Strafbefehl)</td><td>erh&ouml;hend</td><td>+ 3 Monate <span class="src">(T&auml;terkomponente)</span></td></tr>
+                        <tr><td>Mehrere Gesellschaften</td><td>erh&ouml;hend</td><td>je eigene Einzelstrafe, dann Asperation</td></tr>
+                        <tr><td>Ernsthafte Sanierungsabsicht</td><td>mindernd</td><td>&laquo;k&ouml;nnte&raquo; mindernd wirken &ndash; Nachweis n&ouml;tig</td></tr>
+                        <tr><td>Nicht federf&uuml;hrende Rolle</td><td>mindernd</td><td>h&auml;lt Bewertung trotz hohem Schaden bei &laquo;leicht&raquo;</td></tr>
+                        <tr><td>Enger Konnex zu Art. 166 StGB</td><td>mindernd</td><td>Asperation nur &#8531; der Einzelstrafe</td></tr>
+                        <tr><td>Eventualvorsatz</td><td>mindernd</td><td>gering &ndash; &laquo;nicht wesentlich milder&raquo;</td></tr>
+                        <tr><td>H&ouml;he des Verschleppungsschadens</td><td>&mdash;</td><td>kein verl&auml;sslicher Pr&auml;diktor (N&nbsp;6)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <p class="kommentar-lead">Die folgende Gegen&uuml;berstellung dient der &Uuml;berpr&uuml;fung im Sinne von
+                    <a href="https://entscheidsuche.ch/docs/CH_BGE/CH_BGE_006_BGE-136-IV-55_2010-03-08.html" target="_blank" rel="noopener">BGE 136 IV 55</a>
+                    E.&nbsp;5.7: Sie zeigt, welches Strafmass die ausgewertete Praxis einer bestimmten
+                    Verschuldensbezeichnung beimisst, und macht Abweichungen davon begr&uuml;ndungsbed&uuml;rftig.</p>
+
+                <div class="leiter">
+                    <div class="sprosse kopf"><span>Benannter Grad</span><span>Strafmass</span><span>Beobachtung</span></div>
+                    <div class="sprosse">
+                        <div class="grad"><span class="dot s1"></span>leicht / eher leicht</div>
+                        <div class="mass">100&ndash;120 Tagess&auml;tze</div>
+                        <div class="note">Geldstrafe; Schwelle zur Freiheitsstrafe noch nicht &uuml;berschritten</div>
+                    </div>
+                    <div class="sprosse">
+                        <div class="grad"><span class="dot s1"></span>noch leicht</div>
+                        <div class="mass">10&ndash;12 Monate</div>
+                        <div class="note">Sprung auf Freiheitsstrafe &ndash; der gr&ouml;sste Einzelsprung</div>
+                    </div>
+                    <div class="sprosse">
+                        <div class="grad"><span class="dot s2"></span>nicht mehr leicht</div>
+                        <div class="mass">235 TS &ndash; 15 Monate</div>
+                        <div class="note">Breiteste Streuung; hier wirkt die T&auml;terkomponente</div>
+                    </div>
+                    <div class="sprosse">
+                        <div class="grad"><span class="dot s2"></span>mittelschwer</div>
+                        <div class="mass">12&ndash;18 Monate</div>
+                        <div class="note">Formelhaft im Kanton Aargau: &laquo;in Relation zum Strafrahmen&raquo;</div>
+                    </div>
+                    <div class="sprosse">
+                        <div class="grad"><span class="dot s3"></span>mittelschwer bis schwer</div>
+                        <div class="mass">27 Monate</div>
+                        <div class="note">Oberster belegter Wert; Strafrahmen bleibt weitgehend ungenutzt</div>
+                    </div>
+                </div>
+
+                <div class="rz"><span class="n">N 24</span>
+                    <p>Bemerkenswert ist, was die Tabelle <em>nicht</em> zeigt: Obwohl Ziff.&nbsp;1 einen Rahmen bis f&uuml;nf
+                        Jahre er&ouml;ffnet, endet die ausgewertete Praxis bei 27 Monaten. Die oberen zwei F&uuml;nftel des
+                        Strafrahmens bleiben in den untersuchten Entscheiden leer. Die Gerichte begr&uuml;nden dies
+                        ausdr&uuml;cklich mit dem Vergleichsmassstab: Der Tatbestand erfasst auch Gl&auml;ubigerverluste in
+                        Millionenh&ouml;he, weshalb F&auml;lle im sechsstelligen Bereich selbst dann unten im Rahmen anzusiedeln
+                        sind, wenn der Einzelfall gravierend wirkt.</p></div>
+
+                <div class="rz"><span class="n">N 25</span>
+                    <p>Die Streuung innerhalb einer Stufe ist erheblich &ndash; bei &laquo;nicht mehr leicht&raquo; reicht sie
+                        von 235 Tagess&auml;tzen bis 15 Monaten. Die Tabelle ist deshalb kein Bemessungsraster, sondern ein
+                        Plausibilit&auml;tstest: Wer eine Strafe deutlich ausserhalb der f&uuml;r den benannten Grad belegten
+                        Spanne beantragt oder ausf&auml;llt, tr&auml;gt eine erh&ouml;hte Begr&uuml;ndungslast.</p></div>
+
+                <div class="tabelle-wrap">
+                    <table class="table table-sm kommentar-tabelle">
+                        <caption>Belegte Einzel- und Einsatzstrafen f&uuml;r Art. 165 StGB</caption>
+                        <thead>
+                        <tr><th>Entscheid</th><th>Datum</th><th>Benannter Grad</th><th>Strafe f&uuml;r Art. 165</th><th>Schaden</th></tr>
+                        </thead>
+                        <tbody>
+                        <tr><td class="ent"><a href="https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_005_SK-2015-166_2016-10-18.pdf" target="_blank" rel="noopener">OG BE SK 2015 166</a></td><td class="num">18.10.2016</td><td>&mdash;</td><td class="num">100 TS Geldstrafe <span class="src">(Einsatzstrafe)</span></td><td class="num">&gt; 500'000</td></tr>
+                        <tr><td class="ent"><a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB230442_2024-03-26.pdf" target="_blank" rel="noopener">OG ZH SB230442</a></td><td class="num">26.03.2024</td><td><span class="sev"><span class="dot s1"></span>eher leicht</span></td><td class="num">120 TS Geldstrafe <span class="src">(Einsatzstrafe)</span></td><td class="num">niedrig f&uuml;nfstellig</td></tr>
+                        <tr><td class="ent"><a href="https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2021-198_2022-04-08.pdf" target="_blank" rel="noopener">OG AG SST.2021.198</a></td><td class="num">08.04.2022</td><td><span class="sev"><span class="dot s2"></span>nicht mehr nur leicht</span></td><td class="num">120 TS <span class="src">(Einsatzstrafe)</span></td><td>&mdash;</td></tr>
+                        <tr><td class="ent"><a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB160382_2017-09-12.pdf" target="_blank" rel="noopener">OG ZH SB160382</a></td><td class="num">12.09.2017</td><td><span class="sev"><span class="dot s2"></span>nicht mehr leicht</span></td><td class="num">235 TS Geldstrafe <span class="src">(Einsatzstrafe)</span></td><td class="num">32'525</td></tr>
+                        <tr><td class="ent"><a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB200039_2020-10-20.pdf" target="_blank" rel="noopener">OG ZH SB200039</a></td><td class="num">20.10.2020</td><td><span class="sev"><span class="dot s2"></span>nicht mehr leicht</span></td><td class="num">4 Monate <span class="src">(Einzelstrafe)</span></td><td>&mdash;</td></tr>
+                        <tr><td class="ent"><a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240109_2025-04-03.pdf" target="_blank" rel="noopener">OG ZH SB240109</a> <span class="src">(G. AG)</span></td><td class="num">03.04.2025</td><td><span class="sev"><span class="dot s1"></span>leicht bis noch leicht</span></td><td class="num">10 Monate <span class="src">(Einzelstrafe)</span></td><td class="num">215'000</td></tr>
+                        <tr><td class="ent"><a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240109_2025-04-03.pdf" target="_blank" rel="noopener">OG ZH SB240109</a> <span class="src">(F. AG)</span></td><td class="num">03.04.2025</td><td><span class="sev"><span class="dot s1"></span>noch leicht</span></td><td class="num">11 Monate <span class="src">(Einsatzstrafe)</span></td><td>&mdash;</td></tr>
+                        <tr><td class="ent"><a href="https://entscheidsuche.ch/docs/SZ_Gerichte/SZ_KG_003_STK-2022-50_2023-09-12.pdf" target="_blank" rel="noopener">KG SZ STK 2022 50</a></td><td class="num">12.09.2023</td><td><span class="sev"><span class="dot s1"></span>noch leicht</span></td><td class="num">12 Monate <span class="src">(Einsatzstrafe)</span></td><td class="num">346'873</td></tr>
+                        <tr><td class="ent"><a href="https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2022-90_2022-11-22.pdf" target="_blank" rel="noopener">OG AG SST.2022.90</a></td><td class="num">22.11.2022</td><td><span class="sev"><span class="dot s2"></span>mittelschwer</span></td><td class="num">1 Jahr <span class="src">(Einzelstrafe)</span></td><td>&mdash;</td></tr>
+                        <tr><td class="ent"><a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240415_2025-09-16.pdf" target="_blank" rel="noopener">OG ZH SB240415</a></td><td class="num">16.09.2025</td><td><span class="sev"><span class="dot s2"></span>nicht mehr leicht</span></td><td class="num">15 Monate <span class="src">(Einsatzstrafe)</span></td><td>&mdash;</td></tr>
+                        <tr><td class="ent"><a href="https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2024-11_2025-01-08.pdf" target="_blank" rel="noopener">OG AG SST.2024.11</a></td><td class="num">08.01.2025</td><td><span class="sev"><span class="dot s2"></span>mittelschwer</span></td><td class="num">18 Monate <span class="src">(Einsatzstrafe)</span></td><td>&mdash;</td></tr>
+                        <tr><td class="ent"><a href="https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2023-198_2024-08-23.pdf" target="_blank" rel="noopener">OG AG SST.2023.198</a></td><td class="num">23.08.2024</td><td><span class="sev"><span class="dot s3"></span>mittelschwer bis schwer</span></td><td class="num">2 &frac14; Jahre <span class="src">(Einsatzstrafe)</span></td><td>&mdash;</td></tr>
+                        <tr><td class="ent"><a href="https://entscheidsuche.ch/docs/SZ_Gerichte/SZ_KG_003_STK-2024-34_2025-08-05.pdf" target="_blank" rel="noopener">KG SZ STK 2024 34</a></td><td class="num">05.08.2025</td><td>&mdash;</td><td class="num">20 TS <span class="src">(Asperation)</span></td><td class="num">69'467</td></tr>
+                        <tr><td class="ent"><a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240416_2025-09-16.pdf" target="_blank" rel="noopener">OG ZH SB240416</a></td><td class="num">16.09.2025</td><td><span class="sev"><span class="dot s2"></span>nicht mehr leicht</span></td><td class="num">6 Monate <span class="src">(Asperation)</span></td><td>&mdash;</td></tr>
+                        <tr><td class="ent"><a href="https://entscheidsuche.ch/docs/ZG_Obergericht/ZG_OG_002_S-2021-28_2022-07-11.pdf" target="_blank" rel="noopener">OG ZG S 2021 28</a></td><td class="num">11.07.2022</td><td><span class="sev"><span class="dot s2"></span>nicht mehr leicht</span></td><td>&mdash;</td><td class="num">165'000</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h2 class="kommentar-teil"><span class="pn">H</span>Ausgewertete Entscheide</h2>
+
+                <ol class="quellen">
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB230442_2024-03-26.pdf" target="_blank" rel="noopener">OG ZH SB230442</a> vom 26.03.2024 &ndash; Einsatzstrafe 120 TS; Firmenbestattung; Eventualvorsatz</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240109_2025-04-03.pdf" target="_blank" rel="noopener">OG ZH SB240109</a> vom 03.04.2025 &ndash; Einsatz 11 Mt. / Einzelstrafe 10 Mt.; zwei Gesellschaften</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240415_2025-09-16.pdf" target="_blank" rel="noopener">OG ZH SB240415</a> vom 16.09.2025 &ndash; Einsatzstrafe 15 Mt.; einschl&auml;gige Vorstrafe</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240416_2025-09-16.pdf" target="_blank" rel="noopener">OG ZH SB240416</a> vom 16.09.2025 &ndash; Asperation 6 Mt.; Parallelfall zu SB240415</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB160382_2017-09-12.pdf" target="_blank" rel="noopener">OG ZH SB160382</a> vom 12.09.2017 &ndash; Einsatzstrafe 235 TS; &Uuml;berschuldung CHF 32'525</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB200039_2020-10-20.pdf" target="_blank" rel="noopener">OG ZH SB200039</a> vom 20.10.2020 &ndash; Einzelstrafe 4 Mt.; Rechtsgut der Konkursdelikte</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB190038_2019-06-06.pdf" target="_blank" rel="noopener">OG ZH SB190038</a> vom 06.06.2019 &ndash; Misswirtschaft als schwerstes Delikt</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB230383_2024-04-26.pdf" target="_blank" rel="noopener">OG ZH SB230383</a> vom 26.04.2024 &ndash; Doppelverwertungsverbot Art. 165/166</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240297_2025-09-22.pdf" target="_blank" rel="noopener">OG ZH SB240297</a> vom 22.09.2025 &ndash; Abgrenzung zu Art. 164 StGB</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_005_SK-2015-166_2016-10-18.pdf" target="_blank" rel="noopener">OG BE SK 2015 166</a> vom 18.10.2016 &ndash; Einsatzstrafe 100 TS; Zurechenbarkeit des Konkursverlusts</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/ZG_Obergericht/ZG_OG_002_S-2021-28_2022-07-11.pdf" target="_blank" rel="noopener">OG ZG S 2021 28</a> vom 11.07.2022 &ndash; Verschleppungsschaden CHF 165'000; Sanierungshoffnung</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/ZG_Obergericht/ZG_OG_002_S1-2024-23_2025-05-27.pdf" target="_blank" rel="noopener">OG ZG S1 2024 23</a> vom 27.05.2025 &ndash; mehrere Gesellschaften; nicht eindeutig zuordenbar</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/SZ_Gerichte/SZ_KG_003_STK-2022-50_2023-09-12.pdf" target="_blank" rel="noopener">KG SZ STK 2022 50</a> vom 12.09.2023 &ndash; Einsatzstrafe 12 Mt.; Verschleppungsschaden CHF 346'873</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/SZ_Gerichte/SZ_KG_003_STK-2024-34_2025-08-05.pdf" target="_blank" rel="noopener">KG SZ STK 2024 34</a> vom 05.08.2025 &ndash; Asperation &#8531; der Einzelstrafe</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2022-90_2022-11-22.pdf" target="_blank" rel="noopener">OG AG SST.2022.90</a> vom 22.11.2022 &ndash; Einzelstrafe 1 Jahr; Konnex zu Art. 166 StGB</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2024-11_2025-01-08.pdf" target="_blank" rel="noopener">OG AG SST.2024.11</a> vom 08.01.2025 &ndash; Einsatzstrafe 18 Mt.; Strafartwahl</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2023-198_2024-08-23.pdf" target="_blank" rel="noopener">OG AG SST.2023.198</a> vom 23.08.2024 &ndash; Einsatzstrafe 2 &frac14; Jahre; Verschuldensformulierung</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2021-198_2022-04-08.pdf" target="_blank" rel="noopener">OG AG SST.2021.198</a> vom 08.04.2022 &ndash; Einsatzstrafe 120 TS; Rechtsgut</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/GL_Omni/GL_OG_001_OG-2022-00017_2023-11-03.html" target="_blank" rel="noopener">OG GL OG.2022.00017</a> vom 03.11.2023 &ndash; Strafartschwelle; Sanierungsabsicht</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGE/CH_BGE_006_BGE-136-IV-55_2010-03-08.html" target="_blank" rel="noopener">BGE 136 IV 55</a> &ndash; Methodik der Strafzumessung; Benennung des Tatverschuldens</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGE/CH_BGE_006_BGE-144-IV-52_2018.html" target="_blank" rel="noopener">BGE 144 IV 52</a> &ndash; Bankenkonkurs als objektive Strafbarkeitsbedingung</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGE/CH_BGE_006_BGE-148-IV-170_2022-04-07.html" target="_blank" rel="noopener">BGE 148 IV 170</a> &ndash; Konkursliquidation wegen Organisationsmangels gen&uuml;gt nicht</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-1044-2019_2020-02-17.html" target="_blank" rel="noopener">BGer 6B_1044/2019</a> &ndash; Verschuldensformulierung im Einklang mit dem Strafmass</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-1279-2018_2019-03-26.html" target="_blank" rel="noopener">BGer 6B_1279/2018</a> &ndash; gesch&uuml;tztes Rechtsgut</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-765-2011_2012-05-24.html" target="_blank" rel="noopener">BGer 6B_765/2011</a> &ndash; Gl&auml;ubigersch&auml;digung nicht erforderlich</li>
+                    <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-244-2021_2023-04-17.html" target="_blank" rel="noopener">BGer 6B_244/2021</a> &ndash; Kausalit&auml;tserfordernis</li>
+                </ol>
+
+                <p class="kommentar-schluss">Prototyp der Rubrik &laquo;Gesetzeskommentar zur Strafzumessung&raquo;. Erstellt
+                    aus 25 im Volltext ausgewerteten Sachurteilen; alle Zahlenangaben maschinell gegen den Urteilstext
+                    r&uuml;ckgepr&uuml;ft. Die Auswertung ersetzt keine eigene Pr&uuml;fung der Entscheide im Einzelfall.</p>
+
+            </div>
+        </div>
+    </div>
+
+{% endblock body %}

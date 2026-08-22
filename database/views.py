@@ -2458,6 +2458,22 @@ def text_strafzumessung_mit_hilfe_von_ki(request):
     return render(request, "database/strafzumessung_mit_hilfe_von_ki.html", context)
 
 
+# Kommentar-Views (Rubrik "Gesetzeskommentar zur Strafzumessung")
+def kommentar_misswirtschaft(request):
+    context = {}
+    return render(request, "database/kommentar_misswirtschaft.html", context)
+
+
+def kommentar_buchfuehrung(request):
+    context = {}
+    return render(request, "database/kommentar_buchfuehrung.html", context)
+
+
+def kommentar_glaeubigerschaedigung(request):
+    context = {}
+    return render(request, "database/kommentar_glaeubigerschaedigung.html", context)
+
+
 # helper functions
 def csv_in_notebooks_speichern(dbmodel):
     # Datenframe erstellen, db-id als index

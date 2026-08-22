@@ -43,6 +43,18 @@
                   </ul>
                 </li>
 
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownKommentar" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Gesetzeskommentar <br>
+                      zur Strafzumessung
+                  </a>
+                  <ul class="dropdown-menu" aria-labelledby="navbarDropdownKommentar">
+                    <li><a class="dropdown-item" href="{% url 'kommentar_glaeubigerschaedigung' %}">Art. 164 StGB &ndash; Gl&auml;ubigersch&auml;digung</a></li>
+                    <li><a class="dropdown-item" href="{% url 'kommentar_misswirtschaft' %}">Art. 165 StGB &ndash; Misswirtschaft</a></li>
+                    <li><a class="dropdown-item" href="{% url 'kommentar_buchfuehrung' %}">Art. 166 StGB &ndash; Unterlassung der Buchf&uuml;hrung</a></li>
+                  </ul>
+                </li>
+
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'text_funktionsweise' %}">
                         Wie es <br>

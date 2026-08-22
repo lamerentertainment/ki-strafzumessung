@@ -22,3 +22,283 @@ h1 {
     width: 100%;
     height: 100%;
 }
+
+/* ============================================================
+   Rubrik "Gesetzeskommentar zur Strafzumessung"
+   Alle Regeln unter .kommentar gescoped.
+   ============================================================ */
+
+.kommentar {
+    --k-ink: #171a17;
+    --k-ink-2: #3d423c;
+    --k-muted: #6a6f69;
+    --k-rule: #daddd6;
+    --k-rule-2: #c3c7bd;
+    --k-accent: #2c5545;
+    --k-accent-soft: #e2ece5;
+    --k-surface: #fff;
+    --k-surface-2: #edefe9;
+    --k-sev-1: #5e8672;
+    --k-sev-2: #9a7724;
+    --k-sev-3: #9e4a2e;
+    color: var(--k-ink);
+    padding-bottom: 3rem;
+}
+
+/* --- Kopf --- */
+.kommentar .kommentar-kopf {
+    border-bottom: 2px solid var(--k-ink);
+    padding: 2.5rem 0 1.25rem;
+    margin-bottom: .5rem;
+}
+.kommentar .kommentar-eyebrow {
+    font-size: .75rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--k-accent);
+    margin: 0 0 1rem;
+}
+.kommentar .kommentar-titel {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 600;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    line-height: 1.05;
+    letter-spacing: -.02em;
+    margin: 0;
+}
+.kommentar .kommentar-norm {
+    font-style: italic;
+    color: var(--k-muted);
+    margin: .75rem 0 0;
+    font-size: 1.05rem;
+}
+.kommentar .kommentar-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem 1.75rem;
+    margin-top: 1.5rem;
+    font-size: .8rem;
+    color: var(--k-muted);
+}
+.kommentar .kommentar-meta b { color: var(--k-ink-2); font-weight: 500; }
+
+/* --- Methodenkasten --- */
+.kommentar .kommentar-methode {
+    background: var(--k-surface);
+    border: 1px solid var(--k-rule);
+    border-left: 3px solid var(--k-accent);
+    padding: 1.35rem 1.6rem;
+    margin: 2rem 0 1rem;
+    font-size: .95rem;
+    color: var(--k-ink-2);
+}
+.kommentar .kommentar-methode h2 {
+    font-size: .72rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--k-accent);
+    margin: 0 0 .75rem;
+    font-weight: 500;
+}
+.kommentar .kommentar-methode p { margin: 0 0 .6rem; }
+.kommentar .kommentar-methode p:last-child { margin-bottom: 0; }
+
+/* --- Gliederung --- */
+.kommentar h2.kommentar-teil {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 600;
+    font-size: clamp(1.5rem, 3vw, 1.95rem);
+    line-height: 1.2;
+    margin: 3.5rem 0 .35rem;
+    padding-top: 1.35rem;
+    border-top: 1px solid var(--k-rule-2);
+}
+.kommentar h2.kommentar-teil .pn {
+    font-size: .55em;
+    color: var(--k-accent);
+    margin-right: .7em;
+    letter-spacing: .06em;
+    vertical-align: .18em;
+}
+.kommentar h3 {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin: 2.2rem 0 .25rem;
+}
+.kommentar .kommentar-lead { font-size: 1.05rem; color: var(--k-ink-2); margin: .6rem 0 0; }
+
+/* --- Randziffern --- */
+.kommentar .rz { position: relative; margin: 1.15rem 0; }
+.kommentar .rz > .n {
+    font-size: .72rem;
+    color: var(--k-muted);
+    user-select: none;
+    letter-spacing: .04em;
+    font-variant-numeric: tabular-nums;
+}
+.kommentar .rz p { margin: 0; }
+@media (min-width: 992px) {
+    .kommentar .rz { padding-left: 3.9rem; }
+    .kommentar .rz > .n { position: absolute; left: 0; top: .35em; width: 3rem; text-align: right; }
+}
+@media (max-width: 991.98px) {
+    .kommentar .rz > .n { display: inline-block; margin-right: .55em; color: var(--k-accent); }
+}
+
+/* --- Zitate --- */
+.kommentar blockquote {
+    margin: 1.25rem 0;
+    padding: .15rem 0 .15rem 1.25rem;
+    border-left: 2px solid var(--k-accent-soft);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.03rem;
+    font-style: italic;
+    color: var(--k-ink-2);
+}
+.kommentar blockquote cite {
+    display: block;
+    font-style: normal;
+    font-size: .74rem;
+    color: var(--k-muted);
+    margin-top: .55rem;
+    letter-spacing: .03em;
+}
+
+/* --- Tabellen --- */
+.kommentar .tabelle-wrap {
+    overflow-x: auto;
+    margin: 1.6rem 0;
+    border: 1px solid var(--k-rule);
+    background: var(--k-surface);
+}
+.kommentar .kommentar-tabelle { margin-bottom: 0; font-size: .87rem; min-width: 620px; }
+.kommentar .kommentar-tabelle caption {
+    caption-side: top;
+    padding: 1rem 1.1rem .35rem;
+    font-size: .72rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--k-accent);
+}
+.kommentar .kommentar-tabelle thead th {
+    font-size: .68rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--k-muted);
+    font-weight: 500;
+    border-bottom: 1px solid var(--k-rule-2);
+    white-space: nowrap;
+}
+.kommentar .kommentar-tabelle td { vertical-align: top; }
+.kommentar .kommentar-tabelle td.num {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.kommentar .kommentar-tabelle td.ent { white-space: nowrap; color: var(--k-ink-2); }
+.kommentar .src { font-size: .84em; color: var(--k-muted); white-space: nowrap; }
+
+/* --- Verschuldenspunkte --- */
+.kommentar .sev { display: inline-flex; align-items: center; gap: .45rem; white-space: nowrap; }
+.kommentar .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block; }
+.kommentar .dot.s1 { background: var(--k-sev-1); }
+.kommentar .dot.s2 { background: var(--k-sev-2); }
+.kommentar .dot.s3 { background: var(--k-sev-3); }
+
+/* --- Verschuldensleiter --- */
+.kommentar .leiter {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin: 1.75rem 0;
+    border: 1px solid var(--k-rule);
+    background: var(--k-rule);
+}
+.kommentar .sprosse {
+    display: grid;
+    grid-template-columns: minmax(150px, 1fr) minmax(110px, auto) minmax(150px, 1.3fr);
+    gap: .9rem;
+    background: var(--k-surface);
+    padding: .85rem 1.1rem;
+    align-items: baseline;
+}
+.kommentar .sprosse.kopf { background: var(--k-surface-2); }
+.kommentar .sprosse.kopf span {
+    font-size: .68rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--k-muted);
+    font-weight: 500;
+}
+.kommentar .sprosse .grad {
+    font-weight: 600;
+    font-size: .9rem;
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+}
+.kommentar .sprosse .mass {
+    font-size: .88rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--k-accent);
+    font-weight: 500;
+}
+.kommentar .sprosse .note { font-size: .82rem; color: var(--k-muted); }
+@media (max-width: 767.98px) {
+    .kommentar .sprosse { grid-template-columns: 1fr; gap: .2rem; }
+}
+
+/* --- Befundkarten --- */
+.kommentar .befund {
+    background: var(--k-surface);
+    border: 1px solid var(--k-rule);
+    padding: 1.25rem 1.5rem;
+    margin: 1.6rem 0;
+}
+.kommentar .befund .tag {
+    font-size: .68rem;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--k-accent);
+    display: block;
+    margin-bottom: .55rem;
+}
+.kommentar .befund p { margin: 0; font-size: .95rem; color: var(--k-ink-2); }
+.kommentar .befund p + p { margin-top: .7rem; }
+
+/* --- Quellenverzeichnis --- */
+.kommentar ol.quellen {
+    list-style: decimal;
+    padding-left: 1.6rem;
+    margin: 1.35rem 0 0;
+    font-size: .88rem;
+    color: var(--k-ink-2);
+}
+.kommentar ol.quellen li {
+    padding: .45rem 0;
+    border-bottom: 1px solid var(--k-rule);
+}
+.kommentar ol.quellen li:last-child { border-bottom: none; }
+.kommentar ol.quellen .d { font-weight: 600; color: var(--k-ink); }
+
+.kommentar .kommentar-schluss {
+    margin-top: 2.5rem;
+    padding-top: 1.35rem;
+    border-top: 1px solid var(--k-rule-2);
+    font-size: .82rem;
+    color: var(--k-muted);
+}
+
+/* --- Entscheid-Links --- */
+.kommentar a {
+    color: var(--k-accent);
+    text-decoration: none;
+    border-bottom: 1px solid var(--k-accent-soft);
+}
+.kommentar a:hover,
+.kommentar a:focus-visible { border-bottom-color: var(--k-accent); }
+.kommentar a:focus-visible { outline: 2px solid var(--k-accent); outline-offset: 2px; }
+.kommentar blockquote cite a { color: var(--k-muted); border-bottom-color: var(--k-rule); }
+.kommentar blockquote cite a:hover { color: var(--k-accent); }
+.kommentar ol.quellen a.d { font-weight: 600; color: var(--k-ink); border-bottom-color: var(--k-rule-2); }
+.kommentar ol.quellen a.d:hover { color: var(--k-accent); }

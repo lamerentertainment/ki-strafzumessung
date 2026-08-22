@@ -56,6 +56,21 @@ urlpatterns = [
         views.text_strafzumessung_mit_hilfe_von_ki,
         name="text_warum",
     ),
+    path(
+        "kommentar/art-165-stgb",
+        views.kommentar_misswirtschaft,
+        name="kommentar_misswirtschaft",
+    ),
+    path(
+        "kommentar/art-166-stgb",
+        views.kommentar_buchfuehrung,
+        name="kommentar_buchfuehrung",
+    ),
+    path(
+        "kommentar/art-164-stgb",
+        views.kommentar_glaeubigerschaedigung,
+        name="kommentar_glaeubigerschaedigung",
+    ),
     path("betmdatabase", views.BetmUrteilListView.as_view(), name="betmdatabase"),
     path(
         "betmurteil/<int:pk>",

@@ -1,97 +1,107 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="{% url 'homepage' %}">KI-Strafzumessung</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPunkte"
-                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'homepage' %}">KI-Strafzumessung</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPunkte"
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-        <div class="collapse navbar-collapse" id="menuPunkte">
-            <ul class="navbar-nav d-flex">
+    <div class="collapse navbar-collapse" id="menuPunkte">
+      <ul class="navbar-nav d-flex">
 
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    Sanktionsprognose <br>
-                      und Präjudizen
-                  </a>
-                  <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <li><a class="dropdown-item" href="{% url 'prognose' %}">bei Vermögensdelikt</a></li>
-                    <li><a class="dropdown-item" href="{% url 'betm_prognose' %}">bei Betm-Delikt</a></li>
-                    <li><a class="dropdown-item" href="{% url 'sexual_prognose' %}">bei Sexualdelikt</a></li>
-                  </ul>
-                </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+            aria-expanded="false">
+            Sanktionsprognose <br>
+            und Präjudizen
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="{% url 'prognose' %}">bei Vermögensdelikt</a></li>
+            <li><a class="dropdown-item" href="{% url 'betm_prognose' %}">bei Betm-Delikt</a></li>
+            <li><a class="dropdown-item" href="{% url 'sexual_prognose' %}">bei Sexualdelikt</a></li>
+          </ul>
+        </li>
 
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    Datenbanken
-                  </a>
-                  <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <li><a class="dropdown-item" href="{% url 'database' %}">Datenbank der Vermögensdelikte</a></li>
-                    <li><a class="dropdown-item" href="{% url 'betmdatabase' %}">Datenbank der Betm-Delikte</a></li>
-                    <li><a class="dropdown-item" href="{% url 'sexualdatabase' %}">Datenbank der Sexualdelikte</a></li>
-                  </ul>
-                </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+            aria-expanded="false">
+            Datenbanken
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="{% url 'database' %}">Datenbank der Vermögensdelikte</a></li>
+            <li><a class="dropdown-item" href="{% url 'betmdatabase' %}">Datenbank der Betm-Delikte</a></li>
+            <li><a class="dropdown-item" href="{% url 'sexualdatabase' %}">Datenbank der Sexualdelikte</a></li>
+          </ul>
+        </li>
 
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    KI-Modelle <br>
-                      Evaluation
-                  </a>
-                  <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <li><a class="dropdown-item" href="{% url 'ws_evaluation' %}">betr. Vermögensdelikte</a></li>
-                    <li><a class="dropdown-item " href="{% url 'betm_evaluation' %}">betr. Betm-Delikte</a></li>
-                  </ul>
-                </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+            aria-expanded="false">
+            KI-Modelle <br>
+            Evaluation
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="{% url 'ws_evaluation' %}">betr. Vermögensdelikte</a></li>
+            <li><a class="dropdown-item " href="{% url 'betm_evaluation' %}">betr. Betm-Delikte</a></li>
+          </ul>
+        </li>
 
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownKommentar" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    Gesetzeskommentar <br>
-                      zur Strafzumessung
-                  </a>
-                  <ul class="dropdown-menu" aria-labelledby="navbarDropdownKommentar">
-                    <li><a class="dropdown-item" href="{% url 'kommentar_glaeubigerschaedigung' %}">Art. 164 StGB &ndash; Gl&auml;ubigersch&auml;digung</a></li>
-                    <li><a class="dropdown-item" href="{% url 'kommentar_misswirtschaft' %}">Art. 165 StGB &ndash; Misswirtschaft</a></li>
-                    <li><a class="dropdown-item" href="{% url 'kommentar_buchfuehrung' %}">Art. 166 StGB &ndash; Unterlassung der Buchf&uuml;hrung</a></li>
-                  </ul>
-                </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownKommentar" role="button"
+            data-bs-toggle="dropdown" aria-expanded="false">
+            Strafzumessung <br>
+            Praxiskommentar
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdownKommentar">
+            <li><a class="dropdown-item" href="{% url 'kommentar_glaeubigerschaedigung' %}">Art. 164 StGB &ndash;
+                Gl&auml;ubigersch&auml;digung</a></li>
+            <li><a class="dropdown-item" href="{% url 'kommentar_misswirtschaft' %}">Art. 165 StGB &ndash;
+                Misswirtschaft</a></li>
+            <li><a class="dropdown-item" href="{% url 'kommentar_buchfuehrung' %}">Art. 166 StGB &ndash; Unterlassung
+                der Buchf&uuml;hrung</a></li>
+          </ul>
+        </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'text_funktionsweise' %}">
-                        Wie es <br>
-                        funktioniert
-                    </a>
-                </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'text_funktionsweise' %}">
+            Wie es <br>
+            funktioniert
+          </a>
+        </li>
 
-                {% if request.user.is_superuser == True %}
-                <li class="nav-item dropdown">
-                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    Dev-Section
-                  </a>
-                  <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <li><a class="dropdown-item" href="{% url 'dev' %}">betr. Vermögensdelikte</a></li>
-                    <li><a class="dropdown-item" href="{% url 'betm_dev' %}">betr. Betm-Delikte</a></li>
-                    <li><a class="dropdown-item" href="{% url 'sexual_kimodelle_neu_generieren' %}">Sexualdelikt KI-Modelle neu generieren</a></li>
-                    <li><a class="dropdown-item" href="{% url 'strafrechtlicher_sachverhalt' %}">Sachverhalt mit GenAI vergleichen</a></li>
-                  </ul>
-                </li>
-                {% endif %}
+        {% if request.user.is_superuser == True %}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
+            aria-expanded="false">
+            Dev-Section
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="{% url 'dev' %}">betr. Vermögensdelikte</a></li>
+            <li><a class="dropdown-item" href="{% url 'betm_dev' %}">betr. Betm-Delikte</a></li>
+            <li><a class="dropdown-item" href="{% url 'sexual_kimodelle_neu_generieren' %}">Sexualdelikt KI-Modelle neu
+                generieren</a></li>
+            <li><a class="dropdown-item" href="{% url 'strafrechtlicher_sachverhalt' %}">Sachverhalt mit GenAI
+                vergleichen</a></li>
+          </ul>
+        </li>
+        {% endif %}
 
-                {% if request.user.is_superuser == False %}
-                <li class="nav-item ms-auto">
-                    <a class="nav-link" href="{% url 'login' %}">
-                        log in
-                    </a>
-                </li>
-                {% endif %}
-                {% if request.user.is_superuser == True %}
-                <li class="nav-item ms-auto">
-                    <a class="nav-link" href="{% url 'logout' %}">
-                        log out
-                    </a>
-                </li>
-                {% endif %}
+        {% if request.user.is_superuser == False %}
+        <li class="nav-item ms-auto">
+          <a class="nav-link" href="{% url 'login' %}">
+            log in
+          </a>
+        </li>
+        {% endif %}
+        {% if request.user.is_superuser == True %}
+        <li class="nav-item ms-auto">
+          <a class="nav-link" href="{% url 'logout' %}">
+            log out
+          </a>
+        </li>
+        {% endif %}
 
-            </ul>
-        </div>
+      </ul>
     </div>
+  </div>
 </nav>

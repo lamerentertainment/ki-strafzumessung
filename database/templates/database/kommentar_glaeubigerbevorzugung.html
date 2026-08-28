@@ -1,0 +1,900 @@
+{% extends './base.html' %}
+{% load static %}
+
+{% block body %}
+
+<div class="kommentar container">
+    <div class="row">
+        <div class="col-md-11 mx-auto">
+
+            <div class="befund">
+                <span class="tag">Hinweis</span>
+                <p>Nachfolgend wird ein Textformat getestet. Der nachfolgende Text ist mit k&uuml;nstlicher
+                    Intelligenz (Claude Opus 5) erstellt worden und bislang nicht verifiziert worden.</p>
+            </div>
+
+            <header class="kommentar-kopf">
+                <p class="kommentar-eyebrow">Kommentar zur Strafzumessung</p>
+                <h1 class="kommentar-titel">Bevorzugung eines Gl&auml;ubigers</h1>
+                <p class="kommentar-norm">Art. 167 StGB &ndash; Freiheitsstrafe bis zu drei Jahren oder Geldstrafe</p>
+                <div class="kommentar-meta">
+                    <span>Auswertungsstand <b>28.08.2026</b></span>
+                    <span>Ausgewertete Entscheide <b>32</b></span>
+                    <span>Belegte Einzelstrafen <b>12</b></span>
+                    <span>Status <b>Prototyp</b></span>
+                </div>
+            </header>
+
+            <section class="kommentar-methode">
+                <h2>Grundlage und Grenzen dieser Auswertung</h2>
+                <p>Ausgangspunkt ist eine Volltextrecherche &uuml;ber den Bestand publizierter Schweizer Entscheide auf
+                    <a href="https://entscheidsuche.ch/" target="_blank" rel="noopener">entscheidsuche.ch</a>.
+                    120 deutschsprachige Entscheide nennen &laquo;Bevorzugung eines Gl&auml;ubigers&raquo;, 103 zitieren
+                    &laquo;Art.&nbsp;167 StGB&raquo; w&ouml;rtlich, 15 enthalten die Schuldspruchformel
+                    &laquo;Bevorzugung eines Gl&auml;ubigers im Sinne von Art.&nbsp;167&raquo;. Der Suchbegriff
+                    &laquo;Gl&auml;ubigerbevorzugung&raquo; liefert zwar 208 Treffer, betrifft aber weit
+                    &uuml;berwiegend
+                    das Steuererlass- und Betreibungsrecht (Existenzminimum, Art.&nbsp;167a DBG) und nicht den
+                    Straftatbestand.
+                </p>
+                <p>32 Entscheide wurden im Volltext ausgewertet. In 13 Verfahren erging ein Schuldspruch nach
+                    Art.&nbsp;167 StGB; 9 davon weisen eine bezifferte Einzel- oder Einsatzstrafe aus (zusammen 12
+                    Werte), in 4 weiteren ist nur die Gesamtstrafe publiziert. S&auml;mtliche Zahlenangaben wurden gegen
+                    den Urteilstext r&uuml;ckgepr&uuml;ft, alle Entscheide sind verlinkt.</p>
+                <p><strong>Gegenprobe am Dispositiv:</strong> Jeder Strafwert wurde zus&auml;tzlich gegen das Dispositiv
+                    desselben Urteils gespiegelt &ndash; also gegen die Sanktion, die dort gegen dieselbe Person
+                    tats&auml;chlich ausgesprochen wurde. Das ist bei Art.&nbsp;167 StGB zweimal entscheidend: Einmal,
+                    weil die Norm meist als Nebendelikt asperiert wird und der Zuschlag stark von der Einzelstrafe
+                    abweicht; und einmal, weil der aktuellste und h&ouml;chstdotierte Fall der Rubrik &ndash; das
+                    Berufungsurteil des Obergerichts Z&uuml;rich vom 18.&nbsp;M&auml;rz 2025 &ndash; vom Bundesgericht
+                    ein Jahr sp&auml;ter aufgehoben wurde (N&nbsp;13). Die Tabellen weisen das aus.</p>
+                <p><strong>Grenzen:</strong> Der Korpus ist deutschsprachig; die franz&ouml;sisch- und
+                    italienischsprachige Praxis (&laquo;avantages accord&eacute;s &agrave; certains
+                    cr&eacute;anciers&raquo;)
+                    ist nicht erfasst. Die Basis ist klein &ndash; 12 belegte Einzelstrafen sind der schmalste Bestand
+                    dieser Rubrik. Daf&uuml;r verteilt er sich mit ZH, NW, GR, BL und LU breiter &uuml;ber die Kantone
+                    als bei den &uuml;brigen Konkursdelikten. Die Befunde beschreiben eine Tendenz in den ausgewerteten
+                    Entscheiden, nicht eine repr&auml;sentative Gesamtstatistik.</p>
+            </section>
+
+            <h2 class="kommentar-teil"><span class="pn">A</span>Einordnung: ein Tatbestand mit hoher Freispruchquote
+            </h2>
+
+            <div class="rz"><span class="n">N 1</span>
+                <p>Art.&nbsp;167 StGB erfasst den Schuldner, der <em>im Bewusstsein seiner Zahlungsunf&auml;higkeit</em>
+                    und <em>in der Absicht, einzelne seiner Gl&auml;ubiger zum Nachteil anderer zu bevorzugen</em>,
+                    darauf abzielende Handlungen vornimmt &ndash; namentlich nicht verfallene Schulden bezahlt, eine
+                    verfallene Schuld anders als durch &uuml;bliche Zahlungsmittel tilgt oder eine Schuld ohne
+                    Verpflichtung aus eigenen Mitteln sicherstellt. Wie bei den &uuml;brigen Konkursdelikten tritt die
+                    Strafbarkeit erst ein, wenn &uuml;ber den Schuldner der Konkurs er&ouml;ffnet oder gegen ihn ein
+                    Verlustschein ausgestellt worden ist. Gesch&uuml;tzt ist der Anspruch der Gl&auml;ubiger auf
+                    Gleichbehandlung nach der gesetzlichen Regelung der Zwangsvollstreckung
+                    (<a href="https://entscheidsuche.ch/docs/CH_BGE/CH_BGE_006_BGE-117-IV-23_1991-01-22.html"
+                        target="_blank" rel="noopener">BGE 117 IV 23</a> E.&nbsp;4b).</p>
+            </div>
+
+            <div class="rz"><span class="n">N 2</span>
+                <p>F&uuml;r die Strafzumessung ist eine Vorbemerkung unerl&auml;sslich, die bei Art.&nbsp;163&ndash;166
+                    StGB fehlt: <strong>Art.&nbsp;167 StGB scheitert in der ausgewerteten Praxis auff&auml;llig oft,
+                        bevor
+                        es &uuml;berhaupt zu einer Strafzumessung kommt.</strong> Von den 32 ausgewerteten Entscheiden
+                    endeten
+                    sechs mit einem Freispruch und drei mit einer Einstellung wegen Verjährung. Wer die
+                    Bandbreite der Strafwerte kennt, kennt deshalb erst die halbe Praxis; der eigentliche Hebel liegt
+                    h&auml;ufig im Schuld-, nicht im Strafpunkt (Abschnitt&nbsp;C).</p>
+            </div>
+
+            <div class="rz"><span class="n">N 3</span>
+                <p>Der Grund liegt in der Konstruktion der Norm. Das Bundesgericht mahnt seit
+                    <a href="https://entscheidsuche.ch/docs/CH_BGE/CH_BGE_006_BGE-117-IV-23_1991-01-22.html"
+                        target="_blank" rel="noopener">BGE 117 IV 23</a>
+                    ausdr&uuml;cklich zur Zur&uuml;ckhaltung: Die generalklauselartige Tatbestandsvariante lehnt sich an
+                    die Absichtsanfechtung nach Art.&nbsp;288 SchKG an, und &laquo;nicht alles, was paulianisch
+                    anfechtbar
+                    ist, braucht strafbar zu sein&raquo;. Verlangt wird eine <em>inkongruente Deckung</em> und, wo eine
+                    kongruente Deckung vorliegt, zus&auml;tzlich, dass die Bevorzugung &laquo;eine krasse und
+                    ungerechtfertigte Ungleichheit zwischen den Gl&auml;ubigern schafft&raquo;.
+                </p>
+            </div>
+
+            <blockquote>Dem zahlungsunf&auml;higen Schuldner ist es also nicht schlechterdings verwehrt, seinen
+                Verbindlichkeiten nachzukommen. Strafbar ist nur die ungerechtfertigte Schm&auml;lerung der Basis
+                f&uuml;r
+                die Befriedigung der &uuml;brigen Gl&auml;ubiger (STRATENWERTH, op.cit., S.&nbsp;310).
+                <cite><a href="https://entscheidsuche.ch/docs/CH_BGE/CH_BGE_006_BGE-117-IV-23_1991-01-22.html"
+                        target="_blank" rel="noopener">BGE 117 IV 23 E. 4b</a></cite>
+            </blockquote>
+
+            <h2 class="kommentar-teil"><span class="pn">B</span>Die strafzumessungsrelevanten Merkmale</h2>
+
+            <h3>I. Selbstbeg&uuml;nstigung statt Fremdbeg&uuml;nstigung</h3>
+
+            <div class="rz"><span class="n">N 4</span>
+                <p>Das durchg&auml;ngig gewichtigste Merkmal der objektiven Tatschwere ist die Frage, <em>wem</em> die
+                    Bevorzugung zugutekommt. In allen ausgewerteten Verfahren mit einem Strafwert oberhalb von 60
+                    Tagess&auml;tzen hat der T&auml;ter sich selbst oder eine von ihm beherrschte Gesellschaft
+                    befriedigt. Das Obergericht Z&uuml;rich bezeichnet die R&uuml;ckzahlung eines
+                    Aktion&auml;rsdarlehens
+                    durch den Alleinaktion&auml;r als &laquo;klassischen Fall&raquo; der Norm &ndash; und legt
+                    daf&uuml;r
+                    mit 300 Tagess&auml;tzen den h&ouml;chsten belegten Wert dieser Auswertung fest.</p>
+            </div>
+
+            <blockquote>Vielmehr handelt es sich vorliegend geradezu um einen klassischen Fall einer
+                Gl&auml;ubigerbevorzugung im Sinne einer Selbstbeg&uuml;nstigung. Der Beschuldigte,
+                Gesch&auml;ftsf&uuml;hrer und Alleinaktion&auml;r der C._____ AG, brachte vor dem sich schon seit
+                Monaten
+                deutlich abzeichnenden finanziellen Kollaps der C._____ AG seine eigenen Sch&auml;fchen auf Kosten der
+                Gl&auml;ubiger ins Trockene.
+                <cite><a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB190523_2021-04-22.pdf"
+                        target="_blank" rel="noopener">Obergericht Z&uuml;rich SB190523 vom 22.04.2021</a></cite>
+            </blockquote>
+
+            <div class="rz"><span class="n">N 5</span>
+                <p>Das Kantonsgericht Graub&uuml;nden formuliert dasselbe als ausdr&uuml;cklichen
+                    Straferh&ouml;hungsgrund: Erschwerend wirke, dass der T&auml;ter &laquo;nicht irgendeinen
+                    Gl&auml;ubiger bevorzugt hat, sondern eine Gesellschaft, die von ihm absolut beherrscht wird&raquo;
+                    &ndash; er besass 99&nbsp;% der Stammanteile &ndash;, &laquo;so dass die Bevorzugung offensichtlich
+                    schlussendlich ihm selbst zu Gute gekommen ist&raquo;
+                    (<a href="https://entscheidsuche.ch/docs/GR_Gerichte/GR_KG_004_SB-2008-13_2008-06-26.pdf"
+                        target="_blank" rel="noopener">KG GR SB 2008 13</a>).</p>
+            </div>
+
+            <div class="rz"><span class="n">N 6</span>
+                <p>Umgekehrt mindert ein <em>fremdn&uuml;tziges</em> Motiv das Verschulden sp&uuml;rbar. Im Fall
+                    <a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB140131_2014-09-12.pdf"
+                        target="_blank" rel="noopener">OG ZH SB140131</a>
+                    trennt das Gericht die beiden Tathandlungen desselben Beschuldigten sauber: Die Zahlungen an eine
+                    Bauunternehmung wogen leichter, weil sie angedrohte Bauhandwerkerpfandrechte abwenden sollten; die
+                    Verrechnung eigener Lohnanspr&uuml;che von Fr.&nbsp;20'000.&ndash; mit dem Warenlager wog schwerer.
+                </p>
+            </div>
+
+            <blockquote>Sein Beweggrund war jedoch in erster Linie, die angedrohten Bauhandwerkerpfandrechte zu
+                verhindern. Die Begleichung seiner eigenen aufgelaufenen Lohnanspr&uuml;che im Betrag von
+                Fr.&nbsp;20'000.&ndash; mittels Ver&auml;usserung des Warenlagers zeugt hingegen von einem eigenen
+                finanziellen Interesse, was leicht verschuldenserh&ouml;hend ins Gewicht f&auml;llt.
+                <cite><a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB140131_2014-09-12.pdf"
+                        target="_blank" rel="noopener">Obergericht Z&uuml;rich SB140131 vom 12.09.2014</a></cite>
+            </blockquote>
+
+            <h3>II. Der Zeitpunkt der Tathandlung</h3>
+
+            <div class="rz"><span class="n">N 7</span>
+                <p>Das zweite verl&auml;sslich benannte Merkmal ist die zeitliche N&auml;he zur Bilanzdeponierung. Je
+                    n&auml;her die Zahlung am Konkursbegehren liegt, desto schwerer wiegt sie &ndash; nicht als
+                    Beweisindiz f&uuml;r den Vorsatz, sondern als eigenst&auml;ndiger Verschuldensfaktor. Das
+                    Obergericht Z&uuml;rich st&uuml;tzte darauf 2025 eine Einsatzstrafe von 120 Tagess&auml;tzen: Die
+                    &Uuml;berweisung erfolgte am selben Tag, an dem die Insolvenz erkl&auml;rt und das Konkursbegehren
+                    gestellt wurde, mithin &laquo;praktisch zum letztm&ouml;glichen Zeitpunkt&raquo;.</p>
+            </div>
+
+            <h3>III. Die Wirkung auf die &uuml;brigen Gl&auml;ubiger</h3>
+
+            <div class="rz"><span class="n">N 8</span>
+                <p>Nicht der Deliktsbetrag als solcher, sondern sein Verh&auml;ltnis zur verbliebenen Vermögensmasse
+                    pr&auml;gt die Bewertung. Im Fall
+                    <a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240129_2025-03-18.pdf"
+                        target="_blank" rel="noopener">OG ZH SB240129</a>
+                    hebt das Gericht hervor, dass der Kontostand unmittelbar vor der Transaktion Fr.&nbsp;44'544.84
+                    betrug und der Gesellschaft mit der &Uuml;berweisung von Fr.&nbsp;42'810.75 &laquo;im Ergebnis
+                    praktisch s&auml;mtliche liquiden Mittel entzogen&raquo; wurden. Das Kantonsgericht Graub&uuml;nden
+                    wertet erh&ouml;hend, dass die &uuml;brigen Gl&auml;ubiger &laquo;insbesondere auch die
+                    Gl&auml;ubiger der ersten Klasse&raquo; deswegen einen Totalverlust erlitten
+                    (<a href="https://entscheidsuche.ch/docs/GR_Gerichte/GR_KG_004_SB-2008-13_2008-06-26.pdf"
+                        target="_blank" rel="noopener">SB 2008 13</a>).
+                </p>
+            </div>
+
+            <div class="rz"><span class="n">N 9</span>
+                <p>Dass die Bevorzugung mangels Haftungssubstrat ohnehin folgenlos geblieben w&auml;re, entlastet
+                    nicht. Das Obergericht Z&uuml;rich verwirft den Einwand, der Schutzzweck sei nur
+                    &laquo;hypothetisch&raquo; tangiert worden, weil die &uuml;brigen Gl&auml;ubiger auch sonst leer
+                    ausgegangen w&auml;ren, als &laquo;verfehlt&raquo;
+                    (<a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB190523_2021-04-22.pdf"
+                        target="_blank" rel="noopener">SB190523</a>).
+                    Das entspricht der Tatbestandsstruktur: Verlangt ist eine <em>darauf abzielende</em> Handlung,
+                    nicht ein eingetretener Schaden.</p>
+            </div>
+
+            <h3>IV. Der Deliktsbetrag &ndash; ein degressiver, schwacher Ma&szlig;stab</h3>
+
+            <div class="rz"><span class="n">N 10</span>
+                <p>Die belegten Werte reichen von Fr.&nbsp;1'217.53 bis Fr.&nbsp;150'000.&ndash;. Der Betrag
+                    wirkt zwar in dieselbe Richtung, aber deutlich <strong>unterproportional</strong>: Bezogen auf je
+                    Fr.&nbsp;10'000.&ndash; Deliktsbetrag reicht die Strafe von 82 Tagess&auml;tzen (bei
+                    Fr.&nbsp;1'217.&ndash;) bis zu 3 Tagess&auml;tzen (bei Fr.&nbsp;91'000.&ndash;) &ndash; ein Faktor
+                    von rund 25. Wie bei Art.&nbsp;163 StGB taugt der Betrag deshalb nicht als prim&auml;rer
+                    Prognosewert.</p>
+            </div>
+
+            <div class="befund">
+                <span class="tag">Befund</span>
+                <p>Zwei F&auml;lle zeigen die Streuung unmittelbar: <strong>Fr.&nbsp;91'000.&ndash;</strong>
+                    (Mietzinsforderung, getilgt durch vier Fahrzeuge) f&uuml;hrten zu <strong>30
+                        Tagess&auml;tzen</strong>
+                    (<a href="https://entscheidsuche.ch/docs/BL_Gerichte/BL_KG_004_460-11-229_2012-08-07.pdf"
+                        target="_blank" rel="noopener">KG BL 460 11 229</a>),
+                    <strong>Fr.&nbsp;14'256.&ndash;</strong> (Warenlager, verrechnet mit Kontokorrent) zu ebenfalls
+                    <strong>60 Tagess&auml;tzen</strong>
+                    (<a href="https://entscheidsuche.ch/docs/GR_Gerichte/GR_KG_004_SB-2008-13_2008-06-26.pdf"
+                        target="_blank" rel="noopener">KG GR SB 2008 13</a>) &ndash;
+                    also das Doppelte bei einem Sechstel des Betrags.
+                </p>
+                <p>Brauchbar ist der Betrag hingegen als <em>Untergrenze</em>: Wo er unter rund
+                    Fr.&nbsp;3'000.&ndash; liegt, bewerten die Gerichte das Tatverschulden &laquo;im untersten
+                    Bereich&raquo; und setzen 10 Tagess&auml;tze ein
+                    (<a href="https://entscheidsuche.ch/docs/NW_Gerichte/NW_OG_001_35548_2024-06-11.pdf" target="_blank"
+                        rel="noopener">OG NW SA 23 3</a>).</p>
+            </div>
+
+            <h3>V. Absichtsform</h3>
+
+            <div class="rz"><span class="n">N 11</span>
+                <p>Der subjektive Tatbestand verlangt Vorsatz sowie die Absicht, einzelne Gl&auml;ubiger zum Nachteil
+                    anderer zu bevorzugen. F&uuml;r die Strafzumessung ist die Abstufung innerhalb der Absicht
+                    erheblich: Wo dem T&auml;ter nur <em>Eventualabsicht</em> attestiert wird, senken die Gerichte die
+                    Strafe sp&uuml;rbar. Das Obergericht Z&uuml;rich reduzierte deswegen von 120 auf 100
+                    Tagess&auml;tze, weil es dem Ehepaar in erster Linie um die Verg&uuml;tung tats&auml;chlich
+                    erbrachter Leistungen ging und ihm hinsichtlich der Bevorzugung &laquo;lediglich eine
+                    Eventualabsicht attestiert werden kann&raquo;
+                    (<a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240129_2025-03-18.pdf"
+                        target="_blank" rel="noopener">SB240129</a>).
+                    Der Abschlag betrug rund einen Sechstel.</p>
+            </div>
+
+            <div class="rz"><span class="n">N 12</span>
+                <p>Ein h&ouml;herer Ausbildungsstand des T&auml;ters wirkt in die Gegenrichtung: Dass der Beschuldigte
+                    &uuml;ber ein &Ouml;konomiestudium und Weiterbildungen im Sanierungsbereich verf&uuml;gte und
+                    deshalb &uuml;ber seine Pflichten bei Eintritt der Zahlungsunf&auml;higkeit &laquo;bestens im Bilde
+                    war&raquo;, begr&uuml;ndete dort den direkten Vorsatz hinsichtlich der Zahlungsunf&auml;higkeit
+                    (ebd.). Dasselbe Muster erscheint in
+                    <a href="https://entscheidsuche.ch/docs/NW_Gerichte/NW_OG_001_35548_2024-06-11.pdf" target="_blank"
+                        rel="noopener">OG NW SA 23 3</a>:
+                    Der Beschuldigte war von einem Berater ausdr&uuml;cklich auf die Problematik von
+                    Darlehens&uuml;bernahmen zwischen nahestehenden Gesellschaften hingewiesen worden und lie&szlig;
+                    die Verrechnungen dennoch ohne weitere Abkl&auml;rungen vornehmen.
+                </p>
+            </div>
+
+            <h2 class="kommentar-teil"><span class="pn">C</span>Wo der Tatbestand scheitert</h2>
+
+            <h3>I. Kongruente Deckung: Eventualabsicht gen&uuml;gt nicht</h3>
+
+            <div class="rz"><span class="n">N 13</span>
+                <p>Der praktisch wichtigste Befund dieser Auswertung ist zugleich der j&uuml;ngste. Mit Urteil vom
+                    12.&nbsp;M&auml;rz 2026 hob das Bundesgericht die beiden Z&uuml;rcher Verurteilungen aus N&nbsp;7
+                    und N&nbsp;11 auf. Die Beschuldigten hatten ihr Mandatshonorar &uuml;ber die eigene Gesellschaft
+                    bezogen; die Forderung war nach Art.&nbsp;394 OR bereits von Gesetzes wegen f&auml;llig geworden,
+                    nicht erst mit der Rechnungsstellung. Damit lag eine <em>kongruente</em> Deckung mit
+                    &uuml;blichen Zahlungsmitteln vor, kein Regelbeispiel; und f&uuml;r die Generalklausel fehlte die
+                    Gleichwertigkeit im Unrechtsgehalt.</p>
+            </div>
+
+            <blockquote>Liegt indes ein Fall kongruenter Deckung vor, erfordert der subjektive Tatbestand (direkte)
+                Absicht
+                <cite><a href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-481-2025_2026-03-12.html"
+                        target="_blank" rel="noopener">BGer 6B_481/2025 und 6B_491/2025 vom 12.03.2026, E.
+                        3.3.5</a></cite>
+            </blockquote>
+
+            <div class="befund">
+                <span class="tag">Befund</span>
+                <p>Aus dieser Rechtsprechung folgt ein zweistufiges Pr&uuml;fschema, das der Verteidigung den
+                    wirksamsten Ansatzpunkt gibt:</p>
+                <p><strong>1.</strong> War die getilgte Forderung f&auml;llig und wurde sie mit &uuml;blichen
+                    Zahlungsmitteln beglichen? Dann ist der Tatbestand &laquo;generell nicht erf&uuml;llt&raquo;, es sei
+                    denn, die Generalklausel greife ausnahmsweise ein.<br>
+                    <strong>2.</strong> Greift die Generalklausel? Dann gen&uuml;gt <em>Eventualabsicht nicht mehr</em>;
+                    verlangt ist direkte Bevorzugungsabsicht. Der Nachweis dieser inneren Tatsache ist die
+                    Hauptschwierigkeit der Anklage.
+                </p>
+            </div>
+
+            <div class="rz"><span class="n">N 14</span>
+                <p>Die F&auml;lligkeit ist damit der entscheidende Angelpunkt &ndash; und sie richtet sich nach dem
+                    Obligationenrecht, nicht nach dem Verhalten der Parteien. Das Obergericht Aargau sprach 2025 aus
+                    genau diesem Grund frei: Ein Darlehen ohne vereinbarten R&uuml;ckzahlungstermin ist nach
+                    Art.&nbsp;318 OR innert sechs Wochen ab der ersten Aufforderung zur&uuml;ckzuzahlen; im Tatzeitpunkt
+                    war es daher l&auml;ngst verfallen
+                    (<a href="https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2024-11_2025-01-08.pdf"
+                        target="_blank" rel="noopener">OG AG SST.2024.11</a>;
+                    die Beschwerde des Verurteilten gegen die &uuml;brigen Schuldspr&uuml;che blieb erfolglos,
+                    <a href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_007_7B-763-2025_2026-06-09.html"
+                        target="_blank" rel="noopener">BGer 7B_763/2025</a>).
+                </p>
+            </div>
+
+            <div class="rz"><span class="n">N 15</span>
+                <p>Auf der Gegenseite gelten als <strong>unübliche Zahlungsmittel</strong> nach st&auml;ndiger Praxis
+                    die Hingabe von Waren oder Forderungen an Zahlungs statt und die Verrechnung des Gegenwerts von
+                    Warenverk&auml;ufen mit bestehenden Schulden
+                    (<a href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-361-2017_2017-11-02.html"
+                        target="_blank" rel="noopener">BGer 6B_361/2017</a>
+                    E.&nbsp;1.3.1). S&auml;mtliche Verurteilungen dieser Auswertung betreffen im Kern eine
+                    <em>Verrechnungs- oder Sachwertkonstruktion</em>: vier Fahrzeuge f&uuml;r Mietzinsen (KG BL), ein
+                    Rennfahrzeug an die eigene Schwestergesellschaft (BezG Willisau), Warenlager gegen Kontokorrent
+                    (KG GR, KG BL), r&uuml;ckwirkende Darlehensverrechnungen zwischen nahestehenden Gesellschaften
+                    (OG NW). Die schlichte Geld&uuml;berweisung f&uuml;hrt praktisch nie zum Schuldspruch.
+                </p>
+            </div>
+
+            <h3>II. Verj&auml;hrung</h3>
+
+            <div class="rz"><span class="n">N 16</span>
+                <p>Art.&nbsp;167 StGB verj&auml;hrt als Vergehen mit Strafdrohung bis zu drei Jahren nach zehn Jahren
+                    (Art.&nbsp;97 Abs.&nbsp;1 lit.&nbsp;c StGB). Die Frist l&auml;uft nach Art.&nbsp;98 StGB ab der
+                    Tathandlung, nicht ab Eintritt der objektiven Strafbarkeitsbedingung &ndash; die
+                    Konkurser&ouml;ffnung
+                    liegt aber in aller Regel deutlich sp&auml;ter, und das Strafverfahren beginnt erst danach. In drei
+                    der ausgewerteten Verfahren scheiterte die Verfolgung von Art.&nbsp;167 StGB daran: f&ouml;rmlich
+                    eingestellt in
+                    <a href="https://entscheidsuche.ch/docs/BL_Gerichte/BL_KG_004_460-19-151_2019-11-08.pdf"
+                        target="_blank" rel="noopener">KG BL 460 19 151</a>
+                    und &ndash; bereits durch die Vorinstanz &ndash;
+                    <a href="https://entscheidsuche.ch/docs/GR_Gerichte/GR_KG_004_SK1-2012-45_2014-06-18.pdf"
+                        target="_blank" rel="noopener">KG GR SK1 2012 45</a>;
+                    in
+                    <a href="https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_005_SK-2019-318_2020-06-25.pdf"
+                        target="_blank" rel="noopener">OG BE SK 2019 318</a>
+                    erwog die Kammer, der Tatbestand sei &laquo;infolge Verj&auml;hrung nicht mehr zu
+                    pr&uuml;fen&raquo;.
+                </p>
+            </div>
+
+            <div class="rz"><span class="n">N 17</span>
+                <p>Wo die Verj&auml;hrung nicht eintritt, wirkt sie h&auml;ufig immer noch strafmindernd. Sind zwei
+                    Drittel der Frist verstrichen &ndash; bei Art.&nbsp;167 StGB also rund sechs Jahre und acht Monate
+                    &ndash;, ist Art.&nbsp;48 lit.&nbsp;e StGB zwingend zu beachten. Das Obergericht Nidwalden senkte
+                    die Gesamtgeldstrafe deswegen um 20 Tagess&auml;tze von 120 auf 100, obwohl die Frist bei der
+                    gleichzeitig beurteilten Misswirtschaft noch nicht so weit fortgeschritten war
+                    (<a href="https://entscheidsuche.ch/docs/NW_Gerichte/NW_OG_001_35548_2024-06-11.pdf" target="_blank"
+                        rel="noopener">OG NW SA 23 3</a>).</p>
+            </div>
+
+            <h3>III. Sonderdelikt: der Extraneus profitiert von Art.&nbsp;26 StGB</h3>
+
+            <div class="rz"><span class="n">N 18</span>
+                <p>Die Gl&auml;ubigerbevorzugung ist ein echtes Sonderdelikt; T&auml;ter kann nur der
+                    zahlungsunf&auml;hige
+                    Schuldner sein, bei juristischen Personen &uuml;ber Art.&nbsp;29 StGB dessen Organ. Wer die
+                    besondere Pflichtstellung nicht hat, kann nur Teilnehmer sein &ndash; und wird nach Art.&nbsp;26
+                    StGB <em>obligatorisch</em> milder bestraft. Das Kantonsgericht Basel-Landschaft beziffert diesen
+                    Unterschied ausnahmsweise: Erstinstanzlich war der Beschuldigte als Anstifter mit 25
+                    Tagess&auml;tzen bestraft worden; nachdem ihn das Kantonsgericht als T&auml;ter qualifizierte,
+                    <em>&laquo;f&auml;llt die obligatorische Strafmilderung nach Art.&nbsp;26 StGB weg, weshalb die
+                        Geldstrafe in W&uuml;rdigung der gesamten Umst&auml;nde auf 30 Tagess&auml;tze angemessen zu
+                        erh&ouml;hen ist&raquo;</em>
+                    (<a href="https://entscheidsuche.ch/docs/BL_Gerichte/BL_KG_004_460-11-229_2012-08-07.pdf"
+                        target="_blank" rel="noopener">460 11 229</a>).
+                    Der Unterschied betrug einen Sechstel &ndash; ein bescheidener Wert f&uuml;r einen zwingenden
+                    Milderungsgrund.
+                </p>
+            </div>
+
+            <h2 class="kommentar-teil"><span class="pn">D</span>Strafart, Vollzug und Verbindungsbusse</h2>
+
+            <div class="rz"><span class="n">N 19</span>
+                <p>Wo Art.&nbsp;167 StGB die Strafe pr&auml;gt, ergeht ausnahmslos eine <strong>Geldstrafe</strong>,
+                    und sie wird ausnahmslos <strong>bedingt</strong> ausgesprochen. Eine Freiheitsstrafe erscheint nur
+                    dort, wo der Tatbestand in ein bereits freiheitsstrafw&uuml;rdiges B&uuml;ndel asperiert wird
+                    (Tabelle&nbsp;2). Der dreij&auml;hrige Strafrahmen bleibt damit weitgehend ungenutzt: Der
+                    h&ouml;chste belegte eigenst&auml;ndige Wert betr&auml;gt 300 Tagess&auml;tze.</p>
+            </div>
+
+            <div class="befund">
+                <span class="tag">Achtung: ge&auml;ndertes Recht</span>
+                <p>Die hohen Werte dieser Auswertung sind unter altem Recht ergangen. Das H&ouml;chstma&szlig; der
+                    Geldstrafe lag nach <strong>aArt.&nbsp;34 Abs.&nbsp;1 StGB</strong> bei 360 Tagess&auml;tzen; seit
+                    dem 1.&nbsp;Januar 2018 betr&auml;gt es <strong>180 Tagess&auml;tze</strong>
+                    (Art.&nbsp;34 Abs.&nbsp;1 StGB, Fassung gem&auml;ss der Revision des Sanktionenrechts).</p>
+                <p>Praktisch heisst das: Die Einzelstrafe von 300 Tagess&auml;tzen aus
+                    <a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB190523_2021-04-22.pdf"
+                        target="_blank" rel="noopener">OG ZH SB190523</a>
+                    und die Gesamtgeldstrafen von 360 Tagess&auml;tzen aus
+                    <a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB210463_2023-12-18.pdf"
+                        target="_blank" rel="noopener">SB210463</a>
+                    und <a href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-20-2015_2015-03-16.html"
+                        target="_blank" rel="noopener">OG SH</a>
+                    w&auml;ren heute nicht mehr aussprechbar. Beide Z&uuml;rcher Urteile sagen das ausdr&uuml;cklich:
+                    SB210463 rechnet mit dem &laquo;hier wie gesehen altrechtlich&raquo; geltenden Rahmen, SB190523
+                    st&uuml;tzt sich auf &laquo;Art.&nbsp;34 Abs.&nbsp;1 aStGB&raquo;. Wer diese Werte auf einen
+                    heutigen Fall &uuml;bertr&auml;gt, muss das Verh&auml;ltnis zum halbierten Rahmen mitdenken.
+                </p>
+            </div>
+
+            <div class="rz"><span class="n">N 20</span>
+                <p>Bemerkenswert h&auml;ufig tritt zur bedingten Geldstrafe eine <strong>Verbindungsbusse</strong> nach
+                    Art.&nbsp;42 Abs.&nbsp;4 StGB: Fr.&nbsp;550.&ndash; in
+                    <a href="https://entscheidsuche.ch/docs/GR_Gerichte/GR_KG_004_SB-2008-13_2008-06-26.pdf"
+                        target="_blank" rel="noopener">KG GR SB 2008 13</a>,
+                    Fr.&nbsp;500.&ndash; in
+                    <a href="https://entscheidsuche.ch/docs/BL_Gerichte/BL_KG_004_460-11-229_2012-08-07.pdf"
+                        target="_blank" rel="noopener">KG BL 460 11 229</a>,
+                    wo das Gericht ausf&uuml;hrt, eine blo&szlig; bedingte Geldstrafe stelle keinen
+                    &laquo;gen&uuml;genden Denkzettel&raquo; dar. Sie ist indes nicht selbstverst&auml;ndlich: In
+                    <a href="https://entscheidsuche.ch/docs/BL_Gerichte/BL_KG_004_460-15-223_2016-05-24.pdf"
+                        target="_blank" rel="noopener">KG BL 460 15 223</a>
+                    wies dasselbe Gericht die Berufung der Staatsanwaltschaft ab, mit der eine
+                    Verbindungsbusse von Fr.&nbsp;1'500.&ndash; verlangt wurde.
+                </p>
+            </div>
+
+            <div class="rz"><span class="n">N 21</span>
+                <p>Eine Eigenheit der Geldstrafe schl&auml;gt bei Art.&nbsp;167 StGB besonders h&auml;ufig durch: das
+                    gesetzliche H&ouml;chstma&szlig; der Geldstrafe (damals 360 Tagess&auml;tze nach
+                    aArt.&nbsp;34 Abs.&nbsp;1 StGB, heute 180). Weil das
+                    Delikt typischerweise mit mehreren gleichartig zu sanktionierenden Wirtschaftsdelikten
+                    zusammentrifft, wird die verschuldensangemessene Summe regelm&auml;ssig gekappt. In
+                    <a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB190523_2021-04-22.pdf"
+                        target="_blank" rel="noopener">OG ZH SB190523</a>
+                    ergaben die Einzelstrafen kumuliert 1065 Tagess&auml;tze; ausgesprochen wurden 260. In
+                    <a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB210463_2023-12-18.pdf"
+                        target="_blank" rel="noopener">SB210463</a>
+                    standen 730 asperierten Tagess&auml;tzen 360 ausgesprochene gegen&uuml;ber; das Gericht nennt
+                    dieses Ergebnis &laquo;grotesk&raquo;, w&auml;hrend das Obergericht in SB190523 von einem
+                    &laquo;bundesgerichtlichen Straft&auml;terrabatt&raquo; spricht.
+                    Wer die Werte dieser Tabellen verwendet, muss daher stets pr&uuml;fen, ob der ausgewiesene Wert
+                    &uuml;berhaupt in das Dispositiv durchschlug.
+                </p>
+            </div>
+
+            <h2 class="kommentar-teil"><span class="pn">E</span>Belegte Strafmasse</h2>
+
+            <p class="kommentar-lead">Einsatzstrafen und Asperationszuschl&auml;ge sind getrennt auszuweisen: Die
+                Einzelstrafe misst das Delikt f&uuml;r sich, der Zuschlag bereits gek&uuml;rzt um den Zusammenhang mit
+                dem Hauptdelikt (N&nbsp;23). Ein Vergleich &uuml;ber beide Gruppen hinweg ist unzul&auml;ssig.</p>
+
+            <div class="tabelle-wrap">
+                <table class="table table-sm kommentar-tabelle">
+                    <caption>Tabelle 1: Art. 167 StGB als Einsatzstrafdelikt &ndash; gespiegelt am Dispositiv</caption>
+                    <thead>
+                        <tr>
+                            <th>Entscheid</th>
+                            <th>Datum</th>
+                            <th>Benannter Grad</th>
+                            <th>Deliktsbetrag</th>
+                            <th>Einzel-/Einsatzstrafe</th>
+                            <th>Ausgesprochen<br><span class="src">(Dispositiv)</span></th>
+                            <th>Bemerkung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="ent"><a
+                                    href="https://entscheidsuche.ch/docs/BL_Gerichte/BL_KG_004_460-11-229_2012-08-07.pdf"
+                                    target="_blank" rel="noopener">KG BL 460 11 229</a></td>
+                            <td class="num">07.08.2012</td>
+                            <td>&mdash;</td>
+                            <td class="num">Fr. 90'999</td>
+                            <td class="num">30 TS <span class="src">(Anstiftung: 25 TS)</span></td>
+                            <td class="num">30 TS + Fr. 500 Busse</td>
+                            <td>vier Fahrzeuge an Zahlungs statt; best&auml;tigt in BGer 6B_699/2012</td>
+                        </tr>
+                        <tr>
+                            <td class="ent"><a
+                                    href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-361-2017_2017-11-02.html"
+                                    target="_blank" rel="noopener">BezG Willisau</a></td>
+                            <td class="num">26.02.2016</td>
+                            <td>&mdash;</td>
+                            <td class="num">Fr. 59'576</td>
+                            <td class="num">60 TS <span class="src">(Zusatzstrafe)</span></td>
+                            <td class="num">100 TS <span class="src">(KG LU, mit weiterem Delikt)</span></td>
+                            <td>Rennfahrzeug an die eigene Schwestergesellschaft, verrechnet</td>
+                        </tr>
+                        <tr>
+                            <td class="ent"><a
+                                    href="https://entscheidsuche.ch/docs/GR_Gerichte/GR_KG_004_SB-2008-13_2008-06-26.pdf"
+                                    target="_blank" rel="noopener">KG GR SB 2008 13</a></td>
+                            <td class="num">26.06.2008</td>
+                            <td><span class="sev"><span class="dot s2"></span>nicht so leicht</span></td>
+                            <td class="num">Fr. 14'256</td>
+                            <td class="num">60 TS <span class="src">(aStGB: 73 Tage)</span></td>
+                            <td class="num">60 TS + Fr. 550 + Fr. 80 Busse</td>
+                            <td>99&nbsp;% der Stammanteile am beg&uuml;nstigten Gl&auml;ubiger; best&auml;tigt in BGer
+                                6B_989/2008</td>
+                        </tr>
+                        <tr>
+                            <td class="ent"><a
+                                    href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240129_2025-03-18.pdf"
+                                    target="_blank" rel="noopener">OG ZH SB240129</a></td>
+                            <td class="num">18.03.2025</td>
+                            <td><span class="sev"><span class="dot s2"></span>nicht mehr leicht <span
+                                        class="src">(objektiv)</span></span></td>
+                            <td class="num">Fr. 42'811</td>
+                            <td class="num">120 &rarr; 100 &rarr; 90 TS</td>
+                            <td class="num">90 TS <span class="src">(aufgehoben)</span></td>
+                            <td>Freispruch durch BGer 6B_481/2025 vom 12.03.2026</td>
+                        </tr>
+                        <tr>
+                            <td class="ent"><a
+                                    href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240128_2025-03-18.pdf"
+                                    target="_blank" rel="noopener">OG ZH SB240128</a></td>
+                            <td class="num">18.03.2025</td>
+                            <td><span class="sev"><span class="dot s2"></span>nicht mehr leicht <span
+                                        class="src">(objektiv)</span></span></td>
+                            <td class="num">Fr. 42'811</td>
+                            <td class="num">120 &rarr; 100 &rarr; 90 TS</td>
+                            <td class="num">90 TS <span class="src">(aufgehoben)</span></td>
+                            <td>Parallelverfahren gegen die Mitt&auml;terin; Freispruch durch BGer 6B_491/2025</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="rz"><span class="n">N 22</span>
+                <p>Die drei rechtsbest&auml;ndigen Einsatzstrafen liegen eng beieinander: <strong>30 bis 60
+                        Tagess&auml;tze</strong>. Die beiden Z&uuml;rcher Werte von 120 bzw. 90 Tagess&auml;tzen liegen
+                    deutlich dar&uuml;ber, sind aber gerade nicht mehr verwertbar &ndash; der Schuldspruch, auf dem sie
+                    beruhen, ist aufgehoben. Wer sie zitiert, zitiert eine Strafzumessung ohne Straftat. Die Tabelle
+                    f&uuml;hrt sie gleichwohl auf, weil sie die einzige publizierte, ausf&uuml;hrlich begr&uuml;ndete
+                    Verschuldensbewertung zu Art.&nbsp;167 StGB der letzten Jahre enth&auml;lt.</p>
+            </div>
+
+            <div class="tabelle-wrap">
+                <table class="table table-sm kommentar-tabelle">
+                    <caption>Tabelle 2: Art. 167 StGB als asperiertes Nebendelikt</caption>
+                    <thead>
+                        <tr>
+                            <th>Entscheid</th>
+                            <th>Datum</th>
+                            <th>Benannter Grad</th>
+                            <th>Deliktsbetrag</th>
+                            <th>Isolierte Einzelstrafe</th>
+                            <th>Zuschlag</th>
+                            <th>Hauptdelikt</th>
+                            <th>Ausgesprochen<br><span class="src">(Dispositiv)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="ent"><a
+                                    href="https://entscheidsuche.ch/docs/NW_Gerichte/NW_OG_001_35548_2024-06-11.pdf"
+                                    target="_blank" rel="noopener">OG NW SA 23 3</a></td>
+                            <td class="num">21.03.2024</td>
+                            <td><span class="sev"><span class="dot s1"></span>unterster Bereich</span></td>
+                            <td class="num">Fr. 1'218</td>
+                            <td class="num">10 TS</td>
+                            <td class="num">5 TS <span class="src">(&frac12;)</span></td>
+                            <td>Urkundenf&auml;lschung</td>
+                            <td class="num">100 TS</td>
+                        </tr>
+                        <tr>
+                            <td class="ent"><a
+                                    href="https://entscheidsuche.ch/docs/NW_Gerichte/NW_OG_001_35548_2024-06-11.pdf"
+                                    target="_blank" rel="noopener">OG NW SA 23 3</a></td>
+                            <td class="num">21.03.2024</td>
+                            <td><span class="sev"><span class="dot s1"></span>unterster Bereich</span></td>
+                            <td class="num">Fr. 2'156</td>
+                            <td class="num">10 TS</td>
+                            <td class="num">5 TS <span class="src">(&frac12;)</span></td>
+                            <td>Urkundenf&auml;lschung</td>
+                            <td class="num">100 TS</td>
+                        </tr>
+                        <tr>
+                            <td class="ent"><a
+                                    href="https://entscheidsuche.ch/docs/NW_Gerichte/NW_OG_001_35548_2024-06-11.pdf"
+                                    target="_blank" rel="noopener">OG NW SA 23 3</a></td>
+                            <td class="num">21.03.2024</td>
+                            <td><span class="sev"><span class="dot s1"></span>leicht</span></td>
+                            <td class="num">Fr. 28'700</td>
+                            <td class="num">30 TS</td>
+                            <td class="num">20 TS <span class="src">(&#8532;)</span></td>
+                            <td>Urkundenf&auml;lschung</td>
+                            <td class="num">100 TS <span class="src">(120 &minus; 20, Art. 48 lit. e)</span></td>
+                        </tr>
+                        <tr>
+                            <td class="ent"><a
+                                    href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB140131_2014-09-12.pdf"
+                                    target="_blank" rel="noopener">OG ZH SB140131</a></td>
+                            <td class="num">12.09.2014</td>
+                            <td><span class="sev"><span class="dot s1"></span>leicht</span></td>
+                            <td class="num">Fr. 20'000 <span class="src">(+ Zahlungen)</span></td>
+                            <td class="num">30 Tage</td>
+                            <td class="num">15 Tage <span class="src">(Differenz 75&minus;60)</span></td>
+                            <td>Misswirtschaft</td>
+                            <td class="num">75 TS &agrave; Fr. 30</td>
+                        </tr>
+                        <tr>
+                            <td class="ent"><a
+                                    href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB210463_2023-12-18.pdf"
+                                    target="_blank" rel="noopener">OG ZH SB210463</a></td>
+                            <td class="num">18.12.2023</td>
+                            <td>&mdash;</td>
+                            <td class="num">Fr. 66'000</td>
+                            <td class="num">90 TS</td>
+                            <td class="num">70 TS <span class="src">(&#8540;)</span></td>
+                            <td>ung. Gesch&auml;ftsbesorgung</td>
+                            <td class="num">22 Mt. FS + 360 TS + Busse</td>
+                        </tr>
+                        <tr>
+                            <td class="ent"><a
+                                    href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB190523_2021-04-22.pdf"
+                                    target="_blank" rel="noopener">OG ZH SB190523</a></td>
+                            <td class="num">22.04.2021</td>
+                            <td>&mdash;</td>
+                            <td class="num">Fr. 150'000</td>
+                            <td class="num">300 TS</td>
+                            <td class="num">&mdash; <span class="src">(gekappt)</span></td>
+                            <td>Veruntreuung</td>
+                            <td class="num">27 Mt. FS + 260 TS</td>
+                        </tr>
+                        <tr>
+                            <td class="ent"><a
+                                    href="https://entscheidsuche.ch/docs/BL_Gerichte/BL_KG_004_460-15-223_2016-05-24.pdf"
+                                    target="_blank" rel="noopener">KG BL 460 15 223</a></td>
+                            <td class="num">24.05.2016</td>
+                            <td>&mdash;</td>
+                            <td class="num">&mdash;</td>
+                            <td class="num">&mdash;</td>
+                            <td class="num">&mdash;</td>
+                            <td>Misswirtschaft</td>
+                            <td class="num">60 TS &agrave; Fr. 80</td>
+                        </tr>
+                        <tr>
+                            <td class="ent"><a
+                                    href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-20-2015_2015-03-16.html"
+                                    target="_blank" rel="noopener">OG SH</a></td>
+                            <td class="num">18.11.2014</td>
+                            <td>&mdash;</td>
+                            <td class="num">&mdash;</td>
+                            <td class="num">&mdash;</td>
+                            <td class="num">&mdash;</td>
+                            <td>ung. Gesch&auml;ftsbesorgung</td>
+                            <td class="num">360 TS &agrave; Fr. 230</td>
+                        </tr>
+                        <tr>
+                            <td class="ent"><a
+                                    href="https://entscheidsuche.ch/docs/FR_Gerichte/FR_TC_006_501-2018-211_2020-07-06.pdf"
+                                    target="_blank" rel="noopener">KG FR 501 2018 211</a></td>
+                            <td class="num">06.07.2020</td>
+                            <td>&mdash;</td>
+                            <td class="num">&mdash;</td>
+                            <td class="num">&mdash;</td>
+                            <td class="num">&mdash;</td>
+                            <td>Gl&auml;ubigersch&auml;digung</td>
+                            <td class="num">180 Tage FS <span class="src">(Verschlechterungsverbot)</span></td>
+                        </tr>
+                        <tr>
+                            <td class="ent"><a
+                                    href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-134-2009_2009-09-01.html"
+                                    target="_blank" rel="noopener">KG BL</a></td>
+                            <td class="num">01.12.2008</td>
+                            <td>&mdash;</td>
+                            <td class="num">&mdash;</td>
+                            <td class="num">&mdash;</td>
+                            <td class="num">&mdash;</td>
+                            <td>Pf&auml;ndungsbetrug</td>
+                            <td class="num">10 Mt. FS + Fr. 1'500 Busse</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="rz"><span class="n">N 23</span>
+                <p>Der <strong>Asperationsabschlag</strong> ist der praktisch verwertbarste Befund dieser Auswertung.
+                    In den f&uuml;nf Verfahren mit ausgewiesener Einzelstrafe liegt der Zuschlag
+                    zwischen <strong>der H&auml;lfte und drei Vierteln</strong>: 5 von 10 (zweimal), 20 von 30,
+                    15 von 30, 70 von 90. Vier dieser Zuschl&auml;ge beziffern die Gerichte ausdr&uuml;cklich; der
+                    Wert aus
+                    <a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB140131_2014-09-12.pdf"
+                        target="_blank" rel="noopener">SB140131</a>
+                    ist die Differenz zwischen Einsatzstrafe (60 Tage) und Gesamtstrafe (75 Tage) und damit
+                    errechnet, nicht ausgesprochen. Der Median betr&auml;gt rund zwei Drittel. Damit l&auml;sst sich
+                    aus einer hypothetischen Einzelstrafe der zu erwartende Zuschlag absch&auml;tzen &ndash; und
+                    umgekehrt ein ausgewiesener Zuschlag auf seine Plausibilit&auml;t pr&uuml;fen.
+                </p>
+            </div>
+
+            <div class="rz"><span class="n">N 24</span>
+                <p>Auffallend ist schlie&szlig;lich, wie tief die Werte insgesamt liegen. Selbst bei einer
+                    Deliktssumme von rund Fr.&nbsp;66'000.&ndash; und einem Schuldspruch wegen <em>mehrfacher</em>
+                    Bevorzugung hielt das Obergericht Z&uuml;rich 90 Tagess&auml;tze f&uuml;r angemessen &ndash;
+                    allerdings mit dem Hinweis, die vorinstanzliche Strafe sei &laquo;keinesfalls zu tief, sondern
+                    vielmehr eher zu milde&raquo;, weil die Vorinstanz von Fr.&nbsp;56'000.&ndash; statt
+                    Fr.&nbsp;66'000.&ndash; ausgegangen war
+                    (<a href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB210463_2023-12-18.pdf"
+                        target="_blank" rel="noopener">SB210463</a>).
+                    Wer eine Strafe von mehr als 120 Tagess&auml;tzen beantragt oder hinnimmt, bewegt sich
+                    au&szlig;erhalb
+                    des rechtsbest&auml;ndig belegten Rahmens &ndash; mit Ausnahme der reinen Selbstbeg&uuml;nstigung im
+                    sechsstelligen Bereich (N&nbsp;4).</p>
+            </div>
+
+            <h2 class="kommentar-teil"><span class="pn">F</span>Pr&uuml;fraster f&uuml;r die Praxis</h2>
+
+            <div class="tabelle-wrap">
+                <table class="table table-sm kommentar-tabelle">
+                    <caption>Merkmale in der Reihenfolge ihres belegten Gewichts</caption>
+                    <thead>
+                        <tr>
+                            <th>Merkmal</th>
+                            <th>Richtung</th>
+                            <th>Belegte Wirkung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>F&auml;llige Forderung, &uuml;bliche Zahlungsmittel</td>
+                            <td>&mdash;</td>
+                            <td>Tatbestand entf&auml;llt (N&nbsp;13&ndash;14)</td>
+                        </tr>
+                        <tr>
+                            <td>Kongruente Deckung + nur Eventualabsicht</td>
+                            <td>&mdash;</td>
+                            <td>Freispruch; direkte Absicht n&ouml;tig (N&nbsp;13)</td>
+                        </tr>
+                        <tr>
+                            <td>Selbstbeg&uuml;nstigung / beherrschte Gesellschaft</td>
+                            <td>erh&ouml;hend</td>
+                            <td>alle Werte &gt; 60 TS (N&nbsp;4&ndash;5)</td>
+                        </tr>
+                        <tr>
+                            <td>Zahlung am Tag der Bilanzdeponierung</td>
+                            <td>erh&ouml;hend</td>
+                            <td>Einsatzstrafe 120 TS (N&nbsp;7)</td>
+                        </tr>
+                        <tr>
+                            <td>Entzug praktisch aller liquiden Mittel</td>
+                            <td>erh&ouml;hend</td>
+                            <td>Totalverlust auch der 1. Klasse (N&nbsp;8)</td>
+                        </tr>
+                        <tr>
+                            <td>Deliktsbetrag</td>
+                            <td>erh&ouml;hend</td>
+                            <td>degressiv, schwacher Pr&auml;diktor (N&nbsp;10)</td>
+                        </tr>
+                        <tr>
+                            <td>Deliktsbetrag unter rund Fr. 3'000</td>
+                            <td>mindernd</td>
+                            <td>&laquo;unterster Bereich&raquo;, 10 TS (N&nbsp;10)</td>
+                        </tr>
+                        <tr>
+                            <td>Fremdn&uuml;tziges Motiv (z.B. Pfandrechte abwenden)</td>
+                            <td>mindernd</td>
+                            <td>tr&auml;gt die tiefere von zwei Einzelstrafen (N&nbsp;6)</td>
+                        </tr>
+                        <tr>
+                            <td>Nur Eventualabsicht (bei Regelbeispiel)</td>
+                            <td>mindernd</td>
+                            <td>120 &rarr; 100 TS, rund &#8537; (N&nbsp;11)</td>
+                        </tr>
+                        <tr>
+                            <td>Zwei Drittel der Verj&auml;hrung verstrichen</td>
+                            <td>mindernd</td>
+                            <td>Art. 48 lit. e; 120 &rarr; 100 TS (N&nbsp;17)</td>
+                        </tr>
+                        <tr>
+                            <td>Teilnahme statt T&auml;terschaft (Extraneus)</td>
+                            <td>mindernd</td>
+                            <td>Art. 26 StGB; 30 &rarr; 25 TS (N&nbsp;18)</td>
+                        </tr>
+                        <tr>
+                            <td>Kein Haftungssubstrat vorhanden</td>
+                            <td>&mdash;</td>
+                            <td>entlastet <em>nicht</em> (N&nbsp;9)</td>
+                        </tr>
+                        <tr>
+                            <td>Asperation als Nebendelikt</td>
+                            <td>mindernd</td>
+                            <td>Zuschlag &frac12; bis &#8540; der Einzelstrafe (N&nbsp;23)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2 class="kommentar-teil"><span class="pn">G</span>Ausgewertete Entscheide</h2>
+
+            <ol class="quellen">
+                <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGE/CH_BGE_006_BGE-117-IV-23_1991-01-22.html"
+                        target="_blank" rel="noopener">BGE 117 IV 23</a> vom 22.01.1991 &ndash; Generalklausel;
+                    inkongruente Deckung; Gebot der Zur&uuml;ckhaltung</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGE/CH_BGE_006_BGE-104-IV-77_1978-04-14.html"
+                        target="_blank" rel="noopener">BGE 104 IV 77</a> vom 14.04.1978 &ndash; Begriff der
+                    Zahlungsunf&auml;higkeit der Aktiengesellschaft</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-481-2025_2026-03-12.html"
+                        target="_blank" rel="noopener">BGer 6B_481/2025 und 6B_491/2025</a> vom 12.03.2026 &ndash;
+                    kongruente Deckung verlangt direkte Absicht; Freispruch</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_007_7B-763-2025_2026-06-09.html"
+                        target="_blank" rel="noopener">BGer 7B_763/2025</a> vom 09.06.2026 &ndash; Beschwerde gegen OG
+                    AG SST.2024.11 abgewiesen</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-361-2017_2017-11-02.html"
+                        target="_blank" rel="noopener">BGer 6B_361/2017</a> vom 02.11.2017 &ndash; Verrechnung von
+                    Warenverk&auml;ufen als un&uuml;bliches Zahlungsmittel; Einzelstrafe BezG Willisau 60 TS</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-985-2016_2017-02-27.html"
+                        target="_blank" rel="noopener">BGer 6B_985/2016</a> vom 27.02.2017 &ndash; Eventualvorsatz
+                    gen&uuml;gt; best&auml;tigt KG BL 460 15 223</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-20-2015_2015-03-16.html"
+                        target="_blank" rel="noopener">BGer 6B_20/2015</a> vom 16.03.2015 &ndash; OG SH: Gesamtstrafe
+                    360 TS &agrave; Fr. 230</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-699-2012_2013-04-25.html"
+                        target="_blank" rel="noopener">BGer 6B_699/2012</a> vom 25.04.2013 &ndash; best&auml;tigt KG BL
+                    460 11 229 (30 TS + Busse)</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-134-2009_2009-09-01.html"
+                        target="_blank" rel="noopener">BGer 6B_134/2009</a> vom 01.09.2009 &ndash; KG BL: 10 Mt. FS
+                    bedingt + Busse Fr. 1'500</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/CH_BGer/CH_BGer_006_6B-989-2008_2009-01-13.html"
+                        target="_blank" rel="noopener">BGer 6B_989/2008</a> vom 13.01.2009 &ndash; best&auml;tigt KG GR
+                    SB 2008 13 (60 TS)</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240129_2025-03-18.pdf"
+                        target="_blank" rel="noopener">OG ZH SB240129</a> vom 18.03.2025 &ndash; Einsatzstrafe 120
+                    &rarr; 90 TS; aufgehoben</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB240128_2025-03-18.pdf"
+                        target="_blank" rel="noopener">OG ZH SB240128</a> vom 18.03.2025 &ndash; Parallelverfahren;
+                    aufgehoben</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB210463_2023-12-18.pdf"
+                        target="_blank" rel="noopener">OG ZH SB210463</a> vom 18.12.2023 &ndash; Einzelstrafe 90 TS,
+                    asperiert 70 TS; H&ouml;chstma&szlig; Art. 34 StGB</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB190523_2021-04-22.pdf"
+                        target="_blank" rel="noopener">OG ZH SB190523</a> vom 22.04.2021 &ndash; Einzelstrafe 300 TS;
+                    Selbstbeg&uuml;nstigung, Fr. 150'000</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB140131_2014-09-12.pdf"
+                        target="_blank" rel="noopener">OG ZH SB140131</a> vom 12.09.2014 &ndash; hypothetische
+                    Einsatzstrafe 30 Tage, Zuschlag 15 Tage</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB120141_2014-12-16.pdf"
+                        target="_blank" rel="noopener">OG ZH SB120141</a> vom 16.12.2014 &ndash; Freispruch von Art. 167
+                    StGB in Rechtskraft erwachsen</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/NW_Gerichte/NW_OG_001_35548_2024-06-11.pdf"
+                        target="_blank" rel="noopener">OG NW SA 23 3</a> vom 09.11.2023 / 21.03.2024 &ndash; drei
+                    Einzelstrafen (30 / 10 / 10 TS); Art. 48 lit. e</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2024-11_2025-01-08.pdf"
+                        target="_blank" rel="noopener">OG AG SST.2024.11</a> vom 08.01.2025 &ndash; Freispruch;
+                    F&auml;lligkeit nach Art. 318 OR</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/BL_Gerichte/BL_KG_004_460-11-229_2012-08-07.pdf"
+                        target="_blank" rel="noopener">KG BL 460 11 229</a> vom 07.08.2012 &ndash; 30 TS (Anstiftung 25
+                    TS, Art. 26 StGB); Verbindungsbusse</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/BL_Gerichte/BL_KG_004_460-15-223_2016-05-24.pdf"
+                        target="_blank" rel="noopener">KG BL 460 15 223</a> vom 24.05.2016 &ndash; Gesamtstrafe 60 TS;
+                    Verbindungsbusse verweigert</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/BL_Gerichte/BL_KG_004_460-19-151_2019-11-08.pdf"
+                        target="_blank" rel="noopener">KG BL 460 19 151</a> vom 08.11.2019 &ndash; Einstellung infolge
+                    Verj&auml;hrung</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/GR_Gerichte/GR_KG_004_SB-2008-13_2008-06-26.pdf"
+                        target="_blank" rel="noopener">KG GR SB 2008 13</a> vom 26.06.2008 &ndash; 60 TS; Verschulden
+                    &laquo;nicht so leicht&raquo;; Beherrschung des Gl&auml;ubigers</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/GR_Gerichte/GR_KG_004_SK1-2012-48_2013-05-01.pdf"
+                        target="_blank" rel="noopener">KG GR SK1 2012 48</a> vom 01.05.2013 &ndash; Freispruch mangels
+                    Bevorzugungsabsicht</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/GR_Gerichte/GR_KG_004_SK1-2012-45_2014-06-18.pdf"
+                        target="_blank" rel="noopener">KG GR SK1 2012 45</a> vom 18.06.2014 &ndash; Einstellung infolge
+                    Verj&auml;hrung</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/GR_Gerichte/GR_KG_004_SK1-2011-14_2011-08-03.pdf"
+                        target="_blank" rel="noopener">KG GR SK1 2011 14</a> vom 03.08.2011 &ndash; objektiver
+                    Tatbestand verneint: kein Nachteil der &uuml;brigen Gl&auml;ubiger</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/GR_Gerichte/GR_KG_999_SF-2007-5_2007-07-24.pdf"
+                        target="_blank" rel="noopener">KG GR SF 2007 5</a> vom 24.07.2007 &ndash; Freispruch mangels
+                    Vorsatzes</li>
+                <li><a class="d"
+                        href="https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_005_SK-2019-318_2020-06-25.pdf"
+                        target="_blank" rel="noopener">OG BE SK 2019 318</a> vom 25.06.2020 &ndash; Art. 167 StGB
+                    infolge Verj&auml;hrung nicht mehr zu pr&uuml;fen</li>
+                <li><a class="d"
+                        href="https://entscheidsuche.ch/docs/BE_ZivilStraf/BE_OG_008_BK-2018-425_2018-12-04.pdf"
+                        target="_blank" rel="noopener">OG BE BK 2018 425</a> vom 04.12.2018 &ndash; Strafbefehl Art.
+                    166/167 StGB: 50 TS &agrave; Fr. 30</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/FR_Gerichte/FR_TC_006_501-2018-211_2020-07-06.pdf"
+                        target="_blank" rel="noopener">KG FR 501 2018 211</a> vom 06.07.2020 &ndash; Gesamtstrafe 180
+                    Tage FS; Verschlechterungsverbot</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/TG_OG/TG_OG_001_TVR-2018-Nr--4_2018-06-25.html"
+                        target="_blank" rel="noopener">OG TG TVR 2018 Nr. 4</a> vom 25.06.2018 &ndash; Strafbefehl Art.
+                    166/167 StGB: 160 TS &agrave; Fr. 30</li>
+                <li><a class="d"
+                        href="https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2024-15-16_2024-11-08.pdf"
+                        target="_blank" rel="noopener">OG AG SST.2024.15/16</a> vom 08.11.2024 &ndash; R&uuml;ckweisung
+                    nach Art. 409 StPO; keine Strafzumessung</li>
+                <li><a class="d" href="https://entscheidsuche.ch/docs/ZH_Obergericht/ZH_OG_002_SB230447_2024-09-02.pdf"
+                        target="_blank" rel="noopener">OG ZH SB230447</a> vom 02.09.2024 &ndash; best&auml;tigt das
+                    Dispositiv von SB190523 als Vorstrafe</li>
+            </ol>
+
+            <p class="kommentar-schluss">Prototyp der Rubrik &laquo;Gesetzeskommentar zur Strafzumessung&raquo;.
+                Erstellt
+                aus 32 im Volltext ausgewerteten Entscheiden; alle Zahlenangaben gegen Urteilstext und Dispositiv
+                r&uuml;ckgepr&uuml;ft. Die Auswertung ersetzt keine eigene Pr&uuml;fung der Entscheide im Einzelfall.
+            </p>
+
+        </div>
+    </div>
+</div>
+
+{% endblock body %}

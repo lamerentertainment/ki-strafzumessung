@@ -2479,6 +2479,11 @@ def kommentar_pfaendungsbetrug(request):
     return render(request, "database/kommentar_pfaendungsbetrug.html", context)
 
 
+def kommentar_glaeubigerbevorzugung(request):
+    context = {}
+    return render(request, "database/kommentar_glaeubigerbevorzugung.html", context)
+
+
 # helper functions
 def csv_in_notebooks_speichern(dbmodel):
     # Datenframe erstellen, db-id als index

@@ -76,6 +76,11 @@ urlpatterns = [
         views.kommentar_glaeubigerschaedigung,
         name="kommentar_glaeubigerschaedigung",
     ),
+    path(
+        "kommentar/art-167-stgb",
+        views.kommentar_glaeubigerbevorzugung,
+        name="kommentar_glaeubigerbevorzugung",
+    ),
     path("betmdatabase", views.BetmUrteilListView.as_view(), name="betmdatabase"),
     path(
         "betmurteil/<int:pk>",

@@ -8,7 +8,6 @@ urlpatterns = [
     path("", views.homepage, name="homepage"),
     path("prognose", views.prognose, name="prognose"),
     path("betm_prognose", views.betm_prognose, name="betm_prognose"),
-    path("sexual_prognose", views.sexual_prognose, name="sexual_prognose"),
     path(
         "sexual_kimodelle_neu_generieren",
         views.sexual_kimodelle_neu_generieren,

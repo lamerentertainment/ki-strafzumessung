@@ -353,31 +353,38 @@ def prognose(request):
                 nachbar3 = None
                 nachbar4 = None
 
+            # Referenzdistanz für die Vergleichbarkeit:
+            # Anstatt des Extrem-Ausreissers des gesamten Datensatzes (ca. 48'000 durch Extremfälle,
+            # was alle Nachbarn auf 99% staucht), verwenden wir eine auf den nächsten Nachbarn
+            # basierende Skalierung (mind. 25.0, damit geringfügige Abweichungen im 90er-Bereich liegen).
+            d4 = distances[min(len(distances) - 1, 3)] if len(distances) > 0 else 25.0
+            ref_distance = max(25.0, float(d4) * 1.5)
+
             # differenzen von eingabe und nachbarn berechnen, evt. mal auslagern
             def differenzengenerator(nachbarobjekt, formobjekt, index=None):
                 """legt im Nachbarobjekt die Differenzen zu den Formulareingaben als Attribute ab"""
                 nachbarobjekt.ds_diff = (
-                    nachbarobjekt.deliktssumme - form.cleaned_data["deliktssumme"]
+                    nachbarobjekt.deliktssumme - formobjekt.cleaned_data["deliktssumme"]
                 )
                 nachbarobjekt.nvs_diff = (
                     nachbarobjekt.nebenverurteilungsscore
-                    - form.cleaned_data["nebenverurteilungsscore"]
+                    - formobjekt.cleaned_data["nebenverurteilungsscore"]
                 )
                 nachbarobjekt.entsprechung_hauptdelikt = (
                     True
-                    if nachbarobjekt.hauptdelikt == form.cleaned_data["hauptdelikt"]
+                    if nachbarobjekt.hauptdelikt == formobjekt.cleaned_data["hauptdelikt"]
                     else False
                 )
                 nachbarobjekt.entsprechung_gewerbsmaessig = (
                     True
                     if nachbarobjekt.gewerbsmaessig
-                    == form.cleaned_data["gewerbsmaessig"]
+                    == formobjekt.cleaned_data["gewerbsmaessig"]
                     else False
                 )
                 nachbarobjekt.entsprechung_vorbestraft_einschlaegig = (
                     True
                     if nachbarobjekt.vorbestraft_einschlaegig
-                    == form.cleaned_data["vorbestraft_einschlaegig"]
+                    == formobjekt.cleaned_data["vorbestraft_einschlaegig"]
                     else False
                 )
                 nachbarobjekt.zusammenfassung = nachbarobjekt.zusammenfassung
@@ -386,14 +393,39 @@ def prognose(request):
                 if index is not None and len(distances) > 0:
                     # Distanz des aktuellen Nachbarn
                     current_distance = distances[index]
-                    # Distanz des am weitesten entfernten Nachbarn
-                    max_distance = last_neighbor_distance[0]
-                    # Vergleichbarkeitsscore: 1 - (aktuelle Distanz / maximale Distanz)
-                    # Ein Wert von 1 bedeutet perfekte Übereinstimmung, 0 bedeutet maximale Distanz
-                    if max_distance > 0:  # Vermeidung von Division durch Null
-                        nachbarobjekt.vergleichbarkeitsscore = round((1 - current_distance/(max_distance/100)) * 100)
+                    # Vergleichbarkeitsscore: 1 - (aktuelle Distanz / Referenzdistanz)
+                    if ref_distance > 0:
+                        calculated_score = round((1 - current_distance / ref_distance) * 100)
                     else:
-                        nachbarobjekt.vergleichbarkeitsscore = 100  # Wenn alle Distanzen 0 sind
+                        calculated_score = 100  # Wenn alle Distanzen 0 sind
+
+                    # Prüfen auf Abweichungen zwischen den verglichenen Merkmalen
+                    hat_abweichungen = (
+                        nachbarobjekt.ds_diff != 0
+                        or nachbarobjekt.nvs_diff != 0
+                        or not nachbarobjekt.entsprechung_hauptdelikt
+                        or not nachbarobjekt.entsprechung_gewerbsmaessig
+                        or not nachbarobjekt.entsprechung_vorbestraft_einschlaegig
+                        or (
+                            formobjekt.cleaned_data.get("vorbestraft") is not None
+                            and nachbarobjekt.vorbestraft != formobjekt.cleaned_data.get("vorbestraft")
+                        )
+                        or (
+                            formobjekt.cleaned_data.get("mehrfach") is not None
+                            and getattr(nachbarobjekt, "mehrfach", None) != formobjekt.cleaned_data.get("mehrfach")
+                        )
+                        or (
+                            formobjekt.cleaned_data.get("bandenmaessig") is not None
+                            and getattr(nachbarobjekt, "bandenmaessig", None) != formobjekt.cleaned_data.get("bandenmaessig")
+                        )
+                        or current_distance > 1e-6
+                    )
+
+                    # Bei auch nur minimsten Abweichungen darf der Score nicht 100% erreichen
+                    if hat_abweichungen:
+                        nachbarobjekt.vergleichbarkeitsscore = max(0, min(calculated_score, 99))
+                    else:
+                        nachbarobjekt.vergleichbarkeitsscore = 100
 
                 return nachbarobjekt
 
@@ -826,6 +858,25 @@ def betm_prognose(request):
                 )
                 nachbar_objs.append(obj)
 
+            # Zweiter Pass mit allen Trainingsdaten als Nachbarn, um die Distanz zum am weitesten entfernten Sample zu ermitteln
+            total_samples = len(
+                df_x_onehot_scaled_gewichtet
+            )  # Verwende die bereits transformierten und gewichteten Trainingsdaten
+            all_neighbors_knn = KNeighborsRegressor(n_neighbors=total_samples)
+            all_neighbors_knn.fit(
+                df_x_onehot_scaled_gewichtet, y_strafmass
+            )  # Diese Variablen sind bereits definiert
+            all_differences, all_indexes = all_neighbors_knn.kneighbors(
+                df_prognosemerkmale_df_preprocessed_scaled_gewichtet
+            )  # Verwende die transformierten Features der aktuellen Anfrage
+            # Distanz zum am weitesten entfernten Sample im gesamten Trainingsdatensatz
+            furthest_sample_distance = all_differences[:, -1][0]
+
+            # Referenzdistanz für die Vergleichbarkeit bei Betm:
+            chosen_distances = [item[1] for item in chosen_four] if chosen_four else []
+            d_max_chosen = max(chosen_distances) if chosen_distances else 2.5
+            ref_distance_betm = max(2.5, float(d_max_chosen) * 1.5)
+
             # differenzen von eingabe und nachbarn berechnen, evt. mal auslagern
             def differenzengenerator(nachbarobjekt, formobjekt, index=None):
                 """legt im Nachbarobjekt die Differenzen zu den Formulareingaben als Attribute ab"""
@@ -877,29 +928,40 @@ def betm_prognose(request):
                 )
                 nachbarobjekt.zusammenfassung = nachbarobjekt.zusammenfassung
 
-                # Zweiter Pass mit allen Trainingsdaten als Nachbarn, um die Distanz zum am weitesten entfernten Sample zu ermitteln
-                total_samples = len(
-                    df_x_onehot_scaled_gewichtet)  # Verwende die bereits transformierten und gewichteten Trainingsdaten
-                all_neighbors_knn = KNeighborsRegressor(n_neighbors=total_samples)
-                all_neighbors_knn.fit(df_x_onehot_scaled_gewichtet,
-                                      y_strafmass)  # Diese Variablen sind bereits definiert
-                all_differences, all_indexes = all_neighbors_knn.kneighbors(
-                    df_prognosemerkmale_df_preprocessed_scaled_gewichtet)  # Verwende die transformierten Features der aktuellen Anfrage
-                # Distanz zum am weitesten entfernten Sample im gesamten Trainingsdatensatz
-                furthest_sample_distance = all_differences[:, -1][0]
                 # Vergleichbarkeitsscore berechnen, wenn index vorhanden
                 if index is not None and len(distances) > 0:
                     # Distanz des aktuellen Nachbarn
                     current_distance = distances[0][index]
-                    # Distanz des am weitesten entfernten Nachbarn
-                    max_distance = furthest_sample_distance
-                    # Vergleichbarkeitsscore: 1 - (aktuelle Distanz / maximale Distanz)
-                    # Ein Wert von 1 bedeutet perfekte Übereinstimmung, 0 bedeutet maximale Distanz
-                    if max_distance > 0:  # Vermeidung von Division durch Null
-                        nachbarobjekt.vergleichbarkeitsscore = (
-                            round((1 - (current_distance / (max_distance/20))) * 100))
+                    # Vergleichbarkeitsscore: 1 - (aktuelle Distanz / Referenzdistanz)
+                    if ref_distance_betm > 0:
+                        calculated_score = round(
+                            (1 - (current_distance / ref_distance_betm)) * 100
+                        )
                     else:
-                        nachbarobjekt.vergleichbarkeitsscore = 100  # Wenn alle Distanzen 0 sind
+                        calculated_score = 100  # Wenn alle Distanzen 0 sind
+
+                    # Prüfen auf Abweichungen zwischen den verglichenen Merkmalen
+                    hat_abweichungen = (
+                        not nachbarobjekt.entsprechung_rolle
+                        or nachbarobjekt.nvs_diff != 0
+                        or not nachbarobjekt.entsprechung_mengenmaessig
+                        or not nachbarobjekt.entsprechung_gewerbsmaessig
+                        or not nachbarobjekt.entsprechung_bandenmaessig
+                        or not nachbarobjekt.entsprechung_vorbestraft_einschlaegig
+                        or nachbarobjekt.deliktsdauer_diff != 0
+                        or nachbarobjekt.deliktsertrag_diff != 0
+                        or (
+                            formobjekt.cleaned_data.get("vorbestraft") is not None
+                            and nachbarobjekt.vorbestraft != formobjekt.cleaned_data.get("vorbestraft")
+                        )
+                        or current_distance > 1e-6
+                    )
+
+                    # Bei auch nur minimsten Abweichungen darf der Score nicht 100% erreichen
+                    if hat_abweichungen:
+                        nachbarobjekt.vergleichbarkeitsscore = max(0, min(calculated_score, 99))
+                    else:
+                        nachbarobjekt.vergleichbarkeitsscore = 100
 
                 return nachbarobjekt
 

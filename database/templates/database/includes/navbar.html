@@ -45,6 +45,13 @@
           </ul>
         </li>
 
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'text_funktionsweise' %}">
+            Wie es <br>
+            funktioniert
+          </a>
+        </li>
+
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownKommentar" role="button"
             data-bs-toggle="dropdown" aria-expanded="false">
@@ -63,13 +70,6 @@
             <li><a class="dropdown-item" href="{% url 'kommentar_glaeubigerbevorzugung' %}">Art. 167 StGB &ndash;
                 Bevorzugung eines Gl&auml;ubigers</a></li>
           </ul>
-        </li>
-
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'text_funktionsweise' %}">
-            Wie es <br>
-            funktioniert
-          </a>
         </li>
 
         {% if request.user.is_superuser == True %}

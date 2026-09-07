@@ -1077,15 +1077,15 @@ def sanktionsbewertungs_string_erstellen(
     if prognosebereich_start <= nachbarobjekt_sanktion <= prognosebereich_ende:
         if vorhersage_hauptsanktion == "Freiheitsstrafe":
             nachbarobjekt.sanktionsbewertung = (
-                f"Die KI hält die Sanktion dieses Urteils für angemessen. Sie hätte mit den "
-                f"oben dargestellten Eckwerten dieses Urteils "
+                f"Die KI hält die Sanktion dieses Urteils für angemessen. Sie hätte rein basierend auf den "
+                f"oben dargestellten objektiven Eckwerten dieses Urteils "
                 f"eine {vorhersage_vollzug} Freiheitsstrafe zwischen "
                 f"{str(prognosebereich_start)} und {str(prognosebereich_ende)} Monaten prognostiziert"
             )
         if vorhersage_hauptsanktion == "Geldstrafe":
             nachbarobjekt.sanktionsbewertung = (
-                f"Die KI hält die Sanktion dieses Urteils für angemessen. Sie hätte mit den "
-                f"oben dargestellten Eckwerten dieses Urteils "
+                f"Die KI hält die Sanktion dieses Urteils für angemessen. Sie hätte rein basierend auf den "
+                f"oben dargestellten objektiven Eckwerten dieses Urteils "
                 f"eine {vorhersage_vollzug} Geldstrafe zwischen "
                 f"{str(prognosebereich_start * 30)} und {str(prognosebereich_ende * 30)} Tagessätzen prognostiziert"
             )
@@ -1100,8 +1100,8 @@ def sanktionsbewertungs_string_erstellen(
             )
         if vorhersage_hauptsanktion == "Geldstrafe":
             nachbarobjekt.sanktionsbewertung = (
-                f"Die KI hält die Sanktion dieses Urteils für leicht zu streng. Sie hätte mit den "
-                f"oben dargestellten Eckwerten dieses Urteils "
+                f"Die KI hält die Sanktion dieses Urteils für leicht zu streng. Sie hätte rein basierend auf den "
+                f"oben dargestellten objektiven Eckwerten dieses Urteils "
                 f"eine {vorhersage_vollzug} Geldstrafe zwischen "
                 f"{str(prognosebereich_start * 30)} und {str(prognosebereich_ende * 30)} Tagessätzen prognostiziert"
             )
@@ -1109,15 +1109,15 @@ def sanktionsbewertungs_string_erstellen(
     elif nachbarobjekt_sanktion > (prognosebereich_ende + 3):
         if vorhersage_hauptsanktion == "Freiheitsstrafe":
             nachbarobjekt.sanktionsbewertung = (
-                f"Die KI hält die Sanktion dieses Urteils für deutlich zu streng. Sie hätte mit den "
-                f"oben dargestellten Eckwerten dieses Urteils "
+                f"Die KI hält die Sanktion dieses Urteils für deutlich zu streng. Sie hätte rein basierend auf den "
+                f"oben dargestellten objektriven Eckwerten dieses Urteils "
                 f"eine {vorhersage_vollzug} Freiheitsstrafe zwischen "
                 f"{str(prognosebereich_start)} und {str(prognosebereich_ende)} Monaten prognostiziert"
             )
         if vorhersage_hauptsanktion == "Geldstrafe":
             nachbarobjekt.sanktionsbewertung = (
-                f"Die KI hält die Sanktion dieses Urteils für deutlich zu streng. Sie hätte mit den "
-                f"oben dargestellten Eckwerten dieses Urteils "
+                f"Die KI hält die Sanktion dieses Urteils für deutlich zu streng. Sie hätte rein basierend auf den "
+                f"oben dargestellten objektiven Eckwerten dieses Urteils "
                 f"eine {vorhersage_vollzug} Geldstrafe zwischen "
                 f"{str(prognosebereich_start * 30)} und {str(prognosebereich_ende * 30)} Tagessätzen prognostiziert"
             )
@@ -1125,15 +1125,15 @@ def sanktionsbewertungs_string_erstellen(
     elif nachbarobjekt_sanktion >= (prognosebereich_start - 3):
         if vorhersage_hauptsanktion == "Freiheitsstrafe":
             nachbarobjekt.sanktionsbewertung = (
-                f"Die KI hält die Sanktion dieses Urteils für leicht zu mild. Sie hätte mit den "
-                f"oben dargestellten Eckwerten dieses Urteils "
+                f"Die KI hält die Sanktion dieses Urteils für leicht zu mild. Sie hätte rein basierend auf den "
+                f"oben dargestellten objektiven Eckwerten dieses Urteils "
                 f"eine {vorhersage_vollzug} Freiheitsstrafe zwischen "
                 f"{str(prognosebereich_start)} und {str(prognosebereich_ende)} Monaten prognostiziert"
             )
         if vorhersage_hauptsanktion == "Geldstrafe":
             nachbarobjekt.sanktionsbewertung = (
-                f"Die KI hält die Sanktion dieses Urteils für leicht zu mild. Sie hätte mit den "
-                f"oben dargestellten Eckwerten dieses Urteils "
+                f"Die KI hält die Sanktion dieses Urteils für leicht zu mild. Sie hätte rein basierend auf den "
+                f"oben dargestellten objektiven Eckwerten dieses Urteils "
                 f"eine {vorhersage_vollzug} Geldstrafe zwischen "
                 f"{str(prognosebereich_start * 30)} und {str(prognosebereich_ende * 30)} Tagessätzen prognostiziert"
             )
@@ -1141,15 +1141,15 @@ def sanktionsbewertungs_string_erstellen(
     elif nachbarobjekt_sanktion < (prognosebereich_start - 3):
         if vorhersage_hauptsanktion == "Freiheitsstrafe":
             nachbarobjekt.sanktionsbewertung = (
-                f"Die KI hält die Sanktion dieses Urteils für deutlich zu mild. Sie hätte mit den "
-                f"oben dargestellten Eckwerten dieses Urteils "
+                f"Die KI hält die Sanktion dieses Urteils für deutlich zu mild. Sie hätte rein basierend auf den "
+                f"oben dargestellten objektiven Eckwerten dieses Urteils "
                 f"eine {vorhersage_vollzug} Freiheitsstrafe zwischen "
                 f"{str(prognosebereich_start)} und {str(prognosebereich_ende)} Monaten prognostiziert"
             )
         if vorhersage_hauptsanktion == "Geldstrafe":
             nachbarobjekt.sanktionsbewertung = (
-                f"Die KI hält die Sanktion dieses Urteils für deutlich zu mild. Sie hätte mit den "
-                f"oben dargestellten Eckwerten dieses Urteils "
+                f"Die KI hält die Sanktion dieses Urteils für deutlich zu mild. Sie hätte rein basierend auf den "
+                f"oben dargestellten objektiven Eckwerten dieses Urteils "
                 f"eine {vorhersage_vollzug} Geldstrafe zwischen "
                 f"{str(prognosebereich_start * 30)} und {str(prognosebereich_ende * 30)} Tagessätzen prognostiziert"
             )

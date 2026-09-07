@@ -59,12 +59,14 @@
             {% elif vorhersage_sanktionsart == "Geldstrafe" %}
                 <p> Das KI-Modell sagt eine <b>{{ vorhersage_vollzug }}</b> {{ vorhersage_sanktionsart }} <b>
                     {{ vorhersage_strafmass|prognosebereich_angeben_fuer_geldstrafe }}</b>
-                    Tagessätzen voraus</p>
+                    Tagessätzen voraus.<br>
+                    <span class="text-muted">Diese Werte basieren ausschliesslich auf einer Auswertung von einzelnen (nicht vollständig erfassten) objektiven Tatbestandsmerkmalen und ersetzen keinesfalls eine gesetzesmässige Strafzumessung, welche auch konkret vorliegende subjektive Tatbestandsmerkmale und Täterkomponenten zu würdigen hat.</span></p>
 
             {% else %}
                 <p> Das KI-Modell sagt eine <b>{{ vorhersage_vollzug }}</b> {{ vorhersage_sanktionsart }} <b>
                     {{ vorhersage_strafmass|prognosebereich_angeben }}</b>
-                    Monaten voraus</p>
+                    Monaten voraus.<br>
+                    <span class="text-muted">Diese Werte basieren ausschliesslich auf einer Auswertung von einzelnen (nicht vollständig erfassten) objektiven Tatbestandsmerkmalen und ersetzen keinesfalls eine gesetzesmässige Strafzumessung, welche auch konkret vorliegende subjektive Tatbestandsmerkmale und Täterkomponenten zu würdigen hat.</span></p>
             {% endif %}
         </div>
         {% endif %}

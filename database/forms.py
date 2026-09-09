@@ -20,6 +20,14 @@ class UrteilModelForm(ModelForm):
 
 
 class UrteilsEckpunkteAbfrageFormular(ModelForm):
+    gleiches_hauptdelikt = forms.BooleanField(
+        initial=True,
+        required=False,
+        label="Nur Präjudizen anzeigen, die dasselbe Hauptdelikt aufweisen",
+        help_text="Wenn aktiviert, werden nur Präjudizien mit demselben Hauptdelikt wie "
+                  "im Formular ausgewählt angezeigt.",
+    )
+
     class Meta:
         model = Urteil
         fields = [

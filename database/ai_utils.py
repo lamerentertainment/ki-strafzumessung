@@ -747,11 +747,25 @@ def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich
     # Get primary keys for all neighbors
     nachbar_pks = [train_X_df.iloc[indexes[0, i]].name for i in range(n_neighbors)]
 
+    # Sämtliche Urteile nach Distanz sortiert (als Kandidatenliste für allfällige Filter,
+    # z.B. "nur Präjudizien mit demselben Hauptdelikt")
+    alle_nachbar_pks = train_X_df.index[all_indexes[0]].tolist()
+    alle_distanzen = all_differences[0]
+
     # For backward compatibility, return the first two separately
     nachbar_pk = nachbar_pks[0]
     nachbar_pk2 = nachbar_pks[1]
 
-    return nachbar_pk, nachbar_pk2, knn_prediction, nachbar_pks, differences[0], furthest_sample_distance
+    return (
+        nachbar_pk,
+        nachbar_pk2,
+        knn_prediction,
+        nachbar_pks,
+        differences[0],
+        furthest_sample_distance,
+        alle_nachbar_pks,
+        alle_distanzen,
+    )
 
 
 def nachbar_mit_sanktionsbewertung_anreichern(

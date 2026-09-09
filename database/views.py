@@ -335,12 +335,55 @@ def prognose(request):
             ]
             urteil_features_series = pd.Series(urteil_features_list)
 
-            nachbar_pk, nachbar_pk2, knn_prediction, nachbar_pks, distances, last_neighbor_distance = knn_pipeline(
-                x_train_df, y_train_df, urteil_features_series
+            (
+                nachbar_pk,
+                nachbar_pk2,
+                knn_prediction,
+                nachbar_pks,
+                distances,
+                last_neighbor_distance,
+                alle_nachbar_pks,
+                alle_distanzen,
+            ) = knn_pipeline(x_train_df, y_train_df, urteil_features_series)
+
+            # Optionaler Filter: nur Präjudizien mit demselben Hauptdelikt anzeigen
+            gleiches_hauptdelikt = bool(
+                form.cleaned_data.get("gleiches_hauptdelikt")
             )
 
-            nachbar = Urteil.objects.get(pk=nachbar_pk)
-            nachbar2 = Urteil.objects.get(pk=nachbar_pk2)
+            if gleiches_hauptdelikt:
+                gefilterte_nachbarn = [
+                    (pk, float(dist))
+                    for pk, dist in zip(alle_nachbar_pks, alle_distanzen)
+                    if x_train_df.loc[pk, "hauptdelikt"] == hauptdelikt
+                ]
+
+                # Filter strikt anwenden (kein Fallback auf ungefilterte Nachbarn)
+                if len(gefilterte_nachbarn) < 4:
+                    praejudizien_error_message = (
+                        "Nicht genügend (mind. 4) Präjudizen mit folgenden Kriterien vorhanden:\n"
+                        f"• Hauptdelikt: {hauptdelikt}\n"
+                        "Um Präjudizien anzuzeigen, deaktivieren Sie entsprechende Filterfunktionen."
+                    )
+                    return render(
+                        request,
+                        "database/prognose.html",
+                        {
+                            "form": form,
+                            "display_eingabeformular_button": "d-inline-flex",
+                            "eingabeformular_anzeigen": "",
+                            "vorhersage_strafmass": vorhersage_strafmass[0],
+                            "vorhersage_vollzug": vollzugsstring,
+                            "vorhersage_sanktionsart": string_sanktionsart,
+                            "praejudizien_error_message": praejudizien_error_message,
+                        },
+                    )
+
+                nachbar_pks = [pk for pk, _ in gefilterte_nachbarn[:4]]
+                distances = [dist for _, dist in gefilterte_nachbarn[:4]]
+
+            nachbar = Urteil.objects.get(pk=nachbar_pks[0])
+            nachbar2 = Urteil.objects.get(pk=nachbar_pks[1])
 
             # Get the next two neighbors if available
             if len(nachbar_pks) > 2:

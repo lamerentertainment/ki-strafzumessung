@@ -77,6 +77,11 @@
                 {% comment %}
                 <p>knn_prediction: {{ knn_prediction }} Monate</p>
                 {% endcomment %}
+            {% if praejudizien_error_message %}
+                <div class="alert alert-warning" role="alert">
+                    {{ praejudizien_error_message|linebreaksbr }}
+                </div>
+            {% else %}
             <div class="row">
                 <div class="col">{% include "database/includes/nachbar.html" with nachbar=nachbar %}</div>
                 <div class="col">{% include "database/includes/nachbar.html" with nachbar=nachbar2 %}</div>
@@ -102,6 +107,7 @@
                     {% endif %}
                 </div>
             </div>
+            {% endif %}
             {% endif %}
         </div>
         {% endif %}

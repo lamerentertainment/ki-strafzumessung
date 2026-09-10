@@ -11,7 +11,18 @@
         .chat-markdown > *:last-child { margin-bottom: 0; }
         .chat-markdown ul, .chat-markdown ol { padding-left: 1.25rem; }
         .chat-markdown pre { white-space: pre-wrap; word-break: break-word; }
-        .chat-markdown table { width: 100%; }
+        /* Präjudizien-Tabellen (eine abgeschlossene Tabelle pro Präjudiz) im Look der
+           Nearest-Neighbor-Karten der KI-Prognose */
+        .chat-markdown table { width: 100%; margin-bottom: 1rem; border-collapse: collapse; }
+        .chat-markdown th, .chat-markdown td {
+            border: 1px solid var(--bs-border-color, #dee2e6);
+            padding: 0.4rem 0.5rem;
+            vertical-align: top;
+            font-size: 0.9rem;
+        }
+        .chat-markdown thead th { background-color: #f8f9fa; }
+        .chat-markdown tbody tr td:first-child { width: 30%; white-space: nowrap; }
+        .chat-markdown h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.25rem; }
     </style>
 {% endblock extra_head %}
 

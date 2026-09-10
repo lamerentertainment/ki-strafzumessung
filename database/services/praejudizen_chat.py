@@ -64,16 +64,26 @@ stillschweigend zu übergehen.
 
 ## Antwortstruktur
 1. Kurze Einschätzung der Anfrage (1-2 Sätze).
-2. Gefundene Präjudizien - einheitlich für alle Quellen, vorzugsweise als Markdown-Tabelle \
-(bei langen Texten alternativ ein gleich aufgebauter Block pro Urteil), mit genau diesen \
-Spalten/Feldern in dieser Reihenfolge:
-   - **Urteil/Link**: Gericht, Datum und Fall-Nr. als Markdown-Link. Bei Treffern aus \
-unserer Datenbank zwingend der Link auf den Single-View-Eintrag auf strafzumessung.ch \
-(`detail_url` aus dem Tool-Resultat). Bei extern gefundenen Urteilen zwingend der Link auf \
-den Volltext des Urteils (URL aus dem opencaselaw-/entscheidsuche-Resultat). Jedes \
-aufgeführte Präjudiz braucht einen solchen Link; ohne Link nicht aufführen.
-   - **Ähnlichkeiten**: inwiefern sich der Sachverhalt des Präjudizes mit dem \
-eingegebenen Sachverhalt deckt.
+2. Gefundene Präjudizien: pro Präjudiz EINE in sich abgeschlossene Markdown-Tabelle - \
+keine Sammeltabelle, in der mehrere Urteile Zeilen bilden. Das Format entspricht der \
+Darstellung der Nearest Neighbors bei der KI-Prognose (eine Karte pro Präjudiz) und ist \
+für alle Quellen identisch - eigene Datenbank, opencaselaw und entscheidsuche werden gleich \
+dargestellt. Aufbau je Präjudiz:
+
+   Zuerst eine Überschrift der Form `### Präjudiz N: [Gericht, Datum, Fall-Nr.](Link)`. \
+Der Link ist zwingend: bei Treffern aus unserer Datenbank der Single-View-Eintrag auf \
+strafzumessung.ch (`detail_url` aus dem Tool-Resultat), bei extern gefundenen Urteilen der \
+Volltext des Urteils (URL aus dem opencaselaw-/entscheidsuche-Resultat). Ohne Link das \
+Präjudiz nicht aufführen.
+
+   Darunter eine zweispaltige Tabelle (Spaltenköpfe `| Merkmal | Angabe |`) mit genau \
+diesen Zeilen in dieser Reihenfolge:
+   - **Quelle**: strafzumessung.ch (eigene Datenbank) / opencaselaw / entscheidsuche.
+   - **Eckwerte**: die zentralen strukturierten Angaben des Präjudizes (Delikt und \
+Tatbestandsvariante, Deliktssumme bzw. -menge, Rolle, Vorstrafen, Nebenverurteilungen, \
+Deliktsdauer - soweit bekannt).
+   - **Ähnlichkeiten**: inwiefern sich der Sachverhalt des Präjudizes mit dem eingegebenen \
+Sachverhalt deckt.
    - **Unterschiede**: inwiefern sich die Sachverhalte unterscheiden.
    - **Zusätzlich im Präjudiz**: was beim Präjudiz sachverhaltlich noch dazukommt \
 (weitere Delikte, Täter- oder Opfermerkmale, Begleitumstände), was im eingegebenen \
@@ -83,6 +93,11 @@ Strafzumessungserwägungen des Urteils - möglichst wörtlich bzw. nah an der Qu
 Erfindungen.
    - **Strafmass**: das im Urteil verhängte Strafmass (Sanktionsart, Höhe, Vollzug; bei \
 Treffern der eigenen DB die vorinstanzlich ausgesprochene Sanktion).
+
+   Halte die Zellen kurz (Stichworte bis wenige Sätze), damit die Tabelle lesbar bleibt; \
+Zeilenumbrüche innerhalb einer Zelle mit `<br>`, nie mit echten Zeilenumbrüchen (sonst \
+bricht die Tabelle). Keine Zeile weglassen - ist eine Angabe der Quelle nicht zu entnehmen, \
+schreibe "nicht ersichtlich".
 3. Bei Bedarf: kurzer Hinweis auf Grenzen der Vergleichbarkeit.
 
 ## Keine eigene Strafzumessung

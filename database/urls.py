@@ -9,11 +9,6 @@ urlpatterns = [
     path("prognose", views.prognose, name="prognose"),
     path("betm_prognose", views.betm_prognose, name="betm_prognose"),
     path(
-        "sexual_kimodelle_neu_generieren",
-        views.sexual_kimodelle_neu_generieren,
-        name="sexual_kimodelle_neu_generieren",
-    ),
-    path(
         "urteil/erstellen", views.UrteilErstellenView.as_view(), name="urteil_erstellen"
     ),
     path(
@@ -95,11 +90,6 @@ urlpatterns = [
         "sexualurteil/<int:pk>",
         views.SexualdeliktUrteilDetailView.as_view(),
         name="sexualurteil_detail",
-    ),
-    path(
-        "strafrechtlicher_sachverhalt",
-        views.strafrechtlicher_sachverhalt,
-        name="strafrechtlicher_sachverhalt",
     ),
     path(
         "vmurteil/<int:pk>",

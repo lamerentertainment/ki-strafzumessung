@@ -5,11 +5,6 @@ from .models import (
     BetmUrteil,
     BetmArt,
     Rolle,
-    SexualdeliktUrteil,
-    Hauptdelikt,
-    Tatmittel,
-    ZusaetzlicheSexualdelikte,
-    Besonderheiten,
 )
 
 
@@ -176,123 +171,6 @@ class BetmUrteilsEckpunkteAbfrageFormular(forms.Form):
     )
 
 
-class SexualdeliktUrteilsEckpunkteAbfrageFormular(forms.Form):
-    hauptdelikt = forms.ModelChoiceField(
-        # Nur im Datensatz vorkommende Hauptdelikte zulassen, sonst schlägt der OneHotEncoder
-        # bei im Training unbekannten Kategorien fehl.
-        queryset=Hauptdelikt.objects.filter(hauptdelikt__isnull=False).distinct(),
-        label="Hauptdelikt",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    hauptdelikt_tatmittel = forms.ModelChoiceField(
-        queryset=Tatmittel.objects.filter(
-            hauptdelikt_tatmittel__isnull=False
-        ).distinct(),
-        label="Tatmittel",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    hauptdelikt_mehrfachbegehung = forms.BooleanField(
-        initial=False,
-        required=False,
-        label="mehrfache Tatbegehung?",
-        help_text="Verurteilung wegen mehrfacher Begehung des Hauptdelikts",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    hauptdelikt_mehrfachbegehung_anzahl = forms.IntegerField(
-        initial=1,
-        required=False,
-        label="Anzahl Tatbegehungen",
-        help_text="Anzahl der Vollendungen des Hauptdelikts (nur bei mehrfacher Begehung).",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    deliktsperiode_in_tagen = forms.IntegerField(
-        initial=1,
-        required=False,
-        label="Deliktsperiode (Tage)",
-        help_text="Periode, in welcher das Hauptdelikt mehrfach begangen wurde, in Tagen.",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    deliktsdauer_in_minuten = forms.IntegerField(
-        initial=30,
-        required=False,
-        label="Deliktsdauer (Minuten)",
-        help_text="Deliktsdauer einer einzelnen Tatbegehung des Hauptdelikts in Minuten, soweit bekannt.",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    deliktsscore_uebrige_delikte = forms.IntegerField(
-        initial=0,
-        required=False,
-        label="Deliktsscore übrige Delikte",
-        help_text="Anzahl der Schuldsprüche, welche neben den Sexualdelikten ausgesprochen wurden. "
-        "+ 1 Punkt für jedes weitere Vergehen. + 2 Punkte für jedes weitere Verbrechen. "
-        "+ 1 Punkt bei mehrfacher Begehung.",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    hauptdelikt_taeter_opfer_beziehung = forms.ChoiceField(
-        choices=SexualdeliktUrteil.BEZIEHUNG_CHOICES,
-        initial="Bekannte",
-        label="Täter-Opfer-Beziehung",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    hauptdelikt_opferalter = forms.ChoiceField(
-        choices=SexualdeliktUrteil.OPFERALTER_CHOICES,
-        initial="erwachsen",
-        label="Opferalter",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    hauptdelikt_opfer_vorerfahrung = forms.ChoiceField(
-        choices=SexualdeliktUrteil.OPFERERFAHRUNG_CHOICES,
-        initial="unbekannt",
-        label="Sexuelle Vorerfahrung des Opfers?",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    geschlecht = forms.ChoiceField(
-        choices=SexualdeliktUrteil.GESCHLECHT,
-        initial="0",
-        label="Geschlecht",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    nationalitaet = forms.ChoiceField(
-        choices=SexualdeliktUrteil.NATIONALITAET,
-        initial="2",
-        label="Nationalität",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    vorbestraft = forms.BooleanField(
-        initial=False,
-        required=False,
-        label="vorbestraft",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    vorbestraft_einschlaegig = forms.BooleanField(
-        initial=False,
-        required=False,
-        label="einschlägig vorbestraft",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    sexualdelikte_zusaetzliche = forms.ModelMultipleChoiceField(
-        queryset=ZusaetzlicheSexualdelikte.objects.all(),
-        required=False,
-        widget=forms.CheckboxSelectMultiple,
-        label="zusätzliche Sexualdelikte",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    besonderheiten = forms.ModelMultipleChoiceField(
-        queryset=Besonderheiten.objects.all(),
-        required=False,
-        widget=forms.CheckboxSelectMultiple,
-        label="Besonderheiten",
-        template_name="database/includes/prognose_form_field.html",
-    )
-    gleiches_hauptdelikt = forms.BooleanField(
-        initial=True,
-        required=False,
-        label="Nur Präjudizen anzeigen, die dasselbe Hauptdelikt aufweisen",
-        help_text="Wenn aktiviert, werden nur Präjudizien mit demselben Hauptdelikt wie im Formular gewählt angezeigt.",
-        template_name="database/includes/prognose_form_field.html",
-    )
-
-
 class CeteribusParibusFormular(ModelForm):
     class Meta:
         model = Urteil
@@ -305,12 +183,3 @@ class CeteribusParibusFormular(ModelForm):
             "vorbestraft",
             "vorbestraft_einschlaegig",
         ]
-
-
-class StrafrechtlicherSachverhaltFormular(forms.Form):
-    sachverhalt = forms.CharField(
-        widget=forms.Textarea(attrs={'rows': 10, 'cols': 80}),
-        label="Strafrechtlicher Sachverhalt",
-        help_text="Bitte geben Sie hier die Eckwerte des strafrechtlichen Sachverhalts ein.",
-        required=True,
-    )

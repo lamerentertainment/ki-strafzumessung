@@ -106,4 +106,10 @@ urlpatterns = [
         views.VMUrteilDetailView.as_view(),
         name="vmurteil_detail",
     ),
+    path("praejudizensuche", views.praejudizensuche, name="praejudizensuche"),
+    path(
+        "praejudizensuche/nachricht",
+        views.praejudizensuche_nachricht,
+        name="praejudizensuche_nachricht",
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

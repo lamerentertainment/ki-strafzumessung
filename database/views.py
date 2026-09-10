@@ -2438,3 +2438,101 @@ def strafrechtlicher_sachverhalt(request):
 
     context = {'form': form, 'sachverhalt': sachverhalt, 'vergleichbare_urteile': vergleichbare_urteile_html, }
     return render(request, 'database/strafrechtlicher_sachverhalt.html', context)
+
+
+import json
+import logging
+import time
+import uuid
+
+from django.conf import settings
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET, require_POST
+
+from database.models import PraejudizensucheLog
+from database.services.praejudizen_chat import PraejudizenChatError, run_chat_turn
+from database.services.rate_limit import RateLimitExceeded, check_and_increment_rate_limit, client_ip
+
+logger = logging.getLogger(__name__)
+
+
+@require_GET
+def praejudizensuche(request):
+    """Rendert die leere Chat-Seite der Präjudizensuche. Kein Server-Session-State - die
+    Nachrichten-History lebt im Browser (JS) und wird bei jeder Anfrage mitgeschickt."""
+    return render(request, 'database/praejudizensuche.html', {})
+
+
+@require_POST
+def praejudizensuche_nachricht(request):
+    """Nimmt {"history": [...], "message": "...", "conversation_id": "..."} als JSON entgegen,
+    ruft den Claude-Tool-Loop synchron auf (inkl. MCP-Recherche + eigener DB-Tools) und gibt
+    {"reply", "history", "conversation_id"} bzw. einen strukturierten Fehler zurück. Jeder
+    Versuch (Erfolg wie Fehler) wird als PraejudizensucheLog protokolliert.
+
+    Bewusst kein @login_required: das Feature soll öffentlich erreichbar sein, ist aktuell
+    nur über den superuser-only Dev-Menüpunkt verlinkt (siehe navbar.html)."""
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, TypeError):
+        return JsonResponse({'success': False, 'error': 'Ungültiges JSON.'}, status=400)
+
+    user_message = (data.get('message') or '').strip()
+    client_history = data.get('history') or []
+    conversation_id = data.get('conversation_id') or str(uuid.uuid4())
+
+    if not user_message:
+        return JsonResponse({'success': False, 'error': 'Leere Nachricht.'}, status=400)
+    if len(user_message) > 4000:
+        return JsonResponse(
+            {'success': False, 'error': 'Nachricht zu lang (max. 4000 Zeichen).'}, status=400
+        )
+    if not isinstance(client_history, list) or len(client_history) > 40:
+        return JsonResponse(
+            {'success': False, 'error': 'Ungültige oder zu lange History.'}, status=400
+        )
+
+    turn_index = len(client_history) // 2
+    ip = client_ip(request)
+    model_used = getattr(settings, 'PRAEJUDIZENSUCHE_MODEL', '')
+
+    try:
+        check_and_increment_rate_limit(request)
+    except RateLimitExceeded as e:
+        PraejudizensucheLog.objects.create(
+            conversation_id=conversation_id, turn_index=turn_index, ip_address=ip,
+            user_message=user_message, success=False, rate_limited=True, error_message=str(e),
+        )
+        return JsonResponse({'success': False, 'error': str(e)}, status=429)
+
+    start = time.monotonic()
+    try:
+        reply_text, updated_history, tool_calls = run_chat_turn(client_history, user_message)
+    except PraejudizenChatError as e:
+        PraejudizensucheLog.objects.create(
+            conversation_id=conversation_id, turn_index=turn_index, ip_address=ip,
+            user_message=user_message, success=False, error_message=str(e), model_used=model_used,
+            duration_ms=int((time.monotonic() - start) * 1000),
+        )
+        return JsonResponse({'success': False, 'error': str(e)}, status=502)
+    except Exception as e:
+        logger.exception("Unerwarteter Fehler in praejudizensuche_nachricht")
+        PraejudizensucheLog.objects.create(
+            conversation_id=conversation_id, turn_index=turn_index, ip_address=ip,
+            user_message=user_message, success=False, error_message=str(e), model_used=model_used,
+            duration_ms=int((time.monotonic() - start) * 1000),
+        )
+        return JsonResponse({'success': False, 'error': f'Unerwarteter Fehler: {e}'}, status=500)
+
+    PraejudizensucheLog.objects.create(
+        conversation_id=conversation_id, turn_index=turn_index, ip_address=ip,
+        user_message=user_message, assistant_reply=reply_text, tool_calls=tool_calls,
+        model_used=model_used, duration_ms=int((time.monotonic() - start) * 1000), success=True,
+    )
+
+    return JsonResponse({
+        'success': True,
+        'reply': reply_text,
+        'history': updated_history,
+        'conversation_id': conversation_id,
+    })

@@ -154,5 +154,22 @@ AWS_QUERYSTRING_AUTH = False
 # Google Gemini API für KI-gestützte Urteilserfassung
 GOOGLE_API_KEY = env('GOOGLE_API_KEY', default=None)
 
+# Anthropic Claude API für die Präjudizensuche (Chat mit MCP-Connector + eigenen DB-Tools)
+ANTHROPIC_API_KEY = env('ANTHROPIC_API_KEY', default=None)
+PRAEJUDIZENSUCHE_MODEL = env('PRAEJUDIZENSUCHE_MODEL', default='claude-sonnet-5')
+PRAEJUDIZENSUCHE_MAX_TOOL_ROUNDS = env.int('PRAEJUDIZENSUCHE_MAX_TOOL_ROUNDS', default=6)
+PRAEJUDIZENSUCHE_RATE_LIMIT_PER_HOUR = env.int('PRAEJUDIZENSUCHE_RATE_LIMIT_PER_HOUR', default=20)
+
+# Cache-Backend für das Rate-Limiting der Präjudizensuche. Kein Redis vorhanden, daher
+# DatabaseCache (Postgres ist ohnehin da) statt des Default-LocMemCache, der pro
+# Gunicorn-Worker/Dyno separat zählen würde. Einmalig vor dem ersten Request:
+# python manage.py createcachetable
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'praejudizensuche_cache',
+    }
+}
+
 # Authentication redirects
 LOGIN_REDIRECT_URL = '/admin/'

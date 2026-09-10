@@ -840,3 +840,39 @@ class GewaltdeliktUrteil(models.Model):
     class Meta:
         verbose_name_plural = "Gewaltdelikt-Urteile"
         ordering = ["urteilsdatum"]
+
+
+class PraejudizensucheLog(models.Model):
+    """Protokolliert jede Anfrage/Antwort des Präjudizensuche-Chats (Anthropic-API,
+    öffentlich erreichbar) für Missbrauchs-Monitoring und Fehleranalyse."""
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    conversation_id = models.CharField(
+        max_length=64,
+        db_index=True,
+        help_text="Client-seitig erzeugte UUID, gruppiert die Turns einer Konversation.",
+    )
+    turn_index = models.PositiveIntegerField(
+        help_text="0-basierter Index dieser Nachricht innerhalb der Konversation."
+    )
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_message = models.TextField()
+    assistant_reply = models.TextField(blank=True)
+    tool_calls = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Liste von {name, input} der in diesem Turn aufgerufenen eigenen Tools "
+        "(ohne volle Tool-Resultate).",
+    )
+    model_used = models.CharField(max_length=100, blank=True)
+    duration_ms = models.PositiveIntegerField(null=True, blank=True)
+    success = models.BooleanField(default=True)
+    error_message = models.TextField(blank=True)
+    rate_limited = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name_plural = "Präjudizensuche-Logs"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.conversation_id} #{self.turn_index} ({self.created_at:%Y-%m-%d %H:%M})"

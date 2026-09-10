@@ -1,0 +1,54 @@
+{% extends "./base.html" %}
+{% load static %}
+
+{% block body %}
+
+    <h1>Präjudizensuche</h1>
+    <p>
+        Chat-Assistent (Beta) für Schweizer Strafzumessungs-Präjudizien. Durchsucht die
+        kuratierte Urteilsdatenbank dieser Plattform sowie externe Rechtsprechungsdatenbanken
+        (opencaselaw, entscheidsuche.ch) und fasst passende Präjudizien mit Belegstellen
+        zusammen. Ersetzt keine Rechtsberatung.
+    </p>
+
+    {% csrf_token %}
+
+    <div class="col-12 col-lg-9" x-data="praejudizenChat()" x-init="init()">
+        <div class="border rounded p-3 mb-3 bg-white" style="height: 55vh; overflow-y: auto;"
+             x-ref="messagesEl">
+            <template x-if="visibleMessages.length === 0 && !loading">
+                <p class="text-muted fst-italic">
+                    Stellen Sie eine Frage, z.B. „Gibt es Präjudizien zu mehrfachem Diebstahl
+                    mit einschlägigen Vorstrafen?“
+                </p>
+            </template>
+            <template x-for="msg in visibleMessages" :key="msg.id">
+                <div class="mb-3 d-flex" :class="msg.role === 'user' ? 'justify-content-end' : 'justify-content-start'">
+                    <div class="p-2 px-3 rounded"
+                         :class="msg.role === 'user' ? 'bg-primary text-white' : 'bg-light border'"
+                         style="max-width: 85%; white-space: pre-wrap;"
+                         x-text="msg.text"></div>
+                </div>
+            </template>
+            <div x-show="loading" class="text-muted">
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+                Durchsuche Rechtsprechung...
+            </div>
+        </div>
+
+        <form @submit.prevent="send()">
+            <div class="input-group">
+                <textarea class="form-control" rows="2" x-model="input" :disabled="loading"
+                          placeholder="Frage zur Strafzumessung stellen..."
+                          @keydown.enter.exact.prevent="send()"></textarea>
+                <button class="btn btn-primary" type="submit" :disabled="loading || !input.trim()">
+                    Senden
+                </button>
+            </div>
+        </form>
+        <div x-show="errorMsg" class="alert alert-danger mt-2" x-text="errorMsg"></div>
+    </div>
+
+    <script src="{% static 'database/praejudizensuche_chat.js' %}"></script>
+
+{% endblock %}

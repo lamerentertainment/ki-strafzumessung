@@ -7,7 +7,7 @@ from django.utils.decorators import method_decorator
 import json
 from .models import (Urteil, KIModelPickleFile, DiagrammSVG, BetmUrteil, BetmArt, Betm, Rolle, Kanton,
                      SexualdeliktUrteil, Besonderheiten, Hauptdelikt, ZusaetzlicheSexualdelikte, Tatmittel,
-                     GewaltdeliktUrteil)
+                     GewaltdeliktUrteil, PraejudizensucheLog)
 from .services.urteil_extractor import (
     extract_urteil_data, validate_extracted_data,
     extract_betm_urteil_data, validate_betm_extracted_data,
@@ -460,3 +460,20 @@ admin.site.register(Hauptdelikt)
 admin.site.register(Tatmittel)
 admin.site.register(ZusaetzlicheSexualdelikte)
 admin.site.register(Besonderheiten)
+
+
+@admin.register(PraejudizensucheLog)
+class PraejudizensucheLogAdmin(admin.ModelAdmin):
+    list_display = (
+        'created_at', 'conversation_id', 'turn_index', 'success', 'rate_limited',
+        'duration_ms', 'model_used',
+    )
+    list_filter = ('success', 'rate_limited', 'model_used')
+    search_fields = ('conversation_id', 'user_message', 'assistant_reply', 'ip_address')
+    readonly_fields = [f.name for f in PraejudizensucheLog._meta.fields]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

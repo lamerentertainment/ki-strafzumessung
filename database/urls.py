@@ -92,6 +92,16 @@ urlpatterns = [
         name="sexualurteil_detail",
     ),
     path(
+        "gewaltdatabase",
+        views.GewaltdeliktUrteilListView.as_view(),
+        name="gewaltdatabase",
+    ),
+    path(
+        "gewalturteil/<int:pk>",
+        views.GewaltdeliktUrteilDetailView.as_view(),
+        name="gewalturteil_detail",
+    ),
+    path(
         "vmurteil/<int:pk>",
         views.VMUrteilDetailView.as_view(),
         name="vmurteil_detail",

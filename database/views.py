@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.generic import ListView, DetailView
 from django.core.files.base import ContentFile
-from .models import Urteil, BetmUrteil, SexualdeliktUrteil, BetmArt, KIModelPickleFile, DiagrammSVG
+from .models import Urteil, BetmUrteil, SexualdeliktUrteil, GewaltdeliktUrteil, BetmArt, KIModelPickleFile, DiagrammSVG
 from .forms import (
     UrteilModelForm,
     UrteilsEckpunkteAbfrageFormular,
@@ -126,6 +126,17 @@ class SexualdeliktUrteilListView(ListView):
 class SexualdeliktUrteilDetailView(DetailView):
     model = SexualdeliktUrteil
     template_name = "database/sexualurteil_detail.html"
+
+
+class GewaltdeliktUrteilListView(ListView):
+    model = GewaltdeliktUrteil
+    context_object_name = "gewaltdelikt_urteile"
+    template_name = "database/gewalturteil_list.html"
+
+
+class GewaltdeliktUrteilDetailView(DetailView):
+    model = GewaltdeliktUrteil
+    template_name = "database/gewalturteil_detail.html"
 
 
 # KI-Model Views:

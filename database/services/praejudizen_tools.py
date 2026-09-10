@@ -1,12 +1,12 @@
 """
 Function-Calling-Tools für die Präjudizensuche: durchsuchen die eigene kuratierte
-Urteilsdatenbank (Urteil/BetmUrteil/SexualdeliktUrteil). Tool-*Definitionen* (JSON-Schema
+Urteilsdatenbank (Urteil/BetmUrteil/SexualdeliktUrteil/GewaltdeliktUrteil). Tool-*Definitionen* (JSON-Schema
 für die Anthropic Messages API) und Tool-*Ausführung* (Django-ORM) leben bewusst in einem
 Modul, aber als getrennte Funktionen, damit die Ausführung ohne Anthropic-Client testbar ist.
 """
 from django.urls import reverse
 
-from database.models import BetmUrteil, SexualdeliktUrteil, Urteil
+from database.models import BetmUrteil, GewaltdeliktUrteil, SexualdeliktUrteil, Urteil
 
 MAX_LIMIT = 20
 DEFAULT_LIMIT = 15
@@ -314,10 +314,193 @@ def execute_search_sexualdelikt_urteile(params: dict) -> dict:
     return {"total_treffer": total, "angezeigt": len(urteile), "urteile": urteile}
 
 
-CUSTOM_TOOLS = [SEARCH_VERMOEGENSDELIKT_TOOL, SEARCH_BETM_TOOL, SEARCH_SEXUALDELIKT_TOOL]
+# --- search_gewaltdelikt_urteile ------------------------------------------------------------
+
+# Die Choice-Werte werden direkt aus dem Modell abgeleitet, damit Tool-Schema und DB nicht
+# auseinanderlaufen (GewaltdeliktUrteil hat sieben Choice-Felder).
+def _choices(field_choices) -> list[str]:
+    return [value for value, _label in field_choices]
+
+
+SEARCH_GEWALTDELIKT_TOOL = {
+    "name": "search_gewaltdelikt_urteile",
+    "description": (
+        "Durchsucht die kuratierte Datenbank erstinstanzlicher Strafzumessungsentscheide zu "
+        "Gewaltdelikten (Mord, vorsätzliche Tötung, Totschlag, fahrlässige Tötung, schwere "
+        "und einfache Körperverletzung, Tätlichkeiten, Gefährdung des Lebens, Angriff, "
+        "Raufhandel, Raub - je auch versucht). Liefert konkrete, dokumentierte Präjudizien "
+        "mit ausgesprochener Sanktion. Nutze dieses Tool IMMER, wenn die Anfrage eines dieser "
+        "Delikte betrifft."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "hauptdelikt": {
+                "type": "string",
+                "enum": _choices(GewaltdeliktUrteil.HAUPTDELIKT),
+                "description": "Das Delikt, für welches die Einsatzstrafe gebildet wurde.",
+            },
+            "versuch": {
+                "type": "boolean",
+                "description": "Ob das Hauptdelikt beim Versuch geblieben ist (Art. 22 StGB).",
+            },
+            "tatmittel": {
+                "type": "string",
+                "enum": _choices(GewaltdeliktUrteil.TATMITTEL),
+                "description": "Das beim Hauptdelikt eingesetzte Tatmittel.",
+            },
+            "vorsatzform": {
+                "type": "string",
+                "enum": _choices(GewaltdeliktUrteil.VORSATZFORM),
+                "description": "Subjektiver Tatbestand des Hauptdelikts.",
+            },
+            "taeter_opfer_beziehung": {
+                "type": "string",
+                "enum": _choices(GewaltdeliktUrteil.BEZIEHUNG_CHOICES),
+                "description": (
+                    "Beziehung zwischen Täter und Opfer. 'Unbekannte' = das Opfer war eine "
+                    "fremde Person; 'unbekannt' = Beziehung nicht dokumentiert."
+                ),
+            },
+            "verletzungsfolge": {
+                "type": "string",
+                "enum": _choices(GewaltdeliktUrteil.VERLETZUNGSFOLGE),
+                "description": "Schwerste eingetretene Verletzungsfolge beim Opfer.",
+            },
+            "angegriffenes_koerperteil": {
+                "type": "string",
+                "enum": _choices(GewaltdeliktUrteil.KOERPERTEIL),
+                "description": "Vom Angriff hauptbetroffene Körperregion des Opfers.",
+            },
+            "substanzeinfluss": {
+                "type": "string",
+                "enum": _choices(GewaltdeliktUrteil.SUBSTANZEINFLUSS),
+                "description": "Ob der Täter im Tatzeitpunkt unter Alkohol-/Drogeneinfluss stand.",
+            },
+            "opferzahl_min": {
+                "type": "integer",
+                "description": "Mindestzahl der vom Hauptdelikt betroffenen Opfer.",
+            },
+            "deliktssumme_min": {
+                "type": "integer",
+                "description": "Beutebetrag in CHF (nur bei Raub relevant), untere Grenze.",
+            },
+            "deliktssumme_max": {
+                "type": "integer",
+                "description": "Beutebetrag in CHF (nur bei Raub relevant), obere Grenze.",
+            },
+            "mehrfach": {"type": "boolean"},
+            "waffe_gefaehrlicher_gegenstand": {
+                "type": "boolean",
+                "description": "Begehung mit Waffe oder gefährlichem Gegenstand.",
+            },
+            "bandenmaessig": {"type": "boolean"},
+            "besondere_gefaehrlichkeit": {
+                "type": "boolean",
+                "description": "Besonders skrupellose/grausame Begehung.",
+            },
+            "lebensgefahr": {
+                "type": "boolean",
+                "description": "Herbeiführung einer Lebensgefahr für das Opfer.",
+            },
+            "vorbestraft": {"type": "boolean"},
+            "vorbestraft_einschlaegig": {"type": "boolean"},
+            "hauptsanktion": {"type": "string", "enum": ["Freiheitsstrafe", "Geldstrafe", "Busse"]},
+            "vollzug": {"type": "string", "enum": ["bedingt", "teilbedingt", "unbedingt"]},
+            "limit": {
+                "type": "integer",
+                "description": f"Max. Trefferzahl, Default {DEFAULT_LIMIT}, Maximum {MAX_LIMIT}.",
+            },
+        },
+    },
+}
+
+GEWALTDELIKT_CHOICE_FILTER_FIELDS = [
+    "hauptdelikt",
+    "tatmittel",
+    "vorsatzform",
+    "taeter_opfer_beziehung",
+    "verletzungsfolge",
+    "angegriffenes_koerperteil",
+    "substanzeinfluss",
+]
+
+GEWALTDELIKT_BOOL_FILTER_FIELDS = [
+    "versuch",
+    "mehrfach",
+    "waffe_gefaehrlicher_gegenstand",
+    "bandenmaessig",
+    "besondere_gefaehrlichkeit",
+    "lebensgefahr",
+    "vorbestraft",
+    "vorbestraft_einschlaegig",
+]
+
+
+def execute_search_gewaltdelikt_urteile(params: dict) -> dict:
+    qs = GewaltdeliktUrteil.objects.all()
+    for field in GEWALTDELIKT_CHOICE_FILTER_FIELDS:
+        if params.get(field):
+            qs = qs.filter(**{field: params[field]})
+    if params.get("opferzahl_min") is not None:
+        qs = qs.filter(opferzahl__gte=params["opferzahl_min"])
+    if params.get("deliktssumme_min") is not None:
+        qs = qs.filter(deliktssumme__gte=params["deliktssumme_min"])
+    if params.get("deliktssumme_max") is not None:
+        qs = qs.filter(deliktssumme__lte=params["deliktssumme_max"])
+    qs = _apply_bool_filters(qs, params, GEWALTDELIKT_BOOL_FILTER_FIELDS)
+    qs = _apply_sanktion_filters(qs, params)
+
+    total = qs.count()
+    limit = _clamp_limit(params.get("limit"))
+    urteile = [
+        {
+            "id": u.id,
+            "gericht": u.gericht,
+            "urteilsdatum": str(u.urteilsdatum) if u.urteilsdatum else None,
+            "fall_nr": u.fall_nr,
+            "kanton": u.kanton.abk,
+            "hauptdelikt": u.get_hauptdelikt_display(),
+            "versuch": u.versuch,
+            "tatmittel": u.get_tatmittel_display(),
+            "vorsatzform": u.get_vorsatzform_display(),
+            "mehrfach": u.mehrfach,
+            "opferzahl": u.opferzahl,
+            "taeter_opfer_beziehung": u.get_taeter_opfer_beziehung_display(),
+            "verletzungsfolge": u.get_verletzungsfolge_display(),
+            "angegriffenes_koerperteil": u.get_angegriffenes_koerperteil_display(),
+            "substanzeinfluss": u.get_substanzeinfluss_display(),
+            "waffe_gefaehrlicher_gegenstand": u.waffe_gefaehrlicher_gegenstand,
+            "bandenmaessig": u.bandenmaessig,
+            "besondere_gefaehrlichkeit": u.besondere_gefaehrlichkeit,
+            "lebensgefahr": u.lebensgefahr,
+            "deliktssumme": u.deliktssumme,
+            "deliktsscore_uebrige_delikte": u.deliktsscore_uebrige_delikte,
+            "vorbestraft": u.vorbestraft,
+            "vorbestraft_einschlaegig": u.vorbestraft_einschlaegig,
+            "hauptsanktion": u.get_hauptsanktion_display(),
+            "freiheitsstrafe_in_monaten": u.freiheitsstrafe_in_monaten,
+            "anzahl_tagessaetze": u.anzahl_tagessaetze,
+            "vollzug": u.get_vollzug_display(),
+            "zusammenfassung": u.zusammenfassung[:ZUSAMMENFASSUNG_MAX_CHARS],
+            "detail_url": reverse("gewalturteil_detail", args=[u.id]),
+            "pdf_url": u.url_link or None,
+        }
+        for u in qs.order_by("-urteilsdatum")[:limit]
+    ]
+    return {"total_treffer": total, "angezeigt": len(urteile), "urteile": urteile}
+
+
+CUSTOM_TOOLS = [
+    SEARCH_VERMOEGENSDELIKT_TOOL,
+    SEARCH_BETM_TOOL,
+    SEARCH_SEXUALDELIKT_TOOL,
+    SEARCH_GEWALTDELIKT_TOOL,
+]
 
 TOOL_EXECUTORS = {
     "search_vermoegensdelikt_urteile": execute_search_vermoegensdelikt_urteile,
     "search_betm_urteile": execute_search_betm_urteile,
     "search_sexualdelikt_urteile": execute_search_sexualdelikt_urteile,
+    "search_gewaltdelikt_urteile": execute_search_gewaltdelikt_urteile,
 }

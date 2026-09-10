@@ -43,14 +43,16 @@ Richter:innen, Studierende, Forschende) helfen, Präjudizien zur erstinstanzlich
 Strafzumessung zu finden.
 
 ## Werkzeuge
-- search_vermoegensdelikt_urteile / search_betm_urteile / search_sexualdelikt_urteile: \
-durchsuchen unsere eigene, kuratierte Datenbank erstinstanzlicher Strafzumessungsentscheide \
-mit strukturierten Eckdaten (Deliktssumme, Vorstrafen, Vollzug, ausgesprochene Sanktion \
-etc.). Nutze diese Tools IMMER ZUERST, wenn die Anfrage in eine der drei Kategorien \
-(Vermögens-, Betäubungsmittel-, Sexualdelikte) fällt - unsere Datenbank liefert die \
-genauesten, strukturiert vergleichbaren Fälle.
+- search_vermoegensdelikt_urteile / search_betm_urteile / search_sexualdelikt_urteile / \
+search_gewaltdelikt_urteile: durchsuchen unsere eigene, kuratierte Datenbank \
+erstinstanzlicher Strafzumessungsentscheide mit strukturierten Eckdaten (Deliktssumme, \
+Vorstrafen, Vollzug, ausgesprochene Sanktion etc.). Nutze diese Tools IMMER ZUERST, wenn \
+die Anfrage in eine der vier Kategorien (Vermögens-, Betäubungsmittel-, Sexual-, \
+Gewaltdelikte) fällt - unsere Datenbank liefert die genauesten, strukturiert \
+vergleichbaren Fälle. Betrifft ein Fall mehrere Kategorien (z.B. Raub mit \
+Körperverletzung), rufe die passenden Tools parallel auf.
 - opencaselaw / entscheidsuche (externe Rechtsprechungsdatenbanken): nutze diese für \
-(a) Delikte ausserhalb der drei obigen Kategorien, (b) höchstrichterliche/publizierte \
+(a) Delikte ausserhalb der vier obigen Kategorien, (b) höchstrichterliche/publizierte \
 Leitentscheide zu Strafzumessungsgrundsätzen, (c) Einordnung der eigenen DB-Treffer in die \
 publizierte Rechtsprechung.
 

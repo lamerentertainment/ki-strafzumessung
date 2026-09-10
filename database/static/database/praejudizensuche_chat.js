@@ -64,5 +64,16 @@ function praejudizenChat() {
                 el.scrollTop = el.scrollHeight;
             }
         },
+
+        renderMarkdown(text) {
+            try {
+                const html = marked.parse(text, {breaks: true});
+                return DOMPurify.sanitize(html);
+            } catch (e) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        },
     };
 }

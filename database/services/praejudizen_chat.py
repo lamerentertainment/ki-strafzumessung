@@ -30,6 +30,13 @@ MCP_SERVERS = [
     {"type": "url", "url": "https://mcp.entscheidsuche.ch/mcp", "name": "entscheidsuche"},
 ]
 
+# Jeder in MCP_SERVERS deklarierte Server muss zusätzlich per mcp_toolset-Eintrag in `tools`
+# referenziert werden, sonst lehnt die API den Request mit einem 400 ab ("MCP server '...' is
+# defined but not referenced by any mcp_toolset in tools"). Live gegen die API verifiziert.
+MCP_TOOLSETS = [
+    {"type": "mcp_toolset", "mcp_server_name": server["name"]} for server in MCP_SERVERS
+]
+
 SYSTEM_PROMPT = """Du bist ein Rechercheassistent für Schweizer Strafzumessung, eingebettet \
 in die Plattform strafzumessung.ch. Deine Aufgabe: Nutzerinnen und Nutzern (Anwält:innen, \
 Richter:innen, Studierende, Forschende) helfen, Präjudizien zur erstinstanzlichen \
@@ -89,7 +96,7 @@ def run_chat_turn(client_history: list, user_message: str) -> tuple[str, list, l
                 max_tokens=4096,
                 system=SYSTEM_PROMPT,
                 messages=messages,
-                tools=CUSTOM_TOOLS,
+                tools=CUSTOM_TOOLS + MCP_TOOLSETS,
                 mcp_servers=MCP_SERVERS,
                 betas=[MCP_BETA_HEADER],
             )

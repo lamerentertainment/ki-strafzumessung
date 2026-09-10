@@ -1,6 +1,20 @@
 {% extends "./base.html" %}
 {% load static %}
 
+{% block extra_head %}
+    <!-- Markdown-Rendering der Chat-Antworten: marked (Parser) + DOMPurify (Sanitizer gegen XSS,
+         da die Antworten öffentlicher Nutzer-Eingaben mit rendern) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.5/dist/purify.min.js"></script>
+    <style>
+        .chat-markdown > *:first-child { margin-top: 0; }
+        .chat-markdown > *:last-child { margin-bottom: 0; }
+        .chat-markdown ul, .chat-markdown ol { padding-left: 1.25rem; }
+        .chat-markdown pre { white-space: pre-wrap; word-break: break-word; }
+        .chat-markdown table { width: 100%; }
+    </style>
+{% endblock extra_head %}
+
 {% block body %}
 
     <h1>Präjudizensuche</h1>
@@ -24,10 +38,16 @@
             </template>
             <template x-for="msg in visibleMessages" :key="msg.id">
                 <div class="mb-3 d-flex" :class="msg.role === 'user' ? 'justify-content-end' : 'justify-content-start'">
-                    <div class="p-2 px-3 rounded"
-                         :class="msg.role === 'user' ? 'bg-primary text-white' : 'bg-light border'"
-                         style="max-width: 85%; white-space: pre-wrap;"
-                         x-text="msg.text"></div>
+                    <template x-if="msg.role === 'user'">
+                        <div class="p-2 px-3 rounded bg-primary text-white"
+                             style="max-width: 85%; white-space: pre-wrap;"
+                             x-text="msg.text"></div>
+                    </template>
+                    <template x-if="msg.role === 'assistant'">
+                        <div class="p-2 px-3 rounded bg-light border chat-markdown"
+                             style="max-width: 85%;"
+                             x-html="renderMarkdown(msg.text)"></div>
+                    </template>
                 </div>
             </template>
             <div x-show="loading" class="text-muted">

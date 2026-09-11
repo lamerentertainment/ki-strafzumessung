@@ -28,7 +28,30 @@ bleibt dank x-cloak verborgen.
     </div>
 
     {% for feld in filter_spec.primaer %}
-      {% if feld.typ == 'abhaengige_spanne' %}
+      {% if feld.inline %}
+        {# Wenige Auswahlwerte: direkt als Chips in der Kopfzeile statt im Aufklapper #}
+        <div class="col-auto">
+          <div class="input-group input-group-sm flex-nowrap">
+            <span class="input-group-text" data-bs-toggle="tooltip" title="{{ feld.hilfetext }}"
+                  :class="aktiv(feldNach('{{ feld.name }}')) ? 'text-bg-primary' : ''">{{ feld.label }}</span>
+            {% for option in feld.optionen %}
+              <button type="button" class="btn"
+                      :class="istGewaehlt('{{ feld.name }}', '{{ option.value|escapejs }}')
+                                ? 'btn-primary'
+                                : (anzahl('{{ feld.name }}', '{{ option.value|escapejs }}') === 0
+                                    ? 'btn-outline-secondary opacity-50'
+                                    : 'btn-outline-secondary')"
+                      :disabled="!istGewaehlt('{{ feld.name }}', '{{ option.value|escapejs }}')
+                                 && anzahl('{{ feld.name }}', '{{ option.value|escapejs }}') === 0"
+                      @click="umschalten('{{ feld.name }}', '{{ option.value|escapejs }}')">
+                {{ option.label }}
+                <span class="badge rounded-pill text-bg-light ms-1"
+                      x-text="anzahl('{{ feld.name }}', '{{ option.value|escapejs }}')"></span>
+              </button>
+            {% endfor %}
+          </div>
+        </div>
+      {% elif feld.typ == 'abhaengige_spanne' %}
         <div class="col-auto">
           {% include 'database/includes/filterspanne.html' with feld=feld %}
         </div>

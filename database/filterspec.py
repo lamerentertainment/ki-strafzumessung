@@ -140,6 +140,30 @@ def _ohne_filterwirkung(eintrag, feld, queryset):
     return False
 
 
+def _abgeleitetes_feld_eintrag(feldname, abgeleitet, gruppentitel, queryset):
+    """
+    Feld, dessen Wert nicht in der Datenbank steht, sondern je Urteil berechnet
+    wird (``abgeleitet["wert"]``). Bedient wird es wie ein gewoehnliches
+    Auswahlfeld; angeboten werden nur die im Bestand vorkommenden Werte.
+    """
+    vorhanden = {abgeleitet["wert"](objekt) for objekt in queryset}
+    return {
+        "name": feldname,
+        "typ": TYP_CHOICE,
+        "label": abgeleitet["label"],
+        "hilfetext": abgeleitet.get("hilfetext", ""),
+        "einheit": "",
+        "abgeleitet": True,
+        "inline": abgeleitet.get("inline", False),
+        "optionen": [
+            {"value": wert, "label": bezeichnung}
+            for wert, bezeichnung in abgeleitet["choices"]
+            if wert in vorhanden
+        ],
+        "gruppe": gruppentitel,
+    }
+
+
 def _abhaengige_spanne_eintrag(feldname, spanne, gruppentitel):
     """
     Beschreibt eine Von/Bis-Spanne, die sich auf die im Quellfeld gewaehlten
@@ -168,12 +192,24 @@ def filterspezifikation_erstellen(model, config, queryset=None):
     primaer = config.get("primaer", [])
     pfade = config.get("beziehungspfade", {})
     abhaengige = config.get("abhaengige_spannen", {})
+    abgeleitete = config.get("abgeleitete_felder", {})
 
     gruppen = []
     alle_felder = {}
     for gruppentitel, feldnamen in config["gruppen"]:
         felder = []
         for feldname in feldnamen:
+            if feldname in abgeleitete:
+                eintrag = _abgeleitetes_feld_eintrag(
+                    feldname, abgeleitete[feldname], gruppentitel, queryset
+                )
+                if not (
+                    config.get("einwertige_ausblenden", True)
+                    and len(eintrag["optionen"]) < 2
+                ):
+                    felder.append(eintrag)
+                    alle_felder[feldname] = eintrag
+                continue
             if feldname in abhaengige:
                 eintrag = _abhaengige_spanne_eintrag(
                     feldname, abhaengige[feldname], gruppentitel
@@ -285,10 +321,15 @@ def datensaetze_erstellen(model, config, queryset, spezifikation):
         for feld in spezifikation["felder"]
         if feld["typ"] == TYP_ABHAENGIGE_SPANNE
     }
+    abgeleitete = {
+        feld["name"]: config["abgeleitete_felder"][feld["name"]]
+        for feld in spezifikation["felder"]
+        if feld.get("abgeleitet")
+    }
     feldnamen = [
         feld["name"]
         for feld in spezifikation["felder"]
-        if feld["name"] not in abhaengige
+        if feld["name"] not in abhaengige and feld["name"] not in abgeleitete
     ]
     zusaetzlich = [
         feld["name"] for feld in spezifikation.get("sortierfelder", [])
@@ -305,6 +346,8 @@ def datensaetze_erstellen(model, config, queryset, spezifikation):
         werte = {feld.name: _feldwert(objekt, feld, pfade) for feld in felder}
         for feldname, spanne in abhaengige.items():
             werte[feldname] = _mengen_aggregieren(objekt, spanne, pfade)
+        for feldname, abgeleitet in abgeleitete.items():
+            werte[feldname] = abgeleitet["wert"](objekt)
         textteile = []
         for pfad in volltextfelder:
             ziel = objekt
@@ -319,8 +362,59 @@ def datensaetze_erstellen(model, config, queryset, spezifikation):
 
 # --- Konfiguration pro Modell -------------------------------------------------
 
+NUR_HAUPTDELIKT_CHOICES = [
+    ("ja", "ja"),
+    ("nein", "nein"),
+    ("nicht erfasst", "nicht erfasst"),
+]
+
+
+def _nur_hauptdelikt(scorefeld):
+    """
+    Ob allein das Hauptdelikt die Strafe bestimmt, d.h. keine weiteren
+    Schuldsprüche hinzukommen. Ein nicht erfasster Score ist keine Null -
+    er wird als solcher ausgewiesen, statt stillschweigend als "keine
+    Nebenverurteilungen" gedeutet.
+    """
+
+    def wert(urteil):
+        score = getattr(urteil, scorefeld)
+        if score is None:
+            return "nicht erfasst"
+        return "ja" if score == 0 else "nein"
+
+    return wert
+
+
+def _nur_hauptdelikt_sexualdelikt(urteil):
+    """
+    Bei den Sexualdelikten zählen zusätzlich die weiteren Sexualdelikte im
+    Urteilsspruch, die nicht in den Deliktsscore einfliessen.
+    """
+    # .all() statt .exists(), damit ein prefetch_related genutzt wird
+    if len(urteil.sexualdelikte_zusaetzliche.all()) > 0:
+        return "nein"
+    return _nur_hauptdelikt("deliktsscore_uebrige_delikte")(urteil)
+
+
+def _nur_hauptdelikt_feld(hilfetext, wert):
+    return {
+        "label": "nur Hauptdelikt",
+        "hilfetext": hilfetext,
+        "choices": NUR_HAUPTDELIKT_CHOICES,
+        "inline": True,
+        "wert": wert,
+    }
+
+
 SEXUALDELIKT_FILTER_CONFIG = {
-    "primaer": ["hauptdelikt", "hauptsanktion", "vollzug"],
+    "primaer": ["hauptdelikt", "nur_hauptdelikt", "hauptsanktion", "vollzug"],
+    "abgeleitete_felder": {
+        "nur_hauptdelikt": _nur_hauptdelikt_feld(
+            "Nur Urteile, bei denen allein das Hauptdelikt die Strafe bestimmt: kein Deliktsscore für übrige Delikte und keine weiteren Sexualdelikte im Urteilsspruch. Wo der Deliktsscore nicht erfasst ist, wird das ausgewiesen statt als Null gedeutet.",
+            _nur_hauptdelikt_sexualdelikt,
+        )
+    },
     "gruppen": [
         (
             "Fall & Gericht",
@@ -353,6 +447,7 @@ SEXUALDELIKT_FILTER_CONFIG = {
         (
             "Weitere Delikte & Besonderheiten",
             [
+                "nur_hauptdelikt",
                 "sexualdelikte_zusaetzliche",
                 "deliktsscore_uebrige_delikte",
                 "besonderheiten",
@@ -411,7 +506,13 @@ SEXUALDELIKT_FILTER_CONFIG = {
 
 
 URTEIL_FILTER_CONFIG = {
-    "primaer": ["hauptdelikt", "deliktssumme", "hauptsanktion", "vollzug"],
+    "primaer": ["hauptdelikt", "deliktssumme", "nur_hauptdelikt", "hauptsanktion", "vollzug"],
+    "abgeleitete_felder": {
+        "nur_hauptdelikt": _nur_hauptdelikt_feld(
+            "Nur Urteile, bei denen allein das Hauptdelikt die Strafe bestimmt, der Nebenverurteilungsscore also 0 ist.",
+            _nur_hauptdelikt("nebenverurteilungsscore"),
+        )
+    },
     "gruppen": [
         ("Fall & Gericht", ["gericht", "urteilsdatum", "verfahrensart"]),
         (
@@ -428,7 +529,7 @@ URTEIL_FILTER_CONFIG = {
                 "deliktssumme",
             ],
         ),
-        ("Weitere Delikte", ["nebenverurteilungsscore"]),
+        ("Weitere Delikte", ["nur_hauptdelikt", "nebenverurteilungsscore"]),
         (
             "Sanktion",
             [
@@ -475,7 +576,13 @@ URTEIL_FILTER_CONFIG = {
 
 
 BETM_FILTER_CONFIG = {
-    "primaer": ["betm", "betm_menge", "rolle", "vollzug"],
+    "primaer": ["betm", "betm_menge", "nur_hauptdelikt", "rolle", "vollzug"],
+    "abgeleitete_felder": {
+        "nur_hauptdelikt": _nur_hauptdelikt_feld(
+            "Nur Urteile, bei denen allein das Hauptdelikt die Strafe bestimmt, der Nebenverurteilungsscore also 0 ist.",
+            _nur_hauptdelikt("nebenverurteilungsscore"),
+        )
+    },
     "gruppen": [
         ("Fall & Gericht", ["gericht", "kanton", "urteilsdatum", "verfahrensart"]),
         (
@@ -502,7 +609,7 @@ BETM_FILTER_CONFIG = {
                 "mehrfach",
             ],
         ),
-        ("Weitere Delikte", ["nebenverurteilungsscore"]),
+        ("Weitere Delikte", ["nur_hauptdelikt", "nebenverurteilungsscore"]),
         (
             "Sanktion",
             [
@@ -579,7 +686,13 @@ BETM_FILTER_CONFIG = {
 
 
 GEWALTDELIKT_FILTER_CONFIG = {
-    "primaer": ["hauptdelikt", "hauptsanktion", "vollzug"],
+    "primaer": ["hauptdelikt", "nur_hauptdelikt", "hauptsanktion", "vollzug"],
+    "abgeleitete_felder": {
+        "nur_hauptdelikt": _nur_hauptdelikt_feld(
+            "Nur Urteile, bei denen allein das Hauptdelikt die Strafe bestimmt, der Deliktsscore für die übrigen Delikte also 0 ist.",
+            _nur_hauptdelikt("deliktsscore_uebrige_delikte"),
+        )
+    },
     "gruppen": [
         ("Fall & Gericht", ["gericht", "kanton", "urteilsdatum", "verfahrensart"]),
         (
@@ -616,7 +729,12 @@ GEWALTDELIKT_FILTER_CONFIG = {
         ),
         (
             "Weitere Delikte & Besonderheiten",
-            ["deliktssumme", "deliktsscore_uebrige_delikte", "besonderheiten"],
+            [
+                "nur_hauptdelikt",
+                "deliktssumme",
+                "deliktsscore_uebrige_delikte",
+                "besonderheiten",
+            ],
         ),
         (
             "Sanktion",

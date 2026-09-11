@@ -23,6 +23,7 @@ from .models import (
     SexualdeliktUrteil,
     Tatmittel,
     Urteil,
+    ZusaetzlicheSexualdelikte,
 )
 
 ALLE_KONFIGURATIONEN = (
@@ -185,11 +186,12 @@ class FilterkonfigurationenTest(TestCase):
                 for _, feldnamen in config["gruppen"]
                 for feldname in feldnamen
             ]
-            # Abhängige Spannen sind keine Modellfelder, sondern abgeleitet.
+            # Abhängige Spannen und abgeleitete Felder sind keine Modellfelder.
             abhaengige = config.get("abhaengige_spannen", {})
+            abgeleitete = config.get("abgeleitete_felder", {})
             with self.subTest(model=model.__name__):
                 for feldname in gruppierte:
-                    if feldname not in abhaengige:
+                    if feldname not in abhaengige and feldname not in abgeleitete:
                         model._meta.get_field(feldname)
                 for feldname in config.get("labels", {}):
                     model._meta.get_field(feldname)
@@ -199,6 +201,11 @@ class FilterkonfigurationenTest(TestCase):
                     model._meta.get_field(sortierfeld["name"])
                 for feldname in config["primaer"]:
                     self.assertIn(feldname, gruppierte)
+                for feldname, abgeleitet in abgeleitete.items():
+                    self.assertIn(feldname, gruppierte)
+                    self.assertTrue(callable(abgeleitet["wert"]))
+                    werte = {wert for wert, _ in abgeleitet["choices"]}
+                    self.assertTrue(werte)
                 for feldname, spanne in abhaengige.items():
                     self.assertIn(feldname, gruppierte)
                     quellfeld = model._meta.get_field(spanne["quelle"])
@@ -415,3 +422,96 @@ class MengenspanneTest(TestCase):
         namen = [feld["name"] for feld in self.spezifikation()["felder"]]
         self.assertNotIn("betm", namen)
         self.assertNotIn("betm_menge", namen)
+
+
+class NurHauptdeliktTest(TestCase):
+    """
+    Abgeleitetes Feld "nur Hauptdelikt": bestimmt allein das Hauptdelikt die
+    Strafe? Ein nicht erfasster Deliktsscore ist dabei keine Null.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.kanton = Kanton.objects.create(abk="ZH")
+        cls.hauptdelikt = Hauptdelikt.objects.create(name="Art. 190, Vergewaltigung")
+        cls.tatmittel = Tatmittel.objects.create(name="Gewalt")
+        cls.weiteres = ZusaetzlicheSexualdelikte.objects.create(
+            name="Art. 189, sexuelle Nötigung"
+        )
+
+    def sexualurteil(self, fall_nr, score, zusaetzliche=()):
+        urteil = SexualdeliktUrteil.objects.create(
+            fall_nr=fall_nr,
+            gericht="Bezirksgericht Zürich",
+            urteilsdatum=date(2024, 1, 1),
+            kanton=self.kanton,
+            hauptdelikt=self.hauptdelikt,
+            hauptdelikt_tatmittel=self.tatmittel,
+            deliktsscore_uebrige_delikte=score,
+        )
+        urteil.sexualdelikte_zusaetzliche.set(zusaetzliche)
+        return urteil
+
+    def werte(self, model, config, queryset):
+        spezifikation = filterspezifikation_erstellen(model, config, queryset)
+        datensaetze = datensaetze_erstellen(
+            model, config, queryset, spezifikation
+        )
+        return {
+            fall: datensaetze[str(pk)]["nur_hauptdelikt"]
+            for pk, fall in queryset.values_list("pk", "fall_nr")
+        }
+
+    def test_sexualdelikt_dreiwertig(self):
+        self.sexualurteil("A-ja", 0)
+        self.sexualurteil("B-score", 3)
+        self.sexualurteil("C-weiteres", 0, [self.weiteres])
+        self.sexualurteil("D-unerfasst", None)
+        # nicht erfasster Score, aber weiteres Sexualdelikt: eindeutig nein
+        self.sexualurteil("E-null-weit", None, [self.weiteres])
+
+        werte = self.werte(
+            SexualdeliktUrteil,
+            SEXUALDELIKT_FILTER_CONFIG,
+            SexualdeliktUrteil.objects.prefetch_related("sexualdelikte_zusaetzliche"),
+        )
+        self.assertEqual(werte["A-ja"], "ja")
+        self.assertEqual(werte["B-score"], "nein")
+        self.assertEqual(werte["C-weiteres"], "nein")
+        self.assertEqual(werte["D-unerfasst"], "nicht erfasst")
+        self.assertEqual(werte["E-null-weit"], "nein")
+
+    def test_vermoegensdelikt_zweiwertig(self):
+        Urteil.objects.create(
+            fall_nr="V-ja",
+            gericht="Bezirksgericht Zürich",
+            urteilsdatum=date(2024, 1, 1),
+            deliktssumme=1000,
+            nebenverurteilungsscore=0,
+        )
+        Urteil.objects.create(
+            fall_nr="V-nein",
+            gericht="Bezirksgericht Zürich",
+            urteilsdatum=date(2024, 1, 1),
+            deliktssumme=2000,
+            nebenverurteilungsscore=2,
+        )
+        werte = self.werte(Urteil, URTEIL_FILTER_CONFIG, Urteil.objects.all())
+        self.assertEqual(werte, {"V-ja": "ja", "V-nein": "nein"})
+
+    def test_nur_vorkommende_auswahlwerte(self):
+        # Ohne "nicht erfasst" im Bestand erscheint die Option auch nicht.
+        self.sexualurteil("A-ja", 0)
+        self.sexualurteil("B-nein", 3)
+        spezifikation = filterspezifikation_erstellen(
+            SexualdeliktUrteil,
+            SEXUALDELIKT_FILTER_CONFIG,
+            SexualdeliktUrteil.objects.prefetch_related("sexualdelikte_zusaetzliche"),
+        )
+        feld = next(
+            f for f in spezifikation["felder"] if f["name"] == "nur_hauptdelikt"
+        )
+        self.assertEqual(
+            [option["value"] for option in feld["optionen"]], ["ja", "nein"]
+        )
+        self.assertTrue(feld["inline"])

@@ -319,3 +319,4 @@ h1 {
 /* Sortierbare Spaltenkoepfe */
 th[data-sortierbar] { cursor: pointer; user-select: none; white-space: nowrap; }
 th[data-sortierbar]:hover { text-decoration: underline; }
+.filterpanel .filterspanne { max-width: 7.5rem; min-width: 5.5rem; }

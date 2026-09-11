@@ -28,21 +28,43 @@ bleibt dank x-cloak verborgen.
     </div>
 
     {% for feld in filter_spec.primaer %}
-      <div class="col-auto">
-        <div class="dropdown">
-          <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                  data-bs-auto-close="outside"
-                  :class="aktiv(feldNach('{{ feld.name }}')) ? 'btn-primary' : 'btn-outline-secondary'">
-            {{ feld.label }}
-            <template x-if="aktiv(feldNach('{{ feld.name }}'))">
-              <span class="badge text-bg-light ms-1" x-text="zustand['{{ feld.name }}'].length"></span>
-            </template>
-          </button>
-          <div class="dropdown-menu p-3" style="min-width: 22rem;">
-            {% include 'database/includes/filterfeld.html' with feld=feld %}
+      {% if feld.typ == 'number' or feld.typ == 'date' %}
+        {# Spannen werden direkt in der Kopfzeile gesetzt statt hinter einem Aufklapper #}
+        <div class="col-auto">
+          <div class="input-group input-group-sm flex-nowrap">
+            <span class="input-group-text" data-bs-toggle="tooltip"
+                  title="{{ feld.hilfetext }} Bestand: {{ feld.min }} bis {{ feld.max }}"
+                  :class="aktiv(feldNach('{{ feld.name }}')) ? 'text-bg-primary' : ''">{{ feld.label }}</span>
+            <input type="{% if feld.typ == 'date' %}date{% else %}number{% endif %}"
+                   class="form-control filterspanne" placeholder="von" aria-label="{{ feld.label }} von"
+                   x-model="zustand['{{ feld.name }}'].min">
+            <span class="input-group-text px-1">–</span>
+            <input type="{% if feld.typ == 'date' %}date{% else %}number{% endif %}"
+                   class="form-control filterspanne" placeholder="bis" aria-label="{{ feld.label }} bis"
+                   x-model="zustand['{{ feld.name }}'].max">
+            {% if feld.einheit %}<span class="input-group-text">{{ feld.einheit }}</span>{% endif %}
+            <button type="button" class="btn btn-outline-secondary" title="zurücksetzen"
+                    x-show="aktiv(feldNach('{{ feld.name }}'))"
+                    @click="chipEntfernen('{{ feld.name }}')">&times;</button>
           </div>
         </div>
-      </div>
+      {% else %}
+        <div class="col-auto">
+          <div class="dropdown">
+            <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside"
+                    :class="aktiv(feldNach('{{ feld.name }}')) ? 'btn-primary' : 'btn-outline-secondary'">
+              {{ feld.label }}
+              <template x-if="aktiv(feldNach('{{ feld.name }}'))">
+                <span class="badge text-bg-light ms-1" x-text="zustand['{{ feld.name }}'].length"></span>
+              </template>
+            </button>
+            <div class="dropdown-menu p-3" style="min-width: 22rem;">
+              {% include 'database/includes/filterfeld.html' with feld=feld %}
+            </div>
+          </div>
+        </div>
+      {% endif %}
     {% endfor %}
 
     <div class="col-auto ms-lg-auto">

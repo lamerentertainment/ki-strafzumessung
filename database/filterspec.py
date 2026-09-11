@@ -343,7 +343,7 @@ SEXUALDELIKT_FILTER_CONFIG = {
 
 
 URTEIL_FILTER_CONFIG = {
-    "primaer": ["hauptdelikt", "hauptsanktion", "vollzug"],
+    "primaer": ["hauptdelikt", "deliktssumme", "hauptsanktion", "vollzug"],
     "gruppen": [
         ("Fall & Gericht", ["gericht", "urteilsdatum", "verfahrensart"]),
         (

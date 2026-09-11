@@ -346,6 +346,9 @@ class FilterbareAnsichtenTest(TestCase):
             urteilsdatum=date(2024, 2, 2),
             kanton=self.kanton,
             hauptdelikt="Raub",
+            hauptsanktion="0",
+            freiheitsstrafe_in_monaten=36,
+            vollzug="2",
             kurzsachverhalt="Überfall auf eine Tankstelle mit vorgehaltener Schusswaffe.",
         )
         antwort = self.ansicht_pruefen("/gewaltdatabase", urteil)
@@ -355,6 +358,10 @@ class FilterbareAnsichtenTest(TestCase):
         # HTML soll data-kurzsachverhalt und SV-Badge enthalten
         self.assertContains(antwort, 'data-kurzsachverhalt="Überfall auf eine Tankstelle mit vorgehaltener Schusswaffe."')
         self.assertContains(antwort, 'title="Kurzsachverhalt vorhanden (Hover für Vorschau)"')
+        # Sanktion und Vollzug-Badge sowie Vollzug-Sortierung
+        self.assertContains(antwort, "Freiheitsstrafe")
+        self.assertContains(antwort, "unbedingt")
+        self.assertContains(antwort, "sortieren('vollzug')")
         # Detailansicht soll Kurzsachverhalt anzeigen
         detail_antwort = self.client.get(reverse("gewalturteil_detail", kwargs={"pk": urteil.pk}))
         self.assertEqual(detail_antwort.status_code, 200)
@@ -390,6 +397,9 @@ class FilterbareAnsichtenTest(TestCase):
             kanton=self.kanton,
             hauptdelikt=Hauptdelikt.objects.create(name="Art. 190, Vergewaltigung"),
             hauptdelikt_tatmittel=Tatmittel.objects.create(name="Gewalt"),
+            hauptsanktion="0",
+            freiheitsstrafe_in_monaten=36,
+            vollzug="2",
             kurzsachverhalt="Test-Kurzsachverhalt für Sexualdelikt unter Anwendung von körperlicher Gewalt.",
         )
         antwort = self.ansicht_pruefen("/sexualdatabase", urteil)
@@ -397,6 +407,10 @@ class FilterbareAnsichtenTest(TestCase):
         self.assertIn("körperlicher", records[str(urteil.pk)]["_t"])
         self.assertContains(antwort, 'data-kurzsachverhalt="Test-Kurzsachverhalt für Sexualdelikt unter Anwendung von körperlicher Gewalt."')
         self.assertContains(antwort, 'title="Kurzsachverhalt vorhanden (Hover für Vorschau)"')
+        # Sanktion und Vollzug-Badge sowie Vollzug-Sortierung
+        self.assertContains(antwort, "Freiheitsstrafe")
+        self.assertContains(antwort, "unbedingt")
+        self.assertContains(antwort, "sortieren('vollzug')")
         detail_antwort = self.client.get(reverse("sexualurteil_detail", kwargs={"pk": urteil.pk}))
         self.assertEqual(detail_antwort.status_code, 200)
         self.assertContains(detail_antwort, "Kurzsachverhalt")

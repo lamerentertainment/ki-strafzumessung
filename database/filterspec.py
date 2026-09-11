@@ -509,6 +509,7 @@ SEXUALDELIKT_FILTER_CONFIG = {
         {"name": "hauptdelikt_tatmittel", "label": "Tatmittel"},
         {"name": "hauptsanktion", "label": "Hauptsanktion"},
         {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
+        {"name": "vollzug", "label": "Vollzug"},
     ],
 }
 
@@ -869,5 +870,6 @@ GEWALTDELIKT_FILTER_CONFIG = {
         {"name": "verletzungsfolge", "label": "Verletzungsfolge"},
         {"name": "hauptsanktion", "label": "Hauptsanktion"},
         {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
+        {"name": "vollzug", "label": "Vollzug"},
     ],
 }

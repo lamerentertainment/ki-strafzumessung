@@ -33,8 +33,10 @@
             <th data-sortierbar data-tt="nach Tatmittel sortieren" @click="sortieren('hauptdelikt_tatmittel')">
               Tatmittel <span x-text="sortSymbol('hauptdelikt_tatmittel')"></span>
             </th>
-            <th data-sortierbar data-tt="nach Sanktion sortieren" @click="sortieren('hauptsanktion')">
-              Sanktion <span x-text="sortSymbol('hauptsanktion')"></span>
+            <th>
+              <span data-sortierbar data-tt="nach Sanktion sortieren" @click="sortieren('hauptsanktion')">Sanktion <span x-text="sortSymbol('hauptsanktion')"></span></span>
+              &amp;
+              <span data-sortierbar data-tt="nach Vollzug sortieren" @click="sortieren('vollzug')">Vollzug <span x-text="sortSymbol('vollzug')"></span></span>
             </th>
             <th data-sortierbar data-tt="nach Dauer/Höhe sortieren" @click="sortieren('freiheitsstrafe_in_monaten')">
               Dauer/Höhe <span x-text="sortSymbol('freiheitsstrafe_in_monaten')"></span>
@@ -73,14 +75,29 @@
               </td>
               <td>{{ urteil.hauptdelikt }}</td>
               <td>{{ urteil.hauptdelikt_tatmittel }}</td>
+              <td>
+                <div class="d-flex flex-wrap gap-1 align-items-center">
+                  {% if urteil.hauptsanktion == '0' %}
+                    <span class="badge text-bg-primary">Freiheitsstrafe</span>
+                  {% elif urteil.hauptsanktion == '1' %}
+                    <span class="badge text-bg-success">Geldstrafe</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary">Busse</span>
+                  {% endif %}
+                  {% if urteil.vollzug == '0' %}
+                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle" title="Vollzug: bedingt">bedingt</span>
+                  {% elif urteil.vollzug == '1' %}
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" title="Vollzug: teilbedingt">teilbedingt</span>
+                  {% elif urteil.vollzug == '2' %}
+                    <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle" title="Vollzug: unbedingt">unbedingt</span>
+                  {% endif %}
+                </div>
+              </td>
               {% if urteil.hauptsanktion == '0' %}
-                <td><span class="badge text-bg-primary">Freiheitsstrafe</span></td>
                 <td data-tt="{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_monate_tooltip }}">{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_jahre_monate_anzeige }}</td>
               {% elif urteil.hauptsanktion == '1' %}
-                <td><span class="badge text-bg-success">Geldstrafe</span></td>
                 <td>{{ urteil.anzahl_tagessaetze }} Tagessätze</td>
               {% else %}
-                <td>Busse</td>
                 <td>–</td>
               {% endif %}
               <td>

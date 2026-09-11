@@ -379,14 +379,14 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         fsAnzahl: freiheitsstrafen.length,
         fsMedian: this.median(freiheitsstrafen),
         fsMittel: mittelwert === null ? null : Math.round(mittelwert),
-        // mittlere absolute Abweichung vom (ungerundeten) Mittelwert
+        // mittlere absolute Abweichung vom (ungerundeten) Mittelwert (in Monaten)
         fsMad:
           mittelwert === null
             ? null
             : Math.round(
-                freiheitsstrafen.reduce((summe, wert) => summe + Math.abs(wert - mittelwert), 0) /
-                  freiheitsstrafen.length
-              ),
+              freiheitsstrafen.reduce((summe, wert) => summe + Math.abs(wert - mittelwert), 0) /
+              freiheitsstrafen.length
+            ),
         fsMin: freiheitsstrafen.length ? freiheitsstrafen[0] : null,
         fsMax: freiheitsstrafen.length ? freiheitsstrafen[freiheitsstrafen.length - 1] : null,
         bedingt: vollzug["0"],

@@ -2,117 +2,108 @@
 Filterpanel oberhalb einer Urteilsliste.
 
 Erwartet im Context:
-  filter_spec     – Filterspezifikation (database/filterspec.py)
-  filter_records  – normalisierte Felddaten je Datensatz, Schluessel = pk
+filter_spec – Filterspezifikation (database/filterspec.py)
+filter_records – normalisierte Felddaten je Datensatz, Schluessel = pk
 
 Das umgebende Template muss die Alpine-Komponente bereitstellen
 (`x-data="urteilsFilter('filter-spec', 'filter-records')"`), damit auch die
 sortierbaren Spaltenkoepfe der Tabelle im selben Scope liegen. Die Tabelle
 muss `data-urteilsliste` am <tbody> und `data-pk="{{ pk }}"` an jeder <tr>
-tragen. Ohne JavaScript bleibt die vollstaendige Liste sichtbar, das Panel
-bleibt dank x-cloak verborgen.
-{% endcomment %}
-{{ filter_spec|json_script:"filter-spec" }}
-{{ filter_records|json_script:"filter-records" }}
+    tragen. Ohne JavaScript bleibt die vollstaendige Liste sichtbar, das Panel
+    bleibt dank x-cloak verborgen.
+    {% endcomment %}
+    {{ filter_spec|json_script:"filter-spec" }}
+    {{ filter_records|json_script:"filter-records" }}
 
-<div class="filterpanel border rounded-3 p-3 mb-3 bg-body-tertiary" x-cloak>
+    <div class="filterpanel border rounded-3 p-3 mb-3 bg-body-tertiary" x-cloak>
 
-  {# --- Zeile 1: Volltextsuche, Kernfilter, Aufklapper --- #}
-  <div class="row g-2 align-items-center">
-    <div class="col-12 col-lg-5">
-      <div class="input-group input-group-sm">
-        <span class="input-group-text">&#128269;</span>
-        <input type="search" class="form-control" x-model.debounce.200ms="q"
-               placeholder="Volltextsuche ({{ filter_spec.suchfelder_label }})">
-      </div>
-    </div>
+      {# --- Zeile 1: Volltextsuche, Kernfilter, Aufklapper --- #}
+      <div class="row g-2 align-items-center">
+        <div class="col-12 col-lg-5">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">&#128269;</span>
+            <input type="search" class="form-control" x-model.debounce.200ms="q"
+              placeholder="Volltextsuche ({{ filter_spec.suchfelder_label }})">
+          </div>
+        </div>
 
-    {% for feld in filter_spec.primaer %}
-      {% if feld.inline %}
+        {% for feld in filter_spec.primaer %}
+        {% if feld.inline %}
         {# Wenige Auswahlwerte: direkt als Chips in der Kopfzeile statt im Aufklapper #}
         <div class="col-auto">
           <div class="input-group input-group-sm flex-nowrap">
             <span class="input-group-text" data-bs-toggle="tooltip" title="{{ feld.hilfetext }}"
-                  :class="aktiv(feldNach('{{ feld.name }}')) ? 'text-bg-primary' : ''">{{ feld.label }}</span>
+              :class="aktiv(feldNach('{{ feld.name }}')) ? 'text-bg-primary' : ''">{{ feld.label }}</span>
             {% for option in feld.optionen %}
-              <button type="button" class="btn"
-                      :class="istGewaehlt('{{ feld.name }}', '{{ option.value|escapejs }}')
+            <button type="button" class="btn" :class="istGewaehlt('{{ feld.name }}', '{{ option.value|escapejs }}')
                                 ? 'btn-primary'
                                 : (anzahl('{{ feld.name }}', '{{ option.value|escapejs }}') === 0
                                     ? 'btn-outline-secondary opacity-50'
-                                    : 'btn-outline-secondary')"
-                      :disabled="!istGewaehlt('{{ feld.name }}', '{{ option.value|escapejs }}')
+                                    : 'btn-outline-secondary')" :disabled="!istGewaehlt('{{ feld.name }}', '{{ option.value|escapejs }}')
                                  && anzahl('{{ feld.name }}', '{{ option.value|escapejs }}') === 0"
-                      @click="umschalten('{{ feld.name }}', '{{ option.value|escapejs }}')">
-                {{ option.label }}
-                <span class="badge rounded-pill text-bg-light ms-1"
-                      x-text="anzahl('{{ feld.name }}', '{{ option.value|escapejs }}')"></span>
-              </button>
+              @click="umschalten('{{ feld.name }}', '{{ option.value|escapejs }}')">
+              {{ option.label }}
+              <span class="badge rounded-pill text-bg-light ms-1"
+                x-text="anzahl('{{ feld.name }}', '{{ option.value|escapejs }}')"></span>
+            </button>
             {% endfor %}
           </div>
         </div>
-      {% elif feld.typ == 'abhaengige_spanne' %}
+        {% elif feld.typ == 'abhaengige_spanne' %}
         <div class="col-auto">
           {% include 'database/includes/filterspanne.html' with feld=feld %}
         </div>
-      {% elif feld.typ == 'number' or feld.typ == 'date' %}
+        {% elif feld.typ == 'number' or feld.typ == 'date' %}
         {# Spannen werden direkt in der Kopfzeile gesetzt statt hinter einem Aufklapper #}
         <div class="col-auto">
           <div class="input-group input-group-sm flex-nowrap">
             <span class="input-group-text" data-bs-toggle="tooltip"
-                  title="{{ feld.hilfetext }} Bestand: {{ feld.min }} bis {{ feld.max }}"
-                  :class="aktiv(feldNach('{{ feld.name }}')) ? 'text-bg-primary' : ''">{{ feld.label }}</span>
-            <input type="{% if feld.typ == 'date' %}date{% else %}number{% endif %}"
-                   class="form-control filterspanne" placeholder="von" aria-label="{{ feld.label }} von"
-                   x-model="zustand['{{ feld.name }}'].min">
+              title="{{ feld.hilfetext }} Bestand: {{ feld.min }} bis {{ feld.max }}"
+              :class="aktiv(feldNach('{{ feld.name }}')) ? 'text-bg-primary' : ''">{{ feld.label }}</span>
+            <input type="{% if feld.typ == 'date' %}date{% else %}number{% endif %}" class="form-control filterspanne"
+              placeholder="von" aria-label="{{ feld.label }} von" x-model="zustand['{{ feld.name }}'].min">
             <span class="input-group-text px-1">–</span>
-            <input type="{% if feld.typ == 'date' %}date{% else %}number{% endif %}"
-                   class="form-control filterspanne" placeholder="bis" aria-label="{{ feld.label }} bis"
-                   x-model="zustand['{{ feld.name }}'].max">
+            <input type="{% if feld.typ == 'date' %}date{% else %}number{% endif %}" class="form-control filterspanne"
+              placeholder="bis" aria-label="{{ feld.label }} bis" x-model="zustand['{{ feld.name }}'].max">
             {% if feld.einheit %}<span class="input-group-text">{{ feld.einheit }}</span>{% endif %}
             <button type="button" class="btn btn-outline-secondary" title="zurücksetzen"
-                    x-show="aktiv(feldNach('{{ feld.name }}'))"
-                    @click="chipEntfernen('{{ feld.name }}')">&times;</button>
+              x-show="aktiv(feldNach('{{ feld.name }}'))" @click="chipEntfernen('{{ feld.name }}')">&times;</button>
           </div>
         </div>
-      {% elif feld.typ == 'bool' %}
+        {% elif feld.typ == 'bool' %}
         {# Boolesches Feld: direkt als Ja/Nein-Schalter in der Kopfzeile #}
         <div class="col-auto">
           <div class="input-group input-group-sm flex-nowrap">
             <span class="input-group-text" data-bs-toggle="tooltip" title="{{ feld.hilfetext }}"
-                  :class="aktiv(feldNach('{{ feld.name }}')) ? 'text-bg-primary' : ''">{{ feld.label }}</span>
-            <button type="button" class="btn"
-                    :class="zustand['{{ feld.name }}'] === true
+              :class="aktiv(feldNach('{{ feld.name }}')) ? 'text-bg-primary' : ''">{{ feld.label }}</span>
+            <button type="button" class="btn" :class="zustand['{{ feld.name }}'] === true
                               ? 'btn-primary'
                               : (anzahl('{{ feld.name }}', true) === 0
                                   ? 'btn-outline-secondary opacity-50'
                                   : 'btn-outline-secondary')"
-                    :disabled="zustand['{{ feld.name }}'] !== true && anzahl('{{ feld.name }}', true) === 0"
-                    @click="boolSetzen('{{ feld.name }}', true)">
+              :disabled="zustand['{{ feld.name }}'] !== true && anzahl('{{ feld.name }}', true) === 0"
+              @click="boolSetzen('{{ feld.name }}', true)">
               ja
-              <span class="badge rounded-pill text-bg-light ms-1"
-                    x-text="anzahl('{{ feld.name }}', true)"></span>
+              <span class="badge rounded-pill text-bg-light ms-1" x-text="anzahl('{{ feld.name }}', true)"></span>
             </button>
-            <button type="button" class="btn"
-                    :class="zustand['{{ feld.name }}'] === false
+            <button type="button" class="btn" :class="zustand['{{ feld.name }}'] === false
                               ? 'btn-primary'
                               : (anzahl('{{ feld.name }}', false) === 0
                                   ? 'btn-outline-secondary opacity-50'
                                   : 'btn-outline-secondary')"
-                    :disabled="zustand['{{ feld.name }}'] !== false && anzahl('{{ feld.name }}', false) === 0"
-                    @click="boolSetzen('{{ feld.name }}', false)">
+              :disabled="zustand['{{ feld.name }}'] !== false && anzahl('{{ feld.name }}', false) === 0"
+              @click="boolSetzen('{{ feld.name }}', false)">
               nein
-              <span class="badge rounded-pill text-bg-light ms-1"
-                    x-text="anzahl('{{ feld.name }}', false)"></span>
+              <span class="badge rounded-pill text-bg-light ms-1" x-text="anzahl('{{ feld.name }}', false)"></span>
             </button>
           </div>
         </div>
-      {% else %}
+        {% else %}
         <div class="col-auto">
           <div class="dropdown">
             <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                    data-bs-auto-close="outside"
-                    :class="aktiv(feldNach('{{ feld.name }}')) ? 'btn-primary' : 'btn-outline-secondary'">
+              data-bs-auto-close="outside"
+              :class="aktiv(feldNach('{{ feld.name }}')) ? 'btn-primary' : 'btn-outline-secondary'">
               {{ feld.label }}
               <template x-if="aktiv(feldNach('{{ feld.name }}'))">
                 <span class="badge text-bg-light ms-1" x-text="zustand['{{ feld.name }}'].length"></span>
@@ -123,96 +114,97 @@ bleibt dank x-cloak verborgen.
             </div>
           </div>
         </div>
-      {% endif %}
-    {% endfor %}
+        {% endif %}
+        {% endfor %}
 
-    <div class="col-auto ms-lg-auto">
-      <button class="btn btn-sm btn-outline-dark" @click="aufgeklappt = !aufgeklappt">
-        <span x-text="aufgeklappt ? '▾' : '▸'"></span>
-        Alle Filter ({{ filter_spec.felder|length }})
-        <template x-if="anzahlAktiv() > 0">
-          <span class="badge text-bg-primary ms-1" x-text="anzahlAktiv()"></span>
+        <div class="col-auto ms-lg-auto">
+          <button class="btn btn-sm btn-outline-dark" @click="aufgeklappt = !aufgeklappt">
+            <span x-text="aufgeklappt ? '▾' : '▸'"></span>
+            Alle Filter ({{ filter_spec.felder|length }})
+            <template x-if="anzahlAktiv() > 0">
+              <span class="badge text-bg-primary ms-1" x-text="anzahlAktiv()"></span>
+            </template>
+          </button>
+        </div>
+      </div>
+
+      {# --- Zeile 2: aktive Filter als entfernbare Chips --- #}
+      <div class="d-flex flex-wrap gap-1 align-items-center mt-2" x-show="anzahlAktiv() > 0">
+        <span class="small text-body-secondary me-1">Aktiv:</span>
+        <template x-for="chip in aktiveChips()" :key="chip.label">
+          <button type="button" class="btn btn-sm btn-primary rounded-pill py-0" @click="chipEntfernen(chip.feld)">
+            <span x-text="chip.label"></span> <span aria-hidden="true">&times;</span>
+          </button>
         </template>
-      </button>
-    </div>
-  </div>
+        <button type="button" class="btn btn-sm btn-link text-decoration-none py-0" @click="zuruecksetzen()">alle
+          zurücksetzen</button>
+      </div>
 
-  {# --- Zeile 2: aktive Filter als entfernbare Chips --- #}
-  <div class="d-flex flex-wrap gap-1 align-items-center mt-2" x-show="anzahlAktiv() > 0">
-    <span class="small text-body-secondary me-1">Aktiv:</span>
-    <template x-for="chip in aktiveChips()" :key="chip.label">
-      <button type="button" class="btn btn-sm btn-primary rounded-pill py-0"
-              @click="chipEntfernen(chip.feld)">
-        <span x-text="chip.label"></span> <span aria-hidden="true">&times;</span>
-      </button>
-    </template>
-    <button type="button" class="btn btn-sm btn-link text-decoration-none py-0"
-            @click="zuruecksetzen()">alle zurücksetzen</button>
-  </div>
-
-  {# --- Zeile 3: alle Felder, thematisch gruppiert --- #}
-  <div class="mt-3" x-show="aufgeklappt" x-collapse>
-    <div class="accordion accordion-flush border-top">
-      {% for gruppe in filter_spec.gruppen %}
-        <div class="accordion-item bg-transparent">
-          <h2 class="accordion-header">
-            <button class="accordion-button bg-transparent py-2 px-1 shadow-none"
-                    :class="offeneGruppen['{{ gruppe.titel|escapejs }}'] ? '' : 'collapsed'"
-                    type="button"
-                    @click="offeneGruppen['{{ gruppe.titel|escapejs }}'] = !offeneGruppen['{{ gruppe.titel|escapejs }}']">
-              <span class="fw-semibold">{{ gruppe.titel }}</span>
-              <span class="badge text-bg-primary ms-2"
-                    x-show="aktiveGruppe(spec.gruppen[{{ forloop.counter0 }}]) > 0"
-                    x-text="aktiveGruppe(spec.gruppen[{{ forloop.counter0 }}])"></span>
-            </button>
-          </h2>
-          <div class="accordion-collapse" x-show="offeneGruppen['{{ gruppe.titel|escapejs }}']" x-collapse>
-            <div class="accordion-body px-1 py-2">
-              <div class="row">
-                {% for feld in gruppe.felder %}
+      {# --- Zeile 3: alle Felder, thematisch gruppiert --- #}
+      <div class="mt-3" x-show="aufgeklappt" x-collapse>
+        <div class="accordion accordion-flush border-top">
+          {% for gruppe in filter_spec.gruppen %}
+          <div class="accordion-item bg-transparent">
+            <h2 class="accordion-header">
+              <button class="accordion-button bg-transparent py-2 px-1 shadow-none"
+                :class="offeneGruppen['{{ gruppe.titel|escapejs }}'] ? '' : 'collapsed'" type="button"
+                @click="offeneGruppen['{{ gruppe.titel|escapejs }}'] = !offeneGruppen['{{ gruppe.titel|escapejs }}']">
+                <span class="fw-semibold">{{ gruppe.titel }}</span>
+                <span class="badge text-bg-primary ms-2" x-show="aktiveGruppe(spec.gruppen[{{ forloop.counter0 }}]) > 0"
+                  x-text="aktiveGruppe(spec.gruppen[{{ forloop.counter0 }}])"></span>
+              </button>
+            </h2>
+            <div class="accordion-collapse" x-show="offeneGruppen['{{ gruppe.titel|escapejs }}']" x-collapse>
+              <div class="accordion-body px-1 py-2">
+                <div class="row">
+                  {% for feld in gruppe.felder %}
                   <div class="col-12 col-md-6 col-xl-4">
                     {% include 'database/includes/filterfeld.html' with feld=feld %}
                   </div>
-                {% endfor %}
+                  {% endfor %}
+                </div>
               </div>
             </div>
           </div>
+          {% endfor %}
         </div>
-      {% endfor %}
+      </div>
+
+      {# --- Zeile 4: Treffer und Kennzahlen zur gefilterten Menge --- #}
+      <div class="d-flex flex-wrap align-items-center gap-3 mt-3 pt-2 border-top small">
+        <span class="fw-semibold">
+          <span x-text="kennzahlen().anzahl"></span> von <span x-text="kennzahlen().gesamt"></span> Urteilen
+        </span>
+        <template x-if="kennzahlen().fsAnzahl > 0">
+          <span class="text-body-secondary">
+            Freiheitsstrafe (n=<span x-text="kennzahlen().fsAnzahl"></span>):
+            Median <strong :data-tt="jahreMonateTitel(kennzahlen().fsMedian)" x-text="kennzahlen().fsMedian"></strong>
+            Mt.
+            · &#8960; <strong :data-tt="jahreMonateTitel(kennzahlen().fsMittel)"
+              x-text="kennzahlen().fsMittel"></strong> Mt.
+            <span data-bs-toggle="tooltip"
+              title="mittlere absolute Abweichung vom Durchschnitt (in Monaten)">(&plusmn;&nbsp;<span
+                x-text="kennzahlen().fsMad"></span>)</span>
+            · Spanne <span :data-tt="jahreMonateTitel(kennzahlen().fsMin)" x-text="kennzahlen().fsMin"></span>–<span
+              :data-tt="jahreMonateTitel(kennzahlen().fsMax)" x-text="kennzahlen().fsMax"></span> Mt.
+          </span>
+        </template>
+        <template x-if="kennzahlen().anzahl > 0">
+          <span class="text-body-secondary">
+            Vollzug: <strong x-text="kennzahlen().bedingt"></strong> bedingt
+            · <strong x-text="kennzahlen().teilbedingt"></strong> teilbedingt
+            · <strong x-text="kennzahlen().unbedingt"></strong> unbedingt
+          </span>
+        </template>
+        <span class="ms-auto d-flex gap-2">
+          <button class="btn btn-sm btn-outline-secondary py-0" @click="linkKopieren()">Filter-Link kopieren</button>
+          <button class="btn btn-sm btn-outline-secondary py-0" @click="csvExportieren()">CSV der Treffer</button>
+        </span>
+      </div>
+
+      {# --- Leerer Trefferzustand --- #}
+      <div class="alert alert-warning mt-3 mb-0 py-2 small" x-show="trefferPks.length === 0">
+        Keine Urteile entsprechen dieser Filterkombination.
+        <button class="btn btn-sm btn-link p-0 align-baseline" @click="zuruecksetzen()">Filter zurücksetzen</button>
+      </div>
     </div>
-  </div>
-
-  {# --- Zeile 4: Treffer und Kennzahlen zur gefilterten Menge --- #}
-  <div class="d-flex flex-wrap align-items-center gap-3 mt-3 pt-2 border-top small">
-    <span class="fw-semibold">
-      <span x-text="kennzahlen().anzahl"></span> von <span x-text="kennzahlen().gesamt"></span> Urteilen
-    </span>
-    <template x-if="kennzahlen().fsAnzahl > 0">
-      <span class="text-body-secondary">
-        Freiheitsstrafe (n=<span x-text="kennzahlen().fsAnzahl"></span>):
-        Median <strong :data-tt="jahreMonateTitel(kennzahlen().fsMedian)" x-text="kennzahlen().fsMedian"></strong> Mt.
-        · &#8960; <strong :data-tt="jahreMonateTitel(kennzahlen().fsMittel)" x-text="kennzahlen().fsMittel"></strong> Mt.
-        <span data-bs-toggle="tooltip" title="mittlere absolute Abweichung vom Durchschnitt">(&plusmn;&nbsp;<span
-          x-text="kennzahlen().fsMad"></span>)</span>
-        · Spanne <span :data-tt="jahreMonateTitel(kennzahlen().fsMin)" x-text="kennzahlen().fsMin"></span>–<span :data-tt="jahreMonateTitel(kennzahlen().fsMax)" x-text="kennzahlen().fsMax"></span> Mt.
-      </span>
-    </template>
-    <template x-if="kennzahlen().anzahl > 0">
-      <span class="text-body-secondary">
-        Vollzug: <strong x-text="kennzahlen().bedingt"></strong> bedingt
-        · <strong x-text="kennzahlen().teilbedingt"></strong> teilbedingt
-        · <strong x-text="kennzahlen().unbedingt"></strong> unbedingt
-      </span>
-    </template>
-    <span class="ms-auto d-flex gap-2">
-      <button class="btn btn-sm btn-outline-secondary py-0" @click="linkKopieren()">Filter-Link kopieren</button>
-      <button class="btn btn-sm btn-outline-secondary py-0" @click="csvExportieren()">CSV der Treffer</button>
-    </span>
-  </div>
-
-  {# --- Leerer Trefferzustand --- #}
-  <div class="alert alert-warning mt-3 mb-0 py-2 small" x-show="trefferPks.length === 0">
-    Keine Urteile entsprechen dieser Filterkombination.
-    <button class="btn btn-sm btn-link p-0 align-baseline" @click="zuruecksetzen()">Filter zurücksetzen</button>
-  </div>
-</div>

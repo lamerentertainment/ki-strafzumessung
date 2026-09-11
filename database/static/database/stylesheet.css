@@ -330,6 +330,24 @@ h1 {
 }
 .filterpanel .filterspanne { max-width: 7.5rem; min-width: 5.5rem; }
 
+/* Betm-Urteilstabelle: "Betm & Rolle" ist die wichtigste Spalte und bleibt
+   bewusst unbeschraenkt, damit ihr bei table-layout: auto der von den
+   folgenden Nebenspalten eingesparte Platz zufaellt. Zusaetzlich visuell
+   hervorgehoben (Farbakzent), damit sie auf Anhieb als zentrales Kriterium
+   erkennbar ist. Die Randlinie wirkt in th UND td (Hintergrundfarbe wird im
+   th von der sticky-Header-Regel oben ueberschrieben, siehe Spezifitaet). */
+.col-betm-wichtig { border-left: 3px solid var(--bs-primary, #0d6efd); }
+td.col-betm-wichtig { background-color: rgba(13, 110, 253, .05); }
+
+/* Reine Nebeninfo-Spalten schmaler halten, damit sie "Betm & Rolle" und
+   "Sanktion & Vollzug" nicht unnoetig Platz wegnehmen. */
+.col-gericht-datum { max-width: 180px; overflow-wrap: break-word; }
+.col-dauer-ertrag { max-width: 140px; overflow-wrap: break-word; }
+/* [data-sortierbar] erzwingt sonst white-space: nowrap - der Spaltentitel
+   "Gericht / Datum" wuerde dadurch in der schmalen Spalte abgeschnitten statt
+   umzubrechen. */
+th.col-gericht-datum { white-space: normal; }
+
 /* Sofort erscheinender Tooltip ueber [data-tt], ohne die Verzoegerung des
    nativen title-Attributs. Erscheint nur, wenn data-tt nicht leer ist. */
 [data-tt] { position: relative; }

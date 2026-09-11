@@ -24,23 +24,29 @@
             <th data-sortierbar data-tt="nach Fall-Nr. sortieren" @click="sortieren('fall_nr')">
               Fall-Nr. <span x-text="sortSymbol('fall_nr')"></span>
             </th>
-            <th data-sortierbar data-tt="nach Urteilsdatum sortieren" @click="sortieren('urteilsdatum')">
+            <th class="col-gericht-datum" data-sortierbar data-tt="nach Urteilsdatum sortieren" @click="sortieren('urteilsdatum')">
               Gericht / Datum <span x-text="sortSymbol('urteilsdatum')"></span>
             </th>
-            <th>
+            <th class="col-betm-wichtig">
               <span data-sortierbar data-tt="nach Betäubungsmittel (erstgenannt) & Menge sortieren" @click="sortieren('betm_sortierschluessel')">Betm <span x-text="sortSymbol('betm_sortierschluessel')"></span></span>
               &amp;
               <span data-sortierbar data-tt="nach Rolle sortieren" @click="sortieren('rolle')">Rolle <span x-text="sortSymbol('rolle')"></span></span>
             </th>
-            <th>
-              <span data-sortierbar data-tt="nach Deliktsdauer sortieren" @click="sortieren('deliktsdauer_in_monaten')">Dauer <span x-text="sortSymbol('deliktsdauer_in_monaten')"></span></span>,
+            <th class="col-dauer-ertrag">
+              <span data-sortierbar data-tt="nach Deliktsdauer sortieren" @click="sortieren('deliktsdauer_in_monaten')">Deliktsdauer<span x-text="sortSymbol('deliktsdauer_in_monaten')" :class="sortFeld === 'deliktsdauer_in_monaten' ? 'ms-1' : ''"></span></span>,
               <span data-sortierbar data-tt="nach Deliktsertrag sortieren" @click="sortieren('deliktsertrag')">Ertrag <span x-text="sortSymbol('deliktsertrag')"></span></span>
               &amp;
               <span data-sortierbar data-tt="nach Nebenverurteilungsscore sortieren" @click="sortieren('nebenverurteilungsscore')">Zusatzdelikte <span x-text="sortSymbol('nebenverurteilungsscore')"></span></span>
             </th>
-            <th>Täter & Vorstrafen</th>
-            <th data-sortierbar data-tt="nach Sanktion sortieren" @click="sortieren('freiheitsstrafe_in_monaten')">
-              Sanktion & Vollzug <span x-text="sortSymbol('freiheitsstrafe_in_monaten')"></span>
+            <th>
+              <span data-sortierbar data-tt="nach Nationalität, dann Geschlecht Täter sortieren" @click="sortieren('taeter_sortierschluessel')">Täter <span x-text="sortSymbol('taeter_sortierschluessel')"></span></span>
+              &amp;
+              <span data-sortierbar data-tt="nach Vorstrafen sortieren (einschlägig / vorbestraft / keine)" @click="sortieren('vorstrafen_rang')">Vorstrafen <span x-text="sortSymbol('vorstrafen_rang')"></span></span>
+            </th>
+            <th>
+              <span data-sortierbar data-tt="nach Sanktion sortieren" @click="sortieren('freiheitsstrafe_in_monaten')">Sanktion <span x-text="sortSymbol('freiheitsstrafe_in_monaten')"></span></span>
+              &amp;
+              <span data-sortierbar data-tt="nach Vollzug sortieren" @click="sortieren('vollzug')">Vollzug <span x-text="sortSymbol('vollzug')"></span></span>
             </th>
             <th>Details</th>
           </tr>
@@ -59,8 +65,8 @@
               </td>
 
               {# Spalte 2: Gericht / Urteilsdatum / Verfahrensart #}
-              <td>
-                <div>Urteil des {{ urteil.gericht }}s ({{ urteil.kanton.abk }})</div>
+              <td class="col-gericht-datum">
+                <div class="small">{{ urteil.gericht }} ({{ urteil.kanton.abk }})</div>
                 <div class="text-body-secondary small">
                   vom {{ urteil.urteilsdatum|date:'d.m.Y' }}
                   {% if urteil.verfahrensart == '1' %}
@@ -70,11 +76,11 @@
               </td>
 
               {# Spalte 3: Betäubungsmittel, Rolle & Qualifikationen #}
-              <td>
-                <div class="fw-semibold">{{ urteil.rolle }}</div>
-                <div class="small">
+              <td class="col-betm-wichtig">
+                <div class="mb-1"><span class="badge text-bg-primary">{{ urteil.rolle }}</span></div>
+                <div>
                   {% for betm in urteil.betm.all %}
-                    <div>{{ betm }}</div>
+                    <div class="fw-semibold">{{ betm }}</div>
                   {% empty %}
                     <div class="text-body-secondary">–</div>
                   {% endfor %}
@@ -102,9 +108,9 @@
               </td>
 
               {# Spalte 4: Deliktsdauer, Ertrag & Zusatzdelikte #}
-              <td>
+              <td class="col-dauer-ertrag">
                 {% if urteil.deliktsdauer_in_monaten %}
-                  <div class="fw-bold fs-5">{{ urteil.deliktsdauer_in_monaten }} Mt.</div>
+                  <div class="fw-semibold">{{ urteil.deliktsdauer_in_monaten }} Mt.</div>
                 {% else %}
                   <div class="text-body-secondary small">–</div>
                 {% endif %}

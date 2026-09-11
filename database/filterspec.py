@@ -616,6 +616,29 @@ def _betm_sortierschluessel(objekt):
     return f"{erster.art.name}|{erster.menge_in_g:010d}"
 
 
+def _vorstrafen_rang(objekt):
+    """
+    Sortierrang fuer die Spalte "Vorstrafen": gruppiert nach Schwere statt nur
+    binaer nach ``vorbestraft``, analog zur Badge-Prioritaet in der
+    Urteilsliste (einschlaegig > vorbestraft > keine Vorstrafen).
+    """
+    if objekt.vorbestraft_einschlaegig:
+        return 2
+    if objekt.vorbestraft:
+        return 1
+    return 0
+
+
+def _taeter_sortierschluessel(objekt):
+    """
+    Sortierschluessel fuer die Spalte "Täter": primaer nach Nationalitaet,
+    sekundaer nach Geschlecht - beide Codes sind einzelne Zeichen ('0'/'1'/
+    '2' bzw. '0'/'1'), eine simple Konkatenation reicht darum fuer einen
+    stringkorrekten zweistufigen Vergleich.
+    """
+    return f"{objekt.nationalitaet}|{objekt.geschlecht}"
+
+
 BETM_FILTER_CONFIG = {
     "primaer": ["betm", "betm_menge", "nur_hauptdelikt", "rolle"],
     "abgeleitete_felder": {
@@ -726,11 +749,14 @@ BETM_FILTER_CONFIG = {
         {"name": "nebenverurteilungsscore", "label": "Nebenverurteilungsscore"},
         {"name": "hauptsanktion", "label": "Hauptsanktion"},
         {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
+        {"name": "vollzug", "label": "Vollzug"},
     ],
     # Rein rechnerische Felder, die es als Modellfeld nicht gibt und die nur
     # zum Sortieren gebraucht werden (kein Filter-Widget dafuer).
     "berechnete_sortierfelder": {
         "betm_sortierschluessel": _betm_sortierschluessel,
+        "vorstrafen_rang": _vorstrafen_rang,
+        "taeter_sortierschluessel": _taeter_sortierschluessel,
     },
 }
 

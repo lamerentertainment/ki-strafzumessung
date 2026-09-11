@@ -1,5 +1,8 @@
+{% load humanize %}
 {% load strafmass_formatierung %}
+
 <tr data-pk="{{ urteil.pk }}">
+    {# Spalte 1: Fall-Nr. #}
     <td>
         <div class="d-flex flex-column">
             <a href="{% url 'vmurteil_detail' pk=urteil.pk %}" class="fw-semibold">{{ urteil.fall_nr }}</a>
@@ -8,108 +11,113 @@
             {% endif %}
         </div>
     </td>
+
+    {# Spalte 2: Gericht / Urteilsdatum / Verfahrensart #}
     <td>
-        {{ urteil.gericht }}
+        <div>Urteil des {{ urteil.gericht }}s</div>
+        <div class="text-body-secondary small">
+            vom {{ urteil.urteilsdatum|date:'d.m.Y' }}
+            {% if urteil.verfahrensart == '1' %}
+                <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle ms-1 px-1 py-0" style="font-size: 0.65rem;">abgekürzt</span>
+            {% endif %}
+        </div>
     </td>
+
+    {# Spalte 3: Hauptdelikt & Qualifikationen #}
     <td>
-        {{ urteil.urteilsdatum }}
+        <div class="fw-semibold">{{ urteil.hauptdelikt }}</div>
+        <div class="d-flex flex-wrap gap-1 mt-1">
+            {% if urteil.mehrfach %}
+                <span class="badge bg-light text-secondary-emphasis border px-1 py-0" style="font-size: 0.7rem;" title="Mehrfache Begehung">mehrfach</span>
+            {% endif %}
+            {% if urteil.gewerbsmaessig %}
+                <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-1 py-0" style="font-size: 0.7rem;" title="Gewerbsmässig / qualifiziert">gewerbsm./qual.</span>
+            {% endif %}
+            {% if urteil.bandenmaessig %}
+                <span class="badge bg-dark-subtle text-dark-emphasis border border-dark-subtle px-1 py-0" style="font-size: 0.7rem;" title="Bandenmässige Begehung">bandenmässig</span>
+            {% endif %}
+        </div>
     </td>
+
+    {# Spalte 4: Deliktssumme & Zusatzdelikte #}
     <td>
-        {% if urteil.geschlecht == '0' %}
-            männlich
+        <div class="fw-semibold">CHF {{ urteil.deliktssumme|intcomma }}</div>
+        {% if urteil.nebenverurteilungsscore > 0 %}
+            <div class="text-body-secondary small" style="font-size: 0.75rem;">Zusatzscore: {{ urteil.nebenverurteilungsscore }}</div>
         {% else %}
-            weiblich
+            <div class="text-body-secondary small" style="font-size: 0.75rem;">nur Hauptdelikt</div>
         {% endif %}
     </td>
+
+    {# Spalte 5: Täter & Vorstrafen #}
     <td>
-        {% if urteil.nationalitaet == '0' and urteil.geschlecht == '0' %}
-            Schweizer
-        {% elif urteil.nationalitaet == '0' and urteil.geschlecht == '1' %}
-            Schweizerin
-        {% elif urteil.nationalitaet == '1' and urteil.geschlecht == '0' %}
-            Ausländer
-        {% elif urteil.nationalitaet == '1' and urteil.geschlecht == '1' %}
-            Ausländerin
+        <div>
+            {% if urteil.nationalitaet == '0' and urteil.geschlecht == '0' %}
+                Schweizer
+            {% elif urteil.nationalitaet == '0' and urteil.geschlecht == '1' %}
+                Schweizerin
+            {% elif urteil.nationalitaet == '1' and urteil.geschlecht == '0' %}
+                Ausländer
+            {% elif urteil.nationalitaet == '1' and urteil.geschlecht == '1' %}
+                Ausländerin
+            {% else %}
+                {% if urteil.geschlecht == '0' %}männlich{% else %}weiblich{% endif %}
+            {% endif %}
+        </div>
+        <div class="mt-1">
+            {% if urteil.vorbestraft_einschlaegig %}
+                <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle px-1 py-0" style="font-size: 0.7rem;">einschlägig vorbestraft</span>
+            {% elif urteil.vorbestraft %}
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-1 py-0" style="font-size: 0.7rem;">vorbestraft</span>
+            {% else %}
+                <span class="text-body-secondary small" style="font-size: 0.75rem;">nicht vorbestraft</span>
+            {% endif %}
+        </div>
+    </td>
+
+    {# Spalte 6: Sanktion & Vollzug #}
+    <td>
+        {% if urteil.hauptsanktion == '0' %}
+            <div class="d-flex align-items-center gap-1">
+                <span class="badge text-bg-primary">Freiheitsstrafe</span>
+                <span class="fw-semibold" data-tt="{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_monate_tooltip }}">{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_jahre_monate_anzeige }}</span>
+            </div>
+        {% elif urteil.hauptsanktion == '1' %}
+            <div class="d-flex align-items-center gap-1">
+                <span class="badge text-bg-success">Geldstrafe</span>
+                <span class="fw-semibold">{{ urteil.anzahl_tagessaetze }} Tagessätze</span>
+            </div>
         {% else %}
-            unbekannt
+            <div>Busse</div>
         {% endif %}
-    </td>
-    <td>{{ urteil.hauptdelikt }}</td>
-    <td class="text-center">
-        {% if urteil.mehrfach %}
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-              <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-            </svg>
-        {% endif %}
-    </td>
-    <td class="text-center">
-        {% if urteil.gewerbsmaessig %}
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-              <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-            </svg>
-        {% endif %}
-    </td>
-    <td class="text-center">
-        {% if urteil.bandenmaessig %}
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-              <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-            </svg>
-        {% endif %}
-    </td>
-    <td>{{ urteil.deliktssumme }}</td>
-    <td>{{ urteil.nebenverurteilungsscore }}</td>
-    <td class="text-center">
-        {% if urteil.vorbestraft %}
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-              <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-            </svg>
-        {% endif %}
-    </td>
-    <td class="text-center">
-        {% if urteil.vorbestraft_einschlaegig %}
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-              <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-            </svg>
-        {% endif %}
+        <div class="text-body-secondary small mt-1" style="font-size: 0.75rem;">
+            Vollzug:
+            {% if urteil.vollzug == '0' %}
+                bedingt
+            {% elif urteil.vollzug == '1' %}
+                teilbedingt
+            {% elif urteil.vollzug == '2' %}
+                unbedingt
+            {% else %}
+                –
+            {% endif %}
+        </div>
     </td>
 
-    {# Spalte Hauptsanktion #}
-    {% if urteil.hauptsanktion == "0" %}
-        <td>Freiheitsstrafe</td>
-    {% elif urteil.hauptsanktion == "1" %}
-        <td>Geldstrafe</td>
-    {% endif %}
-
-    {# Spalte Sanktion #}
-    {% if urteil.hauptsanktion == "0" %}
-        <td data-tt="{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_monate_tooltip }}">{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_jahre_monate_anzeige }}</td>
-    {% elif urteil.hauptsanktion == "1" %}
-        <td>{{ urteil.anzahl_tagessaetze }} Tagessätze</td>
-    {% endif %}
-
-    {# Spalte Vollzugsform #}
+    {# Spalte 7: Status & Details #}
     <td>
-        {% if urteil.vollzug == '0' %}
-            bedingt
-        {% elif urteil.vollzug == '1' %}
-            teilbedingt
-        {% elif urteil.vollzug == '2' %}
-            unbedingt
-        {% endif %}
+        <div class="d-flex flex-column gap-1 align-items-start">
+            {% if urteil.in_ki_modell %}
+                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-1 py-0" style="font-size: 0.68rem;" title="Im KI-Modell berücksichtigt">KI-Modell &#10003;</span>
+            {% else %}
+                <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle px-1 py-0" style="font-size: 0.68rem;" title="Nicht im KI-Modell berücksichtigt">nicht im Modell</span>
+            {% endif %}
+            <div class="btn-group btn-group-sm mt-1">
+                <a class="btn btn-sm btn-outline-primary py-0 px-2" href="{% url 'vmurteil_detail' pk=urteil.pk %}">Details</a>
+                {% if request.user.is_superuser %}
+                    <a class="btn btn-sm btn-outline-secondary py-0 px-2" href="{% url 'urteil_update' urteil.id %}">Edit</a>
+                {% endif %}
+            </div>
+        </div>
     </td>
-    <td>
-        {% if urteil.in_ki_modell %}
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-              <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-            </svg>
-        {% endif %}
-    </td>
-    <td><a class="btn btn-outline-primary" href="{% url 'urteil_update' urteil.id %}">Bearbeiten</a></td>
-    <td><a class="btn btn-outline-danger disabled">Löschen</a></td>
 </tr>

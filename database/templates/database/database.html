@@ -6,55 +6,59 @@
 {% endblock alpine_komponenten %}
 
 {% block body %}
-    <section id="datenbank" class="row" x-data="urteilsFilter('filter-spec', 'filter-records')">
-        <h1>
+    <section id="datenbank" class="col-12" x-data="urteilsFilter('filter-spec', 'filter-records')">
+        <h1 class="h3">
             Urteile in der Datenbank
             (<span x-text="trefferPks.length">{{ urteile|length }}</span><span x-cloak
               x-show="trefferPks.length !== Object.keys(records).length"> von {{ urteile|length }}</span>)
         </h1>
 
-        {% if request.user.is_superuser == True %}
-        <section id="buttons" class="d-flex mb-1">
-            <a class="btn btn-outline-primary" href="{% url 'urteil_erstellen' %}">Neues Urteil aufnehmen</a>
+        {% if request.user.is_superuser %}
+        <section id="buttons" class="d-flex mb-2">
+            <a class="btn btn-outline-primary btn-sm" href="{% url 'urteil_erstellen' %}">Neues Urteil aufnehmen</a>
         </section>
-        {%  endif %}
+        {% endif %}
 
         {% include 'database/includes/filterpanel.html' %}
 
-        <section id="datenbank-table" class="rounded border border-2" style="overflow: auto; height: 400px;">
-            <table class="table table-sm">
-                <thead>
+        <section id="datenbank-table" class="rounded border border-2 shadow-sm" style="overflow: auto; height: 800px;">
+            <table class="table table-sm table-striped table-hover align-middle mb-0">
+                <thead class="table-light sticky-top">
                 {% include 'database/includes/row_head.html' %}
                 </thead>
                 <tbody data-urteilsliste>
                 {% for urteil in urteile %}
                     {% include 'database/includes/row_urteil.html' %}
                 {% empty %}
-                    <p>Es befinden sich offensichtlich keine Urteile in der Datenbank</p>
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">Es befinden sich keine Urteile in der Datenbank.</td>
+                    </tr>
                 {% endfor %}
                 </tbody>
             </table>
-            <p>Es befinden sich insgesamt {{ urteile|length }} Urteile in der Datenbank</p>
         </section>
-
+        <p class="text-body-secondary small mt-2">Es befinden sich insgesamt {{ urteile|length }} Urteile in der Datenbank.</p>
     </section>
-    
-    <section id="darstellungen">
-        <h1 class="matplotlib">Urteilsdatenbank in grafischen Darstellungen</h1>
-        <div class="rounded border border-2">
-            <div class="row">
-                <div class="col-xl-6"><img src="{{ vollzug_scatterplot_1000000.file.url }}" style="max-width: 100%">
+
+    <section id="darstellungen" class="col-12 mt-4">
+        <h2 class="h4 matplotlib">Urteilsdatenbank in grafischen Darstellungen</h2>
+        <div class="rounded border border-2 p-3 bg-body-tertiary">
+            <div class="row g-3">
+                <div class="col-xl-6">
+                    <img src="{{ vollzug_scatterplot_1000000.file.url }}" class="img-fluid rounded border" alt="Vollzug Scatterplot bis 1 Mio.">
                 </div>
-                <div class="col-xl-6"><img src="{{ vollzug_scatterplot_200000.file.url }}" style="max-width: 100%">
+                <div class="col-xl-6">
+                    <img src="{{ vollzug_scatterplot_200000.file.url }}" class="img-fluid rounded border" alt="Vollzug Scatterplot bis 200k">
                 </div>
             </div>
-            <div class="row">
-                <div class="col-xl-6"><img src="{{ hauptdelikt_scatterplot_1000000.file.url }}" style="max-width: 100%">
+            <div class="row g-3 mt-1">
+                <div class="col-xl-6">
+                    <img src="{{ hauptdelikt_scatterplot_1000000.file.url }}" class="img-fluid rounded border" alt="Hauptdelikt Scatterplot bis 1 Mio.">
                 </div>
-                <div class="col-xl-6"><img src="{{ hauptdelikt_scatterplot_200000.file.url }}" style="max-width: 100%">
+                <div class="col-xl-6">
+                    <img src="{{ hauptdelikt_scatterplot_200000.file.url }}" class="img-fluid rounded border" alt="Hauptdelikt Scatterplot bis 200k">
                 </div>
             </div>
         </div>
     </section>
-
 {% endblock body %}

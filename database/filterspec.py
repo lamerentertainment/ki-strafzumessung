@@ -572,9 +572,11 @@ URTEIL_FILTER_CONFIG = {
     "suchfelder_label": "Fall-Nr., Gericht, Delikt, Zusammenfassung",
     "sortierfelder": [
         {"name": "fall_nr", "label": "Fall-Nr."},
+        {"name": "gericht", "label": "Gericht"},
         {"name": "urteilsdatum", "label": "Urteilsdatum"},
         {"name": "hauptdelikt", "label": "Hauptdelikt"},
         {"name": "deliktssumme", "label": "Deliktssumme"},
+        {"name": "nebenverurteilungsscore", "label": "Nebenverurteilungsscore"},
         {"name": "hauptsanktion", "label": "Hauptsanktion"},
         {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
     ],

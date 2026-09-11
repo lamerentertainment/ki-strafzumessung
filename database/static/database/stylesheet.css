@@ -319,6 +319,13 @@ h1 {
 /* Sortierbare Spaltenkoepfe */
 th[data-sortierbar] { cursor: pointer; user-select: none; white-space: nowrap; }
 th[data-sortierbar]:hover { text-decoration: underline; }
+#datenbank-table thead th {
+    position: sticky;
+    top: 0;
+    background-color: var(--bs-tertiary-bg, #f8f9fa);
+    box-shadow: inset 0 -1px 0 var(--bs-border-color, #dee2e6);
+    z-index: 2;
+}
 .filterpanel .filterspanne { max-width: 7.5rem; min-width: 5.5rem; }
 
 /* Sofort erscheinender Tooltip ueber [data-tt], ohne die Verzoegerung des

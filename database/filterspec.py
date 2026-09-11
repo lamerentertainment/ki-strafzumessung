@@ -779,10 +779,11 @@ GEWALTDELIKT_FILTER_CONFIG = {
         "fall_nr",
         "gericht",
         "hauptdelikt",
+        "kurzsachverhalt",
         "zusammenfassung",
         "bemerkungen",
     ],
-    "suchfelder_label": "Fall-Nr., Gericht, Delikt, Zusammenfassung, Bemerkungen",
+    "suchfelder_label": "Fall-Nr., Gericht, Delikt, Kurzsachverhalt, Zusammenfassung, Bemerkungen",
     "sortierfelder": [
         {"name": "fall_nr", "label": "Fall-Nr."},
         {"name": "urteilsdatum", "label": "Urteilsdatum"},

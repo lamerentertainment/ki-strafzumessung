@@ -822,6 +822,11 @@ class GewaltdeliktUrteil(models.Model):
 
     # Weitere Informationen
     in_ki_modell = models.BooleanField(default=True)
+    kurzsachverhalt = models.TextField(
+        blank=True,
+        default="",
+        help_text="Kurze Zusammenfassung des Sachverhalts (wird beim Hovern in der Urteilsliste angezeigt)",
+    )
     zusammenfassung = models.TextField(
         blank=True,
         help_text="Die Zusammenfassung der massgebenden Erwägungen für die Strafzumessung",

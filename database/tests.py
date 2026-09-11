@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
 from django.test import TestCase, override_settings
+from django.urls import reverse
 
 from .filterspec import (
     BETM_FILTER_CONFIG,
@@ -299,6 +300,7 @@ class FilterbareAnsichtenTest(TestCase):
         self.assertContains(antwort, 'id="filter-records"')
         self.assertContains(antwort, f'data-pk="{objekt.pk}"')
         self.assertContains(antwort, "data-urteilsliste")
+        return antwort
 
     def test_vermoegensdelikte(self):
         urteil = Urteil.objects.create(
@@ -329,8 +331,20 @@ class FilterbareAnsichtenTest(TestCase):
             urteilsdatum=date(2024, 2, 2),
             kanton=self.kanton,
             hauptdelikt="Raub",
+            kurzsachverhalt="Überfall auf eine Tankstelle mit vorgehaltener Schusswaffe.",
         )
-        self.ansicht_pruefen("/gewaltdatabase", urteil)
+        antwort = self.ansicht_pruefen("/gewaltdatabase", urteil)
+        # Volltext-Suche in filter_records soll kurzsachverhalt enthalten
+        records = antwort.context["filter_records"]
+        self.assertIn("tankstelle", records[str(urteil.pk)]["_t"])
+        # HTML soll data-kurzsachverhalt und SV-Badge enthalten
+        self.assertContains(antwort, 'data-kurzsachverhalt="Überfall auf eine Tankstelle mit vorgehaltener Schusswaffe."')
+        self.assertContains(antwort, 'title="Kurzsachverhalt vorhanden (Hover für Vorschau)"')
+        # Detailansicht soll Kurzsachverhalt anzeigen
+        detail_antwort = self.client.get(reverse("gewalturteil_detail", kwargs={"pk": urteil.pk}))
+        self.assertEqual(detail_antwort.status_code, 200)
+        self.assertContains(detail_antwort, "Kurzsachverhalt")
+        self.assertContains(detail_antwort, "Überfall auf eine Tankstelle mit vorgehaltener Schusswaffe.")
 
     def test_sexualdelikte(self):
         urteil = SexualdeliktUrteil.objects.create(

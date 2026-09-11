@@ -1,3 +1,4 @@
+{% load strafmass_formatierung %}
 <tr data-pk="{{ urteil.pk }}">
     <td>
         <div class="d-flex flex-column">
@@ -86,7 +87,7 @@
 
     {# Spalte Sanktion #}
     {% if urteil.hauptsanktion == "0" %}
-        <td>{{ urteil.freiheitsstrafe_in_monaten }} Monate</td>
+        <td>{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_anzeige }}</td>
     {% elif urteil.hauptsanktion == "1" %}
         <td>{{ urteil.anzahl_tagessaetze }} Tagessätze</td>
     {% endif %}

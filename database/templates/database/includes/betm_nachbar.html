@@ -1,4 +1,5 @@
 {% load humanize %}
+{% load strafmass_formatierung %}
 
 <div class="card">
     <h5 class="card-header">Präjudiz: <a href="{{ nachbar.url_link }}">{{ nachbar }}</a></h5>
@@ -125,7 +126,7 @@
                                     {% elif nachbar.vollzug == '2' %}
                                     unbedingte
                                     {% endif %}
-                                    Freiheitsstrafe von {{ nachbar.freiheitsstrafe_in_monaten }} Monaten.
+                                    Freiheitsstrafe von {{ nachbar.freiheitsstrafe_in_monaten|freiheitsstrafe_anzeige:"Monaten" }}.
                                 {% elif nachbar.hauptsanktion == '1' %}
                                     {% if nachbar.vollzug == '0' %}
                                     bedingte

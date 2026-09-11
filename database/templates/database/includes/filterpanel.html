@@ -158,11 +158,11 @@ bleibt dank x-cloak verborgen.
     <template x-if="kennzahlen().fsAnzahl > 0">
       <span class="text-body-secondary">
         Freiheitsstrafe (n=<span x-text="kennzahlen().fsAnzahl"></span>):
-        Median <strong x-text="kennzahlen().fsMedian"></strong> Mt.
-        · &#8960; <strong x-text="kennzahlen().fsMittel"></strong> Mt.
+        Median <strong :data-tt="jahreMonateTitel(kennzahlen().fsMedian)" x-text="kennzahlen().fsMedian"></strong> Mt.
+        · &#8960; <strong :data-tt="jahreMonateTitel(kennzahlen().fsMittel)" x-text="kennzahlen().fsMittel"></strong> Mt.
         <span data-bs-toggle="tooltip" title="mittlere absolute Abweichung vom Durchschnitt">(&plusmn;&nbsp;<span
           x-text="kennzahlen().fsMad"></span>)</span>
-        · Spanne <span x-text="kennzahlen().fsMin"></span>–<span x-text="kennzahlen().fsMax"></span> Mt.
+        · Spanne <span :data-tt="jahreMonateTitel(kennzahlen().fsMin)" x-text="kennzahlen().fsMin"></span>–<span :data-tt="jahreMonateTitel(kennzahlen().fsMax)" x-text="kennzahlen().fsMax"></span> Mt.
       </span>
     </template>
     <template x-if="kennzahlen().anzahl > 0">

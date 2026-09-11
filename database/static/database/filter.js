@@ -357,8 +357,12 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
 
     kennzahlen() {
       const treffer = this.trefferPks.map((pk) => this.records[pk]);
+      // Urteile mit in_ki_modell=false (z.B. eine lebenslängliche Freiheitsstrafe,
+      // die als Platzhalterwert codiert ist) verzerren Mittelwert/Median/Spanne
+      // der Freiheitsstrafe und werden daher aus dieser Stichprobe ausgeschlossen.
+      // Sie bleiben Teil der Trefferliste (`anzahl`) und der Vollzugs-Verteilung.
       const freiheitsstrafen = treffer
-        .filter((record) => record.hauptsanktion === "0")
+        .filter((record) => record.hauptsanktion === "0" && record.in_ki_modell !== false)
         .map((record) => record.freiheitsstrafe_in_monaten)
         .filter((wert) => wert !== null && wert !== undefined)
         .sort((a, b) => a - b);
@@ -395,6 +399,21 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       if (!werte.length) return null;
       const mitte = Math.floor(werte.length / 2);
       return werte.length % 2 ? werte[mitte] : Math.round((werte[mitte - 1] + werte[mitte]) / 2);
+    },
+
+    /**
+     * Wandelt eine Monatszahl in "X Jahre Y Monate" um, als Titel fuer eine
+     * Tooltip-Anzeige (z.B. bei Median/Durchschnitt der Freiheitsstrafe).
+     * Ab 12 Monaten sinnvoll; darunter (oder ohne Wert) leerer String, sodass
+     * kein Tooltip erscheint.
+     */
+    jahreMonateTitel(monate) {
+      if (monate === null || monate === undefined || monate <= 12) return "";
+      const jahre = Math.floor(monate / 12);
+      const rest = monate % 12;
+      const teile = [`${jahre} ${jahre === 1 ? "Jahr" : "Jahre"}`];
+      if (rest > 0) teile.push(`${rest} ${rest === 1 ? "Monat" : "Monate"}`);
+      return teile.join(" ");
     },
 
     // --- URL-Synchronisierung (verlinkbare Filterergebnisse) -----------------

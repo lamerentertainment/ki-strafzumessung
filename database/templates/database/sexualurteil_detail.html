@@ -1,4 +1,5 @@
 {% extends './base.html' %}
+{% load strafmass_formatierung %}
 
 {% block body %}
   <div class="col-12">
@@ -72,7 +73,7 @@
           <div class="card-body">
             <p class="mb-2"><strong>Hauptsanktion:</strong> {{ object.get_hauptsanktion_display }}</p>
             {% if object.hauptsanktion == '0' %}
-              <p class="mb-2"><strong>Dauer:</strong> {{ object.freiheitsstrafe_in_monaten }} Monate</p>
+              <p class="mb-2"><strong>Dauer:</strong> {{ object.freiheitsstrafe_in_monaten|freiheitsstrafe_anzeige }}</p>
             {% elif object.hauptsanktion == '1' %}
               <p class="mb-2"><strong>Anzahl Tagessätze:</strong> {{ object.anzahl_tagessaetze }}</p>
             {% endif %}

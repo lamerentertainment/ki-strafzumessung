@@ -320,3 +320,30 @@ h1 {
 th[data-sortierbar] { cursor: pointer; user-select: none; white-space: nowrap; }
 th[data-sortierbar]:hover { text-decoration: underline; }
 .filterpanel .filterspanne { max-width: 7.5rem; min-width: 5.5rem; }
+
+/* Sofort erscheinender Tooltip ueber [data-tt], ohne die Verzoegerung des
+   nativen title-Attributs. Erscheint nur, wenn data-tt nicht leer ist. */
+[data-tt] { position: relative; }
+[data-tt]:not([data-tt=""]) { cursor: help; }
+[data-tt]:not([data-tt=""])::after {
+    content: attr(data-tt);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: .25rem;
+    padding: .15rem .5rem;
+    background: #212529;
+    color: #fff;
+    font-size: .75rem;
+    font-weight: normal;
+    white-space: nowrap;
+    border-radius: .25rem;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 20;
+}
+[data-tt]:not([data-tt=""]):hover::after,
+[data-tt]:not([data-tt=""]):focus::after {
+    opacity: 1;
+}

@@ -47,6 +47,13 @@
         </li>
 
         <li class="nav-item">
+          <a class="nav-link" href="{% url 'text_warum' %}">
+            Warum Strafzumessung <br>
+            mit KI?
+          </a>
+        </li>
+
+        <li class="nav-item">
           <a class="nav-link" href="{% url 'text_funktionsweise' %}">
             Wie es <br>
             funktioniert
@@ -87,13 +94,6 @@
         </li>
         {% endif %}
 
-        {% if request.user.is_superuser == False %}
-        <li class="nav-item ms-auto">
-          <a class="nav-link" href="{% url 'login' %}">
-            log in
-          </a>
-        </li>
-        {% endif %}
         {% if request.user.is_superuser == True %}
         <li class="nav-item ms-auto">
           <a class="nav-link" href="{% url 'logout' %}">

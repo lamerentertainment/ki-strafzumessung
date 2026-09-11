@@ -254,14 +254,23 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       treffer.forEach((record) => {
         if (vollzug[record.vollzug] !== undefined) vollzug[record.vollzug] += 1;
       });
+      const mittelwert = freiheitsstrafen.length
+        ? freiheitsstrafen.reduce((a, b) => a + b, 0) / freiheitsstrafen.length
+        : null;
       return {
         anzahl: treffer.length,
         gesamt: Object.keys(this.records).length,
         fsAnzahl: freiheitsstrafen.length,
         fsMedian: this.median(freiheitsstrafen),
-        fsMittel: freiheitsstrafen.length
-          ? Math.round(freiheitsstrafen.reduce((a, b) => a + b, 0) / freiheitsstrafen.length)
-          : null,
+        fsMittel: mittelwert === null ? null : Math.round(mittelwert),
+        // mittlere absolute Abweichung vom (ungerundeten) Mittelwert
+        fsMad:
+          mittelwert === null
+            ? null
+            : Math.round(
+                freiheitsstrafen.reduce((summe, wert) => summe + Math.abs(wert - mittelwert), 0) /
+                  freiheitsstrafen.length
+              ),
         fsMin: freiheitsstrafen.length ? freiheitsstrafen[0] : null,
         fsMax: freiheitsstrafen.length ? freiheitsstrafen[freiheitsstrafen.length - 1] : null,
         bedingt: vollzug["0"],

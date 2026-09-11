@@ -593,7 +593,7 @@ class GewaltdeliktUrteil(models.Model):
 
     # Grunddaten
     fall_nr = models.CharField(
-        max_length=15,
+        max_length=25,
         unique=True,
         help_text="Die Verfahrensnummer des Urteils, dem die Informationen entnommen sind.",
     )

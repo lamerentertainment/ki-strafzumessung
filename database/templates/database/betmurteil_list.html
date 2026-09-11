@@ -1,7 +1,7 @@
 {% extends './base.html' %}
 {% load static %}
+{% load humanize %}
 {% load strafmass_formatierung %}
-
 
 {% block alpine_komponenten %}
   <script defer src="{% static 'database/filter.js' %}"></script>
@@ -17,25 +17,25 @@
 
     {% include 'database/includes/filterpanel.html' %}
 
-    <div class="table-responsive">
-      <table class="table table-sm table-striped table-hover align-middle">
-        <thead class="table-light">
+    <div class="table-scroll-container rounded border border-2 shadow-sm" style="overflow: auto; height: 800px;">
+      <table class="table table-sm table-striped table-hover align-middle mb-0">
+        <thead class="table-light sticky-top">
           <tr>
             <th data-sortierbar data-tt="nach Fall-Nr. sortieren" @click="sortieren('fall_nr')">
               Fall-Nr. <span x-text="sortSymbol('fall_nr')"></span>
             </th>
             <th data-sortierbar data-tt="nach Urteilsdatum sortieren" @click="sortieren('urteilsdatum')">
-              Gericht/Urteilsdatum <span x-text="sortSymbol('urteilsdatum')"></span>
+              Gericht / Datum <span x-text="sortSymbol('urteilsdatum')"></span>
             </th>
-            <th>Betäubungsmittel</th>
             <th data-sortierbar data-tt="nach Rolle sortieren" @click="sortieren('rolle')">
-              Rolle <span x-text="sortSymbol('rolle')"></span>
+              Betm & Rolle <span x-text="sortSymbol('rolle')"></span>
             </th>
-            <th data-sortierbar data-tt="nach Sanktion sortieren" @click="sortieren('hauptsanktion')">
-              Sanktion <span x-text="sortSymbol('hauptsanktion')"></span>
+            <th data-sortierbar data-tt="nach Deliktsertrag sortieren" @click="sortieren('deliktsertrag')">
+              Ertrag & Zusatzdelikte <span x-text="sortSymbol('deliktsertrag')"></span>
             </th>
-            <th data-sortierbar data-tt="nach Dauer/Höhe sortieren" @click="sortieren('freiheitsstrafe_in_monaten')">
-              Dauer/Höhe <span x-text="sortSymbol('freiheitsstrafe_in_monaten')"></span>
+            <th>Täter & Vorstrafen</th>
+            <th data-sortierbar data-tt="nach Sanktion sortieren" @click="sortieren('freiheitsstrafe_in_monaten')">
+              Sanktion & Vollzug <span x-text="sortSymbol('freiheitsstrafe_in_monaten')"></span>
             </th>
             <th>Details</th>
           </tr>
@@ -43,6 +43,7 @@
         <tbody data-urteilsliste>
           {% for urteil in object_list %}
             <tr data-pk="{{ urteil.pk }}">
+              {# Spalte 1: Fall-Nr. #}
               <td>
                 <div class="d-flex flex-column">
                   <a href="{% url 'betmurteil_detail' pk=urteil.pk %}" class="fw-semibold">{{ urteil.fall_nr }}</a>
@@ -51,41 +52,144 @@
                   {% endif %}
                 </div>
               </td>
+
+              {# Spalte 2: Gericht / Urteilsdatum / Verfahrensart #}
               <td>
-                <div>Urteil des {{ urteil.gericht }}s</div>
-                <div class="text-body-secondary small">vom {{ urteil.urteilsdatum|date:'d.m.Y' }}</div>
+                <div>Urteil des {{ urteil.gericht }}s ({{ urteil.kanton.abk }})</div>
+                <div class="text-body-secondary small">
+                  vom {{ urteil.urteilsdatum|date:'d.m.Y' }}
+                  {% if urteil.verfahrensart == '1' %}
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle ms-1 px-1 py-0" style="font-size: 0.65rem;">abgekürzt</span>
+                  {% endif %}
+                </div>
               </td>
+
+              {# Spalte 3: Betäubungsmittel, Rolle & Qualifikationen #}
               <td>
-                <ul class="mb-0 small">
+                <div class="fw-semibold">{{ urteil.rolle }}</div>
+                <div class="small">
                   {% for betm in urteil.betm.all %}
-                    <li>{{ betm }}</li>
+                    <div>{{ betm }}</div>
                   {% empty %}
-                    <li>–</li>
+                    <div class="text-body-secondary">–</div>
                   {% endfor %}
-                </ul>
+                </div>
+                <div class="d-flex flex-wrap gap-1 mt-1">
+                  {% if urteil.mengenmaessig %}
+                    <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle px-1 py-0" style="font-size: 0.7rem;" title="Schwerer Fall nach Art. 19 Abs. 2 lit. a BetmG">mengenmässig</span>
+                  {% endif %}
+                  {% if urteil.gewerbsmaessig %}
+                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-1 py-0" style="font-size: 0.7rem;" title="Gewerbsmässig nach Art. 19 Abs. 2 lit. c BetmG">gewerbsm.</span>
+                  {% endif %}
+                  {% if urteil.bandenmaessig %}
+                    <span class="badge bg-dark-subtle text-dark-emphasis border border-dark-subtle px-1 py-0" style="font-size: 0.7rem;" title="Bandenmässig nach Art. 19 Abs. 2 lit. b BetmG">bandenmässig</span>
+                  {% endif %}
+                  {% if urteil.anstaltentreffen %}
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-1 py-0" style="font-size: 0.7rem;" title="Anstalten treffen">Anstalten</span>
+                  {% endif %}
+                  {% if urteil.mehrfach %}
+                    <span class="badge bg-light text-secondary-emphasis border px-1 py-0" style="font-size: 0.7rem;" title="Mehrfache Begehung">mehrfach</span>
+                  {% endif %}
+                  {% if urteil.beschaffungskriminalitaet %}
+                    <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle px-1 py-0" style="font-size: 0.7rem;" title="Suchtdruck attestiert">Suchtdruck</span>
+                  {% endif %}
+                </div>
               </td>
-              <td>{{ urteil.rolle }}</td>
-              {% if urteil.hauptsanktion == '0' %}
-                <td><span class="badge text-bg-primary">Freiheitsstrafe</span></td>
-                <td data-tt="{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_monate_tooltip }}">{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_jahre_monate_anzeige }}</td>
-              {% elif urteil.hauptsanktion == '1' %}
-                <td><span class="badge text-bg-success">Geldstrafe</span></td>
-                <td>{{ urteil.anzahl_tagessaetze }} Tagessätze</td>
-              {% else %}
-                <td>Busse</td>
-                <td>–</td>
-              {% endif %}
+
+              {# Spalte 4: Deliktsertrag & Zusatzdelikte #}
               <td>
-                <a class="btn btn-sm btn-outline-primary" href="{% url 'betmurteil_detail' pk=urteil.pk %}">Details</a>
+                {% if urteil.deliktsertrag %}
+                  <div class="fw-semibold">CHF {{ urteil.deliktsertrag|intcomma }}</div>
+                {% else %}
+                  <div class="text-body-secondary small">–</div>
+                {% endif %}
+                {% if urteil.deliktsdauer_in_monaten %}
+                  <div class="text-body-secondary small" style="font-size: 0.75rem;">Dauer: {{ urteil.deliktsdauer_in_monaten }} Mt.</div>
+                {% endif %}
+                {% if urteil.nebenverurteilungsscore > 0 %}
+                  <div class="text-body-secondary small" style="font-size: 0.75rem;">Zusatzscore: {{ urteil.nebenverurteilungsscore }}</div>
+                {% else %}
+                  <div class="text-body-secondary small" style="font-size: 0.75rem;">nur Hauptdelikt</div>
+                {% endif %}
+              </td>
+
+              {# Spalte 5: Täter & Vorstrafen #}
+              <td>
+                <div>
+                  {% if urteil.nationalitaet == '0' and urteil.geschlecht == '0' %}
+                    Schweizer
+                  {% elif urteil.nationalitaet == '0' and urteil.geschlecht == '1' %}
+                    Schweizerin
+                  {% elif urteil.nationalitaet == '1' and urteil.geschlecht == '0' %}
+                    Ausländer
+                  {% elif urteil.nationalitaet == '1' and urteil.geschlecht == '1' %}
+                    Ausländerin
+                  {% else %}
+                    {% if urteil.geschlecht == '0' %}männlich{% else %}weiblich{% endif %}
+                  {% endif %}
+                </div>
+                <div class="mt-1">
+                  {% if urteil.vorbestraft_einschlaegig %}
+                    <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle px-1 py-0" style="font-size: 0.7rem;">einschlägig vorbestraft</span>
+                  {% elif urteil.vorbestraft %}
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-1 py-0" style="font-size: 0.7rem;">vorbestraft</span>
+                  {% else %}
+                    <span class="text-body-secondary small" style="font-size: 0.75rem;">nicht vorbestraft</span>
+                  {% endif %}
+                </div>
+              </td>
+
+              {# Spalte 6: Sanktion & Vollzug #}
+              <td>
+                {% if urteil.hauptsanktion == '0' %}
+                  <div class="d-flex align-items-center gap-1">
+                    <span class="badge text-bg-primary">Freiheitsstrafe</span>
+                    <span class="fw-semibold" data-tt="{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_monate_tooltip }}">{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_jahre_monate_anzeige }}</span>
+                  </div>
+                {% elif urteil.hauptsanktion == '1' %}
+                  <div class="d-flex align-items-center gap-1">
+                    <span class="badge text-bg-success">Geldstrafe</span>
+                    <span class="fw-semibold">{{ urteil.anzahl_tagessaetze }} Tagessätze</span>
+                  </div>
+                {% else %}
+                  <div>Busse</div>
+                {% endif %}
+                <div class="text-body-secondary small mt-1" style="font-size: 0.75rem;">
+                  Vollzug:
+                  {% if urteil.vollzug == '0' %}
+                    bedingt
+                  {% elif urteil.vollzug == '1' %}
+                    teilbedingt
+                  {% elif urteil.vollzug == '2' %}
+                    unbedingt
+                  {% else %}
+                    –
+                  {% endif %}
+                </div>
+              </td>
+
+              {# Spalte 7: Status & Details #}
+              <td>
+                <div class="d-flex flex-column gap-1 align-items-start">
+                  {% if urteil.in_ki_modell %}
+                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-1 py-0" style="font-size: 0.68rem;" title="Im KI-Modell berücksichtigt">KI-Modell &#10003;</span>
+                  {% else %}
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle px-1 py-0" style="font-size: 0.68rem;" title="Nicht im KI-Modell berücksichtigt">nicht im Modell</span>
+                  {% endif %}
+                  <div class="mt-1">
+                    <a class="btn btn-sm btn-outline-primary py-0 px-2" href="{% url 'betmurteil_detail' pk=urteil.pk %}">Details</a>
+                  </div>
+                </div>
               </td>
             </tr>
           {% empty %}
             <tr>
-              <td colspan="7">Keine Betäubungsmittel-Urteile gefunden.</td>
+              <td colspan="7" class="text-center py-4 text-muted">Keine Betäubungsmittel-Urteile gefunden.</td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+    <p class="text-body-secondary small mt-2">Es befinden sich insgesamt {{ object_list|length }} Urteile in der Datenbank.</p>
   </div>
 {% endblock %}

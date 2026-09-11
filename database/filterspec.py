@@ -688,6 +688,8 @@ BETM_FILTER_CONFIG = {
         {"name": "fall_nr", "label": "Fall-Nr."},
         {"name": "urteilsdatum", "label": "Urteilsdatum"},
         {"name": "rolle", "label": "Rolle"},
+        {"name": "deliktsertrag", "label": "Deliktsertrag"},
+        {"name": "nebenverurteilungsscore", "label": "Nebenverurteilungsscore"},
         {"name": "hauptsanktion", "label": "Hauptsanktion"},
         {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
     ],

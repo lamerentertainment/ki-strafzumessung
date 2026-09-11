@@ -319,7 +319,8 @@ h1 {
 /* Sortierbare Spaltenkoepfe */
 th[data-sortierbar] { cursor: pointer; user-select: none; white-space: nowrap; }
 th[data-sortierbar]:hover { text-decoration: underline; }
-#datenbank-table thead th {
+#datenbank-table thead th,
+.table-scroll-container thead th {
     position: sticky;
     top: 0;
     background-color: var(--bs-tertiary-bg, #f8f9fa);

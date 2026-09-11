@@ -318,7 +318,8 @@ class SexualdeliktUrteilAdminForm(forms.ModelForm):
 class SexualdeliktUrteilAdmin(admin.ModelAdmin):
     form = SexualdeliktUrteilAdminForm
     list_display = ["fall_nr", "update_time", "urteilsdatum", "gericht", "freiheitsstrafe_in_monaten",
-                    "anzahl_tagessaetze", "has_zusammenfassung"]
+                    "anzahl_tagessaetze", "has_kurzsachverhalt", "has_zusammenfassung"]
+    search_fields = ["fall_nr", "gericht", "kurzsachverhalt", "zusammenfassung", "bemerkungen"]
     ordering = ["-update_time"]
 
     fieldsets = (
@@ -345,9 +346,14 @@ class SexualdeliktUrteilAdmin(admin.ModelAdmin):
             'fields': ('hauptsanktion', 'freiheitsstrafe_in_monaten', 'anzahl_tagessaetze', 'vollzug', 'verfahrensart'),
         }),
         ('Weitere Informationen', {
-            'fields': ('zusammenfassung', 'bemerkungen'),
+            'fields': ('kurzsachverhalt', 'zusammenfassung', 'bemerkungen'),
         }),
     )
+
+    def has_kurzsachverhalt(self, obj):
+        return bool(obj.kurzsachverhalt)
+    has_kurzsachverhalt.boolean = True
+    has_kurzsachverhalt.short_description = "Kurzsachverhalt vorhanden"
 
     def has_zusammenfassung(self, obj):
         return bool(obj.zusammenfassung)

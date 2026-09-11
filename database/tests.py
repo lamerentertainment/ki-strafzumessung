@@ -354,8 +354,17 @@ class FilterbareAnsichtenTest(TestCase):
             kanton=self.kanton,
             hauptdelikt=Hauptdelikt.objects.create(name="Art. 190, Vergewaltigung"),
             hauptdelikt_tatmittel=Tatmittel.objects.create(name="Gewalt"),
+            kurzsachverhalt="Test-Kurzsachverhalt für Sexualdelikt unter Anwendung von körperlicher Gewalt.",
         )
-        self.ansicht_pruefen("/sexualdatabase", urteil)
+        antwort = self.ansicht_pruefen("/sexualdatabase", urteil)
+        records = antwort.context["filter_records"]
+        self.assertIn("körperlicher", records[str(urteil.pk)]["_t"])
+        self.assertContains(antwort, 'data-kurzsachverhalt="Test-Kurzsachverhalt für Sexualdelikt unter Anwendung von körperlicher Gewalt."')
+        self.assertContains(antwort, 'title="Kurzsachverhalt vorhanden (Hover für Vorschau)"')
+        detail_antwort = self.client.get(reverse("sexualurteil_detail", kwargs={"pk": urteil.pk}))
+        self.assertEqual(detail_antwort.status_code, 200)
+        self.assertContains(detail_antwort, "Kurzsachverhalt")
+        self.assertContains(detail_antwort, "Test-Kurzsachverhalt für Sexualdelikt unter Anwendung von körperlicher Gewalt.")
 
 
 class MengenspanneTest(TestCase):

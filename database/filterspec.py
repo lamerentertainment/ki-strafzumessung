@@ -492,10 +492,11 @@ SEXUALDELIKT_FILTER_CONFIG = {
         "gericht",
         "hauptdelikt__name",
         "hauptdelikt_tatmittel__name",
+        "kurzsachverhalt",
         "zusammenfassung",
         "bemerkungen",
     ],
-    "suchfelder_label": "Fall-Nr., Gericht, Delikt, Zusammenfassung, Bemerkungen",
+    "suchfelder_label": "Fall-Nr., Gericht, Delikt, Kurzsachverhalt, Zusammenfassung, Bemerkungen",
     "sortierfelder": [
         {"name": "fall_nr", "label": "Fall-Nr."},
         {"name": "urteilsdatum", "label": "Urteilsdatum"},

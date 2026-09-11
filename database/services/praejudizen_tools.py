@@ -306,6 +306,7 @@ def execute_search_sexualdelikt_urteile(params: dict) -> dict:
             "freiheitsstrafe_in_monaten": u.freiheitsstrafe_in_monaten,
             "anzahl_tagessaetze": u.anzahl_tagessaetze,
             "vollzug": u.get_vollzug_display(),
+            "kurzsachverhalt": u.kurzsachverhalt or None,
             "zusammenfassung": u.zusammenfassung[:ZUSAMMENFASSUNG_MAX_CHARS],
             "detail_url": u.url_link or reverse("sexualurteil_detail", args=[u.id]),
         }

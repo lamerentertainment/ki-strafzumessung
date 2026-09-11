@@ -505,6 +505,11 @@ class SexualdeliktUrteil(models.Model):
                                             related_name='besonderheiten',
                                             blank=True)
     bemerkungen = models.TextField(blank=True, help_text="Besondere Bemerkungen zum Fall")
+    kurzsachverhalt = models.TextField(
+        blank=True,
+        default="",
+        help_text="Kurze Zusammenfassung des Sachverhalts (wird beim Hovern in der Urteilsliste angezeigt)",
+    )
     zusammenfassung = models.TextField(
         blank=True,
         help_text="Die Zusammenfassung der massgebenden Erwägungen für die Strafzumessung",

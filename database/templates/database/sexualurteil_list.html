@@ -4,6 +4,7 @@
 
 {% block alpine_komponenten %}
   <script defer src="{% static 'database/filter.js' %}"></script>
+  <script defer src="{% static 'database/kurzsachverhalt_preview.js' %}"></script>
 {% endblock alpine_komponenten %}
 
 {% block body %}
@@ -39,10 +40,24 @@
         </thead>
         <tbody data-urteilsliste>
           {% for urteil in object_list %}
-            <tr data-pk="{{ urteil.pk }}">
+            <tr data-pk="{{ urteil.pk }}"
+                {% if urteil.kurzsachverhalt %}
+                  data-kurzsachverhalt="{{ urteil.kurzsachverhalt }}"
+                  data-fall-nr="{{ urteil.fall_nr }}"
+                  data-gericht="{{ urteil.gericht }}"
+                  data-urteilsdatum="{{ urteil.urteilsdatum|date:'d.m.Y' }}"
+                  data-hauptdelikt="{{ urteil.hauptdelikt.name }}"
+                  data-mehrfach="{% if urteil.hauptdelikt_mehrfachbegehung %}1{% else %}0{% endif %}"
+                  data-versuch="0"
+                {% endif %}>
               <td>
                 <div class="d-flex flex-column">
-                  <a href="{% url 'sexualurteil_detail' pk=urteil.pk %}" class="fw-semibold">{{ urteil.fall_nr }}</a>
+                  <div class="d-flex align-items-center gap-1">
+                    <a href="{% url 'sexualurteil_detail' pk=urteil.pk %}" class="fw-semibold">{{ urteil.fall_nr }}</a>
+                    {% if urteil.kurzsachverhalt %}
+                      <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-1 py-0" style="font-size: 0.65rem;" title="Kurzsachverhalt vorhanden (Hover für Vorschau)">SV</span>
+                    {% endif %}
+                  </div>
                   {% if urteil.url_link %}
                     <a href="{{ urteil.url_link }}" target="_blank" rel="noopener" class="link-secondary small">PDF öffnen</a>
                   {% endif %}

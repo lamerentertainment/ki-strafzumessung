@@ -393,10 +393,6 @@ th[data-sortierbar]:hover { text-decoration: underline; }
     overflow-y: hidden;
 }
 
-.kurzsachverhalt-hovercard .hovercard-footer {
-    font-size: 0.75rem;
-}
-
 tr[data-kurzsachverhalt] {
     cursor: pointer;
 }

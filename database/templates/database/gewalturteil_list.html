@@ -49,6 +49,8 @@
                   data-gericht="{{ urteil.gericht }}"
                   data-urteilsdatum="{{ urteil.urteilsdatum|date:'d.m.Y' }}"
                   data-hauptdelikt="{{ urteil.get_hauptdelikt_display }}"
+                  data-mehrfach="{% if urteil.mehrfach %}1{% else %}0{% endif %}"
+                  data-versuch="{% if urteil.versuch %}1{% else %}0{% endif %}"
                 {% endif %}>
               <td>
                 <div class="d-flex flex-column">

@@ -18,10 +18,6 @@ document.addEventListener("DOMContentLoaded", function () {
       <div class="hovercard-delikt small mt-1"></div>
     </div>
     <div class="hovercard-body mt-2"></div>
-    <div class="hovercard-footer small text-body-secondary border-top pt-2 mt-2 d-flex justify-content-between align-items-center">
-      <span>Urteilsdetails ansehen</span>
-      <span class="text-primary fw-bold">→</span>
-    </div>
   `;
   document.body.appendChild(preview);
 
@@ -56,8 +52,20 @@ document.addEventListener("DOMContentLoaded", function () {
     const fallNr = row.dataset.fallNr || "";
     const gericht = row.dataset.gericht || "";
     const datum = row.dataset.urteilsdatum || "";
-    const delikt = row.dataset.hauptdelikt || "";
+    const rawDelikt = row.dataset.hauptdelikt || "";
+    const mehrfach = row.dataset.mehrfach === "1";
+    const versuch = row.dataset.versuch === "1";
     const text = row.dataset.kurzsachverhalt || "";
+
+    let delikt = rawDelikt;
+    if (delikt) {
+      if (mehrfach) {
+        delikt = "mehrfache " + delikt;
+      }
+      if (versuch) {
+        delikt = delikt + ", versucht";
+      }
+    }
 
     preview.querySelector(".hovercard-title").textContent = fallNr ? `Fall ${fallNr}` : "Kurzsachverhalt";
     preview.querySelector(".hovercard-meta").textContent = [gericht, datum].filter(Boolean).join(", ");

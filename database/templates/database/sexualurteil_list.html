@@ -1,9 +1,9 @@
 {% extends './base.html' %}
 {% load static %}
 
-{% block extra_head %}
+{% block alpine_komponenten %}
   <script defer src="{% static 'database/filter.js' %}"></script>
-{% endblock extra_head %}
+{% endblock alpine_komponenten %}
 
 {% block body %}
   <div class="col-12" x-data="urteilsFilter('filter-spec', 'filter-records')">

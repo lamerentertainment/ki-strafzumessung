@@ -21,6 +21,7 @@ TYP_BOOL = "bool"  # Dreizustands-Schalter egal/ja/nein
 TYP_NUMBER = "number"  # Von/Bis-Zahlenpaar
 TYP_DATE = "date"  # Von/Bis-Datumspaar
 TYP_MULTI = "multi"  # M2M, Chips, "enthaelt mindestens eines"
+TYP_ABHAENGIGE_SPANNE = "abhaengige_spanne"  # Von/Bis, erst nach Wahl im Quellfeld
 
 
 # Felder, welche die Kennzahlenleiste im Frontend auswertet (filter.js,
@@ -139,6 +140,26 @@ def _ohne_filterwirkung(eintrag, feld, queryset):
     return False
 
 
+def _abhaengige_spanne_eintrag(feldname, spanne, gruppentitel):
+    """
+    Beschreibt eine Von/Bis-Spanne, die sich auf die im Quellfeld gewaehlten
+    Werte bezieht und erst dann bedienbar ist. Beispiel: die Betaeubungsmittel-
+    menge ergibt erst Sinn, wenn eine Substanz gewaehlt wurde - 100 g sind bei
+    Kokain ein mittlerer, bei Marihuana ein Bagatellfall.
+    """
+    return {
+        "name": feldname,
+        "typ": TYP_ABHAENGIGE_SPANNE,
+        "label": spanne["label"],
+        "quelle": spanne["quelle"],
+        "einheit": spanne.get("einheit", ""),
+        "einheiten_je_schluessel": spanne.get("einheiten_je_schluessel", {}),
+        "basis_labels": list(spanne.get("basis_labels", ())),
+        "hilfetext": spanne.get("hilfetext", ""),
+        "gruppe": gruppentitel,
+    }
+
+
 def filterspezifikation_erstellen(model, config, queryset=None):
     """Baut die Gruppen-/Feldstruktur fuer das Filterpanel."""
     queryset = model.objects.all() if queryset is None else queryset
@@ -146,12 +167,23 @@ def filterspezifikation_erstellen(model, config, queryset=None):
     einheiten = config.get("einheiten", {})
     primaer = config.get("primaer", [])
     pfade = config.get("beziehungspfade", {})
+    abhaengige = config.get("abhaengige_spannen", {})
 
     gruppen = []
     alle_felder = {}
     for gruppentitel, feldnamen in config["gruppen"]:
         felder = []
         for feldname in feldnamen:
+            if feldname in abhaengige:
+                eintrag = _abhaengige_spanne_eintrag(
+                    feldname, abhaengige[feldname], gruppentitel
+                )
+                # Ohne Quellfeld (etwa weil dieses keine Filterwirkung hat)
+                # kann die Spanne nicht bedient werden.
+                if eintrag["quelle"] in alle_felder:
+                    felder.append(eintrag)
+                    alle_felder[feldname] = eintrag
+                continue
             feld = model._meta.get_field(feldname)
             typ = _typ_ermitteln(feld)
             eintrag = {
@@ -221,9 +253,43 @@ def _feldwert(objekt, feld, pfade):
     return str(wert) if wert is not None else None
 
 
+def _mengen_aggregieren(objekt, spanne, pfade):
+    """
+    Summiert die Werte des Quellfelds je Auswahlwert und Bemessungsgrundlage,
+    z.B. ``{"Kokain": {"rein": 340, "gemisch": 90}}``.
+
+    Getrennt nach Grundlage, weil reine Wirkstoff- und Bruttomengen nicht
+    addierbar sind: 250 g reines Kokain und 90 g Gemisch ergeben nicht 340 g.
+    """
+    quelle = spanne["quelle"]
+    wertfeld = spanne["wertfeld"]
+    basisfeld = spanne["basisfeld"]
+    schluesselpfad = pfade.get(quelle, "name")
+
+    summen = {}
+    for eintrag in getattr(objekt, quelle).all():
+        schluessel = _durchlaufen(eintrag, schluesselpfad)
+        wert = getattr(eintrag, wertfeld, None)
+        if schluessel is None or wert is None:
+            continue
+        basis = "rein" if getattr(eintrag, basisfeld) else "gemisch"
+        summen.setdefault(schluessel, {})
+        summen[schluessel][basis] = summen[schluessel].get(basis, 0) + wert
+    return summen
+
+
 def datensaetze_erstellen(model, config, queryset, spezifikation):
     """Erzeugt ``{pk: {feld: wert, ..., '_t': 'volltextblob'}}`` fuer Alpine."""
-    feldnamen = [feld["name"] for feld in spezifikation["felder"]]
+    abhaengige = {
+        feld["name"]: config["abhaengige_spannen"][feld["name"]]
+        for feld in spezifikation["felder"]
+        if feld["typ"] == TYP_ABHAENGIGE_SPANNE
+    }
+    feldnamen = [
+        feld["name"]
+        for feld in spezifikation["felder"]
+        if feld["name"] not in abhaengige
+    ]
     zusaetzlich = [
         feld["name"] for feld in spezifikation.get("sortierfelder", [])
     ] + list(KENNZAHLENFELDER)
@@ -237,6 +303,8 @@ def datensaetze_erstellen(model, config, queryset, spezifikation):
     datensaetze = {}
     for objekt in queryset:
         werte = {feld.name: _feldwert(objekt, feld, pfade) for feld in felder}
+        for feldname, spanne in abhaengige.items():
+            werte[feldname] = _mengen_aggregieren(objekt, spanne, pfade)
         textteile = []
         for pfad in volltextfelder:
             ziel = objekt
@@ -407,7 +475,7 @@ URTEIL_FILTER_CONFIG = {
 
 
 BETM_FILTER_CONFIG = {
-    "primaer": ["betm", "rolle", "vollzug"],
+    "primaer": ["betm", "betm_menge", "rolle", "vollzug"],
     "gruppen": [
         ("Fall & Gericht", ["gericht", "kanton", "urteilsdatum", "verfahrensart"]),
         (
@@ -422,7 +490,7 @@ BETM_FILTER_CONFIG = {
         ),
         (
             "Betäubungsmittel & Tatbeitrag",
-            ["betm", "rolle", "deliktsertrag", "deliktsdauer_in_monaten"],
+            ["betm", "betm_menge", "rolle", "deliktsertrag", "deliktsdauer_in_monaten"],
         ),
         (
             "Qualifikationen",
@@ -449,6 +517,26 @@ BETM_FILTER_CONFIG = {
     # Jeder Betm-Datensatz ist durch seine Menge einmalig; gefiltert wird nach
     # der Substanz.
     "beziehungspfade": {"betm": "art__name"},
+    "abhaengige_spannen": {
+        "betm_menge": {
+            "quelle": "betm",
+            "wertfeld": "menge_in_g",
+            "basisfeld": "rein",
+            "basis_labels": ["rein", "Gemisch"],
+            "label": "Menge",
+            "einheit": "g",
+            # LSD-Trips und Ecstasy-Pillen sind in menge_in_g als Stueckzahlen
+            # erfasst, nicht als Gramm.
+            "einheiten_je_schluessel": {
+                "LSD Trips": "Stk.",
+                "MDMA/Ecstasy Pillen": "Stk.",
+            },
+            "hilfetext": "Summe je Substanz, getrennt nach reiner Wirkstoff- "
+            "und Bruttomenge. Wird erst bedienbar, wenn eine Substanz gewählt "
+            "ist, weil die Mengen je nach Substanz um Grössenordnungen "
+            "auseinanderliegen.",
+        }
+    },
     "labels": {
         "gericht": "Gericht",
         "kanton": "Kanton",

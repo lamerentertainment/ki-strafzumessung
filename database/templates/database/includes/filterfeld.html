@@ -15,7 +15,13 @@ Boolesche Felder, Von/Bis-Paare fuer Zahlen und Daten.
             @click="chipEntfernen('{{ feld.name }}')">zurücksetzen</button>
   </label>
 
-  {% if feld.typ == 'choice' or feld.typ == 'multi' %}
+  {% if feld.typ == 'abhaengige_spanne' %}
+    {% include 'database/includes/filterspanne.html' with feld=feld %}
+    <div class="form-text small" x-show="zustand['{{ feld.quelle }}'].length == 0">
+      Erst wählbar, sobald oben eine Auswahl getroffen ist.
+    </div>
+
+  {% elif feld.typ == 'choice' or feld.typ == 'multi' %}
     <div class="d-flex flex-wrap gap-1">
       {% for option in feld.optionen %}
         <button type="button"

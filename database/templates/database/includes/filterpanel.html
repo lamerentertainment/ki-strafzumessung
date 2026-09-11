@@ -28,7 +28,11 @@ bleibt dank x-cloak verborgen.
     </div>
 
     {% for feld in filter_spec.primaer %}
-      {% if feld.typ == 'number' or feld.typ == 'date' %}
+      {% if feld.typ == 'abhaengige_spanne' %}
+        <div class="col-auto">
+          {% include 'database/includes/filterspanne.html' with feld=feld %}
+        </div>
+      {% elif feld.typ == 'number' or feld.typ == 'date' %}
         {# Spannen werden direkt in der Kopfzeile gesetzt statt hinter einem Aufklapper #}
         <div class="col-auto">
           <div class="input-group input-group-sm flex-nowrap">

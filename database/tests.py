@@ -185,9 +185,12 @@ class FilterkonfigurationenTest(TestCase):
                 for _, feldnamen in config["gruppen"]
                 for feldname in feldnamen
             ]
+            # Abhängige Spannen sind keine Modellfelder, sondern abgeleitet.
+            abhaengige = config.get("abhaengige_spannen", {})
             with self.subTest(model=model.__name__):
                 for feldname in gruppierte:
-                    model._meta.get_field(feldname)
+                    if feldname not in abhaengige:
+                        model._meta.get_field(feldname)
                 for feldname in config.get("labels", {}):
                     model._meta.get_field(feldname)
                 for feldname in config.get("einheiten", {}):
@@ -196,6 +199,13 @@ class FilterkonfigurationenTest(TestCase):
                     model._meta.get_field(sortierfeld["name"])
                 for feldname in config["primaer"]:
                     self.assertIn(feldname, gruppierte)
+                for feldname, spanne in abhaengige.items():
+                    self.assertIn(feldname, gruppierte)
+                    quellfeld = model._meta.get_field(spanne["quelle"])
+                    self.assertIn(spanne["quelle"], gruppierte)
+                    # Wert- und Basisfeld liegen im verknüpften Modell
+                    quellfeld.related_model._meta.get_field(spanne["wertfeld"])
+                    quellfeld.related_model._meta.get_field(spanne["basisfeld"])
                 self.assertEqual(len(gruppierte), len(set(gruppierte)))
 
     def test_spezifikation_auf_leerem_bestand(self):
@@ -325,3 +335,83 @@ class FilterbareAnsichtenTest(TestCase):
             hauptdelikt_tatmittel=Tatmittel.objects.create(name="Gewalt"),
         )
         self.ansicht_pruefen("/sexualdatabase", urteil)
+
+
+class MengenspanneTest(TestCase):
+    """
+    Abhängige Mengenspanne der Betäubungsmittel-Urteile: Summen je Substanz,
+    getrennt nach reiner Wirkstoff- und Bruttomenge.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        kanton = Kanton.objects.create(abk="ZH")
+        rolle = Rolle.objects.create(name="Transport")
+        kokain = BetmArt.objects.create(name="Kokain")
+        heroin = BetmArt.objects.create(name="Heroin")
+        cls.urteil = BetmUrteil.objects.create(
+            fall_nr="SB240030",
+            gericht="Bezirksgericht Zürich",
+            urteilsdatum=date(2024, 6, 6),
+            kanton=kanton,
+            rolle=rolle,
+        )
+        cls.urteil.betm.set(
+            [
+                Betm.objects.create(art=kokain, menge_in_g=250, rein=True),
+                Betm.objects.create(art=kokain, menge_in_g=90, rein=True),
+                Betm.objects.create(art=kokain, menge_in_g=400, rein=False),
+                Betm.objects.create(art=heroin, menge_in_g=40, rein=True),
+            ]
+        )
+        # zweites Urteil, damit betm mehr als einen Auswahlwert hat
+        cls.zweites = BetmUrteil.objects.create(
+            fall_nr="SB240031",
+            gericht="Bezirksgericht Uster",
+            urteilsdatum=date(2024, 7, 7),
+            kanton=kanton,
+            rolle=rolle,
+        )
+        cls.zweites.betm.set(
+            [Betm.objects.create(art=heroin, menge_in_g=1200, rein=False)]
+        )
+
+    def spezifikation(self):
+        return filterspezifikation_erstellen(
+            BetmUrteil, BETM_FILTER_CONFIG, BetmUrteil.objects.all()
+        )
+
+    def datensaetze(self):
+        spezifikation = self.spezifikation()
+        return datensaetze_erstellen(
+            BetmUrteil, BETM_FILTER_CONFIG, BetmUrteil.objects.all(), spezifikation
+        )
+
+    def test_spezifikationseintrag(self):
+        feld = next(
+            f for f in self.spezifikation()["felder"] if f["name"] == "betm_menge"
+        )
+        self.assertEqual(feld["typ"], "abhaengige_spanne")
+        self.assertEqual(feld["quelle"], "betm")
+        self.assertEqual(feld["basis_labels"], ["rein", "Gemisch"])
+        self.assertEqual(feld["einheit"], "g")
+        self.assertEqual(feld["einheiten_je_schluessel"]["LSD Trips"], "Stk.")
+
+    def test_summen_je_substanz_und_grundlage(self):
+        mengen = self.datensaetze()[str(self.urteil.pk)]["betm_menge"]
+        # 250 + 90 rein, 400 gemisch - nie über die Grundlage hinweg addiert
+        self.assertEqual(mengen["Kokain"], {"rein": 340, "gemisch": 400})
+        self.assertEqual(mengen["Heroin"], {"rein": 40})
+
+    def test_spanne_entfaellt_ohne_bedienbares_quellfeld(self):
+        # Ein M2M-Feld mit einem einzigen Wert bleibt bedienbar ("hat Heroin /
+        # hat nicht"); erst ohne jede Position verliert betm die Filterwirkung -
+        # und mit ihm die daran hängende Mengenspanne, die sonst ins Leere liefe.
+        namen = [feld["name"] for feld in self.spezifikation()["felder"]]
+        self.assertIn("betm_menge", namen)
+
+        for urteil in BetmUrteil.objects.all():
+            urteil.betm.clear()
+        namen = [feld["name"] for feld in self.spezifikation()["felder"]]
+        self.assertNotIn("betm", namen)
+        self.assertNotIn("betm_menge", namen)

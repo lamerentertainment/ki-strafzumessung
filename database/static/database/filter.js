@@ -20,6 +20,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     sortRichtung: "asc",
     trefferPks: [],
     facetten: {},
+    spannen: {},
 
     init() {
       this.spec = JSON.parse(document.getElementById(spezifikationId).textContent);
@@ -39,6 +40,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     leererZustand(feld) {
       if (feld.typ === "choice" || feld.typ === "multi") return [];
       if (feld.typ === "bool") return null;
+      if (feld.typ === "abhaengige_spanne") return { min: "", max: "", basis: null };
       return { min: "", max: "" };
     },
 
@@ -62,6 +64,9 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       if (feld.typ === "bool") {
         return zustand === null || wert === zustand;
       }
+      if (feld.typ === "abhaengige_spanne") {
+        return this.passtSpanne(record, feld);
+      }
       // Zahlen und Daten: leere Grenze heisst "offen"
       const { min, max } = zustand;
       if (min === "" && max === "") return true;
@@ -74,6 +79,32 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       if (min !== "" && wert < Number(min)) return false;
       if (max !== "" && wert > Number(max)) return false;
       return true;
+    },
+
+    /**
+     * Abhaengige Spanne: bezieht sich auf die im Quellfeld gewaehlten Werte.
+     * Ohne Auswahl dort greift sie nicht. Ein Urteil passt, wenn irgendeine
+     * gewaehlte Substanz in der Spanne liegt - passend zur ODER-Logik der
+     * Chips. Reine und Bruttomengen werden nie vermischt.
+     */
+    passtSpanne(record, feld) {
+      const gewaehlt = this.zustand[feld.quelle];
+      if (!gewaehlt || gewaehlt.length === 0) return true;
+      const { min, max, basis } = this.zustand[feld.name];
+      if (min === "" && max === "" && basis === null) return true;
+      const mengen = record[feld.name] || {};
+      const basen = basis === null ? ["rein", "gemisch"] : [basis];
+      return gewaehlt.some((schluessel) => {
+        const eintrag = mengen[schluessel];
+        if (!eintrag) return false;
+        return basen.some((b) => {
+          const wert = eintrag[b];
+          if (wert === undefined || wert === null) return false;
+          if (min !== "" && wert < Number(min)) return false;
+          if (max !== "" && wert > Number(max)) return false;
+          return true;
+        });
+      });
     },
 
     trifftZu(record, ausserFeld) {
@@ -93,6 +124,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       });
       this.trefferPks = treffer;
       this.facettenBerechnen();
+      this.spannenBerechnen();
       this.zeilenAktualisieren();
       this.inUrlSchreiben();
     },
@@ -162,6 +194,53 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       this.facetten = ergebnis;
     },
 
+    /**
+     * Beschriftung, Einheit und Wertebereich einer abhaengigen Spanne, bezogen
+     * auf die aktuell gewaehlten Quellwerte und die uebrigen aktiven Filter.
+     * Die Grenzen des Gesamtbestands taugen hier nicht: Kokain reicht bis
+     * 51'200 g, Marihuana bis 434'000 g.
+     */
+    spannenBerechnen() {
+      const ergebnis = {};
+      this.spec.felder.forEach((feld) => {
+        if (feld.typ !== "abhaengige_spanne") return;
+        const gewaehlt = this.zustand[feld.quelle] || [];
+        const basis = this.zustand[feld.name].basis;
+        const basen = basis === null ? ["rein", "gemisch"] : [basis];
+        let min = null;
+        let max = null;
+        Object.values(this.records).forEach((record) => {
+          if (!this.trifftZu(record, feld.name)) return;
+          const mengen = record[feld.name] || {};
+          gewaehlt.forEach((schluessel) => {
+            const eintrag = mengen[schluessel];
+            if (!eintrag) return;
+            basen.forEach((b) => {
+              const wert = eintrag[b];
+              if (wert === undefined || wert === null) return;
+              if (min === null || wert < min) min = wert;
+              if (max === null || wert > max) max = wert;
+            });
+          });
+        });
+        const einheiten = new Set(
+          gewaehlt.map((k) => feld.einheiten_je_schluessel[k] || feld.einheit)
+        );
+        let label = feld.label;
+        if (gewaehlt.length === 1) label = `${feld.label} ${gewaehlt[0]}`;
+        else if (gewaehlt.length === 2) label = `${feld.label} (${gewaehlt.join(" oder ")})`;
+        else if (gewaehlt.length > 2) label = `${feld.label} (${gewaehlt.length} Substanzen)`;
+        ergebnis[feld.name] = {
+          label,
+          // Bei gemischten Einheiten keine angeben, statt eine falsche
+          einheit: einheiten.size === 1 ? [...einheiten][0] : "",
+          min,
+          max,
+        };
+      });
+      this.spannen = ergebnis;
+    },
+
     /** Trefferzahl einer Option unter den uebrigen aktiven Filtern. */
     anzahl(feldname, optionswert) {
       const zaehler = this.facetten[feldname];
@@ -175,6 +254,22 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       const index = liste.indexOf(wert);
       if (index === -1) liste.push(wert);
       else liste.splice(index, 1);
+      this.abhaengigeSynchronisieren();
+    },
+
+    /** Ohne Auswahl im Quellfeld hat die abhaengige Spanne keinen Bezug mehr. */
+    abhaengigeSynchronisieren() {
+      this.spec.felder.forEach((feld) => {
+        if (feld.typ !== "abhaengige_spanne") return;
+        if (this.zustand[feld.quelle].length === 0) {
+          this.zustand[feld.name] = this.leererZustand(feld);
+        }
+      });
+    },
+
+    basisSetzen(feldname, wert) {
+      const zustand = this.zustand[feldname];
+      zustand.basis = zustand.basis === wert ? null : wert;
     },
 
     istGewaehlt(feldname, wert) {
@@ -189,6 +284,12 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       const zustand = this.zustand[feld.name];
       if (Array.isArray(zustand)) return zustand.length > 0;
       if (feld.typ === "bool") return zustand !== null;
+      if (feld.typ === "abhaengige_spanne") {
+        return (
+          this.zustand[feld.quelle].length > 0 &&
+          (zustand.min !== "" || zustand.max !== "" || zustand.basis !== null)
+        );
+      }
       return zustand.min !== "" || zustand.max !== "";
     },
 
@@ -217,6 +318,16 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           chips.push({ label: `${feld.label}: ${bezeichnungen.join(" oder ")}`, feld: feld.name });
         } else if (feld.typ === "bool") {
           chips.push({ label: `${feld.label}: ${zustand ? "ja" : "nein"}`, feld: feld.name });
+        } else if (feld.typ === "abhaengige_spanne") {
+          const info = this.spannen[feld.name] || {};
+          const teile = [];
+          if (zustand.min !== "" || zustand.max !== "") {
+            const von = zustand.min !== "" ? zustand.min : "…";
+            const bis = zustand.max !== "" ? zustand.max : "…";
+            teile.push(`${von} – ${bis} ${info.einheit || ""}`.trim());
+          }
+          if (zustand.basis !== null) teile.push(zustand.basis === "rein" ? "rein" : "Gemisch");
+          chips.push({ label: `${info.label || feld.label}: ${teile.join(", ")}`, feld: feld.name });
         } else {
           const von = zustand.min !== "" ? zustand.min : "…";
           const bis = zustand.max !== "" ? zustand.max : "…";
@@ -232,6 +343,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         return;
       }
       this.zustand[feldname] = this.leererZustand(this.feldNach(feldname));
+      this.abhaengigeSynchronisieren();
     },
 
     zuruecksetzen() {
@@ -295,7 +407,11 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         const zustand = this.zustand[feld.name];
         if (Array.isArray(zustand)) params.set(feld.name, zustand.join("|"));
         else if (feld.typ === "bool") params.set(feld.name, zustand ? "1" : "0");
-        else {
+        else if (feld.typ === "abhaengige_spanne") {
+          if (zustand.min !== "") params.set(`${feld.name}_min`, zustand.min);
+          if (zustand.max !== "") params.set(`${feld.name}_max`, zustand.max);
+          if (zustand.basis !== null) params.set(`${feld.name}_basis`, zustand.basis);
+        } else {
           if (zustand.min !== "") params.set(`${feld.name}_min`, zustand.min);
           if (zustand.max !== "") params.set(`${feld.name}_max`, zustand.max);
         }
@@ -321,6 +437,12 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           const max = params.get(`${feld.name}_max`);
           if (min !== null) this.zustand[feld.name].min = min;
           if (max !== null) this.zustand[feld.name].max = max;
+          if (feld.typ === "abhaengige_spanne") {
+            const basis = params.get(`${feld.name}_basis`);
+            if (basis === "rein" || basis === "gemisch") {
+              this.zustand[feld.name].basis = basis;
+            }
+          }
         }
       });
       if (this.anzahlAktiv() > 0) this.aufgeklappt = true;
@@ -336,6 +458,15 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     klartext(feld, wert) {
       if (wert === null || wert === undefined) return "";
       if (Array.isArray(wert)) return wert.join("; ");
+      if (feld.typ === "abhaengige_spanne") {
+        return Object.entries(wert)
+          .map(([schluessel, basen]) =>
+            Object.entries(basen)
+              .map(([basis, menge]) => `${schluessel} ${menge} ${basis}`)
+              .join(", ")
+          )
+          .join("; ");
+      }
       if (feld.typ === "bool") return wert ? "ja" : "nein";
       if (feld.optionen) {
         const option = feld.optionen.find((o) => o.value === String(wert));

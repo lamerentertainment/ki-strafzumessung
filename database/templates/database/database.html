@@ -1,9 +1,17 @@
 {% extends './base.html' %}
 {% load static %}
 
+{% block alpine_komponenten %}
+  <script defer src="{% static 'database/filter.js' %}"></script>
+{% endblock alpine_komponenten %}
+
 {% block body %}
-    <section id="datenbank" class="row">
-        <h1>Urteile in der Datenbank ({{ urteile|length }})</h1>
+    <section id="datenbank" class="row" x-data="urteilsFilter('filter-spec', 'filter-records')">
+        <h1>
+            Urteile in der Datenbank
+            (<span x-text="trefferPks.length">{{ urteile|length }}</span><span x-cloak
+              x-show="trefferPks.length !== Object.keys(records).length"> von {{ urteile|length }}</span>)
+        </h1>
 
         {% if request.user.is_superuser == True %}
         <section id="buttons" class="d-flex mb-1">
@@ -11,12 +19,14 @@
         </section>
         {%  endif %}
 
+        {% include 'database/includes/filterpanel.html' %}
+
         <section id="datenbank-table" class="rounded border border-2" style="overflow: auto; height: 400px;">
             <table class="table table-sm">
                 <thead>
                 {% include 'database/includes/row_head.html' %}
                 </thead>
-                <tbody>
+                <tbody data-urteilsliste>
                 {% for urteil in urteile %}
                     {% include 'database/includes/row_urteil.html' %}
                 {% empty %}

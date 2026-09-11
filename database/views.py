@@ -42,7 +42,10 @@ from .db_utils import (
 from .filterspec import (
     filterspezifikation_erstellen,
     datensaetze_erstellen,
+    URTEIL_FILTER_CONFIG,
+    BETM_FILTER_CONFIG,
     SEXUALDELIKT_FILTER_CONFIG,
+    GEWALTDELIKT_FILTER_CONFIG,
 )
 from .aws_helpers import (
     kimodell_von_pickle_file_aus_aws_bucket_laden,
@@ -55,31 +58,6 @@ from sklearn.model_selection import cross_val_score
 def homepage(request):
     context = {}
     return render(request, "database/homepage.html", context)
-
-
-# Database Views
-def database(request):
-    vollzug_scatterplot_1000000 = DiagrammSVG.objects.get(
-        name="vollzug_scatterplot_1000000"
-    )
-    vollzug_scatterplot_200000 = DiagrammSVG.objects.get(
-        name="vollzug_scatterplot_200000"
-    )
-    hauptdelikt_scatterplot_1000000 = DiagrammSVG.objects.get(
-        name="hauptdelikt_scatterplot_1000000"
-    )
-    hauptdelikt_scatterplot_200000 = DiagrammSVG.objects.get(
-        name="hauptdelikt_scatterplot_200000"
-    )
-
-    context = {
-        "urteile": Urteil.objects.all(),
-        "vollzug_scatterplot_200000": vollzug_scatterplot_200000,
-        "vollzug_scatterplot_1000000": vollzug_scatterplot_1000000,
-        "hauptdelikt_scatterplot_200000": hauptdelikt_scatterplot_200000,
-        "hauptdelikt_scatterplot_1000000": hauptdelikt_scatterplot_1000000,
-    }
-    return render(request, "database/database.html", context)
 
 
 def ws_db_scatterplots_aktualisieren(request):
@@ -104,22 +82,6 @@ class UrteilUpdateView(LoginRequiredMixin, generic.UpdateView):
     fields = "__all__"
     success_url = reverse_lazy("database")
     template_name_suffix = "_update"
-
-
-class BetmUrteilListView(ListView):
-    model = BetmUrteil
-    context_object_name = "betm_urteile"
-    template_name = "database/betmurteil_list.html"
-
-
-class BetmUrteilDetailView(DetailView):
-    model = BetmUrteil
-    template_name = "database/betmurteil_detail.html"
-
-
-class VMUrteilDetailView(DetailView):
-    model = Urteil
-    template_name = "database/vmurteil_detail.html"
 
 
 class FilterbareListView(ListView):
@@ -162,6 +124,46 @@ class FilterbareListView(ListView):
         return context
 
 
+class BetmUrteilListView(FilterbareListView):
+    model = BetmUrteil
+    context_object_name = "betm_urteile"
+    template_name = "database/betmurteil_list.html"
+    filter_config = BETM_FILTER_CONFIG
+    filter_prefetch = ("betm__art",)
+
+
+class BetmUrteilDetailView(DetailView):
+    model = BetmUrteil
+    template_name = "database/betmurteil_detail.html"
+
+
+class VMUrteilDetailView(DetailView):
+    model = Urteil
+    template_name = "database/vmurteil_detail.html"
+
+
+class UrteilListView(FilterbareListView):
+    model = Urteil
+    context_object_name = "urteile"
+    template_name = "database/database.html"
+    filter_config = URTEIL_FILTER_CONFIG
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                name: DiagrammSVG.objects.get(name=name)
+                for name in (
+                    "vollzug_scatterplot_200000",
+                    "vollzug_scatterplot_1000000",
+                    "hauptdelikt_scatterplot_200000",
+                    "hauptdelikt_scatterplot_1000000",
+                )
+            }
+        )
+        return context
+
+
 class SexualdeliktUrteilListView(FilterbareListView):
     model = SexualdeliktUrteil
     context_object_name = "sexualdelikt_urteile"
@@ -175,10 +177,12 @@ class SexualdeliktUrteilDetailView(DetailView):
     template_name = "database/sexualurteil_detail.html"
 
 
-class GewaltdeliktUrteilListView(ListView):
+class GewaltdeliktUrteilListView(FilterbareListView):
     model = GewaltdeliktUrteil
     context_object_name = "gewaltdelikt_urteile"
     template_name = "database/gewalturteil_list.html"
+    filter_config = GEWALTDELIKT_FILTER_CONFIG
+    filter_prefetch = ("besonderheiten",)
 
 
 class GewaltdeliktUrteilDetailView(DetailView):

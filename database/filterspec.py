@@ -12,6 +12,7 @@ Bedienelemente beschrieben und die Datensaetze in eine schlanke
 JSON-Struktur normalisiert.
 """
 
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 
 # Feldtypen, die das Frontend kennt
@@ -20,6 +21,20 @@ TYP_BOOL = "bool"  # Dreizustands-Schalter egal/ja/nein
 TYP_NUMBER = "number"  # Von/Bis-Zahlenpaar
 TYP_DATE = "date"  # Von/Bis-Datumspaar
 TYP_MULTI = "multi"  # M2M, Chips, "enthaelt mindestens eines"
+
+
+# Felder, welche die Kennzahlenleiste im Frontend auswertet (filter.js,
+# kennzahlen()). Sie muessen in den Datensaetzen enthalten sein, auch wenn sie
+# als Filter entfallen, weil sie im Bestand nur einen Wert kennen.
+KENNZAHLENFELDER = ("hauptsanktion", "freiheitsstrafe_in_monaten", "vollzug")
+
+
+def _hat_feld(model, feldname):
+    try:
+        model._meta.get_field(feldname)
+        return True
+    except FieldDoesNotExist:
+        return False
 
 
 def _ist_bool(feld):
@@ -49,7 +64,20 @@ def _label(feld, labels):
     return feld.name.replace("_", " ").capitalize()
 
 
-def _optionen(model, feld, queryset):
+def _beziehungspfad(feld, pfade):
+    """
+    Pfad innerhalb des verknuepften Modells, aus dem Auswahlwert und Anzeige
+    stammen. Konfigurierbar, weil das verknuepfte Modell nicht immer selbst die
+    sinnvolle Facette traegt: Bei ``BetmUrteil.betm`` ist jeder Datensatz durch
+    die Menge einmalig, gefiltert werden soll aber nach der Substanz
+    (``art__name``).
+    """
+    if feld.name in pfade:
+        return pfade[feld.name]
+    return "abk" if hasattr(feld.related_model, "abk") else "name"
+
+
+def _optionen(model, feld, queryset, pfade):
     """Auswahlwerte eines Chip-Feldes, immer nur die im Bestand vorkommenden."""
     if feld.choices:
         vorhanden = set(queryset.values_list(feld.name, flat=True))
@@ -59,9 +87,8 @@ def _optionen(model, feld, queryset):
             if wert in vorhanden
         ]
     if isinstance(feld, (models.ForeignKey, models.ManyToManyField)):
-        related = feld.related_model
-        namensfeld = "abk" if hasattr(related, "abk") else "name"
-        werte = queryset.values_list(f"{feld.name}__{namensfeld}", flat=True)
+        pfad = _beziehungspfad(feld, pfade)
+        werte = queryset.values_list(f"{feld.name}__{pfad}", flat=True)
         werte = sorted({w for w in werte if w})
         return [{"value": w, "label": w} for w in werte]
     werte = sorted({w for w in queryset.values_list(feld.name, flat=True) if w})
@@ -99,7 +126,7 @@ def _einheit(feld, einheiten):
     return ""
 
 
-def _ohne_filterwirkung(eintrag):
+def _ohne_filterwirkung(eintrag, feld, queryset):
     """Trifft zu, wenn ein Feld im Bestand keine Unterscheidung erlaubt."""
     if eintrag["typ"] == TYP_CHOICE:
         return len(eintrag["optionen"]) < 2
@@ -107,6 +134,8 @@ def _ohne_filterwirkung(eintrag):
         return len(eintrag["optionen"]) == 0
     if eintrag["typ"] in (TYP_NUMBER, TYP_DATE):
         return eintrag["min"] is None or eintrag["min"] == eintrag["max"]
+    if eintrag["typ"] == TYP_BOOL:
+        return len(set(queryset.values_list(feld.name, flat=True))) < 2
     return False
 
 
@@ -116,6 +145,7 @@ def filterspezifikation_erstellen(model, config, queryset=None):
     labels = config.get("labels", {})
     einheiten = config.get("einheiten", {})
     primaer = config.get("primaer", [])
+    pfade = config.get("beziehungspfade", {})
 
     gruppen = []
     alle_felder = {}
@@ -133,11 +163,12 @@ def filterspezifikation_erstellen(model, config, queryset=None):
                 "gruppe": gruppentitel,
             }
             if typ in (TYP_CHOICE, TYP_MULTI):
-                eintrag["optionen"] = _optionen(model, feld, queryset)
+                eintrag["optionen"] = _optionen(model, feld, queryset, pfade)
+                eintrag["pfad"] = _beziehungspfad(feld, pfade) if feld.is_relation else None
             if typ in (TYP_NUMBER, TYP_DATE):
                 eintrag["min"], eintrag["max"] = _grenzwerte(feld, queryset)
             if config.get("einwertige_ausblenden", True) and _ohne_filterwirkung(
-                eintrag
+                eintrag, feld, queryset
             ):
                 # Felder, die im Bestand nur einen einzigen Wert kennen (oder
                 # durchwegs leer sind), taugen nicht als Filter und wuerden das
@@ -145,7 +176,9 @@ def filterspezifikation_erstellen(model, config, queryset=None):
                 continue
             felder.append(eintrag)
             alle_felder[feldname] = eintrag
-        gruppen.append({"titel": gruppentitel, "felder": felder})
+        if felder:
+            # Gruppen, deren Felder saemtlich ohne Filterwirkung sind, entfallen
+            gruppen.append({"titel": gruppentitel, "felder": felder})
 
     return {
         "gruppen": gruppen,
@@ -158,13 +191,25 @@ def filterspezifikation_erstellen(model, config, queryset=None):
     }
 
 
-def _feldwert(objekt, feld):
+def _durchlaufen(objekt, pfad):
+    """Folgt einem ``a__b__c``-Pfad und gibt den Endwert als String zurueck."""
+    ziel = objekt
+    for teil in pfad.split("__"):
+        ziel = getattr(ziel, teil, None) if ziel is not None else None
+    return str(ziel) if ziel is not None else None
+
+
+def _feldwert(objekt, feld, pfade):
     """Normalisiert einen Feldwert fuer die JSON-Uebergabe ans Frontend."""
     wert = getattr(objekt, feld.name, None)
     if isinstance(feld, models.ManyToManyField):
-        return sorted(str(eintrag) for eintrag in wert.all())
+        pfad = _beziehungspfad(feld, pfade)
+        werte = {_durchlaufen(eintrag, pfad) for eintrag in wert.all()}
+        return sorted(w for w in werte if w is not None)
     if isinstance(feld, models.ForeignKey):
-        return str(wert) if wert is not None else None
+        if wert is None:
+            return None
+        return _durchlaufen(wert, _beziehungspfad(feld, pfade))
     if _ist_bool(feld):
         return bool(wert)
     if isinstance(feld, models.DurationField):
@@ -179,15 +224,19 @@ def _feldwert(objekt, feld):
 def datensaetze_erstellen(model, config, queryset, spezifikation):
     """Erzeugt ``{pk: {feld: wert, ..., '_t': 'volltextblob'}}`` fuer Alpine."""
     feldnamen = [feld["name"] for feld in spezifikation["felder"]]
-    for sortierfeld in spezifikation.get("sortierfelder", []):
-        if sortierfeld["name"] not in feldnamen:
-            feldnamen.append(sortierfeld["name"])
+    zusaetzlich = [
+        feld["name"] for feld in spezifikation.get("sortierfelder", [])
+    ] + list(KENNZAHLENFELDER)
+    for feldname in zusaetzlich:
+        if feldname not in feldnamen and _hat_feld(model, feldname):
+            feldnamen.append(feldname)
     felder = [model._meta.get_field(name) for name in feldnamen]
     volltextfelder = config.get("volltextfelder", [])
+    pfade = config.get("beziehungspfade", {})
 
     datensaetze = {}
     for objekt in queryset:
-        werte = {feld.name: _feldwert(objekt, feld) for feld in felder}
+        werte = {feld.name: _feldwert(objekt, feld, pfade) for feld in felder}
         textteile = []
         for pfad in volltextfelder:
             ziel = objekt
@@ -280,6 +329,250 @@ SEXUALDELIKT_FILTER_CONFIG = {
         "gericht",
         "hauptdelikt__name",
         "hauptdelikt_tatmittel__name",
+        "zusammenfassung",
+        "bemerkungen",
+    ],
+    "suchfelder_label": "Fall-Nr., Gericht, Delikt, Zusammenfassung, Bemerkungen",
+    "sortierfelder": [
+        {"name": "fall_nr", "label": "Fall-Nr."},
+        {"name": "urteilsdatum", "label": "Urteilsdatum"},
+        {"name": "hauptdelikt", "label": "Hauptdelikt"},
+        {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
+    ],
+}
+
+
+URTEIL_FILTER_CONFIG = {
+    "primaer": ["hauptdelikt", "hauptsanktion", "vollzug"],
+    "gruppen": [
+        ("Fall & Gericht", ["gericht", "urteilsdatum", "verfahrensart"]),
+        (
+            "Täter",
+            ["geschlecht", "nationalitaet", "vorbestraft", "vorbestraft_einschlaegig"],
+        ),
+        (
+            "Hauptdelikt",
+            [
+                "hauptdelikt",
+                "mehrfach",
+                "gewerbsmaessig",
+                "bandenmaessig",
+                "deliktssumme",
+            ],
+        ),
+        ("Weitere Delikte", ["nebenverurteilungsscore"]),
+        (
+            "Sanktion",
+            [
+                "hauptsanktion",
+                "freiheitsstrafe_in_monaten",
+                "anzahl_tagessaetze",
+                "vollzug",
+            ],
+        ),
+        ("Datenbank", ["in_ki_modell"]),
+    ],
+    "labels": {
+        "gericht": "Gericht",
+        "urteilsdatum": "Urteilsdatum",
+        "verfahrensart": "Verfahrensart",
+        "geschlecht": "Geschlecht Täter",
+        "nationalitaet": "Nationalität Täter",
+        "hauptdelikt": "Hauptdelikt",
+        "mehrfach": "mehrfache Begehung",
+        "bandenmaessig": "bandenmässig",
+        "deliktssumme": "Deliktssumme",
+        "nebenverurteilungsscore": "Nebenverurteilungsscore",
+        "hauptsanktion": "Hauptsanktion",
+        "freiheitsstrafe_in_monaten": "Freiheitsstrafe",
+        "anzahl_tagessaetze": "Geldstrafe",
+        "vollzug": "Vollzug",
+        "in_ki_modell": "im KI-Modell berücksichtigt",
+    },
+    "einheiten": {
+        "deliktssumme": "CHF",
+        "freiheitsstrafe_in_monaten": "Monate",
+        "anzahl_tagessaetze": "Tagessätze",
+    },
+    "volltextfelder": ["fall_nr", "gericht", "hauptdelikt", "zusammenfassung"],
+    "suchfelder_label": "Fall-Nr., Gericht, Delikt, Zusammenfassung",
+    "sortierfelder": [
+        {"name": "fall_nr", "label": "Fall-Nr."},
+        {"name": "urteilsdatum", "label": "Urteilsdatum"},
+        {"name": "hauptdelikt", "label": "Hauptdelikt"},
+        {"name": "deliktssumme", "label": "Deliktssumme"},
+        {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
+    ],
+}
+
+
+BETM_FILTER_CONFIG = {
+    "primaer": ["betm", "rolle", "vollzug"],
+    "gruppen": [
+        ("Fall & Gericht", ["gericht", "kanton", "urteilsdatum", "verfahrensart"]),
+        (
+            "Täter",
+            [
+                "geschlecht",
+                "nationalitaet",
+                "vorbestraft",
+                "vorbestraft_einschlaegig",
+                "beschaffungskriminalitaet",
+            ],
+        ),
+        (
+            "Betäubungsmittel & Tatbeitrag",
+            ["betm", "rolle", "deliktsertrag", "deliktsdauer_in_monaten"],
+        ),
+        (
+            "Qualifikationen",
+            [
+                "mengenmaessig",
+                "bandenmaessig",
+                "gewerbsmaessig",
+                "anstaltentreffen",
+                "mehrfach",
+            ],
+        ),
+        ("Weitere Delikte", ["nebenverurteilungsscore"]),
+        (
+            "Sanktion",
+            [
+                "hauptsanktion",
+                "freiheitsstrafe_in_monaten",
+                "anzahl_tagessaetze",
+                "vollzug",
+            ],
+        ),
+        ("Datenbank", ["in_ki_modell"]),
+    ],
+    # Jeder Betm-Datensatz ist durch seine Menge einmalig; gefiltert wird nach
+    # der Substanz.
+    "beziehungspfade": {"betm": "art__name"},
+    "labels": {
+        "gericht": "Gericht",
+        "kanton": "Kanton",
+        "urteilsdatum": "Urteilsdatum",
+        "verfahrensart": "Verfahrensart",
+        "geschlecht": "Geschlecht Täter",
+        "nationalitaet": "Nationalität Täter",
+        "beschaffungskriminalitaet": "Beschaffungskriminalität",
+        "betm": "Betäubungsmittel",
+        "rolle": "Rolle im Handel",
+        "deliktsertrag": "Deliktsertrag",
+        "deliktsdauer_in_monaten": "Deliktsdauer",
+        "mengenmaessig": "mengenmässig (Art. 19 II a)",
+        "bandenmaessig": "bandenmässig (Art. 19 II b)",
+        "gewerbsmaessig": "gewerbsmässig (Art. 19 II c)",
+        "anstaltentreffen": "Anstaltentreffen",
+        "mehrfach": "mehrfache Begehung",
+        "nebenverurteilungsscore": "Nebenverurteilungsscore",
+        "hauptsanktion": "Hauptsanktion",
+        "freiheitsstrafe_in_monaten": "Freiheitsstrafe",
+        "anzahl_tagessaetze": "Geldstrafe",
+        "vollzug": "Vollzug",
+        "in_ki_modell": "im KI-Modell berücksichtigt",
+    },
+    "einheiten": {
+        "deliktsertrag": "CHF",
+        "deliktsdauer_in_monaten": "Monate",
+        "freiheitsstrafe_in_monaten": "Monate",
+        "anzahl_tagessaetze": "Tagessätze",
+    },
+    "volltextfelder": ["fall_nr", "gericht", "rolle__name", "zusammenfassung"],
+    "suchfelder_label": "Fall-Nr., Gericht, Rolle, Zusammenfassung",
+    "sortierfelder": [
+        {"name": "fall_nr", "label": "Fall-Nr."},
+        {"name": "urteilsdatum", "label": "Urteilsdatum"},
+        {"name": "rolle", "label": "Rolle"},
+        {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
+    ],
+}
+
+
+GEWALTDELIKT_FILTER_CONFIG = {
+    "primaer": ["hauptdelikt", "hauptsanktion", "vollzug"],
+    "gruppen": [
+        ("Fall & Gericht", ["gericht", "kanton", "urteilsdatum", "verfahrensart"]),
+        (
+            "Täter",
+            [
+                "geschlecht",
+                "nationalitaet",
+                "vorbestraft",
+                "vorbestraft_einschlaegig",
+                "substanzeinfluss",
+            ],
+        ),
+        (
+            "Hauptdelikt",
+            ["hauptdelikt", "versuch", "tatmittel", "vorsatzform", "mehrfach"],
+        ),
+        (
+            "Qualifikationen",
+            [
+                "waffe_gefaehrlicher_gegenstand",
+                "bandenmaessig",
+                "besondere_gefaehrlichkeit",
+                "lebensgefahr",
+            ],
+        ),
+        (
+            "Opfer",
+            [
+                "taeter_opfer_beziehung",
+                "opferzahl",
+                "verletzungsfolge",
+                "angegriffenes_koerperteil",
+            ],
+        ),
+        (
+            "Weitere Delikte & Besonderheiten",
+            ["deliktssumme", "deliktsscore_uebrige_delikte", "besonderheiten"],
+        ),
+        (
+            "Sanktion",
+            [
+                "hauptsanktion",
+                "freiheitsstrafe_in_monaten",
+                "anzahl_tagessaetze",
+                "vollzug",
+            ],
+        ),
+        ("Datenbank", ["in_ki_modell"]),
+    ],
+    "labels": {
+        "gericht": "Gericht",
+        "kanton": "Kanton",
+        "urteilsdatum": "Urteilsdatum",
+        "verfahrensart": "Verfahrensart",
+        "geschlecht": "Geschlecht Täter",
+        "nationalitaet": "Nationalität Täter",
+        "hauptdelikt": "Hauptdelikt",
+        "tatmittel": "Tatmittel",
+        "mehrfach": "mehrfache Begehung",
+        "bandenmaessig": "bandenmässig",
+        "opferzahl": "Anzahl Opfer",
+        "verletzungsfolge": "Verletzungsfolge",
+        "deliktssumme": "Deliktssumme/Beute",
+        "deliktsscore_uebrige_delikte": "Deliktsscore übrige Delikte",
+        "besonderheiten": "Besonderheiten",
+        "hauptsanktion": "Hauptsanktion",
+        "freiheitsstrafe_in_monaten": "Freiheitsstrafe",
+        "anzahl_tagessaetze": "Geldstrafe",
+        "vollzug": "Vollzug",
+        "in_ki_modell": "im KI-Modell berücksichtigt",
+    },
+    "einheiten": {
+        "deliktssumme": "CHF",
+        "freiheitsstrafe_in_monaten": "Monate",
+        "anzahl_tagessaetze": "Tagessätze",
+        "opferzahl": "Opfer",
+    },
+    "volltextfelder": [
+        "fall_nr",
+        "gericht",
+        "hauptdelikt",
         "zusammenfassung",
         "bemerkungen",
     ],

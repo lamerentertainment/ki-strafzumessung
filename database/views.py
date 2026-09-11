@@ -39,6 +39,11 @@ from .ai_utils import (
 from .db_utils import (
     kategorie_scatterplot_erstellen,
 )
+from .filterspec import (
+    filterspezifikation_erstellen,
+    datensaetze_erstellen,
+    SEXUALDELIKT_FILTER_CONFIG,
+)
 from .aws_helpers import (
     kimodell_von_pickle_file_aus_aws_bucket_laden,
     ki_modell_als_pickle_file_speichern,
@@ -117,10 +122,52 @@ class VMUrteilDetailView(DetailView):
     template_name = "database/vmurteil_detail.html"
 
 
-class SexualdeliktUrteilListView(ListView):
+class FilterbareListView(ListView):
+    """
+    ListView mit Filterpanel oberhalb der Liste.
+
+    Die Filterung selbst geschieht clientseitig (siehe
+    database/static/database/filter.js); die View liefert nur die aus dem
+    Modell abgeleitete Filterspezifikation und die normalisierten Felddaten.
+    Bei den hier vorliegenden Datenmengen (< 300 Urteile je Ansicht) ist das
+    einem Roundtrip pro Filterklick vorzuziehen und ermoeglicht facettierte
+    Trefferzahlen ohne zusaetzliche Aggregat-Queries.
+    """
+
+    filter_config = None
+    filter_prefetch = ()
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.filter_prefetch:
+            queryset = queryset.prefetch_related(*self.filter_prefetch)
+        return queryset.select_related(
+            *[
+                feld.name
+                for feld in self.model._meta.get_fields()
+                if feld.many_to_one
+            ]
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        queryset = context["object_list"]
+        spezifikation = filterspezifikation_erstellen(
+            self.model, self.filter_config, queryset
+        )
+        context["filter_spec"] = spezifikation
+        context["filter_records"] = datensaetze_erstellen(
+            self.model, self.filter_config, queryset, spezifikation
+        )
+        return context
+
+
+class SexualdeliktUrteilListView(FilterbareListView):
     model = SexualdeliktUrteil
     context_object_name = "sexualdelikt_urteile"
     template_name = "database/sexualurteil_list.html"
+    filter_config = SEXUALDELIKT_FILTER_CONFIG
+    filter_prefetch = ("sexualdelikte_zusaetzliche", "besonderheiten")
 
 
 class SexualdeliktUrteilDetailView(DetailView):

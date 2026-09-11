@@ -1,0 +1,135 @@
+{% comment %}
+Filterpanel oberhalb einer Urteilsliste.
+
+Erwartet im Context:
+  filter_spec     – Filterspezifikation (database/filterspec.py)
+  filter_records  – normalisierte Felddaten je Datensatz, Schluessel = pk
+
+Das umgebende Template muss die Alpine-Komponente bereitstellen
+(`x-data="urteilsFilter('filter-spec', 'filter-records')"`), damit auch die
+sortierbaren Spaltenkoepfe der Tabelle im selben Scope liegen. Die Tabelle
+muss `data-urteilsliste` am <tbody> und `data-pk="{{ pk }}"` an jeder <tr>
+tragen. Ohne JavaScript bleibt die vollstaendige Liste sichtbar, das Panel
+bleibt dank x-cloak verborgen.
+{% endcomment %}
+{{ filter_spec|json_script:"filter-spec" }}
+{{ filter_records|json_script:"filter-records" }}
+
+<div class="filterpanel border rounded-3 p-3 mb-3 bg-body-tertiary" x-cloak>
+
+  {# --- Zeile 1: Volltextsuche, Kernfilter, Aufklapper --- #}
+  <div class="row g-2 align-items-center">
+    <div class="col-12 col-lg-5">
+      <div class="input-group input-group-sm">
+        <span class="input-group-text">&#128269;</span>
+        <input type="search" class="form-control" x-model.debounce.200ms="q"
+               placeholder="Volltextsuche ({{ filter_spec.suchfelder_label }})">
+      </div>
+    </div>
+
+    {% for feld in filter_spec.primaer %}
+      <div class="col-auto">
+        <div class="dropdown">
+          <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                  data-bs-auto-close="outside"
+                  :class="aktiv(feldNach('{{ feld.name }}')) ? 'btn-primary' : 'btn-outline-secondary'">
+            {{ feld.label }}
+            <template x-if="aktiv(feldNach('{{ feld.name }}'))">
+              <span class="badge text-bg-light ms-1" x-text="zustand['{{ feld.name }}'].length"></span>
+            </template>
+          </button>
+          <div class="dropdown-menu p-3" style="min-width: 22rem;">
+            {% include 'database/includes/filterfeld.html' with feld=feld %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+
+    <div class="col-auto ms-lg-auto">
+      <button class="btn btn-sm btn-outline-dark" @click="aufgeklappt = !aufgeklappt">
+        <span x-text="aufgeklappt ? '▾' : '▸'"></span>
+        Alle Filter ({{ filter_spec.felder|length }})
+        <template x-if="anzahlAktiv() > 0">
+          <span class="badge text-bg-primary ms-1" x-text="anzahlAktiv()"></span>
+        </template>
+      </button>
+    </div>
+  </div>
+
+  {# --- Zeile 2: aktive Filter als entfernbare Chips --- #}
+  <div class="d-flex flex-wrap gap-1 align-items-center mt-2" x-show="anzahlAktiv() > 0">
+    <span class="small text-body-secondary me-1">Aktiv:</span>
+    <template x-for="chip in aktiveChips()" :key="chip.label">
+      <button type="button" class="btn btn-sm btn-primary rounded-pill py-0"
+              @click="chipEntfernen(chip.feld)">
+        <span x-text="chip.label"></span> <span aria-hidden="true">&times;</span>
+      </button>
+    </template>
+    <button type="button" class="btn btn-sm btn-link text-decoration-none py-0"
+            @click="zuruecksetzen()">alle zurücksetzen</button>
+  </div>
+
+  {# --- Zeile 3: alle Felder, thematisch gruppiert --- #}
+  <div class="mt-3" x-show="aufgeklappt" x-collapse>
+    <div class="accordion accordion-flush border-top">
+      {% for gruppe in filter_spec.gruppen %}
+        <div class="accordion-item bg-transparent">
+          <h2 class="accordion-header">
+            <button class="accordion-button bg-transparent py-2 px-1 shadow-none"
+                    :class="offeneGruppen['{{ gruppe.titel|escapejs }}'] ? '' : 'collapsed'"
+                    type="button"
+                    @click="offeneGruppen['{{ gruppe.titel|escapejs }}'] = !offeneGruppen['{{ gruppe.titel|escapejs }}']">
+              <span class="fw-semibold">{{ gruppe.titel }}</span>
+              <span class="badge text-bg-primary ms-2"
+                    x-show="aktiveGruppe(spec.gruppen[{{ forloop.counter0 }}]) > 0"
+                    x-text="aktiveGruppe(spec.gruppen[{{ forloop.counter0 }}])"></span>
+            </button>
+          </h2>
+          <div class="accordion-collapse" x-show="offeneGruppen['{{ gruppe.titel|escapejs }}']" x-collapse>
+            <div class="accordion-body px-1 py-2">
+              <div class="row">
+                {% for feld in gruppe.felder %}
+                  <div class="col-12 col-md-6 col-xl-4">
+                    {% include 'database/includes/filterfeld.html' with feld=feld %}
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {# --- Zeile 4: Treffer und Kennzahlen zur gefilterten Menge --- #}
+  <div class="d-flex flex-wrap align-items-center gap-3 mt-3 pt-2 border-top small">
+    <span class="fw-semibold">
+      <span x-text="kennzahlen().anzahl"></span> von <span x-text="kennzahlen().gesamt"></span> Urteilen
+    </span>
+    <template x-if="kennzahlen().fsAnzahl > 0">
+      <span class="text-body-secondary">
+        Freiheitsstrafe (n=<span x-text="kennzahlen().fsAnzahl"></span>):
+        Median <strong x-text="kennzahlen().fsMedian"></strong> Mt.
+        · &#8960; <strong x-text="kennzahlen().fsMittel"></strong> Mt.
+        · Spanne <span x-text="kennzahlen().fsMin"></span>–<span x-text="kennzahlen().fsMax"></span> Mt.
+      </span>
+    </template>
+    <template x-if="kennzahlen().anzahl > 0">
+      <span class="text-body-secondary">
+        Vollzug: <strong x-text="kennzahlen().bedingt"></strong> bedingt
+        · <strong x-text="kennzahlen().teilbedingt"></strong> teilbedingt
+        · <strong x-text="kennzahlen().unbedingt"></strong> unbedingt
+      </span>
+    </template>
+    <span class="ms-auto d-flex gap-2">
+      <button class="btn btn-sm btn-outline-secondary py-0" @click="linkKopieren()">Filter-Link kopieren</button>
+      <button class="btn btn-sm btn-outline-secondary py-0" @click="csvExportieren()">CSV der Treffer</button>
+    </span>
+  </div>
+
+  {# --- Leerer Trefferzustand --- #}
+  <div class="alert alert-warning mt-3 mb-0 py-2 small" x-show="trefferPks.length === 0">
+    Keine Urteile entsprechen dieser Filterkombination.
+    <button class="btn btn-sm btn-link p-0 align-baseline" @click="zuruecksetzen()">Filter zurücksetzen</button>
+  </div>
+</div>

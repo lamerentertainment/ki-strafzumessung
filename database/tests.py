@@ -361,6 +361,27 @@ class FilterbareAnsichtenTest(TestCase):
         self.assertContains(detail_antwort, "Kurzsachverhalt")
         self.assertContains(detail_antwort, "Überfall auf eine Tankstelle mit vorgehaltener Schusswaffe.")
 
+    def test_gewaltdelikte_fahrlaessige_koerperverletzung(self):
+        urteil = GewaltdeliktUrteil.objects.create(
+            fall_nr="SB240099",
+            gericht="Bezirksgericht Zürich",
+            urteilsdatum=date(2024, 3, 1),
+            kanton=self.kanton,
+            hauptdelikt="fahrlässige Körperverletzung",
+            tatmittel="Fahrzeug/Motorfahrzeug",
+            vorsatzform="fahrlaessig",
+            verletzungsfolge="schwer",
+            kurzsachverhalt="Kollision mit Fussgänger beim Abbiegen.",
+        )
+        urteil.full_clean()
+        antwort = self.ansicht_pruefen("/gewaltdatabase", urteil)
+        self.assertContains(antwort, "fahrlässige Körperverletzung (Art. 125 StGB)")
+        self.assertContains(antwort, "Fahrzeug/Motorfahrzeug")
+        detail_antwort = self.client.get(reverse("gewalturteil_detail", kwargs={"pk": urteil.pk}))
+        self.assertEqual(detail_antwort.status_code, 200)
+        self.assertContains(detail_antwort, "fahrlässige Körperverletzung (Art. 125 StGB)")
+        self.assertContains(detail_antwort, "Fahrzeug/Motorfahrzeug")
+
     def test_sexualdelikte(self):
         urteil = SexualdeliktUrteil.objects.create(
             fall_nr="SB240023",

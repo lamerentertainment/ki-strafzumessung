@@ -327,8 +327,8 @@ SEARCH_GEWALTDELIKT_TOOL = {
     "name": "search_gewaltdelikt_urteile",
     "description": (
         "Durchsucht die kuratierte Datenbank erstinstanzlicher Strafzumessungsentscheide zu "
-        "Gewaltdelikten (Mord, vorsätzliche Tötung, Totschlag, fahrlässige Tötung, schwere "
-        "und einfache Körperverletzung, Tätlichkeiten, Gefährdung des Lebens, Angriff, "
+        "Gewaltdelikten (Mord, vorsätzliche Tötung, Totschlag, fahrlässige Tötung, schwere, "
+        "einfache und fahrlässige Körperverletzung, Tätlichkeiten, Gefährdung des Lebens, Angriff, "
         "Raufhandel, Raub - je auch versucht). Liefert konkrete, dokumentierte Präjudizien "
         "mit ausgesprochener Sanktion. Nutze dieses Tool IMMER, wenn die Anfrage eines dieser "
         "Delikte betrifft."

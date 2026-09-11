@@ -645,6 +645,7 @@ class GewaltdeliktUrteil(models.Model):
         ("fahrlässige Tötung", "fahrlässige Tötung (Art. 117 StGB)"),
         ("schwere Körperverletzung", "schwere Körperverletzung (Art. 122 StGB)"),
         ("einfache Körperverletzung", "einfache Körperverletzung (Art. 123 StGB)"),
+        ("fahrlässige Körperverletzung", "fahrlässige Körperverletzung (Art. 125 StGB)"),
         ("Tätlichkeiten", "Tätlichkeiten (Art. 126 StGB)"),
         ("Gefährdung des Lebens", "Gefährdung des Lebens (Art. 129 StGB)"),
         ("Angriff", "Angriff (Art. 134 StGB)"),
@@ -670,6 +671,7 @@ class GewaltdeliktUrteil(models.Model):
         ("Messer/Stichwaffe", "Messer/Stich-/Schnittwerkzeug (auch Glas/Flasche)"),
         ("Schusswaffe", "Schusswaffe"),
         ("stumpfer Gegenstand", "stumpfer/gefährlicher Gegenstand"),
+        ("Fahrzeug/Motorfahrzeug", "Fahrzeug/Motorfahrzeug"),
         ("andere", "andere/mehrere"),
     )
     tatmittel = models.CharField(

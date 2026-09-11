@@ -106,7 +106,34 @@
                 </a>
             </div>
         </div>
-    
+
+        <div class="row mx-1">
+            <div class="col-12 col-md-6">
+                <p class="lead my-3">
+                    neu
+                </p>
+            </div>
+        </div>
+
+        <div class="row mb-3 mx-1 g-3" id="neu-row">
+            <div class="col-md-5 mx-1 p-4 border rounded bg-light position-relative" style="--bs-bg-opacity: .5;">
+                <p class="lead">
+                    In Datenbank der Sexualdelikte
+                </p>
+                <a class="stretched-link" href="{% url "sexualdatabase" %}">
+                    suchen
+                </a>
+            </div>
+            <div class="col-md-5 mx-1 p-4 border rounded bg-light position-relative" style="--bs-bg-opacity: .5;">
+                <p class="lead">
+                    In Datenbank der Gewaltdelikte
+                </p>
+                <a class="stretched-link" href="{% url "gewaltdatabase" %}">
+                    suchen
+                </a>
+            </div>
+        </div>
+
     </div>
 
 {% endblock %}

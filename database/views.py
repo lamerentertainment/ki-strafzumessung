@@ -39,6 +39,14 @@ from .ai_utils import (
 from .db_utils import (
     kategorie_scatterplot_erstellen,
 )
+from .filterspec import (
+    filterspezifikation_erstellen,
+    datensaetze_erstellen,
+    URTEIL_FILTER_CONFIG,
+    BETM_FILTER_CONFIG,
+    SEXUALDELIKT_FILTER_CONFIG,
+    GEWALTDELIKT_FILTER_CONFIG,
+)
 from .aws_helpers import (
     kimodell_von_pickle_file_aus_aws_bucket_laden,
     ki_modell_als_pickle_file_speichern,
@@ -50,31 +58,6 @@ from sklearn.model_selection import cross_val_score
 def homepage(request):
     context = {}
     return render(request, "database/homepage.html", context)
-
-
-# Database Views
-def database(request):
-    vollzug_scatterplot_1000000 = DiagrammSVG.objects.get(
-        name="vollzug_scatterplot_1000000"
-    )
-    vollzug_scatterplot_200000 = DiagrammSVG.objects.get(
-        name="vollzug_scatterplot_200000"
-    )
-    hauptdelikt_scatterplot_1000000 = DiagrammSVG.objects.get(
-        name="hauptdelikt_scatterplot_1000000"
-    )
-    hauptdelikt_scatterplot_200000 = DiagrammSVG.objects.get(
-        name="hauptdelikt_scatterplot_200000"
-    )
-
-    context = {
-        "urteile": Urteil.objects.all(),
-        "vollzug_scatterplot_200000": vollzug_scatterplot_200000,
-        "vollzug_scatterplot_1000000": vollzug_scatterplot_1000000,
-        "hauptdelikt_scatterplot_200000": hauptdelikt_scatterplot_200000,
-        "hauptdelikt_scatterplot_1000000": hauptdelikt_scatterplot_1000000,
-    }
-    return render(request, "database/database.html", context)
 
 
 def ws_db_scatterplots_aktualisieren(request):
@@ -101,10 +84,52 @@ class UrteilUpdateView(LoginRequiredMixin, generic.UpdateView):
     template_name_suffix = "_update"
 
 
-class BetmUrteilListView(ListView):
+class FilterbareListView(ListView):
+    """
+    ListView mit Filterpanel oberhalb der Liste.
+
+    Die Filterung selbst geschieht clientseitig (siehe
+    database/static/database/filter.js); die View liefert nur die aus dem
+    Modell abgeleitete Filterspezifikation und die normalisierten Felddaten.
+    Bei den hier vorliegenden Datenmengen (< 300 Urteile je Ansicht) ist das
+    einem Roundtrip pro Filterklick vorzuziehen und ermoeglicht facettierte
+    Trefferzahlen ohne zusaetzliche Aggregat-Queries.
+    """
+
+    filter_config = None
+    filter_prefetch = ()
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.filter_prefetch:
+            queryset = queryset.prefetch_related(*self.filter_prefetch)
+        return queryset.select_related(
+            *[
+                feld.name
+                for feld in self.model._meta.get_fields()
+                if feld.many_to_one
+            ]
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        queryset = context["object_list"]
+        spezifikation = filterspezifikation_erstellen(
+            self.model, self.filter_config, queryset
+        )
+        context["filter_spec"] = spezifikation
+        context["filter_records"] = datensaetze_erstellen(
+            self.model, self.filter_config, queryset, spezifikation
+        )
+        return context
+
+
+class BetmUrteilListView(FilterbareListView):
     model = BetmUrteil
     context_object_name = "betm_urteile"
     template_name = "database/betmurteil_list.html"
+    filter_config = BETM_FILTER_CONFIG
+    filter_prefetch = ("betm__art",)
 
 
 class BetmUrteilDetailView(DetailView):
@@ -117,10 +142,34 @@ class VMUrteilDetailView(DetailView):
     template_name = "database/vmurteil_detail.html"
 
 
-class SexualdeliktUrteilListView(ListView):
+class UrteilListView(FilterbareListView):
+    model = Urteil
+    context_object_name = "urteile"
+    template_name = "database/database.html"
+    filter_config = URTEIL_FILTER_CONFIG
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(
+            {
+                name: DiagrammSVG.objects.get(name=name)
+                for name in (
+                    "vollzug_scatterplot_200000",
+                    "vollzug_scatterplot_1000000",
+                    "hauptdelikt_scatterplot_200000",
+                    "hauptdelikt_scatterplot_1000000",
+                )
+            }
+        )
+        return context
+
+
+class SexualdeliktUrteilListView(FilterbareListView):
     model = SexualdeliktUrteil
     context_object_name = "sexualdelikt_urteile"
     template_name = "database/sexualurteil_list.html"
+    filter_config = SEXUALDELIKT_FILTER_CONFIG
+    filter_prefetch = ("sexualdelikte_zusaetzliche", "besonderheiten")
 
 
 class SexualdeliktUrteilDetailView(DetailView):
@@ -128,10 +177,12 @@ class SexualdeliktUrteilDetailView(DetailView):
     template_name = "database/sexualurteil_detail.html"
 
 
-class GewaltdeliktUrteilListView(ListView):
+class GewaltdeliktUrteilListView(FilterbareListView):
     model = GewaltdeliktUrteil
     context_object_name = "gewaltdelikt_urteile"
     template_name = "database/gewalturteil_list.html"
+    filter_config = GEWALTDELIKT_FILTER_CONFIG
+    filter_prefetch = ("besonderheiten",)
 
 
 class GewaltdeliktUrteilDetailView(DetailView):

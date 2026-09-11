@@ -1,24 +1,44 @@
 {% extends './base.html' %}
+{% load static %}
+
+{% block alpine_komponenten %}
+  <script defer src="{% static 'database/filter.js' %}"></script>
+{% endblock alpine_komponenten %}
 
 {% block body %}
-  <div class="col-12">
-    <h1 class="h3">Sexualdelikt-Urteile ({{ object_list|length }})</h1>
+  <div class="col-12" x-data="urteilsFilter('filter-spec', 'filter-records')">
+    <h1 class="h3">
+      Sexualdelikt-Urteile
+      (<span x-text="trefferPks.length">{{ object_list|length }}</span><span x-cloak
+        x-show="trefferPks.length !== Object.keys(records).length"> von {{ object_list|length }}</span>)
+    </h1>
+
+    {% include 'database/includes/filterpanel.html' %}
+
     <div class="table-responsive">
       <table class="table table-sm table-striped table-hover align-middle">
         <thead class="table-light">
           <tr>
-            <th>Fall-Nr.</th>
-            <th>Gericht/Urteilsdatum</th>
-            <th>Hauptdelikt</th>
+            <th data-sortierbar @click="sortieren('fall_nr')">
+              Fall-Nr. <span x-text="sortSymbol('fall_nr')"></span>
+            </th>
+            <th data-sortierbar @click="sortieren('urteilsdatum')">
+              Gericht/Urteilsdatum <span x-text="sortSymbol('urteilsdatum')"></span>
+            </th>
+            <th data-sortierbar @click="sortieren('hauptdelikt')">
+              Hauptdelikt <span x-text="sortSymbol('hauptdelikt')"></span>
+            </th>
             <th>Tatmittel</th>
             <th>Sanktion</th>
-            <th>Dauer/Höhe</th>
+            <th data-sortierbar @click="sortieren('freiheitsstrafe_in_monaten')">
+              Dauer/Höhe <span x-text="sortSymbol('freiheitsstrafe_in_monaten')"></span>
+            </th>
             <th>Details</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody data-urteilsliste>
           {% for urteil in object_list %}
-            <tr>
+            <tr data-pk="{{ urteil.pk }}">
               <td>
                 <div class="d-flex flex-column">
                   <a href="{% url 'sexualurteil_detail' pk=urteil.pk %}" class="fw-semibold">{{ urteil.fall_nr }}</a>

@@ -302,3 +302,21 @@ h1 {
 .kommentar blockquote cite a:hover { color: var(--k-accent); }
 .kommentar ol.quellen a.d { font-weight: 600; color: var(--k-ink); border-bottom-color: var(--k-rule-2); }
 .kommentar ol.quellen a.d:hover { color: var(--k-accent); }
+
+/* --- Filterpanel der Datenbankansichten --- */
+[x-cloak] { display: none !important; }
+
+.filterpanel .filterchip {
+    --bs-btn-padding-y: .15rem;
+    --bs-btn-padding-x: .5rem;
+    --bs-btn-font-size: .8rem;
+}
+.filterpanel .filterchip .badge { font-weight: 500; }
+.filterpanel .accordion-button::after { margin-left: .5rem; }
+.filterpanel .accordion-button:not(.collapsed) { color: inherit; box-shadow: none; }
+.filterpanel .filterfeld .form-label { margin-bottom: .25rem; }
+
+/* Sortierbare Spaltenkoepfe */
+th[data-sortierbar] { cursor: pointer; user-select: none; white-space: nowrap; }
+th[data-sortierbar]:hover { text-decoration: underline; }
+.filterpanel .filterspanne { max-width: 7.5rem; min-width: 5.5rem; }

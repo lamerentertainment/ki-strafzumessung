@@ -1,0 +1,30 @@
+{% comment %}
+Bedienelement einer abhängigen Spanne (database/filterspec.py, TYP_ABHAENGIGE_SPANNE).
+Erwartet `feld`. Erscheint erst, wenn im Quellfeld etwas gewählt ist; Beschriftung,
+Einheit und Von/Bis-Hinweise stammen aus `spannen[...]` und richten sich nach der
+getroffenen Auswahl. Der Basis-Schalter trennt reine Wirkstoff- von Bruttomengen –
+ohne ihn würde der Filter Unvergleichbares zusammenwerfen.
+{% endcomment %}
+<div class="input-group input-group-sm flex-nowrap" x-cloak
+     x-show="zustand['{{ feld.quelle }}'].length > 0">
+  <span class="input-group-text" data-bs-toggle="tooltip" title="{{ feld.hilfetext }}"
+        :class="aktiv(feldNach('{{ feld.name }}')) ? 'text-bg-primary' : ''"
+        x-text="spannen['{{ feld.name }}'].label"></span>
+  <input type="number" class="form-control filterspanne" aria-label="Menge von"
+         :placeholder="spannen['{{ feld.name }}'].min === null ? 'von' : 'von (' + spannen['{{ feld.name }}'].min + ')'"
+         x-model="zustand['{{ feld.name }}'].min">
+  <span class="input-group-text px-1">–</span>
+  <input type="number" class="form-control filterspanne" aria-label="Menge bis"
+         :placeholder="spannen['{{ feld.name }}'].max === null ? 'bis' : 'bis (' + spannen['{{ feld.name }}'].max + ')'"
+         x-model="zustand['{{ feld.name }}'].max">
+  <span class="input-group-text" x-text="spannen['{{ feld.name }}'].einheit"></span>
+  {% for basis in feld.basis_labels %}
+    <button type="button" class="btn"
+            data-bs-toggle="tooltip" title="Bemessungsgrundlage – nochmals klicken für «egal»"
+            :class="zustand['{{ feld.name }}'].basis === '{{ basis|lower }}' ? 'btn-primary' : 'btn-outline-secondary'"
+            @click="basisSetzen('{{ feld.name }}', '{{ basis|lower }}')">{{ basis }}</button>
+  {% endfor %}
+  <button type="button" class="btn btn-outline-secondary" title="zurücksetzen"
+          x-show="aktiv(feldNach('{{ feld.name }}'))"
+          @click="chipEntfernen('{{ feld.name }}')">&times;</button>
+</div>

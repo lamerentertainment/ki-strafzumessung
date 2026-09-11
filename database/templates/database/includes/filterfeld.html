@@ -1,0 +1,75 @@
+{% comment %}
+Ein einzelnes Bedienelement des Filterpanels. Erwartet `feld` aus der
+Filterspezifikation (database/filterspec.py). Das Bedienelement richtet sich
+nach dem Feldtyp: Chips fuer Auswahlfelder, Dreizustands-Schalter fuer
+Boolesche Felder, Von/Bis-Paare fuer Zahlen und Daten.
+{% endcomment %}
+<div class="filterfeld mb-3">
+  <label class="form-label mb-1 small fw-semibold d-flex align-items-center gap-1">
+    {{ feld.label }}
+    {% if feld.hilfetext %}
+      <span class="text-body-secondary" data-bs-toggle="tooltip" title="{{ feld.hilfetext }}">&#9432;</span>
+    {% endif %}
+    <button type="button" class="btn btn-link btn-sm p-0 ms-auto text-decoration-none"
+            x-show="aktiv(feldNach('{{ feld.name }}'))"
+            @click="chipEntfernen('{{ feld.name }}')">zurücksetzen</button>
+  </label>
+
+  {% if feld.typ == 'abhaengige_spanne' %}
+    {% include 'database/includes/filterspanne.html' with feld=feld %}
+    <div class="form-text small" x-show="zustand['{{ feld.quelle }}'].length == 0">
+      Erst wählbar, sobald oben eine Auswahl getroffen ist.
+    </div>
+
+  {% elif feld.typ == 'choice' or feld.typ == 'multi' %}
+    <div class="d-flex flex-wrap gap-1">
+      {% for option in feld.optionen %}
+        <button type="button"
+                class="btn btn-sm filterchip"
+                :class="istGewaehlt('{{ feld.name }}', '{{ option.value|escapejs }}')
+                          ? 'btn-primary'
+                          : (anzahl('{{ feld.name }}', '{{ option.value|escapejs }}') === 0
+                              ? 'btn-outline-secondary opacity-50'
+                              : 'btn-outline-secondary')"
+                :disabled="!istGewaehlt('{{ feld.name }}', '{{ option.value|escapejs }}')
+                           && anzahl('{{ feld.name }}', '{{ option.value|escapejs }}') === 0"
+                @click="umschalten('{{ feld.name }}', '{{ option.value|escapejs }}')">
+          {{ option.label }}
+          <span class="badge rounded-pill text-bg-light ms-1"
+                x-text="anzahl('{{ feld.name }}', '{{ option.value|escapejs }}')"></span>
+        </button>
+      {% endfor %}
+    </div>
+
+  {% elif feld.typ == 'bool' %}
+    <div class="btn-group btn-group-sm" role="group">
+      <button type="button" class="btn"
+              :class="zustand['{{ feld.name }}'] === null ? 'btn-secondary' : 'btn-outline-secondary'"
+              @click="zustand['{{ feld.name }}'] = null">egal</button>
+      <button type="button" class="btn"
+              :class="zustand['{{ feld.name }}'] === true ? 'btn-primary' : 'btn-outline-secondary'"
+              :disabled="zustand['{{ feld.name }}'] !== true && anzahl('{{ feld.name }}', true) === 0"
+              @click="boolSetzen('{{ feld.name }}', true)">
+        ja <span class="badge rounded-pill text-bg-light ms-1" x-text="anzahl('{{ feld.name }}', true)"></span>
+      </button>
+      <button type="button" class="btn"
+              :class="zustand['{{ feld.name }}'] === false ? 'btn-primary' : 'btn-outline-secondary'"
+              :disabled="zustand['{{ feld.name }}'] !== false && anzahl('{{ feld.name }}', false) === 0"
+              @click="boolSetzen('{{ feld.name }}', false)">
+        nein <span class="badge rounded-pill text-bg-light ms-1" x-text="anzahl('{{ feld.name }}', false)"></span>
+      </button>
+    </div>
+
+  {% else %}
+    <div class="input-group input-group-sm">
+      <input type="{% if feld.typ == 'date' %}date{% else %}number{% endif %}"
+             class="form-control" placeholder="von ({{ feld.min }})"
+             x-model="zustand['{{ feld.name }}'].min">
+      <span class="input-group-text">–</span>
+      <input type="{% if feld.typ == 'date' %}date{% else %}number{% endif %}"
+             class="form-control" placeholder="bis ({{ feld.max }})"
+             x-model="zustand['{{ feld.name }}'].max">
+      {% if feld.einheit %}<span class="input-group-text">{{ feld.einheit }}</span>{% endif %}
+    </div>
+  {% endif %}
+</div>

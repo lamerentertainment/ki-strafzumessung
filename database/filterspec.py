@@ -408,10 +408,10 @@ def _nur_hauptdelikt_feld(hilfetext, wert):
 
 
 SEXUALDELIKT_FILTER_CONFIG = {
-    "primaer": ["hauptdelikt", "nur_hauptdelikt", "hauptsanktion", "vollzug"],
+    "primaer": ["hauptdelikt", "hauptdelikt_tatmittel", "nur_hauptdelikt"],
     "abgeleitete_felder": {
         "nur_hauptdelikt": _nur_hauptdelikt_feld(
-            "Nur Urteile, bei denen allein das Hauptdelikt die Strafe bestimmt: kein Deliktsscore für übrige Delikte und keine weiteren Sexualdelikte im Urteilsspruch. Wo der Deliktsscore nicht erfasst ist, wird das ausgewiesen statt als Null gedeutet.",
+            "Nur Urteile, bei denen allein das Hauptdelikt die Strafe bestimmt: Nebst der Verurteilung zum Hauptdelikte befindet sich kein weiterer Schuldspruch im Dispositiv",
             _nur_hauptdelikt_sexualdelikt,
         )
     },
@@ -470,6 +470,8 @@ SEXUALDELIKT_FILTER_CONFIG = {
         "verfahrensart": "Verfahrensart",
         "geschlecht": "Geschlecht Täter",
         "nationalitaet": "Nationalität Täter",
+        "hauptdelikt": "Hauptdelikt",
+        "hauptdelikt_tatmittel": "Tatmittel",
         "hauptdelikt_mehrfachbegehung_anzahl": "Anzahl Tatbegehungen",
         "hauptdelikt_mehrfachbegehung_deliktsperiode": "Deliktsperiode",
         "hauptdelikt_deliktsdauer_bekannt": "Deliktsdauer bekannt?",
@@ -507,7 +509,7 @@ SEXUALDELIKT_FILTER_CONFIG = {
 
 
 URTEIL_FILTER_CONFIG = {
-    "primaer": ["hauptdelikt", "deliktssumme", "nur_hauptdelikt", "hauptsanktion", "vollzug"],
+    "primaer": ["hauptdelikt", "deliktssumme", "nur_hauptdelikt"],
     "abgeleitete_felder": {
         "nur_hauptdelikt": _nur_hauptdelikt_feld(
             "Nur Urteile, bei denen allein das Hauptdelikt die Strafe bestimmt, der Nebenverurteilungsscore also 0 ist.",
@@ -577,7 +579,7 @@ URTEIL_FILTER_CONFIG = {
 
 
 BETM_FILTER_CONFIG = {
-    "primaer": ["betm", "betm_menge", "nur_hauptdelikt", "rolle", "vollzug"],
+    "primaer": ["betm", "betm_menge", "nur_hauptdelikt", "rolle"],
     "abgeleitete_felder": {
         "nur_hauptdelikt": _nur_hauptdelikt_feld(
             "Nur Urteile, bei denen allein das Hauptdelikt die Strafe bestimmt, der Nebenverurteilungsscore also 0 ist.",
@@ -687,7 +689,7 @@ BETM_FILTER_CONFIG = {
 
 
 GEWALTDELIKT_FILTER_CONFIG = {
-    "primaer": ["hauptdelikt", "nur_hauptdelikt", "hauptsanktion", "vollzug"],
+    "primaer": ["hauptdelikt", "versuch", "nur_hauptdelikt"],
     "abgeleitete_felder": {
         "nur_hauptdelikt": _nur_hauptdelikt_feld(
             "Nur Urteile, bei denen allein das Hauptdelikt die Strafe bestimmt, der Deliktsscore für die übrigen Delikte also 0 ist.",
@@ -756,6 +758,7 @@ GEWALTDELIKT_FILTER_CONFIG = {
         "geschlecht": "Geschlecht Täter",
         "nationalitaet": "Nationalität Täter",
         "hauptdelikt": "Hauptdelikt",
+        "versuch": "Versuch",
         "tatmittel": "Tatmittel",
         "mehrfach": "mehrfache Begehung",
         "bandenmaessig": "bandenmässig",

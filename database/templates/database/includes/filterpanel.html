@@ -75,6 +75,38 @@ bleibt dank x-cloak verborgen.
                     @click="chipEntfernen('{{ feld.name }}')">&times;</button>
           </div>
         </div>
+      {% elif feld.typ == 'bool' %}
+        {# Boolesches Feld: direkt als Ja/Nein-Schalter in der Kopfzeile #}
+        <div class="col-auto">
+          <div class="input-group input-group-sm flex-nowrap">
+            <span class="input-group-text" data-bs-toggle="tooltip" title="{{ feld.hilfetext }}"
+                  :class="aktiv(feldNach('{{ feld.name }}')) ? 'text-bg-primary' : ''">{{ feld.label }}</span>
+            <button type="button" class="btn"
+                    :class="zustand['{{ feld.name }}'] === true
+                              ? 'btn-primary'
+                              : (anzahl('{{ feld.name }}', true) === 0
+                                  ? 'btn-outline-secondary opacity-50'
+                                  : 'btn-outline-secondary')"
+                    :disabled="zustand['{{ feld.name }}'] !== true && anzahl('{{ feld.name }}', true) === 0"
+                    @click="boolSetzen('{{ feld.name }}', true)">
+              ja
+              <span class="badge rounded-pill text-bg-light ms-1"
+                    x-text="anzahl('{{ feld.name }}', true)"></span>
+            </button>
+            <button type="button" class="btn"
+                    :class="zustand['{{ feld.name }}'] === false
+                              ? 'btn-primary'
+                              : (anzahl('{{ feld.name }}', false) === 0
+                                  ? 'btn-outline-secondary opacity-50'
+                                  : 'btn-outline-secondary')"
+                    :disabled="zustand['{{ feld.name }}'] !== false && anzahl('{{ feld.name }}', false) === 0"
+                    @click="boolSetzen('{{ feld.name }}', false)">
+              nein
+              <span class="badge rounded-pill text-bg-light ms-1"
+                    x-text="anzahl('{{ feld.name }}', false)"></span>
+            </button>
+          </div>
+        </div>
       {% else %}
         <div class="col-auto">
           <div class="dropdown">

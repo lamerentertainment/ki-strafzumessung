@@ -87,7 +87,7 @@
 
     {# Spalte Sanktion #}
     {% if urteil.hauptsanktion == "0" %}
-        <td>{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_anzeige }}</td>
+        <td data-tt="{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_monate_tooltip }}">{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_jahre_monate_anzeige }}</td>
     {% elif urteil.hauptsanktion == "1" %}
         <td>{{ urteil.anzahl_tagessaetze }} Tagessätze</td>
     {% endif %}

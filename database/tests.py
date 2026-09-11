@@ -226,6 +226,21 @@ class FilterkonfigurationenTest(TestCase):
                 self.assertEqual(spezifikation["felder"], [])
                 self.assertEqual(spezifikation["gruppen"], [])
 
+    def test_hauptsanktion_und_vollzug_nicht_in_primaer(self):
+        for model, config in ALLE_KONFIGURATIONEN:
+            with self.subTest(model=model.__name__):
+                primaer = config.get("primaer", [])
+                self.assertNotIn("hauptsanktion", primaer)
+                self.assertNotIn("vollzug", primaer)
+
+    def test_gewaltdelikt_versuch_in_primaer(self):
+        self.assertIn("versuch", GEWALTDELIKT_FILTER_CONFIG.get("primaer", []))
+
+    def test_sexualdelikt_tatmittel_in_primaer(self):
+        self.assertIn(
+            "hauptdelikt_tatmittel", SEXUALDELIKT_FILTER_CONFIG.get("primaer", [])
+        )
+
 
 class BetmBeziehungspfadTest(TestCase):
     """BetmUrteil.betm wird über die Substanz gefiltert, nicht über den

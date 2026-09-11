@@ -65,7 +65,7 @@
               <td>{{ urteil.rolle }}</td>
               {% if urteil.hauptsanktion == '0' %}
                 <td><span class="badge text-bg-primary">Freiheitsstrafe</span></td>
-                <td>{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_anzeige }}</td>
+                <td data-tt="{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_monate_tooltip }}">{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_jahre_monate_anzeige }}</td>
               {% elif urteil.hauptsanktion == '1' %}
                 <td><span class="badge text-bg-success">Geldstrafe</span></td>
                 <td>{{ urteil.anzahl_tagessaetze }} Tagessätze</td>

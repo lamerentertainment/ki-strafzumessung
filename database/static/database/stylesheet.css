@@ -316,9 +316,10 @@ h1 {
 .filterpanel .accordion-button:not(.collapsed) { color: inherit; box-shadow: none; }
 .filterpanel .filterfeld .form-label { margin-bottom: .25rem; }
 
-/* Sortierbare Spaltenkoepfe */
-th[data-sortierbar] { cursor: pointer; user-select: none; white-space: nowrap; }
-th[data-sortierbar]:hover { text-decoration: underline; }
+/* Sortierbare Spaltenkoepfe (auch als Teil-Label innerhalb einer th, wenn eine
+   Spalte mehrere unabhaengig sortierbare Werte zusammenfasst) */
+[data-sortierbar] { cursor: pointer; user-select: none; white-space: nowrap; }
+[data-sortierbar]:hover { text-decoration: underline; }
 #datenbank-table thead th,
 .table-scroll-container thead th {
     position: sticky;

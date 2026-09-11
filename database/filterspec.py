@@ -340,6 +340,7 @@ def datensaetze_erstellen(model, config, queryset, spezifikation):
     felder = [model._meta.get_field(name) for name in feldnamen]
     volltextfelder = config.get("volltextfelder", [])
     pfade = config.get("beziehungspfade", {})
+    berechnete_sortierfelder = config.get("berechnete_sortierfelder", {})
 
     datensaetze = {}
     for objekt in queryset:
@@ -348,6 +349,8 @@ def datensaetze_erstellen(model, config, queryset, spezifikation):
             werte[feldname] = _mengen_aggregieren(objekt, spanne, pfade)
         for feldname, abgeleitet in abgeleitete.items():
             werte[feldname] = abgeleitet["wert"](objekt)
+        for feldname, funktion in berechnete_sortierfelder.items():
+            werte[feldname] = funktion(objekt)
         textteile = []
         for pfad in volltextfelder:
             ziel = objekt
@@ -583,6 +586,36 @@ URTEIL_FILTER_CONFIG = {
 }
 
 
+def _betm_sortierschluessel(objekt):
+    """
+    Sortierschluessel fuer BetmUrteile: primaer die Substanz des erstgenannten
+    Betm-Eintrags (alphabetisch), sekundaer dessen Menge in Gramm.
+
+    "Erstgenannt" = der Betm-Eintrag mit der kleinsten Pk, d.h. der zuerst
+    erfasste - dieselbe Reihenfolge, in der die Substanzen in der Urteilsliste
+    angezeigt werden. Da pro Urteil i.d.R. wenige, meist ein bis zwei
+    Substanzen erfasst sind, ist das eine brauchbare Auszeichnung des
+    "Hauptbetaeubungsmittels" ohne eigenes Modellfeld dafuer.
+
+    Substanz und Menge werden zu einem einzigen String kombiniert (Menge auf
+    10 Stellen gepaddet), damit der bestehende generische Einzelfeld-Sort im
+    Frontend (simple String-/Zahlenvergleiche, kein Mehrfachschluessel-
+    Sortieren) ihn unveraendert verwenden kann: String-Vergleich sortiert
+    zuerst nach dem Substanznamen-Praefix, bei gleicher Substanz macht das
+    Zero-Padding den Zahlenvergleich der Menge textuell korrekt.
+
+    Sortiert in Python statt per ``order_by("pk").first()`` auf der Beziehung,
+    damit der ``filter_prefetch``-Cache der Listenansicht (``betm__art``)
+    greift - ein zusaetzliches ``.order_by()`` auf der Beziehung wuerde ihn
+    umgehen und pro Urteil eine eigene Query ausloesen.
+    """
+    eintraege = sorted(objekt.betm.all(), key=lambda eintrag: eintrag.pk)
+    if not eintraege:
+        return None
+    erster = eintraege[0]
+    return f"{erster.art.name}|{erster.menge_in_g:010d}"
+
+
 BETM_FILTER_CONFIG = {
     "primaer": ["betm", "betm_menge", "nur_hauptdelikt", "rolle"],
     "abgeleitete_felder": {
@@ -688,11 +721,17 @@ BETM_FILTER_CONFIG = {
         {"name": "fall_nr", "label": "Fall-Nr."},
         {"name": "urteilsdatum", "label": "Urteilsdatum"},
         {"name": "rolle", "label": "Rolle"},
+        {"name": "deliktsdauer_in_monaten", "label": "Deliktsdauer"},
         {"name": "deliktsertrag", "label": "Deliktsertrag"},
         {"name": "nebenverurteilungsscore", "label": "Nebenverurteilungsscore"},
         {"name": "hauptsanktion", "label": "Hauptsanktion"},
         {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
     ],
+    # Rein rechnerische Felder, die es als Modellfeld nicht gibt und die nur
+    # zum Sortieren gebraucht werden (kein Filter-Widget dafuer).
+    "berechnete_sortierfelder": {
+        "betm_sortierschluessel": _betm_sortierschluessel,
+    },
 }
 
 

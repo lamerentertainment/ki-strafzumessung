@@ -27,11 +27,16 @@
             <th data-sortierbar data-tt="nach Urteilsdatum sortieren" @click="sortieren('urteilsdatum')">
               Gericht / Datum <span x-text="sortSymbol('urteilsdatum')"></span>
             </th>
-            <th data-sortierbar data-tt="nach Rolle sortieren" @click="sortieren('rolle')">
-              Betm & Rolle <span x-text="sortSymbol('rolle')"></span>
+            <th>
+              <span data-sortierbar data-tt="nach Betäubungsmittel (erstgenannt) & Menge sortieren" @click="sortieren('betm_sortierschluessel')">Betm <span x-text="sortSymbol('betm_sortierschluessel')"></span></span>
+              &amp;
+              <span data-sortierbar data-tt="nach Rolle sortieren" @click="sortieren('rolle')">Rolle <span x-text="sortSymbol('rolle')"></span></span>
             </th>
-            <th data-sortierbar data-tt="nach Deliktsertrag sortieren" @click="sortieren('deliktsertrag')">
-              Ertrag & Zusatzdelikte <span x-text="sortSymbol('deliktsertrag')"></span>
+            <th>
+              <span data-sortierbar data-tt="nach Deliktsdauer sortieren" @click="sortieren('deliktsdauer_in_monaten')">Dauer <span x-text="sortSymbol('deliktsdauer_in_monaten')"></span></span>,
+              <span data-sortierbar data-tt="nach Deliktsertrag sortieren" @click="sortieren('deliktsertrag')">Ertrag <span x-text="sortSymbol('deliktsertrag')"></span></span>
+              &amp;
+              <span data-sortierbar data-tt="nach Nebenverurteilungsscore sortieren" @click="sortieren('nebenverurteilungsscore')">Zusatzdelikte <span x-text="sortSymbol('nebenverurteilungsscore')"></span></span>
             </th>
             <th>Täter & Vorstrafen</th>
             <th data-sortierbar data-tt="nach Sanktion sortieren" @click="sortieren('freiheitsstrafe_in_monaten')">
@@ -96,15 +101,15 @@
                 </div>
               </td>
 
-              {# Spalte 4: Deliktsertrag & Zusatzdelikte #}
+              {# Spalte 4: Deliktsdauer, Ertrag & Zusatzdelikte #}
               <td>
-                {% if urteil.deliktsertrag %}
-                  <div class="fw-semibold">CHF {{ urteil.deliktsertrag|intcomma }}</div>
+                {% if urteil.deliktsdauer_in_monaten %}
+                  <div class="fw-bold fs-5">{{ urteil.deliktsdauer_in_monaten }} Mt.</div>
                 {% else %}
                   <div class="text-body-secondary small">–</div>
                 {% endif %}
-                {% if urteil.deliktsdauer_in_monaten %}
-                  <div class="text-body-secondary small" style="font-size: 0.75rem;">Dauer: {{ urteil.deliktsdauer_in_monaten }} Mt.</div>
+                {% if urteil.deliktsertrag %}
+                  <div class="text-body-secondary small" style="font-size: 0.75rem;">Ertrag: CHF {{ urteil.deliktsertrag|intcomma }}</div>
                 {% endif %}
                 {% if urteil.nebenverurteilungsscore > 0 %}
                   <div class="text-body-secondary small" style="font-size: 0.75rem;">Zusatzscore: {{ urteil.nebenverurteilungsscore }}</div>

@@ -21,18 +21,20 @@
       <table class="table table-sm table-striped table-hover align-middle">
         <thead class="table-light">
           <tr>
-            <th data-sortierbar @click="sortieren('fall_nr')">
+            <th data-sortierbar data-tt="nach Fall-Nr. sortieren" @click="sortieren('fall_nr')">
               Fall-Nr. <span x-text="sortSymbol('fall_nr')"></span>
             </th>
-            <th data-sortierbar @click="sortieren('urteilsdatum')">
+            <th data-sortierbar data-tt="nach Urteilsdatum sortieren" @click="sortieren('urteilsdatum')">
               Gericht/Urteilsdatum <span x-text="sortSymbol('urteilsdatum')"></span>
             </th>
             <th>Betäubungsmittel</th>
-            <th data-sortierbar @click="sortieren('rolle')">
+            <th data-sortierbar data-tt="nach Rolle sortieren" @click="sortieren('rolle')">
               Rolle <span x-text="sortSymbol('rolle')"></span>
             </th>
-            <th>Sanktion</th>
-            <th data-sortierbar @click="sortieren('freiheitsstrafe_in_monaten')">
+            <th data-sortierbar data-tt="nach Sanktion sortieren" @click="sortieren('hauptsanktion')">
+              Sanktion <span x-text="sortSymbol('hauptsanktion')"></span>
+            </th>
+            <th data-sortierbar data-tt="nach Dauer/Höhe sortieren" @click="sortieren('freiheitsstrafe_in_monaten')">
               Dauer/Höhe <span x-text="sortSymbol('freiheitsstrafe_in_monaten')"></span>
             </th>
             <th>Details</th>

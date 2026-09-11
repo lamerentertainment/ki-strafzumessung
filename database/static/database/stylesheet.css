@@ -348,6 +348,16 @@ th[data-sortierbar]:hover { text-decoration: underline; }
     opacity: 1;
 }
 
+/* Tooltips auf dem sticky Tabellenkopf (#datenbank-table) muessen nach unten
+   statt nach oben aufgehen, sonst werden sie vom umgebenden overflow:auto
+   des Tabellencontainers abgeschnitten. */
+thead [data-tt]:not([data-tt=""])::after {
+    bottom: auto;
+    top: 100%;
+    margin-bottom: 0;
+    margin-top: .25rem;
+}
+
 /* ============================================================
    Kurzsachverhalt Hovercard (Urteilslisten-Vorschau)
    ============================================================ */

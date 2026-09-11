@@ -1,19 +1,19 @@
 <tr class="bg-white" style="position: sticky; top: 0" scope="col">
-    <th data-sortierbar @click="sortieren('fall_nr')">Fallnummer OG ZH <span x-text="sortSymbol('fall_nr')"></span></th>
-    <th data-sortierbar @click="sortieren('gericht')">Gericht <span x-text="sortSymbol('gericht')"></span></th>
-    <th data-sortierbar @click="sortieren('urteilsdatum')">Urteilsdatum <span x-text="sortSymbol('urteilsdatum')"></span></th>
+    <th data-sortierbar data-tt="nach Fallnummer OG ZH sortieren" @click="sortieren('fall_nr')">Fallnummer OG ZH <span x-text="sortSymbol('fall_nr')"></span></th>
+    <th data-sortierbar data-tt="nach Gericht sortieren" @click="sortieren('gericht')">Gericht <span x-text="sortSymbol('gericht')"></span></th>
+    <th data-sortierbar data-tt="nach Urteilsdatum sortieren" @click="sortieren('urteilsdatum')">Urteilsdatum <span x-text="sortSymbol('urteilsdatum')"></span></th>
     <th>Geschlecht</th>
     <th>Nationalität</th>
-    <th data-sortierbar @click="sortieren('hauptdelikt')">Hauptdelikt <span x-text="sortSymbol('hauptdelikt')"></span></th>
+    <th data-sortierbar data-tt="nach Hauptdelikt sortieren" @click="sortieren('hauptdelikt')">Hauptdelikt <span x-text="sortSymbol('hauptdelikt')"></span></th>
     <th>mehrfach</th>
     <th>gewerbsmässig/<br>qualifiziert</th>
     <th>banden-<br>mässig</th>
-    <th data-sortierbar @click="sortieren('deliktssumme')">Deliktssumme <span x-text="sortSymbol('deliktssumme')"></span></th>
-    <th data-sortierbar @click="sortieren('nebenverurteilungsscore')">Neben-<br>verurteilungs-<br>score <span x-text="sortSymbol('nebenverurteilungsscore')"></span></th>
+    <th data-sortierbar data-tt="nach Deliktssumme sortieren" @click="sortieren('deliktssumme')">Deliktssumme <span x-text="sortSymbol('deliktssumme')"></span></th>
+    <th data-sortierbar data-tt="nach Nebenverurteilungsscore sortieren" @click="sortieren('nebenverurteilungsscore')">Neben-<br>verurteilungs-<br>score <span x-text="sortSymbol('nebenverurteilungsscore')"></span></th>
     <th>vorbestraft</th>
     <th>einschlägig<br>vorbestraft</th>
-    <th>Hauptsanktion</th>
-    <th data-sortierbar @click="sortieren('freiheitsstrafe_in_monaten')">Sanktion <span x-text="sortSymbol('freiheitsstrafe_in_monaten')"></span></th>
+    <th data-sortierbar data-tt="nach Hauptsanktion sortieren" @click="sortieren('hauptsanktion')">Hauptsanktion <span x-text="sortSymbol('hauptsanktion')"></span></th>
+    <th data-sortierbar data-tt="nach Sanktion sortieren" @click="sortieren('freiheitsstrafe_in_monaten')">Sanktion <span x-text="sortSymbol('freiheitsstrafe_in_monaten')"></span></th>
     <th>Vollzugsform</th>
     <th>in KI Modell <br>berücksichtigt?</th>
 </tr>

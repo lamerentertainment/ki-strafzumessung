@@ -503,6 +503,8 @@ SEXUALDELIKT_FILTER_CONFIG = {
         {"name": "fall_nr", "label": "Fall-Nr."},
         {"name": "urteilsdatum", "label": "Urteilsdatum"},
         {"name": "hauptdelikt", "label": "Hauptdelikt"},
+        {"name": "hauptdelikt_tatmittel", "label": "Tatmittel"},
+        {"name": "hauptsanktion", "label": "Hauptsanktion"},
         {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
     ],
 }
@@ -573,6 +575,7 @@ URTEIL_FILTER_CONFIG = {
         {"name": "urteilsdatum", "label": "Urteilsdatum"},
         {"name": "hauptdelikt", "label": "Hauptdelikt"},
         {"name": "deliktssumme", "label": "Deliktssumme"},
+        {"name": "hauptsanktion", "label": "Hauptsanktion"},
         {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
     ],
 }
@@ -683,6 +686,7 @@ BETM_FILTER_CONFIG = {
         {"name": "fall_nr", "label": "Fall-Nr."},
         {"name": "urteilsdatum", "label": "Urteilsdatum"},
         {"name": "rolle", "label": "Rolle"},
+        {"name": "hauptsanktion", "label": "Hauptsanktion"},
         {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
     ],
 }
@@ -792,6 +796,9 @@ GEWALTDELIKT_FILTER_CONFIG = {
         {"name": "fall_nr", "label": "Fall-Nr."},
         {"name": "urteilsdatum", "label": "Urteilsdatum"},
         {"name": "hauptdelikt", "label": "Hauptdelikt"},
+        {"name": "tatmittel", "label": "Tatmittel"},
+        {"name": "verletzungsfolge", "label": "Verletzungsfolge"},
+        {"name": "hauptsanktion", "label": "Hauptsanktion"},
         {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
     ],
 }

@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.views.generic import ListView, DetailView
 from django.core.files.base import ContentFile
 from .models import Urteil, BetmUrteil, SexualdeliktUrteil, GewaltdeliktUrteil, BetmArt, KIModelPickleFile, DiagrammSVG
@@ -11,10 +12,14 @@ from .forms import (
     UrteilsEckpunkteAbfrageFormular,
     CeteribusParibusFormular,
     BetmUrteilsEckpunkteAbfrageFormular,
+    UrteilBearbeitenForm,
+    BetmUrteilBearbeitenForm,
+    SexualdeliktUrteilBearbeitenForm,
+    GewaltdeliktUrteilBearbeitenForm,
 )
 
 from django.views import generic
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from .ai_utils import (
     formulareingaben_in_abfragesample_konvertieren,
     y_und_x_erstellen,
@@ -132,14 +137,65 @@ class BetmUrteilListView(FilterbareListView):
     filter_prefetch = ("betm__art",)
 
 
-class BetmUrteilDetailView(DetailView):
+class InlineBearbeitbarMixin:
+    """Ergaenzt eine DetailView um ein Bearbeitungsformular fuer Superuser.
+
+    Damit muessen Korrekturen an einem Urteil nicht ueber den Admin laufen: Das
+    Formular wird auf der Detailseite selbst eingeblendet und per POST an
+    dieselbe URL gespeichert. Fuer alle uebrigen Besucher aendert sich nichts -
+    ohne Superuser-Recht landet weder ein Formular im Kontext noch wird ein POST
+    entgegengenommen.
+    """
+
+    bearbeiten_form_class = None
+
+    def darf_bearbeiten(self):
+        return self.request.user.is_superuser
+
+    def get_bearbeiten_form(self, **kwargs):
+        return self.bearbeiten_form_class(instance=self.object, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.darf_bearbeiten():
+            context.setdefault("bearbeiten_form", self.get_bearbeiten_form())
+            opts = self.object._meta
+            context["admin_url"] = reverse(
+                f"admin:{opts.app_label}_{opts.model_name}_change", args=[self.object.pk]
+            )
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if not self.darf_bearbeiten():
+            raise PermissionDenied
+
+        form = self.get_bearbeiten_form(data=request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Die Änderungen an {self.object.fall_nr} wurden gespeichert.")
+            return redirect(request.path)
+
+        messages.error(
+            request,
+            "Die Änderungen konnten nicht gespeichert werden, das Formular enthält Fehler.",
+        )
+        # Bei Fehlern bleibt das Formular mit den eingegebenen Werten offen.
+        return self.render_to_response(
+            self.get_context_data(bearbeiten_form=form, bearbeiten_offen=True)
+        )
+
+
+class BetmUrteilDetailView(InlineBearbeitbarMixin, DetailView):
     model = BetmUrteil
     template_name = "database/betmurteil_detail.html"
+    bearbeiten_form_class = BetmUrteilBearbeitenForm
 
 
-class VMUrteilDetailView(DetailView):
+class VMUrteilDetailView(InlineBearbeitbarMixin, DetailView):
     model = Urteil
     template_name = "database/vmurteil_detail.html"
+    bearbeiten_form_class = UrteilBearbeitenForm
 
 
 class UrteilListView(FilterbareListView):
@@ -172,9 +228,10 @@ class SexualdeliktUrteilListView(FilterbareListView):
     filter_prefetch = ("sexualdelikte_zusaetzliche", "besonderheiten")
 
 
-class SexualdeliktUrteilDetailView(DetailView):
+class SexualdeliktUrteilDetailView(InlineBearbeitbarMixin, DetailView):
     model = SexualdeliktUrteil
     template_name = "database/sexualurteil_detail.html"
+    bearbeiten_form_class = SexualdeliktUrteilBearbeitenForm
 
 
 class GewaltdeliktUrteilListView(FilterbareListView):
@@ -185,9 +242,10 @@ class GewaltdeliktUrteilListView(FilterbareListView):
     filter_prefetch = ("besonderheiten",)
 
 
-class GewaltdeliktUrteilDetailView(DetailView):
+class GewaltdeliktUrteilDetailView(InlineBearbeitbarMixin, DetailView):
     model = GewaltdeliktUrteil
     template_name = "database/gewalturteil_detail.html"
+    bearbeiten_form_class = GewaltdeliktUrteilBearbeitenForm
 
 
 # KI-Model Views:

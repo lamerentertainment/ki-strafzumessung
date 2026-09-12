@@ -4,7 +4,9 @@ from .models import (
     Urteil,
     BetmUrteil,
     BetmArt,
+    GewaltdeliktUrteil,
     Rolle,
+    SexualdeliktUrteil,
 )
 
 
@@ -183,3 +185,182 @@ class CeteribusParibusFormular(ModelForm):
             "vorbestraft",
             "vorbestraft_einschlaegig",
         ]
+
+
+class BearbeitenModelForm(ModelForm):
+    """Basis der Formulare, mit denen Superuser ein Urteil direkt auf dessen
+    Detailansicht bearbeiten koennen.
+
+    Anders als im Admin erscheinen die Felder im Bootstrap-Grid der Website,
+    deshalb werden die Widgets hier mit den passenden Klassen versehen.
+    `FELDGRUPPEN` bildet die Gliederung der Admin-Fieldsets nach; Felder, die
+    dort nicht aufgefuehrt sind, landen in einer Auffanggruppe (siehe
+    `gruppen()`), damit beim Erweitern eines Modells nichts unter den Tisch faellt.
+    """
+
+    FELDGRUPPEN = ()
+    ISO_DATUM = "%Y-%m-%d"
+
+    class Meta:
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for feld in self.fields.values():
+            widget = feld.widget
+            if isinstance(widget, forms.CheckboxInput):
+                klasse = "form-check-input"
+            elif isinstance(widget, forms.Select):
+                klasse = "form-select"
+            else:
+                klasse = "form-control"
+            widget.attrs["class"] = f"{widget.attrs.get('class', '')} {klasse}".strip()
+
+            if isinstance(widget, forms.Textarea):
+                widget.attrs.setdefault("rows", 8)
+
+            if isinstance(feld, forms.DateField):
+                # <input type="date"> liefert und erwartet ISO-Daten; das
+                # de-CH-Locale kennt dieses Format weder beim Rendern noch beim
+                # Parsen, deshalb beides explizit ergaenzen.
+                widget.input_type = "date"
+                widget.format = self.ISO_DATUM
+                feld.input_formats = [self.ISO_DATUM, *feld.input_formats]
+
+    def gruppen(self):
+        """Gibt `(titel, [BoundField, ...])` je Feldgruppe aus."""
+        zugeteilt = set()
+        for titel, feldnamen in self.FELDGRUPPEN:
+            felder = [self[name] for name in feldnamen if name in self.fields]
+            if not felder:
+                continue
+            zugeteilt.update(feld.name for feld in felder)
+            yield titel, felder
+
+        uebrige = [feld for feld in self if feld.name not in zugeteilt]
+        if uebrige:
+            yield "Weitere Felder", uebrige
+
+
+class UrteilBearbeitenForm(BearbeitenModelForm):
+    class Meta(BearbeitenModelForm.Meta):
+        model = Urteil
+
+    FELDGRUPPEN = (
+        ("Grunddaten", ("fall_nr", "url_link", "gericht", "urteilsdatum", "verfahrensart")),
+        ("Person", ("geschlecht", "nationalitaet", "vorbestraft", "vorbestraft_einschlaegig")),
+        (
+            "Delikt",
+            (
+                "hauptdelikt",
+                "mehrfach",
+                "gewerbsmaessig",
+                "bandenmaessig",
+                "deliktssumme",
+                "nebenverurteilungsscore",
+            ),
+        ),
+        ("Sanktion", ("hauptsanktion", "freiheitsstrafe_in_monaten", "anzahl_tagessaetze", "vollzug")),
+        ("Weitere Informationen", ("zusammenfassung", "in_ki_modell")),
+    )
+
+
+class BetmUrteilBearbeitenForm(BearbeitenModelForm):
+    class Meta(BearbeitenModelForm.Meta):
+        model = BetmUrteil
+
+    FELDGRUPPEN = (
+        (
+            "Grunddaten",
+            ("fall_nr", "url_link", "gericht", "urteilsdatum", "kanton", "verfahrensart"),
+        ),
+        ("Person", ("geschlecht", "nationalitaet", "vorbestraft", "vorbestraft_einschlaegig")),
+        (
+            "Delikt & Rolle",
+            (
+                "mengenmaessig",
+                "bandenmaessig",
+                "gewerbsmaessig",
+                "anstaltentreffen",
+                "mehrfach",
+                "beschaffungskriminalitaet",
+                "rolle",
+                "deliktsertrag",
+                "deliktsdauer_in_monaten",
+                "nebenverurteilungsscore",
+                "betm",
+            ),
+        ),
+        ("Sanktion", ("hauptsanktion", "freiheitsstrafe_in_monaten", "anzahl_tagessaetze", "vollzug")),
+        ("Weitere Informationen", ("zusammenfassung", "in_ki_modell")),
+    )
+
+
+class SexualdeliktUrteilBearbeitenForm(BearbeitenModelForm):
+    class Meta(BearbeitenModelForm.Meta):
+        model = SexualdeliktUrteil
+
+    FELDGRUPPEN = (
+        (
+            "Grunddaten",
+            ("fall_nr", "url_link", "gericht", "urteilsdatum", "kanton", "verfahrensart"),
+        ),
+        ("Person", ("geschlecht", "nationalitaet", "vorbestraft", "vorbestraft_einschlaegig")),
+        (
+            "Deliktsangaben",
+            (
+                "hauptdelikt",
+                "hauptdelikt_tatmittel",
+                "hauptdelikt_mehrfachbegehung",
+                "hauptdelikt_mehrfachbegehung_anzahl",
+                "hauptdelikt_mehrfachbegehung_deliktsperiode",
+                "hauptdelikt_deliktsdauer_bekannt",
+                "hautpdelikt_deliktsdauer_einfachbegehung",
+                "hauptdelikt_taeter_opfer_beziehung",
+                "hauptdelikt_opferalter",
+                "hauptdelikt_opfer_vorerfahrung",
+                "deliktsscore_uebrige_delikte",
+                "sexualdelikte_zusaetzliche",
+                "besonderheiten",
+            ),
+        ),
+        ("Sanktion", ("hauptsanktion", "freiheitsstrafe_in_monaten", "anzahl_tagessaetze", "vollzug")),
+        ("Weitere Informationen", ("kurzsachverhalt", "zusammenfassung", "bemerkungen")),
+    )
+
+
+class GewaltdeliktUrteilBearbeitenForm(BearbeitenModelForm):
+    class Meta(BearbeitenModelForm.Meta):
+        model = GewaltdeliktUrteil
+
+    FELDGRUPPEN = (
+        (
+            "Grunddaten",
+            ("fall_nr", "url_link", "gericht", "urteilsdatum", "kanton", "verfahrensart"),
+        ),
+        ("Person", ("geschlecht", "nationalitaet", "vorbestraft", "vorbestraft_einschlaegig")),
+        (
+            "Delikt",
+            (
+                "hauptdelikt",
+                "versuch",
+                "vorsatzform",
+                "tatmittel",
+                "waffe_gefaehrlicher_gegenstand",
+                "bandenmaessig",
+                "besondere_gefaehrlichkeit",
+                "lebensgefahr",
+                "mehrfach",
+                "opferzahl",
+                "taeter_opfer_beziehung",
+                "verletzungsfolge",
+                "angegriffenes_koerperteil",
+                "substanzeinfluss",
+                "deliktssumme",
+                "deliktsscore_uebrige_delikte",
+                "besonderheiten",
+            ),
+        ),
+        ("Sanktion", ("hauptsanktion", "freiheitsstrafe_in_monaten", "anzahl_tagessaetze", "vollzug")),
+        ("Weitere Informationen", ("kurzsachverhalt", "zusammenfassung", "bemerkungen", "in_ki_modell")),
+    )

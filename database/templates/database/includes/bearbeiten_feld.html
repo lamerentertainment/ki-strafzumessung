@@ -1,0 +1,16 @@
+{% load formulardarstellung %}
+{% with typ=field|widget_typ %}
+  <div class="{% if typ == 'textarea' or typ == 'mehrfachauswahl' %}col-12{% else %}col-md-6 col-xl-4{% endif %}">
+    {% if typ == 'checkbox' %}
+      <div class="form-check">
+        {{ field }}
+        <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+      </div>
+    {% else %}
+      <label class="form-label mb-1 fw-semibold" for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+    {% endif %}
+    {% if field.help_text %}<div class="form-text small">{{ field.help_text }}</div>{% endif %}
+    {% for fehler in field.errors %}<div class="text-danger small">{{ fehler }}</div>{% endfor %}
+  </div>
+{% endwith %}

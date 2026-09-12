@@ -1,7 +1,16 @@
 from datetime import date, timedelta
 
+from django import forms
+from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
+
+from .forms import (
+    BetmUrteilBearbeitenForm,
+    GewaltdeliktUrteilBearbeitenForm,
+    SexualdeliktUrteilBearbeitenForm,
+    UrteilBearbeitenForm,
+)
 
 from .filterspec import (
     BETM_FILTER_CONFIG,
@@ -588,3 +597,174 @@ class NurHauptdeliktTest(TestCase):
             [option["value"] for option in feld["optionen"]], ["ja", "nein"]
         )
         self.assertTrue(feld["inline"])
+
+
+class InlineBearbeitungTest(TestCase):
+    """Bearbeiten eines Urteils direkt auf dessen Detailansicht (nur Superuser)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.kanton = Kanton.objects.create(abk="ZH")
+        cls.superuser = get_user_model().objects.create_superuser(
+            username="admin", password="geheim", email="admin@example.com"
+        )
+        cls.redakteur = get_user_model().objects.create_user(
+            username="redaktion", password="geheim"
+        )
+
+        cls.urteil = Urteil.objects.create(
+            fall_nr="SB240501",
+            gericht="Bezirksgericht Zürich",
+            urteilsdatum=date(2024, 2, 2),
+            deliktssumme=15000,
+        )
+        cls.betm_urteil = BetmUrteil.objects.create(
+            fall_nr="SB240502",
+            gericht="Bezirksgericht Zürich",
+            urteilsdatum=date(2024, 2, 2),
+            kanton=cls.kanton,
+            rolle=Rolle.objects.create(name="Transport"),
+        )
+        cls.betm_urteil.betm.set(
+            [Betm.objects.create(art=BetmArt.objects.create(name="Kokain"), menge_in_g=50)]
+        )
+        cls.sexual_urteil = SexualdeliktUrteil.objects.create(
+            fall_nr="SB240503",
+            gericht="Bezirksgericht Zürich",
+            urteilsdatum=date(2024, 2, 2),
+            kanton=cls.kanton,
+            hauptdelikt=Hauptdelikt.objects.create(name="Art. 190, Vergewaltigung"),
+            hauptdelikt_tatmittel=Tatmittel.objects.create(name="Gewalt"),
+        )
+        cls.gewalt_urteil = GewaltdeliktUrteil.objects.create(
+            fall_nr="SB240504",
+            gericht="Bezirksgericht Zürich",
+            urteilsdatum=date(2024, 2, 2),
+            kanton=cls.kanton,
+            hauptdelikt="Raub",
+        )
+
+        cls.detailseiten = (
+            ("vmurteil_detail", cls.urteil),
+            ("betmurteil_detail", cls.betm_urteil),
+            ("sexualurteil_detail", cls.sexual_urteil),
+            ("gewalturteil_detail", cls.gewalt_urteil),
+        )
+
+    def pfad(self, urlname, objekt):
+        return reverse(urlname, kwargs={"pk": objekt.pk})
+
+    def formulardaten(self, form, **aenderungen):
+        """Baut aus einem gebundenen Formular einen vollstaendigen POST-Body."""
+        daten = {}
+        for feld in form:
+            wert = feld.value()
+            if isinstance(feld.field.widget, forms.CheckboxInput):
+                if wert:
+                    daten[feld.name] = "on"
+                continue
+            if wert is None:
+                continue
+            if isinstance(wert, (list, tuple)):
+                daten[feld.name] = [str(einzelwert) for einzelwert in wert]
+            elif isinstance(wert, date):
+                daten[feld.name] = wert.strftime("%Y-%m-%d")
+            else:
+                daten[feld.name] = str(wert)
+        daten.update(aenderungen)
+        return daten
+
+    def test_ohne_anmeldung_kein_formular(self):
+        for urlname, objekt in self.detailseiten:
+            with self.subTest(ansicht=urlname):
+                antwort = self.client.get(self.pfad(urlname, objekt))
+                self.assertEqual(antwort.status_code, 200)
+                self.assertNotIn("bearbeiten_form", antwort.context)
+                self.assertNotContains(antwort, "Eintrag bearbeiten")
+
+    def test_ohne_superuser_kein_speichern(self):
+        self.client.force_login(self.redakteur)
+        for urlname, objekt in self.detailseiten:
+            with self.subTest(ansicht=urlname):
+                antwort = self.client.get(self.pfad(urlname, objekt))
+                self.assertNotIn("bearbeiten_form", antwort.context)
+                self.assertEqual(
+                    self.client.post(self.pfad(urlname, objekt), {}).status_code, 403
+                )
+
+    def test_anonymer_post_wird_abgewiesen(self):
+        antwort = self.client.post(self.pfad("vmurteil_detail", self.urteil), {})
+        self.assertEqual(antwort.status_code, 403)
+        self.urteil.refresh_from_db()
+        self.assertEqual(self.urteil.deliktssumme, 15000)
+
+    def test_superuser_sieht_formular_auf_der_detailansicht(self):
+        self.client.force_login(self.superuser)
+        for urlname, objekt in self.detailseiten:
+            with self.subTest(ansicht=urlname):
+                antwort = self.client.get(self.pfad(urlname, objekt))
+                self.assertEqual(antwort.status_code, 200)
+                self.assertIn("bearbeiten_form", antwort.context)
+                self.assertContains(antwort, "Eintrag bearbeiten")
+                self.assertContains(antwort, "bearbeitenOffen")
+                # Datumsfelder als ISO-Wert, damit <input type="date"> vorbelegt ist
+                self.assertContains(antwort, 'value="2024-02-02"')
+                self.assertFalse(antwort.context.get("bearbeiten_offen"))
+
+    def test_superuser_speichert_alle_vier_modelle(self):
+        self.client.force_login(self.superuser)
+        for urlname, objekt in self.detailseiten:
+            with self.subTest(ansicht=urlname):
+                pfad = self.pfad(urlname, objekt)
+                form = self.client.get(pfad).context["bearbeiten_form"]
+                daten = self.formulardaten(
+                    form,
+                    gericht="Bezirksgericht Winterthur",
+                    urteilsdatum="2024-03-15",
+                    freiheitsstrafe_in_monaten="42",
+                )
+                antwort = self.client.post(pfad, daten)
+                self.assertRedirects(antwort, pfad)
+
+                objekt.refresh_from_db()
+                self.assertEqual(objekt.gericht, "Bezirksgericht Winterthur")
+                self.assertEqual(objekt.urteilsdatum, date(2024, 3, 15))
+                self.assertEqual(objekt.freiheitsstrafe_in_monaten, 42)
+
+    def test_beziehungsfelder_bleiben_erhalten(self):
+        self.client.force_login(self.superuser)
+        pfad = self.pfad("betmurteil_detail", self.betm_urteil)
+        form = self.client.get(pfad).context["bearbeiten_form"]
+        self.client.post(pfad, self.formulardaten(form, deliktsertrag="8000"))
+
+        self.betm_urteil.refresh_from_db()
+        self.assertEqual(self.betm_urteil.deliktsertrag, 8000)
+        self.assertEqual(self.betm_urteil.betm.count(), 1)
+        self.assertEqual(self.betm_urteil.kanton, self.kanton)
+
+    def test_fehlerhaftes_formular_bleibt_offen(self):
+        self.client.force_login(self.superuser)
+        pfad = self.pfad("vmurteil_detail", self.urteil)
+        form = self.client.get(pfad).context["bearbeiten_form"]
+        antwort = self.client.post(pfad, self.formulardaten(form, deliktssumme="keine Zahl"))
+
+        self.assertEqual(antwort.status_code, 200)
+        self.assertTrue(antwort.context["bearbeiten_offen"])
+        self.assertIn("deliktssumme", antwort.context["bearbeiten_form"].errors)
+        self.urteil.refresh_from_db()
+        self.assertEqual(self.urteil.deliktssumme, 15000)
+
+    def test_alle_modellfelder_sind_einer_gruppe_zugeordnet(self):
+        """Die Gruppierung darf kein Feld verschlucken."""
+        for form_klasse in (
+            UrteilBearbeitenForm,
+            BetmUrteilBearbeitenForm,
+            SexualdeliktUrteilBearbeitenForm,
+            GewaltdeliktUrteilBearbeitenForm,
+        ):
+            with self.subTest(formular=form_klasse.__name__):
+                form = form_klasse()
+                gruppiert = [
+                    feld.name for _, felder in form.gruppen() for feld in felder
+                ]
+                self.assertCountEqual(gruppiert, list(form.fields))

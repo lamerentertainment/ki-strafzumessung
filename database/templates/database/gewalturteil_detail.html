@@ -2,16 +2,22 @@
 {% load strafmass_formatierung %}
 
 {% block body %}
-  <div class="col-12">
+  <div class="col-12" x-data="{ bearbeitenOffen: {% if bearbeiten_offen %}true{% else %}false{% endif %} }">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h1 class="h3 mb-0">Fall {{ object.fall_nr }}</h1>
       <div class="btn-group">
         <a href="{% url 'gewaltdatabase' %}" class="btn btn-outline-secondary btn-sm">Zurück zur Liste</a>
+        {% if bearbeiten_form %}
+          <button type="button" class="btn btn-warning btn-sm" @click="bearbeitenOffen = !bearbeitenOffen"
+                  x-text="bearbeitenOffen ? 'Bearbeitung schliessen' : 'Bearbeiten'">Bearbeiten</button>
+        {% endif %}
         {% if object.url_link %}
           <a href="{{ object.url_link }}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">PDF öffnen</a>
         {% endif %}
       </div>
     </div>
+
+    {% include 'database/includes/detail_bearbeiten.html' %}
 
     <div class="row g-3">
       <div class="col-lg-8">

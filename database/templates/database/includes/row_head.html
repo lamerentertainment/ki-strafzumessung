@@ -12,8 +12,8 @@
         Deliktssumme <span x-text="sortSymbol('deliktssumme')"></span>
     </th>
     <th>Täter & Vorstrafen</th>
-    <th data-sortierbar data-tt="nach Sanktion sortieren" @click="sortieren('freiheitsstrafe_in_monaten')">
-        Sanktion & Vollzug <span x-text="sortSymbol('freiheitsstrafe_in_monaten')"></span>
+    <th data-sortierbar data-tt="nach Sanktionsart und -höhe sortieren (Geldstrafen nach Tagessätzen, Freiheitsstrafen nach Dauer)" @click="sortieren('sanktion_sortierschluessel')">
+        Sanktion & Vollzug <span x-text="sortSymbol('sanktion_sortierschluessel')"></span>
     </th>
     <th>Details</th>
 </tr>

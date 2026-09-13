@@ -44,7 +44,7 @@
               <span data-sortierbar data-tt="nach Vorstrafen sortieren (einschlägig / vorbestraft / keine)" @click="sortieren('vorstrafen_rang')">Vorstrafen <span x-text="sortSymbol('vorstrafen_rang')"></span></span>
             </th>
             <th>
-              <span data-sortierbar data-tt="nach Sanktion sortieren" @click="sortieren('freiheitsstrafe_in_monaten')">Sanktion <span x-text="sortSymbol('freiheitsstrafe_in_monaten')"></span></span>
+              <span data-sortierbar data-tt="nach Sanktionsart und -höhe sortieren (Geldstrafen nach Tagessätzen, Freiheitsstrafen nach Dauer)" @click="sortieren('sanktion_sortierschluessel')">Sanktion <span x-text="sortSymbol('sanktion_sortierschluessel')"></span></span>
               &amp;
               <span data-sortierbar data-tt="nach Vollzug sortieren" @click="sortieren('vollzug')">Vollzug <span x-text="sortSymbol('vollzug')"></span></span>
             </th>

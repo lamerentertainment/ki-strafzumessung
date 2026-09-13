@@ -410,6 +410,38 @@ def _nur_hauptdelikt_feld(hilfetext, wert):
     }
 
 
+# Sanktionsarten nach Schwere, aufsteigend. Die Modell-Codes ('0'
+# Freiheitsstrafe, '1' Geldstrafe, '2' Busse) laufen der Schwere zuwider und
+# taugen darum nicht als Sortierrang.
+SANKTION_SCHWERERANG = {"2": 0, "1": 1, "0": 2}
+
+
+def _sanktion_sortierschluessel(objekt):
+    """
+    Sortierschluessel fuer die Sanktionsspalte: primaer die Sanktionsart nach
+    Schwere (Busse < Geldstrafe < Freiheitsstrafe), sekundaer deren Hoehe in
+    der je eigenen Einheit - Tagessaetze bei der Geldstrafe, Monate bei der
+    Freiheitsstrafe.
+
+    Ein Sortieren nach ``freiheitsstrafe_in_monaten`` allein trennt die Arten
+    zwar (Geldstrafen tragen dort 0), laesst die Geldstrafen untereinander aber
+    unsortiert. Rang und Hoehe werden - wie bei
+    ``_betm_sortierschluessel`` - zu einem einzigen String kombiniert (Hoehe auf
+    10 Stellen gepaddet), damit der generische Einzelfeld-Sort im Frontend ihn
+    unveraendert verwenden kann.
+    """
+    art = objekt.hauptsanktion
+    if art == "0":
+        hoehe = objekt.freiheitsstrafe_in_monaten or 0
+    elif art == "1":
+        hoehe = objekt.anzahl_tagessaetze or 0
+    else:
+        # Die Bussenhoehe wird in keinem Modell erfasst; Bussen bleiben darum
+        # eine Gruppe ohne innere Ordnung.
+        hoehe = 0
+    return f"{SANKTION_SCHWERERANG.get(art, 9)}|{hoehe:010d}"
+
+
 SEXUALDELIKT_FILTER_CONFIG = {
     "primaer": ["hauptdelikt", "hauptdelikt_tatmittel", "nur_hauptdelikt"],
     "abgeleitete_felder": {
@@ -511,6 +543,9 @@ SEXUALDELIKT_FILTER_CONFIG = {
         {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
         {"name": "vollzug", "label": "Vollzug"},
     ],
+    "berechnete_sortierfelder": {
+        "sanktion_sortierschluessel": _sanktion_sortierschluessel,
+    },
 }
 
 
@@ -584,6 +619,9 @@ URTEIL_FILTER_CONFIG = {
         {"name": "hauptsanktion", "label": "Hauptsanktion"},
         {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
     ],
+    "berechnete_sortierfelder": {
+        "sanktion_sortierschluessel": _sanktion_sortierschluessel,
+    },
 }
 
 
@@ -758,6 +796,7 @@ BETM_FILTER_CONFIG = {
         "betm_sortierschluessel": _betm_sortierschluessel,
         "vorstrafen_rang": _vorstrafen_rang,
         "taeter_sortierschluessel": _taeter_sortierschluessel,
+        "sanktion_sortierschluessel": _sanktion_sortierschluessel,
     },
 }
 
@@ -872,4 +911,7 @@ GEWALTDELIKT_FILTER_CONFIG = {
         {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
         {"name": "vollzug", "label": "Vollzug"},
     ],
+    "berechnete_sortierfelder": {
+        "sanktion_sortierschluessel": _sanktion_sortierschluessel,
+    },
 }

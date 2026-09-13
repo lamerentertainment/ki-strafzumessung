@@ -27,7 +27,12 @@ TYP_ABHAENGIGE_SPANNE = "abhaengige_spanne"  # Von/Bis, erst nach Wahl im Quellf
 # Felder, welche die Kennzahlenleiste im Frontend auswertet (filter.js,
 # kennzahlen()). Sie muessen in den Datensaetzen enthalten sein, auch wenn sie
 # als Filter entfallen, weil sie im Bestand nur einen Wert kennen.
-KENNZAHLENFELDER = ("hauptsanktion", "freiheitsstrafe_in_monaten", "vollzug")
+KENNZAHLENFELDER = (
+    "hauptsanktion",
+    "freiheitsstrafe_in_monaten",
+    "anzahl_tagessaetze",
+    "vollzug",
+)
 
 
 def _hat_feld(model, feldname):

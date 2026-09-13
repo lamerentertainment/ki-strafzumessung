@@ -175,18 +175,25 @@ muss `data-urteilsliste` am <tbody> und `data-pk="{{ pk }}"` an jeder <tr>
         <span class="fw-semibold">
           <span x-text="kennzahlen().anzahl"></span> von <span x-text="kennzahlen().gesamt"></span> Urteilen
         </span>
-        <template x-if="kennzahlen().fsAnzahl > 0">
+        {# Klick auf die Sanktionsart schaltet die Kennzahlen um (filter.js, sanktionUmschalten) #}
+        <template x-if="kennzahlen().sanktion.anzahl > 0">
           <span class="text-body-secondary">
-            Freiheitsstrafe (n=<span x-text="kennzahlen().fsAnzahl"></span>):
-            Median <strong :data-tt="jahreMonateTitel(kennzahlen().fsMedian)" x-text="kennzahlen().fsMedian"></strong>
-            Mt.
-            · &#8960; <strong :data-tt="jahreMonateTitel(kennzahlen().fsMittel)"
-              x-text="kennzahlen().fsMittel"></strong> Mt.
-            <span data-bs-toggle="tooltip"
-              title="mittlere absolute Abweichung vom Durchschnitt (in Monaten)">(&plusmn;&nbsp;<span
-                x-text="kennzahlen().fsMad"></span>)</span>
-            · Spanne <span :data-tt="jahreMonateTitel(kennzahlen().fsMin)" x-text="kennzahlen().fsMin"></span>–<span
-              :data-tt="jahreMonateTitel(kennzahlen().fsMax)" x-text="kennzahlen().fsMax"></span> Mt.
+            <button type="button" class="kennzahl-umschalter" @click="sanktionUmschalten()"
+              :disabled="!kennzahlen().sanktion.umschaltbar" :data-tt="kennzahlen().sanktion.umschaltTitel"
+              x-text="kennzahlen().sanktion.label"></button>
+            (n=<span x-text="kennzahlen().sanktion.anzahl"></span>):
+            Median <strong :data-tt="strafhoeheTitel(kennzahlen().sanktion.median)"
+              x-text="kennzahlen().sanktion.median"></strong>
+            <span x-text="kennzahlen().sanktion.einheit"></span>
+            · &#8960; <strong :data-tt="strafhoeheTitel(kennzahlen().sanktion.mittel)"
+              x-text="kennzahlen().sanktion.mittel"></strong>
+            <span x-text="kennzahlen().sanktion.einheit"></span>
+            <span :data-tt="'mittlere absolute Abweichung vom Durchschnitt (in ' + kennzahlen().sanktion.einheitDativ + ')'">(&plusmn;&nbsp;<span
+                x-text="kennzahlen().sanktion.mad"></span>)</span>
+            · Spanne <span :data-tt="strafhoeheTitel(kennzahlen().sanktion.min)"
+              x-text="kennzahlen().sanktion.min"></span>–<span
+              :data-tt="strafhoeheTitel(kennzahlen().sanktion.max)" x-text="kennzahlen().sanktion.max"></span>
+            <span x-text="kennzahlen().sanktion.einheit"></span>
           </span>
         </template>
         <template x-if="kennzahlen().anzahl > 0">

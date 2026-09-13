@@ -385,6 +385,23 @@ thead [data-tt]:not([data-tt=""])::after {
     margin-top: .25rem;
 }
 
+/* Umschalter der Kennzahlenleiste zwischen den Sanktionsarten: liest sich wie
+   Fliesstext, verhaelt sich wie ein Link. Ist nur eine Sanktionsart belegt,
+   bleibt er als gewoehnliche Beschriftung stehen (disabled). */
+.kennzahl-umschalter {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-decoration: underline dotted;
+    text-underline-offset: .15em;
+}
+.kennzahl-umschalter:not(:disabled) { cursor: pointer; }
+.kennzahl-umschalter:not(:disabled):hover,
+.kennzahl-umschalter:not(:disabled):focus-visible { color: var(--bs-primary, #0d6efd); }
+.kennzahl-umschalter:disabled { text-decoration: none; }
+
 /* ============================================================
    Kurzsachverhalt Hovercard (Urteilslisten-Vorschau)
    ============================================================ */

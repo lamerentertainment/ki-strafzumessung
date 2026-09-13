@@ -21,6 +21,8 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     trefferPks: [],
     facetten: {},
     spannen: {},
+    // Sanktionsart, deren Strafhoehen die Kennzahlenleiste auswertet
+    kennzahlenSanktion: "0",
 
     init() {
       this.spec = JSON.parse(document.getElementById(spezifikationId).textContent);
@@ -355,43 +357,114 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
 
     // --- Kennzahlen zur Treffermenge ----------------------------------------
 
+    /**
+     * Sanktionsarten mit auswertbarer Strafhoehe, in der Reihenfolge des
+     * Umschaltens. Die Busse ('2') fehlt, weil ihre Hoehe in keinem Modell
+     * erfasst ist.
+     */
+    sanktionsarten: [
+      {
+        code: "0",
+        label: "Freiheitsstrafe",
+        feld: "freiheitsstrafe_in_monaten",
+        einheit: "Mt.",
+        einheitDativ: "Monaten",
+        monate: true,
+      },
+      {
+        code: "1",
+        label: "Geldstrafe",
+        feld: "anzahl_tagessaetze",
+        einheit: "Tagessätze",
+        einheitDativ: "Tagessätzen",
+        monate: false,
+      },
+    ],
+
+    /**
+     * Strafhoehen der Treffer je Sanktionsart, aufsteigend sortiert; nur die
+     * Arten, zu denen die Treffermenge ueberhaupt Werte hergibt.
+     *
+     * Urteile mit in_ki_modell=false (z.B. eine lebenslaengliche
+     * Freiheitsstrafe, die als Platzhalterwert codiert ist) verzerren
+     * Mittelwert/Median/Spanne und bleiben darum aussen vor. Teil der
+     * Trefferliste (`anzahl`) und der Vollzugsverteilung bleiben sie.
+     */
+    sanktionsstichproben() {
+      const stichproben = this.sanktionsarten.map((art) => ({ art, werte: [] }));
+      this.trefferPks.forEach((pk) => {
+        const record = this.records[pk];
+        if (record.in_ki_modell === false) return;
+        const eintrag = stichproben.find((s) => s.art.code === record.hauptsanktion);
+        if (!eintrag) return;
+        const wert = record[eintrag.art.feld];
+        if (wert === null || wert === undefined) return;
+        eintrag.werte.push(wert);
+      });
+      stichproben.forEach((s) => s.werte.sort((a, b) => a - b));
+      return stichproben.filter((s) => s.werte.length > 0);
+    },
+
+    /**
+     * Angezeigte Stichprobe: die gewaehlte Sanktionsart, solange die
+     * Treffermenge dazu Werte hergibt, sonst die erste belegte. Ohne jede
+     * auswertbare Sanktion null.
+     */
+    aktiveStichprobe() {
+      const belegt = this.sanktionsstichproben();
+      return belegt.find((s) => s.art.code === this.kennzahlenSanktion) || belegt[0] || null;
+    },
+
+    /** Wechselt auf die naechste Sanktionsart, zu der es Werte gibt. */
+    sanktionUmschalten() {
+      const belegt = this.sanktionsstichproben();
+      if (belegt.length < 2) return;
+      const aktuell = this.aktiveStichprobe();
+      const index = belegt.findIndex((s) => s.art.code === aktuell.art.code);
+      this.kennzahlenSanktion = belegt[(index + 1) % belegt.length].art.code;
+    },
+
     kennzahlen() {
       const treffer = this.trefferPks.map((pk) => this.records[pk]);
-      // Urteile mit in_ki_modell=false (z.B. eine lebenslängliche Freiheitsstrafe,
-      // die als Platzhalterwert codiert ist) verzerren Mittelwert/Median/Spanne
-      // der Freiheitsstrafe und werden daher aus dieser Stichprobe ausgeschlossen.
-      // Sie bleiben Teil der Trefferliste (`anzahl`) und der Vollzugs-Verteilung.
-      const freiheitsstrafen = treffer
-        .filter((record) => record.hauptsanktion === "0" && record.in_ki_modell !== false)
-        .map((record) => record.freiheitsstrafe_in_monaten)
-        .filter((wert) => wert !== null && wert !== undefined)
-        .sort((a, b) => a - b);
       const vollzug = { "0": 0, "1": 0, "2": 0 };
       treffer.forEach((record) => {
         if (vollzug[record.vollzug] !== undefined) vollzug[record.vollzug] += 1;
       });
-      const mittelwert = freiheitsstrafen.length
-        ? freiheitsstrafen.reduce((a, b) => a + b, 0) / freiheitsstrafen.length
-        : null;
       return {
         anzahl: treffer.length,
         gesamt: Object.keys(this.records).length,
-        fsAnzahl: freiheitsstrafen.length,
-        fsMedian: this.median(freiheitsstrafen),
-        fsMittel: mittelwert === null ? null : Math.round(mittelwert),
-        // mittlere absolute Abweichung vom (ungerundeten) Mittelwert (in Monaten)
-        fsMad:
-          mittelwert === null
-            ? null
-            : Math.round(
-              freiheitsstrafen.reduce((summe, wert) => summe + Math.abs(wert - mittelwert), 0) /
-              freiheitsstrafen.length
-            ),
-        fsMin: freiheitsstrafen.length ? freiheitsstrafen[0] : null,
-        fsMax: freiheitsstrafen.length ? freiheitsstrafen[freiheitsstrafen.length - 1] : null,
+        sanktion: this.sanktionskennzahlen(),
         bedingt: vollzug["0"],
         teilbedingt: vollzug["1"],
         unbedingt: vollzug["2"],
+      };
+    },
+
+    /** Median, Mittel, mittlere Abweichung und Spanne der angezeigten Sanktion. */
+    sanktionskennzahlen() {
+      const belegt = this.sanktionsstichproben();
+      const stichprobe = this.aktiveStichprobe();
+      if (stichprobe === null) return { anzahl: 0, umschaltbar: false, umschaltTitel: "" };
+      const { art, werte } = stichprobe;
+      const mittelwert = werte.reduce((a, b) => a + b, 0) / werte.length;
+      const index = belegt.findIndex((s) => s.art.code === art.code);
+      const naechste = belegt[(index + 1) % belegt.length].art;
+      return {
+        label: art.label,
+        einheit: art.einheit,
+        einheitDativ: art.einheitDativ,
+        anzahl: werte.length,
+        median: this.median(werte),
+        mittel: Math.round(mittelwert),
+        // mittlere absolute Abweichung vom (ungerundeten) Mittelwert
+        mad: Math.round(
+          werte.reduce((summe, wert) => summe + Math.abs(wert - mittelwert), 0) / werte.length
+        ),
+        min: werte[0],
+        max: werte[werte.length - 1],
+        umschaltbar: belegt.length > 1,
+        umschaltTitel:
+          belegt.length > 1 ? `Kennzahlen zur ${naechste.label} anzeigen` : "",
       };
     },
 
@@ -399,6 +472,15 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       if (!werte.length) return null;
       const mitte = Math.floor(werte.length / 2);
       return werte.length % 2 ? werte[mitte] : Math.round((werte[mitte - 1] + werte[mitte]) / 2);
+    },
+
+    /**
+     * Tooltip zu einer Strafhoehe der angezeigten Sanktionsart. Nur Monate
+     * lassen sich als "X Jahre Y Monate" lesen, Tagessaetze nicht.
+     */
+    strafhoeheTitel(wert) {
+      const stichprobe = this.aktiveStichprobe();
+      return stichprobe && stichprobe.art.monate ? this.jahreMonateTitel(wert) : "";
     },
 
     /**

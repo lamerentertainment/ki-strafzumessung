@@ -420,20 +420,29 @@ def _nur_hauptdelikt_feld(hilfetext, wert):
 # taugen darum nicht als Sortierrang.
 SANKTION_SCHWERERANG = {"2": 0, "1": 1, "0": 2}
 
+# Umrechnungsfaktor Monate -> Tage fuer die sanktionsartuebergreifende
+# Sortierung: ein Monat Freiheitsstrafe = 30 Tagessaetze Geldstrafe
+# (Art. 36 Abs. 1 StGB: ein Tagessatz = ein Tag Freiheitsstrafe).
+TAGE_PRO_MONAT = 30
+
 
 def _sanktion_sortierschluessel(objekt):
     """
-    Sortierschluessel fuer die Sanktionsspalte: primaer die Sanktionsart nach
-    Schwere (Busse < Geldstrafe < Freiheitsstrafe), sekundaer deren Hoehe in
-    der je eigenen Einheit - Tagessaetze bei der Geldstrafe, Monate bei der
-    Freiheitsstrafe.
+    Sortierschluessel fuer die Spalte "Sanktion(sart)": primaer die
+    Sanktionsart nach Schwere (Busse < Geldstrafe < Freiheitsstrafe),
+    sekundaer deren Hoehe in der je eigenen Einheit - Tagessaetze bei der
+    Geldstrafe, Monate bei der Freiheitsstrafe. Die Sanktionsarten bleiben
+    also als Bloecke beieinander.
 
-    Ein Sortieren nach ``freiheitsstrafe_in_monaten`` allein trennt die Arten
-    zwar (Geldstrafen tragen dort 0), laesst die Geldstrafen untereinander aber
+    Ein Sortieren nach ``hauptsanktion`` allein ordnet die Arten nach ihrem
+    Modell-Code statt nach Schwere und laesst die Urteile innerhalb einer Art
     unsortiert. Rang und Hoehe werden - wie bei
     ``_betm_sortierschluessel`` - zu einem einzigen String kombiniert (Hoehe auf
     10 Stellen gepaddet), damit der generische Einzelfeld-Sort im Frontend ihn
     unveraendert verwenden kann.
+
+    Fuer die sanktionsartuebergreifende Sortierung nach dem blossen Strafmass
+    siehe ``_strafmass_sortierschluessel``.
     """
     art = objekt.hauptsanktion
     if art == "0":
@@ -445,6 +454,29 @@ def _sanktion_sortierschluessel(objekt):
         # eine Gruppe ohne innere Ordnung.
         hoehe = 0
     return f"{SANKTION_SCHWERERANG.get(art, 9)}|{hoehe:010d}"
+
+
+def _strafmass_sortierschluessel(objekt):
+    """
+    Sortierschluessel fuer die Spalte "Dauer/Hoehe": das Strafmass allein,
+    ueber die Sanktionsarten hinweg und in einer gemeinsamen Einheit (Tage).
+
+    Art. 34 Abs. 1 i.V.m. Art. 36 Abs. 1 StGB setzt einen Tagessatz Geldstrafe
+    einem Tag Freiheitsstrafe gleich; 30 Tagessaetze entsprechen damit einem
+    Monat Freiheitsstrafe. Eine Geldstrafe von 30 Tagessaetzen reiht sich also
+    zwischen 20 Tagessaetze und 2 Monate Freiheitsstrafe ein, statt wie beim
+    ``_sanktion_sortierschluessel`` in einem eigenen Block zu stehen.
+
+    Bussen tragen ``None``: ihre Hoehe wird in keinem Modell erfasst (die
+    Spalte zeigt "-"), und eine fehlende Hoehe ist keine Strafe von null Tagen.
+    Das Frontend sortiert ``None`` in beiden Richtungen ans Ende.
+    """
+    art = objekt.hauptsanktion
+    if art == "0":
+        return (objekt.freiheitsstrafe_in_monaten or 0) * TAGE_PRO_MONAT
+    if art == "1":
+        return objekt.anzahl_tagessaetze or 0
+    return None
 
 
 SEXUALDELIKT_FILTER_CONFIG = {
@@ -550,6 +582,7 @@ SEXUALDELIKT_FILTER_CONFIG = {
     ],
     "berechnete_sortierfelder": {
         "sanktion_sortierschluessel": _sanktion_sortierschluessel,
+        "strafmass_sortierschluessel": _strafmass_sortierschluessel,
     },
 }
 
@@ -918,5 +951,6 @@ GEWALTDELIKT_FILTER_CONFIG = {
     ],
     "berechnete_sortierfelder": {
         "sanktion_sortierschluessel": _sanktion_sortierschluessel,
+        "strafmass_sortierschluessel": _strafmass_sortierschluessel,
     },
 }

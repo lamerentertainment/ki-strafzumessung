@@ -609,6 +609,104 @@ class NurHauptdeliktTest(TestCase):
         self.assertTrue(feld["inline"])
 
 
+@override_settings(
+    STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage"
+)
+class SanktionSortierungTest(TestCase):
+    """
+    Die beiden Sortierschluessel der Sanktionsspalten bei Gewalt- und
+    Sexualdelikten: nach Sanktionsart getrennt (Spalte "Sanktion") bzw.
+    sanktionsartuebergreifend nach dem Strafmass (Spalte "Dauer/Hoehe").
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.kanton = Kanton.objects.create(abk="ZH")
+
+    def gewalturteil(self, fall_nr, hauptsanktion, monate=0, tagessaetze=0):
+        return GewaltdeliktUrteil.objects.create(
+            fall_nr=fall_nr,
+            gericht="Bezirksgericht Zürich",
+            urteilsdatum=date(2024, 1, 1),
+            kanton=self.kanton,
+            hauptdelikt="Raub",
+            hauptsanktion=hauptsanktion,
+            freiheitsstrafe_in_monaten=monate,
+            anzahl_tagessaetze=tagessaetze,
+        )
+
+    def reihenfolge(self, feldname):
+        """Fall-Nrn. in der Reihenfolge, die das Frontend aufsteigend zeigt."""
+        queryset = GewaltdeliktUrteil.objects.all()
+        spezifikation = filterspezifikation_erstellen(
+            GewaltdeliktUrteil, GEWALTDELIKT_FILTER_CONFIG, queryset
+        )
+        datensaetze = datensaetze_erstellen(
+            GewaltdeliktUrteil, GEWALTDELIKT_FILTER_CONFIG, queryset, spezifikation
+        )
+        werte = [
+            (datensaetze[str(pk)][feldname], fall)
+            for pk, fall in queryset.values_list("pk", "fall_nr")
+        ]
+        # None sortiert das Frontend in beiden Richtungen ans Ende
+        ohne = [paar for paar in werte if paar[0] is None]
+        mit = sorted(paar for paar in werte if paar[0] is not None)
+        return [fall for _, fall in mit] + [fall for _, fall in ohne]
+
+    def test_sanktionsart_trennt_die_arten(self):
+        self.gewalturteil("FS-2M", "0", monate=2)
+        self.gewalturteil("GS-30TS", "1", tagessaetze=30)
+        self.gewalturteil("FS-1M", "0", monate=1)
+        self.gewalturteil("GS-20TS", "1", tagessaetze=20)
+        self.gewalturteil("Busse", "2")
+        # Bloecke nach Schwere: Busse, dann Geldstrafen, dann Freiheitsstrafen
+        self.assertEqual(
+            self.reihenfolge("sanktion_sortierschluessel"),
+            ["Busse", "GS-20TS", "GS-30TS", "FS-1M", "FS-2M"],
+        )
+
+    def test_strafmass_sortiert_sanktionsartuebergreifend(self):
+        self.gewalturteil("FS-2M", "0", monate=2)
+        self.gewalturteil("GS-30TS", "1", tagessaetze=30)
+        self.gewalturteil("FS-1M", "0", monate=1)
+        self.gewalturteil("GS-20TS", "1", tagessaetze=20)
+        self.gewalturteil("Busse", "2")
+        # 30 Tagessaetze = 1 Monat, die Geldstrafe reiht sich also dazwischen
+        # ein; die Busse traegt keine erfasste Hoehe und bleibt am Ende.
+        self.assertEqual(
+            self.reihenfolge("strafmass_sortierschluessel"),
+            ["GS-20TS", "FS-1M", "GS-30TS", "FS-2M", "Busse"],
+        )
+
+    def test_dreissig_tagessaetze_gleich_ein_monat(self):
+        self.gewalturteil("FS-1M", "0", monate=1)
+        self.gewalturteil("GS-30TS", "1", tagessaetze=30)
+        queryset = GewaltdeliktUrteil.objects.all()
+        spezifikation = filterspezifikation_erstellen(
+            GewaltdeliktUrteil, GEWALTDELIKT_FILTER_CONFIG, queryset
+        )
+        datensaetze = datensaetze_erstellen(
+            GewaltdeliktUrteil, GEWALTDELIKT_FILTER_CONFIG, queryset, spezifikation
+        )
+        werte = {
+            fall: datensaetze[str(pk)]["strafmass_sortierschluessel"]
+            for pk, fall in queryset.values_list("pk", "fall_nr")
+        }
+        self.assertEqual(werte["FS-1M"], werte["GS-30TS"])
+
+    def test_spaltenkoepfe_sind_den_schluesseln_zugeordnet(self):
+        for pfad in ("/gewaltdatabase", "/sexualdatabase"):
+            with self.subTest(pfad=pfad):
+                antwort = self.client.get(pfad)
+                self.assertContains(
+                    antwort, "sortieren('sanktion_sortierschluessel')"
+                )
+                self.assertContains(
+                    antwort, "sortieren('strafmass_sortierschluessel')"
+                )
+                self.assertNotContains(antwort, "sortieren('hauptsanktion')")
+
+
 class InlineBearbeitungTest(TestCase):
     """Bearbeiten eines Urteils direkt auf dessen Detailansicht (nur Superuser)."""
 

@@ -1,0 +1,18 @@
+{% comment %}
+    Stellt die Strafmassprognose als Farbverlauf dar, statt die Zahlenwerte
+    auszuschreiben. Erwartet im Kontext `prognoseverlauf` – ein Dict aus
+    database.prognoseverlauf.verlauf_erstellen mit `gradient`, `ticks` und
+    `achstitel`.
+{% endcomment %}
+<figure class="prognoseverlauf">
+    <div class="prognoseverlauf-flaeche"
+         style="background: {{ prognoseverlauf.gradient }}"
+         role="img"
+         aria-label="Farbverlauf der Prognose: {{ prognoseverlauf.achstitel }}. Die kräftigste Färbung markiert das prognostizierte Strafmass."></div>
+    <div class="prognoseverlauf-achse">
+        {% for tick in prognoseverlauf.ticks %}
+            <span class="prognoseverlauf-tick" style="left: {{ tick.position }}%">{{ tick.wert }}</span>
+        {% endfor %}
+    </div>
+    <figcaption class="prognoseverlauf-achstitel">{{ prognoseverlauf.achstitel }}</figcaption>
+</figure>

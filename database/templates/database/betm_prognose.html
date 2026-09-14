@@ -1,5 +1,4 @@
 {% extends "./base.html" %}
-{% load prognoseformatierung %}
 
 {% block body %}
 
@@ -84,12 +83,14 @@
         {% if form.is_valid %}
         <section>
             <h1>Vorhersage</h1>
-            {% if vorhersage_hauptsanktion == 'Freiheitsstrafe' %}
-                <p>Das KI-Modell sagt eine <strong>{{ vorhersage_vollzug }} {{ vorhersage_hauptsanktion }} {{ vorhersage_strafmass|prognosebereich_angeben }} Monaten </strong>  voraus.<br>
-                <span class="text-muted">Diese Werte basieren ausschliesslich auf einer Auswertung von einzelnen (nicht vollständig erfassten) objektiven Tatbestandsmerkmalen und ersetzen keinesfalls eine gesetzesmässige Strafzumessung, welche auch konkret vorliegende subjektive Tatbestandsmerkmale und Täterkomponenten zu würdigen hat.</span></p>
-            {% elif vorhersage_hauptsanktion == 'Geldstrafe' %}
-                <p>Das KI-Modell sagt eine <strong>{{ vorhersage_vollzug }} {{ vorhersage_hauptsanktion }} {{ vorhersage_strafmass|prognosebereich_angeben_fuer_geldstrafe }} Tagessätzen </strong> voraus.<br>
-                <span class="text-muted">Diese Werte basieren ausschliesslich auf einer Auswertung von einzelnen (nicht vollständig erfassten) objektiven Tatbestandsmerkmalen und ersetzen keinesfalls eine gesetzesmässige Strafzumessung, welche auch konkret vorliegende subjektive Tatbestandsmerkmale und Täterkomponenten zu würdigen hat.</span></p>
+            {% if vorhersage_hauptsanktion == 'Freiheitsstrafe' or vorhersage_hauptsanktion == 'Geldstrafe' %}
+                <p>Das KI-Modell sagt eine <strong>{{ vorhersage_vollzug }} {{ vorhersage_hauptsanktion }}</strong> in folgendem Wahrscheinlichkeitsbereich voraus:</p>
+
+                {% if prognoseverlauf %}
+                    {% include "database/includes/prognoseverlauf.html" with prognoseverlauf=prognoseverlauf %}
+                {% endif %}
+
+                <p><span class="text-muted">Diese Werte basieren ausschliesslich auf einer Auswertung von einzelnen (nicht vollständig erfassten) objektiven Tatbestandsmerkmalen und ersetzen keinesfalls eine gesetzesmässige Strafzumessung, welche auch konkret vorliegende subjektive Tatbestandsmerkmale und Täterkomponenten zu würdigen hat.</span></p>
             {% endif %}
         </section>
         {% endif %}

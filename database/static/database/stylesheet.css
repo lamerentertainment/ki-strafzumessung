@@ -455,3 +455,37 @@ tr[data-kurzsachverhalt]:hover td {
     background-color: rgba(13, 110, 253, 0.05);
 }
 
+
+/* Farbverlauf der Strafmassprognose (database/includes/prognoseverlauf.html) */
+
+.prognoseverlauf {
+    margin: 0 0 1.25rem 0;
+    max-width: 680px;
+}
+
+.prognoseverlauf-flaeche {
+    /* Bewusst ohne Rahmen und ohne Radius: der Verlauf soll an seinen Enden
+       in den weissen Seitenhintergrund auslaufen, statt dort abgeschnitten
+       zu wirken. */
+    height: 54px;
+}
+
+.prognoseverlauf-achse {
+    position: relative;
+    height: 1.25rem;
+    margin-top: 0.3rem;
+}
+
+.prognoseverlauf-tick {
+    position: absolute;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.prognoseverlauf-achstitel {
+    font-size: 0.75rem;
+    color: var(--bs-secondary-color, #6c757d);
+    margin-top: 0.15rem;
+}

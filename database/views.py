@@ -44,6 +44,7 @@ from .ai_utils import (
 from .db_utils import (
     kategorie_scatterplot_erstellen,
 )
+from .prognoseverlauf import verlauf_erstellen
 from .filterspec import (
     filterspezifikation_erstellen,
     datensaetze_erstellen,
@@ -422,6 +423,12 @@ def prognose(request):
             elif vorhersage_sanktionsart[0] == "2":
                 string_sanktionsart = "Busse"
 
+            # Farbverlauf, der die Prognose anstelle der Zahlenwerte darstellt
+            prognoseverlauf = verlauf_erstellen(
+                vorhersage_strafmass[0],
+                geldstrafe=string_sanktionsart == "Geldstrafe",
+            )
+
             # knn model errechnen
             x_train_df = Urteil.pandas.return_as_df(
                 "deliktssumme",
@@ -491,6 +498,7 @@ def prognose(request):
                             "vorhersage_strafmass": vorhersage_strafmass[0],
                             "vorhersage_vollzug": vollzugsstring,
                             "vorhersage_sanktionsart": string_sanktionsart,
+                            "prognoseverlauf": prognoseverlauf,
                             "praejudizien_error_message": praejudizien_error_message,
                         },
                     )
@@ -636,6 +644,7 @@ def prognose(request):
                     "vorhersage_strafmass": vorhersage_strafmass[0],
                     "vorhersage_vollzug": vollzugsstring,
                     "vorhersage_sanktionsart": string_sanktionsart,
+                    "prognoseverlauf": prognoseverlauf,
                     "knn_prediction": knn_prediction,
                     "nachbar": nachbar,
                     "nachbar2": nachbar2,
@@ -813,6 +822,12 @@ def betm_prognose(request):
             vorhersage_strafmass = strafmass_modell.predict(
                 prognosemerkmale_df_preprocessed
             )[0]
+
+            # Farbverlauf, der die Prognose anstelle der Zahlenwerte darstellt
+            prognoseverlauf = verlauf_erstellen(
+                vorhersage_strafmass,
+                geldstrafe=vorhersage_hauptsanktion == "Geldstrafe",
+            )
 
             # nearest neighbors
             df_urteile, liste_aller_ohe_betm_spalten = betm_urteile_dataframe_erzeugen()
@@ -992,6 +1007,7 @@ def betm_prognose(request):
                     "vorhersage_vollzug": vorhersage_vollzug,
                     "vorhersage_hauptsanktion": vorhersage_hauptsanktion,
                     "vorhersage_strafmass": vorhersage_strafmass,
+                    "prognoseverlauf": prognoseverlauf,
                     "praejudizien_error_message": praejudizien_error_message,
                 }
                 return render(
@@ -1136,6 +1152,7 @@ def betm_prognose(request):
                 "vorhersage_vollzug": vorhersage_vollzug,
                 "vorhersage_hauptsanktion": vorhersage_hauptsanktion,
                 "vorhersage_strafmass": vorhersage_strafmass,
+                "prognoseverlauf": prognoseverlauf,
                 "nachbar1": nachbar1,
                 "nachbar2": nachbar2,
                 "nachbar3": nachbar3,

@@ -1,8 +1,9 @@
+import re
 from datetime import date, timedelta
 
 from django import forms
 from django.contrib.auth import get_user_model
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
 from .forms import (
@@ -10,6 +11,17 @@ from .forms import (
     GewaltdeliktUrteilBearbeitenForm,
     SexualdeliktUrteilBearbeitenForm,
     UrteilBearbeitenForm,
+)
+
+from .prognoseverlauf import (
+    AUSBLENDUNG_IN_MONATEN,
+    kernintervall,
+    verlauf_erstellen,
+)
+
+from .templatetags.prognoseformatierung import (
+    prognosebereich_angeben,
+    prognosebereich_angeben_fuer_geldstrafe,
 )
 
 from .filterspec import (
@@ -768,3 +780,65 @@ class InlineBearbeitungTest(TestCase):
                     feld.name for _, felder in form.gruppen() for feld in felder
                 ]
                 self.assertCountEqual(gruppiert, list(form.fields))
+
+
+class PrognoseverlaufTest(SimpleTestCase):
+    """Der Farbverlauf, der die Prognose anstelle der Zahlenwerte darstellt."""
+
+    def test_kern_entspricht_dem_bisher_ausgewiesenen_intervall(self):
+        """Die Umstellung auf den Verlauf darf die Grenzen nicht verschieben.
+
+        Die Werte stammen aus der Implementierung vor der Umstellung, samt
+        ihrer Fliesskomma-Eigenheit: `3.8 % 1` ergibt 0.7999..., die erste
+        Nachkommastelle gilt damit als 7 und nicht als 8.
+        """
+        self.assertEqual(kernintervall(27.06), (25.5, 29.5))
+        self.assertEqual(kernintervall(3.8), (2, 5))
+        self.assertEqual(kernintervall(13.0), (11.5, 14.5))
+        # Bei einer Geldstrafe in Tagessaetzen, mit eigener Rundung fuer .0
+        self.assertEqual(kernintervall(6.4, geldstrafe=True), (150, 240))
+        self.assertEqual(kernintervall(13.0, geldstrafe=True), (330, 450))
+
+    def test_filter_geben_weiterhin_denselben_text_aus(self):
+        self.assertEqual(prognosebereich_angeben(27.06), "zwischen 25.5 und 29.5")
+        self.assertEqual(prognosebereich_angeben(3.8), "zwischen 2 und 5")
+        self.assertEqual(
+            prognosebereich_angeben_fuer_geldstrafe(6.4), "zwischen 150 und 240"
+        )
+
+    def test_verlauf_blendet_beidseitig_ueber_drei_monate_aus(self):
+        verlauf = verlauf_erstellen(27.06)
+        untere, obere = kernintervall(27.06)
+        # Die Achse reicht drei Monate ueber den Kern hinaus; die Tickwerte
+        # muessen vollstaendig in dieses Fenster fallen.
+        werte = [tick["wert"] for tick in verlauf["ticks"]]
+        self.assertGreaterEqual(min(werte), untere - AUSBLENDUNG_IN_MONATEN)
+        self.assertLessEqual(max(werte), obere + AUSBLENDUNG_IN_MONATEN)
+
+    def test_stops_und_positionen_ergeben_gueltiges_css(self):
+        verlauf = verlauf_erstellen(27.06)
+        positionen = [
+            float(wert) for wert in re.findall(r"([\d.]+)%", verlauf["gradient"])
+        ]
+        self.assertEqual(positionen, sorted(positionen))
+        self.assertGreaterEqual(min(positionen), 0)
+        self.assertLessEqual(max(positionen), 100)
+        # Ein Dezimalkomma wuerde den CSS-Wert zerstoeren - siehe LANGUAGE_CODE
+        self.assertNotIn(",", verlauf["gradient"].replace(", ", ""))
+        for tick in verlauf["ticks"]:
+            self.assertIsInstance(tick["position"], str)
+            self.assertNotIn(",", tick["position"])
+
+    def test_geldstrafe_beschriftet_die_achse_in_tagessaetzen(self):
+        self.assertEqual(
+            verlauf_erstellen(6.4, geldstrafe=True)["achstitel"],
+            "Geldstrafe in Tagessätzen",
+        )
+        self.assertEqual(
+            verlauf_erstellen(6.4)["achstitel"], "Freiheitsstrafe in Monaten"
+        )
+
+    def test_unbrauchbare_prognosewerte_ergeben_keinen_verlauf(self):
+        for wert in (None, "", 0, -3):
+            with self.subTest(wert=wert):
+                self.assertIsNone(verlauf_erstellen(wert))

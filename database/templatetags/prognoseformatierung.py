@@ -1,58 +1,25 @@
 from django import template
-import math
+
+from database.prognoseverlauf import kernintervall
 
 register = template.Library()
 
 
+def _zahl_formatieren(wert):
+    """Ganze Zahlen ohne Nachkommastelle, halbe mit – wie bisher ausgegeben."""
+    if float(wert) == int(wert):
+        return str(int(wert))
+    return str(wert)
+
+
 @register.filter
 def prognosebereich_angeben(prognose_float):
+    untere, obere = kernintervall(prognose_float)
+    return f"zwischen {_zahl_formatieren(untere)} und {_zahl_formatieren(obere)}"
 
-    def erste_ziffer_nach_dem_komma(zahl):
-        zahl = float(zahl)
-        nachkommastelle = abs(zahl) % 1  # Extrahiere die Nachkommastelle (nur positive Werte verwenden)
-        if nachkommastelle == 0:
-            return 0  # Keine Ziffer nach dem Komma
-        else:
-            nachkommastelle *= 10
-            erste_ziffer = int(nachkommastelle)
-            return erste_ziffer
-
-    if erste_ziffer_nach_dem_komma(prognose_float) in [1, 2]:
-        return f'zwischen {str(math.floor(prognose_float-2))} und {str(math.ceil(prognose_float))}'
-
-    elif erste_ziffer_nach_dem_komma(prognose_float) in [3, 4, 5, 6, 7]:
-        return f'zwischen {str(math.floor(prognose_float-1))} und {str(math.ceil(prognose_float+1))}'
-
-    elif erste_ziffer_nach_dem_komma(prognose_float) == 0:
-        return f'zwischen {str(math.floor(prognose_float)-1.5)} und {str(math.ceil(prognose_float)+1.5)}'
-
-    elif erste_ziffer_nach_dem_komma(prognose_float) in [8, 9]:
-        return f'zwischen {str(math.floor(prognose_float))} und {str(math.ceil(prognose_float+2))}'
 
 @register.filter
 def prognosebereich_angeben_fuer_geldstrafe(prognose_float):
     """Die Prognosewerte werden mit 30 multipliziert, wenn eine Geldstrafe prognostiziert wird"""
-
-    def erste_ziffer_nach_dem_komma_eruieren(zahl):
-        zahl = float(zahl)
-        nachkommastelle = abs(zahl) % 1  # Extrahiere die Nachkommastelle (nur positive Werte verwenden)
-        if nachkommastelle == 0:
-            return 0  # Keine Ziffer nach dem Komma
-        else:
-            nachkommastelle *= 10
-            erste_ziffer = int(nachkommastelle)
-            return erste_ziffer
-
-    erste_ziffer_nach_dem_komma = erste_ziffer_nach_dem_komma_eruieren(prognose_float)
-
-    if erste_ziffer_nach_dem_komma in [1, 2]:
-        return f'zwischen {str(math.floor(prognose_float-2)*30)} und {str(math.ceil(prognose_float)*30)}'
-
-    elif erste_ziffer_nach_dem_komma in [3, 4, 5, 6, 7]:
-        return f'zwischen {str(math.floor(prognose_float-1)*30)} und {str(math.ceil(prognose_float+1)*30)}'
-
-    elif erste_ziffer_nach_dem_komma == 0:
-        return f'zwischen {str(math.floor(prognose_float-1.5)*30)} und {str(math.ceil(prognose_float+1.5)*30)}'
-
-    elif erste_ziffer_nach_dem_komma in [8, 9]:
-        return f'zwischen {str(math.floor(prognose_float)*30)} und {str(math.ceil(prognose_float+2)*30)}'
+    untere, obere = kernintervall(prognose_float, geldstrafe=True)
+    return f"zwischen {_zahl_formatieren(untere)} und {_zahl_formatieren(obere)}"

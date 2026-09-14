@@ -17,14 +17,9 @@ from .prognoseverlauf import (
     AUSBLENDUNG_IN_MONATEN,
     BETM_AUSBLENDUNG_IN_MONATEN,
     BETM_KERNBREITE_IN_MONATEN,
+    KERNBREITE_IN_MONATEN,
     RAMPE,
-    kernintervall,
     verlauf_erstellen,
-)
-
-from .templatetags.prognoseformatierung import (
-    prognosebereich_angeben,
-    prognosebereich_angeben_fuer_geldstrafe,
 )
 
 from .filterspec import (
@@ -788,32 +783,11 @@ class InlineBearbeitungTest(TestCase):
 class PrognoseverlaufTest(SimpleTestCase):
     """Der Farbverlauf, der die Prognose anstelle der Zahlenwerte darstellt."""
 
-    def test_kern_entspricht_dem_bisher_ausgewiesenen_intervall(self):
-        """Die Umstellung auf den Verlauf darf die Grenzen nicht verschieben.
-
-        Die Werte stammen aus der Implementierung vor der Umstellung, samt
-        ihrer Fliesskomma-Eigenheit: `3.8 % 1` ergibt 0.7999..., die erste
-        Nachkommastelle gilt damit als 7 und nicht als 8.
-        """
-        self.assertEqual(kernintervall(27.06), (25.5, 29.5))
-        self.assertEqual(kernintervall(3.8), (2, 5))
-        self.assertEqual(kernintervall(13.0), (11.5, 14.5))
-        # Bei einer Geldstrafe in Tagessaetzen, mit eigener Rundung fuer .0
-        self.assertEqual(kernintervall(6.4, geldstrafe=True), (150, 240))
-        self.assertEqual(kernintervall(13.0, geldstrafe=True), (330, 450))
-
-    def test_filter_geben_weiterhin_denselben_text_aus(self):
-        self.assertEqual(prognosebereich_angeben(27.06), "zwischen 25.5 und 29.5")
-        self.assertEqual(prognosebereich_angeben(3.8), "zwischen 2 und 5")
-        self.assertEqual(
-            prognosebereich_angeben_fuer_geldstrafe(6.4), "zwischen 150 und 240"
-        )
-
     def test_verlauf_blendet_beidseitig_ueber_drei_monate_aus(self):
+        """Kern 25.56-28.56, Ausblendung je 3 Monate -> Achse 22.56-31.56."""
         verlauf = verlauf_erstellen(27.06)
-        untere, obere = kernintervall(27.06)
-        # Die Achse reicht drei Monate ueber den Kern hinaus; die Tickwerte
-        # muessen vollstaendig in dieses Fenster fallen.
+        untere = 27.06 - KERNBREITE_IN_MONATEN / 2
+        obere = 27.06 + KERNBREITE_IN_MONATEN / 2
         werte = [tick["wert"] for tick in verlauf["ticks"]]
         self.assertGreaterEqual(min(werte), untere - AUSBLENDUNG_IN_MONATEN)
         self.assertLessEqual(max(werte), obere + AUSBLENDUNG_IN_MONATEN)
@@ -871,8 +845,8 @@ class PrognoseverlaufTest(SimpleTestCase):
         ]
         self.assertAlmostEqual(max(vollton) - min(vollton), 4 / 12 * 100, places=1)
 
-    def test_vermoegensdelikte_behalten_den_schmaleren_kern(self):
-        """Ohne ausdrueckliche Breite bleibt es beim bisherigen Intervall."""
+    def test_vermoegensdelikte_haben_einen_mittigen_drei_monats_kern(self):
+        """Kern 3 Monate, Ausblendung je 3 -> 3 von 9 Achsenmonaten."""
         verlauf = verlauf_erstellen(27.06)
         positionen = [
             float(wert) for wert in re.findall(r"([\d.]+)%", verlauf["gradient"])
@@ -884,5 +858,10 @@ class PrognoseverlaufTest(SimpleTestCase):
             )
             if farbe == RAMPE[0]
         ]
-        # Kern 25.5-29.5 (4 Monate) auf einer Achse von 22.5 bis 32.5 (10 Monate)
-        self.assertAlmostEqual(max(vollton) - min(vollton), 4 / 10 * 100, places=1)
+        self.assertAlmostEqual(
+            max(vollton) - min(vollton),
+            KERNBREITE_IN_MONATEN / (KERNBREITE_IN_MONATEN + 2 * AUSBLENDUNG_IN_MONATEN) * 100,
+            places=1,
+        )
+        # Der Kern liegt mittig: gleich viel Ausblendung links wie rechts.
+        self.assertAlmostEqual(min(vollton), 100 - max(vollton), places=1)

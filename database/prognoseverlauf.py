@@ -16,6 +16,12 @@ import math
 # Breite der Ausblendung je Seite, in Monaten.
 AUSBLENDUNG_IN_MONATEN = 3
 
+# Betäubungsmitteldelikte: Der Ermessensspielraum ist dort grösser und die
+# erfasste Rechtsprechung streut stärker, deshalb ein breiterer Kern und eine
+# breitere Ausblendung als bei den Vermögensdelikten.
+BETM_KERNBREITE_IN_MONATEN = 4
+BETM_AUSBLENDUNG_IN_MONATEN = 4
+
 # Tagessätze pro Monat – dieselbe Umrechnung, die auch das Urteilsmodell
 # verwendet, wenn eine Geldstrafe als Zielwert dient.
 TAGESSAETZE_PRO_MONAT = 30
@@ -89,8 +95,19 @@ def _achsenschritt(spanne):
     return 360
 
 
-def verlauf_erstellen(prognose_float, geldstrafe=False):
+def verlauf_erstellen(
+    prognose_float,
+    geldstrafe=False,
+    kernbreite_in_monaten=None,
+    ausblendung_in_monaten=AUSBLENDUNG_IN_MONATEN,
+):
     """Baut den Farbverlauf samt Achse für eine Prognose.
+
+    Ohne `kernbreite_in_monaten` entspricht der voll gefärbte Kern dem
+    Intervall aus `kernintervall` – also dem, was die Vermögensdelikts-Prognose
+    bisher ausgeschrieben hat. Wird eine Breite übergeben, liegt stattdessen ein
+    Kern dieser Breite mittig über dem Prognosewert; das dient den
+    Betäubungsmitteldelikten, deren Streuung einen breiteren Bereich verlangt.
 
     Gibt ein Dict mit den Schlüsseln `gradient` (fertiger CSS-Wert), `ticks`
     (Liste von `{"wert", "position"}` für die Achsenbeschriftung) und
@@ -105,14 +122,20 @@ def verlauf_erstellen(prognose_float, geldstrafe=False):
     if prognose_float <= 0:
         return None
 
-    untere, obere = kernintervall(prognose_float, geldstrafe=geldstrafe)
+    faktor = TAGESSAETZE_PRO_MONAT if geldstrafe else 1
+
+    if kernbreite_in_monaten is None:
+        untere, obere = kernintervall(prognose_float, geldstrafe=geldstrafe)
+    else:
+        mitte = prognose_float * faktor
+        halbe_breite = kernbreite_in_monaten * faktor / 2
+        untere, obere = mitte - halbe_breite, mitte + halbe_breite
+
     untere = max(untere, 0)
     if obere <= untere:
         return None
 
-    ausblendung = AUSBLENDUNG_IN_MONATEN * (
-        TAGESSAETZE_PRO_MONAT if geldstrafe else 1
-    )
+    ausblendung = ausblendung_in_monaten * faktor
     links = max(untere - ausblendung, 0)
     rechts = obere + ausblendung
     spanne = rechts - links

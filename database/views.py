@@ -44,7 +44,11 @@ from .ai_utils import (
 from .db_utils import (
     kategorie_scatterplot_erstellen,
 )
-from .prognoseverlauf import verlauf_erstellen
+from .prognoseverlauf import (
+    BETM_AUSBLENDUNG_IN_MONATEN,
+    BETM_KERNBREITE_IN_MONATEN,
+    verlauf_erstellen,
+)
 from .filterspec import (
     filterspezifikation_erstellen,
     datensaetze_erstellen,
@@ -823,10 +827,14 @@ def betm_prognose(request):
                 prognosemerkmale_df_preprocessed
             )[0]
 
-            # Farbverlauf, der die Prognose anstelle der Zahlenwerte darstellt
+            # Farbverlauf, der die Prognose anstelle der Zahlenwerte darstellt.
+            # Breiter als bei den Vermögensdelikten, weil der Ermessensspielraum
+            # und die Streuung der erfassten Betm-Urteile grösser sind.
             prognoseverlauf = verlauf_erstellen(
                 vorhersage_strafmass,
                 geldstrafe=vorhersage_hauptsanktion == "Geldstrafe",
+                kernbreite_in_monaten=BETM_KERNBREITE_IN_MONATEN,
+                ausblendung_in_monaten=BETM_AUSBLENDUNG_IN_MONATEN,
             )
 
             # nearest neighbors

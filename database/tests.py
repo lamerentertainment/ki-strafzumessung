@@ -15,6 +15,9 @@ from .forms import (
 
 from .prognoseverlauf import (
     AUSBLENDUNG_IN_MONATEN,
+    BETM_AUSBLENDUNG_IN_MONATEN,
+    BETM_KERNBREITE_IN_MONATEN,
+    RAMPE,
     kernintervall,
     verlauf_erstellen,
 )
@@ -842,3 +845,44 @@ class PrognoseverlaufTest(SimpleTestCase):
         for wert in (None, "", 0, -3):
             with self.subTest(wert=wert):
                 self.assertIsNone(verlauf_erstellen(wert))
+
+    def test_betm_kern_ist_vier_monate_breit_und_mittig(self):
+        """Betm-Delikte bekommen einen breiteren Kern als die Vermögensdelikte."""
+        verlauf = verlauf_erstellen(
+            27.06,
+            kernbreite_in_monaten=BETM_KERNBREITE_IN_MONATEN,
+            ausblendung_in_monaten=BETM_AUSBLENDUNG_IN_MONATEN,
+        )
+        # Kern 25.06-29.06, Ausblendung je 4 Monate -> Achse 21.06-33.06
+        werte = [tick["wert"] for tick in verlauf["ticks"]]
+        self.assertGreaterEqual(min(werte), 21)
+        self.assertLessEqual(max(werte), 34)
+        # Der voll gefaerbte Bereich liegt mittig ueber dem Prognosewert: der
+        # Abstand der beiden Vollton-Stops entspricht 4 von 12 Achsenmonaten.
+        positionen = [
+            float(wert) for wert in re.findall(r"([\d.]+)%", verlauf["gradient"])
+        ]
+        vollton = [
+            position
+            for farbe, position in zip(
+                re.findall(r"(#\w{6})", verlauf["gradient"]), positionen
+            )
+            if farbe == RAMPE[0]
+        ]
+        self.assertAlmostEqual(max(vollton) - min(vollton), 4 / 12 * 100, places=1)
+
+    def test_vermoegensdelikte_behalten_den_schmaleren_kern(self):
+        """Ohne ausdrueckliche Breite bleibt es beim bisherigen Intervall."""
+        verlauf = verlauf_erstellen(27.06)
+        positionen = [
+            float(wert) for wert in re.findall(r"([\d.]+)%", verlauf["gradient"])
+        ]
+        vollton = [
+            position
+            for farbe, position in zip(
+                re.findall(r"(#\w{6})", verlauf["gradient"]), positionen
+            )
+            if farbe == RAMPE[0]
+        ]
+        # Kern 25.5-29.5 (4 Monate) auf einer Achse von 22.5 bis 32.5 (10 Monate)
+        self.assertAlmostEqual(max(vollton) - min(vollton), 4 / 10 * 100, places=1)

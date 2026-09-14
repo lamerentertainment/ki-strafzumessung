@@ -2,170 +2,178 @@
 
 {% block body %}
 
-        <h1>Strafprognose bei Betäubungsmitteldelikt vornehmen und Präjudizien anzeigen</h1>
-        <p>Die Prognose erfolgt auf Grundlage des folgendem <a href="{% url 'betmdatabase' %}">Datensatzes</a> und der darauf
-            aufbauendem KI-Modelle. 
-            Die Funktionsweise der KI-Modelle wird <a href="{% url 'text_funktionsweise' %}">hier</a> erklärt.</p>
+<h1>Strafprognose bei Betäubungsmitteldelikt vornehmen und Präjudizien anzeigen</h1>
+<p>Die Prognose erfolgt auf Grundlage des folgendem <a href="{% url 'betmdatabase' %}">Datensatzes</a> und der darauf
+    aufbauendem KI-Modelle.
+    Die Funktionsweise der KI-Modelle wird <a href="{% url 'text_funktionsweise' %}">hier</a> erklärt.</p>
 
-        <p class="{{ display_eingabeformular_button }}">
-            <a class="btn btn-primary" 
-               type="button" 
-               data-bs-toggle="collapse" 
-               href="#eingabeformular" 
-               role="button" 
-               aria-expanded="true"
-           aria-controls="eingabeformular">Eingabeformular und Prognosedaten wieder anzeigen</a>
-        </p>
-        <div class="row collapse {{ eingabeformular_anzeigen }}"  id="eingabeformular">
-            <form action="" method="post">
-                    {% csrf_token %}
+<p class="{{ display_eingabeformular_button }}">
+    <a class="btn btn-primary" type="button" data-bs-toggle="collapse" href="#eingabeformular" role="button"
+        aria-expanded="true" aria-controls="eingabeformular">Eingabeformular und Prognosedaten wieder anzeigen</a>
+</p>
+<div class="row collapse {{ eingabeformular_anzeigen }}" id="eingabeformular">
+    <form action="" method="post">
+        {% csrf_token %}
 
-                    <div class="row g-1">
-                        <div class="col col-sm-9 col-lg-6">
-                            <table class="table border rounded">
-                                    <legend>Schuldspruch/Dispositiv</legend>
-                                    {{ form.mengenmaessig.as_field_group }}
-                                    {{ form.bandenmaessig.as_field_group }}
-                                    {{ form.gewerbsmaessig.as_field_group }}
-                                    {{ form.mehrfach.as_field_group }}
-                                    {{ form.anstaltentreffen.as_field_group }}
-                                    {{ form.nebenverurteilungsscore.as_field_group }}
-                            </table>
-                            <table class="table border">
-                            <legend>Strafzumessungsfaktoren</legend>
-                            {{ form.rolle.as_field_group }}
-                            {{ form.beschaffungskriminalitaet.as_field_group }}
-                            {{ form.deliktsdauer_in_monaten.as_field_group }}
-                            {{ form.deliktsertrag.as_field_group }}
-                            {{ form.vorbestraft.as_field_group }}
-                            {{ form.vorbestraft_einschlaegig.as_field_group }}
-                    </table> 
-                        </div>
-                        <div class="col col-sm-9 col-lg-6">
-                            <div id="betmform1">
-                                <table id="betm1" class="table border rounded">
-                                    <legend>Betäubungsmittel</legend>
-                                    {{ form.betm1.as_field_group }}
-                                    {{ form.betm1_menge.as_field_group }}
-                                    {{ form.betm1_rein.as_field_group }}
-                                </table>
-                            </div>
-                            <div id="betmform2">
-                                <table id="betm2" class="table border rounded">
-                                    <legend>allf. Betäubungsmittel 2</legend>
-                                    {{ form.betm2.as_field_group }}
-                                    {{ form.betm2_menge.as_field_group }}
-                                    {{ form.betm2_rein.as_field_group }}
-                                </table>
-                            </div>
-                            <div id="betmform3">
-                                <table id="betm3" class="table border rounded">
-                                    <legend>allf. Betäubungsmittel 3</legend>
-                                    {{ form.betm3.as_field_group }}
-                                    {{ form.betm3_menge.as_field_group }}
-                                    {{ form.betm3_rein.as_field_group }}
-                                </table>
-                            </div>
-                            <div id="praejudizfilter">
-                                <table id="filterpraejudiz" class="table border rounded">
-                                    <legend>Präjudizien filtern</legend>
-                                    {{ form.gleiche_kategorie_betm1.as_field_group }}
-                                    {{ form.gleiche_rolle.as_field_group }}
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    <input type="submit" class="btn btn-primary" value="Strafmass und Vollzugsform prognostizieren">
-
-            </form>
+        <div class="row g-1">
+            <div class="col col-sm-9 col-lg-6">
+                <table class="table border rounded">
+                    <legend>Schuldspruch/Dispositiv</legend>
+                    {{ form.mengenmaessig.as_field_group }}
+                    {{ form.bandenmaessig.as_field_group }}
+                    {{ form.gewerbsmaessig.as_field_group }}
+                    {{ form.mehrfach.as_field_group }}
+                    {{ form.anstaltentreffen.as_field_group }}
+                    {{ form.nebenverurteilungsscore.as_field_group }}
+                </table>
+                <table class="table border">
+                    <legend>Strafzumessungsfaktoren</legend>
+                    {{ form.rolle.as_field_group }}
+                    {{ form.beschaffungskriminalitaet.as_field_group }}
+                    {{ form.deliktsdauer_in_monaten.as_field_group }}
+                    {{ form.deliktsertrag.as_field_group }}
+                    {{ form.vorbestraft.as_field_group }}
+                    {{ form.vorbestraft_einschlaegig.as_field_group }}
+                </table>
+            </div>
+            <div class="col col-sm-9 col-lg-6">
+                <div id="betmform1">
+                    <table id="betm1" class="table border rounded">
+                        <legend>Betäubungsmittel</legend>
+                        {{ form.betm1.as_field_group }}
+                        {{ form.betm1_menge.as_field_group }}
+                        {{ form.betm1_rein.as_field_group }}
+                    </table>
+                </div>
+                <div id="betmform2">
+                    <table id="betm2" class="table border rounded">
+                        <legend>allf. Betäubungsmittel 2</legend>
+                        {{ form.betm2.as_field_group }}
+                        {{ form.betm2_menge.as_field_group }}
+                        {{ form.betm2_rein.as_field_group }}
+                    </table>
+                </div>
+                <div id="betmform3">
+                    <table id="betm3" class="table border rounded">
+                        <legend>allf. Betäubungsmittel 3</legend>
+                        {{ form.betm3.as_field_group }}
+                        {{ form.betm3_menge.as_field_group }}
+                        {{ form.betm3_rein.as_field_group }}
+                    </table>
+                </div>
+                <div id="praejudizfilter">
+                    <table id="filterpraejudiz" class="table border rounded">
+                        <legend>Präjudizien filtern</legend>
+                        {{ form.gleiche_kategorie_betm1.as_field_group }}
+                        {{ form.gleiche_rolle.as_field_group }}
+                    </table>
+                </div>
+            </div>
         </div>
+        <input type="submit" class="btn btn-primary" value="Strafmass und Vollzugsform prognostizieren">
 
-        {% if form.is_valid %}
-        <section>
-            <h1>Vorhersage</h1>
-            {% if vorhersage_hauptsanktion == 'Freiheitsstrafe' or vorhersage_hauptsanktion == 'Geldstrafe' %}
-                <p>Das KI-Modell sagt eine <strong>{{ vorhersage_vollzug }} {{ vorhersage_hauptsanktion }}</strong> in folgendem Wahrscheinlichkeitsbereich voraus:</p>
+    </form>
+</div>
 
-                {% if prognoseverlauf %}
-                    {% include "database/includes/prognoseverlauf.html" with prognoseverlauf=prognoseverlauf %}
-                {% endif %}
+{% if form.is_valid %}
+<section>
+    <h1>Vorhersage</h1>
+    {% if vorhersage_hauptsanktion == 'Freiheitsstrafe' or vorhersage_hauptsanktion == 'Geldstrafe' %}
+    {# Die beiden include-Tags muessen je auf EINER Zeile bleiben (Djangos Lexer kennt kein DOTALL). #}
+    <p>Das KI-Modell sagt eine <strong>{% include "database/includes/prognose_wahrscheinlichkeit.html" with text=vorhersage_vollzug wahrscheinlichkeiten=wahrscheinlichkeiten_vollzug %}{% include "database/includes/prognose_wahrscheinlichkeit.html" with text=vorhersage_hauptsanktion wahrscheinlichkeiten=wahrscheinlichkeiten_sanktionsart %}</strong> in folgendem Wahrscheinlichkeitsbereich voraus:</p>
 
-                <p><span class="text-muted">Diese Werte basieren ausschliesslich auf einer Auswertung von einzelnen (nicht vollständig erfassten) objektiven Tatbestandsmerkmalen und ersetzen keinesfalls eine gesetzesmässige Strafzumessung, welche auch konkret vorliegende subjektive Tatbestandsmerkmale und Täterkomponenten zu würdigen hat.</span></p>
-            {% endif %}
-        </section>
-        {% endif %}
+    {% if prognoseverlauf %}
+    {% include "database/includes/prognoseverlauf.html" with prognoseverlauf=prognoseverlauf %}
+    {% endif %}
 
-        {% if form.is_valid %}
-        <div>
-            <h1>Vergleichbare Präjudizien</h1>
-                {% comment %}
-                <p>knn_prediction: {{ knn_prediction }} Monate</p>
-                {% endcomment %}
-            {% if praejudizien_error_message %}
-                <div class="alert alert-warning" role="alert">
-                    {{ praejudizien_error_message|linebreaksbr }}
-                </div>
-            {% else %}
-                <div class="row">
-                    <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar1 %}</div>
-                    <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar2 %}</div>
-                </div>
+    <p><span class="text-muted">Diese Werte basieren ausschliesslich auf einer Auswertung von einzelnen (nicht
+            vollständig erfassten) objektiven Tatbestandsmerkmalen und ersetzen keinesfalls eine gesetzesmässige
+            Strafzumessung, welche auch konkret vorliegende subjektive Tatbestandsmerkmale und Täterkomponenten zu
+            würdigen hat.</span></p>
+    <p><span class="text-muted">Eine Bemerkung zur Datengrundlage: Die Daten, mit denen das vorliegende KI-Modell
+            trainiert wurde, basieren auf veröffentlichten Gerichtsurteilen, meist einer Rechtsmittelinstanz. Massen-
+            und Bagatelldelinquenz (z.B. Betäubungsmittelkonsum) findet selten den Weg ans Gericht und in die Publika
+            und sind daher in
+            der
+            Datengrundlage untervertreten. In diesen Bereichen wird das KI-Modell eine zu hohe Strafe anzeigen, da es
+            durch die Datengrundlage verzerrt wird.</span></p>
+    {% endif %}
+</section>
+{% endif %}
 
-                <div class="text-center mt-3 mb-3">
-                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#moreNachbarn" aria-expanded="false" aria-controls="moreNachbarn">
-                        Zeige weitere vergleichbare Präjudizien
-                    </button>
-                </div>
+{% if form.is_valid %}
+<div>
+    <h1>Vergleichbare Präjudizien</h1>
+    {% comment %}
+    <p>knn_prediction: {{ knn_prediction }} Monate</p>
+    {% endcomment %}
+    {% if praejudizien_error_message %}
+    <div class="alert alert-warning" role="alert">
+        {{ praejudizien_error_message|linebreaksbr }}
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar1 %}</div>
+        <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar2 %}</div>
+    </div>
 
-                <div class="collapse" id="moreNachbarn">
-                    <div class="row">
-                        <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar3 %}</div>
-                        <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar4 %}</div>
-                    </div>
-                </div>
-            {% endif %}
+    <div class="text-center mt-3 mb-3">
+        <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#moreNachbarn"
+            aria-expanded="false" aria-controls="moreNachbarn">
+            Zeige weitere vergleichbare Präjudizien
+        </button>
+    </div>
+
+    <div class="collapse" id="moreNachbarn">
+        <div class="row">
+            <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar3 %}</div>
+            <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar4 %}</div>
         </div>
-        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}
 
-        {% comment %}<script>
-            document.addEventListener('DOMContentLoaded', function () {
-                // Select the input field for betm1_menge
-                const betm1MengeInput = document.getElementById('id_betm1_menge');
+{% comment %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Select the input field for betm1_menge
+        const betm1MengeInput = document.getElementById('id_betm1_menge');
 
-                // Select the input field for betm2_menge
-                const betm2MengeInput = document.getElementById('id_betm2_menge');
+        // Select the input field for betm2_menge
+        const betm2MengeInput = document.getElementById('id_betm2_menge');
 
-                // Select the table for betm2
-                const betm2Form = document.getElementById('betmform2');
+        // Select the table for betm2
+        const betm2Form = document.getElementById('betmform2');
 
-                // Select the table for betm3
-                const betm3Form = document.getElementById('betmform3');
+        // Select the table for betm3
+        const betm3Form = document.getElementById('betmform3');
 
-                // Hide betm2 and betm3 initially
-                betm2Form.style.display = 'none';
-                betm3Form.style.display = 'none';
+        // Hide betm2 and betm3 initially
+        betm2Form.style.display = 'none';
+        betm3Form.style.display = 'none';
 
-                // Add event listener to betm1_menge input field
-                betm1MengeInput.addEventListener('input', function () {
-                    // If betm1_menge has a value, show betm2; otherwise, hide it
-                    if (betm1MengeInput.value.trim() !== '') {
-                        betm2Form.style.display = 'table'; // Show betm2
-                    } else {
-                        betm2Form.style.display = 'none'; // Hide betm2
-                    }
-                });
+        // Add event listener to betm1_menge input field
+        betm1MengeInput.addEventListener('input', function () {
+            // If betm1_menge has a value, show betm2; otherwise, hide it
+            if (betm1MengeInput.value.trim() !== '') {
+                betm2Form.style.display = 'table'; // Show betm2
+            } else {
+                betm2Form.style.display = 'none'; // Hide betm2
+            }
+        });
 
-                // Add event listener to betm2_menge input field
-                betm2MengeInput.addEventListener('input', function () {
-                    // If betm1_menge has a value, show betm2; otherwise, hide it
-                    if (betm2MengeInput.value.trim() !== '') {
-                        betm3Form.style.display = 'table'; // Show betm2
-                    } else {
-                        betm3Form.style.display = 'none'; // Hide betm2
-                    }
-                });
-            });
-        </script>{% endcomment %}
+        // Add event listener to betm2_menge input field
+        betm2MengeInput.addEventListener('input', function () {
+            // If betm1_menge has a value, show betm2; otherwise, hide it
+            if (betm2MengeInput.value.trim() !== '') {
+                betm3Form.style.display = 'table'; // Show betm2
+            } else {
+                betm3Form.style.display = 'none'; // Hide betm2
+            }
+        });
+    });
+</script>{% endcomment %}
 
 
 {% endblock %}

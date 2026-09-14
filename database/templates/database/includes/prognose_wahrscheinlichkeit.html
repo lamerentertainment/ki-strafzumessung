@@ -1,0 +1,9 @@
+{% comment %}
+Zeigt einen Prognosewert (Vollzugsart oder Sanktionsart) an. Liegen die
+Klassenwahrscheinlichkeiten vor, werden sie beim Hovern als Tooltip eingeblendet.
+
+Parameter:
+  text               -- anzuzeigender Prognosewert (z.B. "bedingte")
+  wahrscheinlichkeiten -- Liste von {label, wahrscheinlichkeit} (absteigend sortiert)
+{% endcomment %}
+{% if wahrscheinlichkeiten %}<span class="prognose-wahrscheinlichkeit" data-bs-toggle="tooltip" data-bs-html="true" data-bs-placement="top" title="{% for eintrag in wahrscheinlichkeiten %}{{ eintrag.label }}: {{ eintrag.wahrscheinlichkeit }}%{% if not forloop.last %}<br>{% endif %}{% endfor %}">{{ text }}</span>{% else %}{{ text }}{% endif %}

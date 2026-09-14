@@ -40,6 +40,9 @@ from .ai_utils import (
     betm_urteile_dataframe_erzeugen,
     nachbar_mit_sanktionsbewertung_anreichern,
     urteilcodes_aufloesen,
+    klassenwahrscheinlichkeiten_ermitteln,
+    VOLLZUGS_LABELS,
+    SANKTIONS_LABELS,
 )
 from .db_utils import (
     kategorie_scatterplot_erstellen,
@@ -409,6 +412,14 @@ def prognose(request):
                 sample_pandas_dataframe
             )
 
+            # Klassenwahrscheinlichkeiten fuer die Mouseover-Anzeige der Alternativen
+            wahrscheinlichkeiten_vollzug = klassenwahrscheinlichkeiten_ermitteln(
+                vollzugs_model, sample_pandas_dataframe, VOLLZUGS_LABELS
+            )
+            wahrscheinlichkeiten_sanktionsart = klassenwahrscheinlichkeiten_ermitteln(
+                sanktionsart_model, sample_pandas_dataframe, SANKTIONS_LABELS
+            )
+
             vollzugsstring = "empty"
 
             if vorhersage_vollzug[0] == "0":
@@ -502,6 +513,8 @@ def prognose(request):
                             "vorhersage_strafmass": vorhersage_strafmass[0],
                             "vorhersage_vollzug": vollzugsstring,
                             "vorhersage_sanktionsart": string_sanktionsart,
+                            "wahrscheinlichkeiten_vollzug": wahrscheinlichkeiten_vollzug,
+                            "wahrscheinlichkeiten_sanktionsart": wahrscheinlichkeiten_sanktionsart,
                             "prognoseverlauf": prognoseverlauf,
                             "praejudizien_error_message": praejudizien_error_message,
                         },
@@ -648,6 +661,8 @@ def prognose(request):
                     "vorhersage_strafmass": vorhersage_strafmass[0],
                     "vorhersage_vollzug": vollzugsstring,
                     "vorhersage_sanktionsart": string_sanktionsart,
+                    "wahrscheinlichkeiten_vollzug": wahrscheinlichkeiten_vollzug,
+                    "wahrscheinlichkeiten_sanktionsart": wahrscheinlichkeiten_sanktionsart,
                     "prognoseverlauf": prognoseverlauf,
                     "knn_prediction": knn_prediction,
                     "nachbar": nachbar,
@@ -797,6 +812,13 @@ def betm_prognose(request):
                 prognosemerkmale_df_preprocessed
             )[0]
 
+            # Klassenwahrscheinlichkeiten fuer die Mouseover-Anzeige der Alternativen
+            wahrscheinlichkeiten_sanktionsart = klassenwahrscheinlichkeiten_ermitteln(
+                hauptsanktions_modell,
+                prognosemerkmale_df_preprocessed,
+                SANKTIONS_LABELS,
+            )
+
             if vorhersage_hauptsanktion == "0":
                 vorhersage_hauptsanktion = "Freiheitsstrafe"
             elif vorhersage_hauptsanktion == "1":
@@ -811,6 +833,10 @@ def betm_prognose(request):
             vorhersage_vollzug = vollzugs_modell.predict(
                 prognosemerkmale_df_preprocessed
             )[0]
+
+            wahrscheinlichkeiten_vollzug = klassenwahrscheinlichkeiten_ermitteln(
+                vollzugs_modell, prognosemerkmale_df_preprocessed, VOLLZUGS_LABELS
+            )
 
             if vorhersage_vollzug == "bedingt":
                 vorhersage_vollzug = "bedingte"
@@ -1014,6 +1040,8 @@ def betm_prognose(request):
                     "eingabeformular_anzeigen": "",
                     "vorhersage_vollzug": vorhersage_vollzug,
                     "vorhersage_hauptsanktion": vorhersage_hauptsanktion,
+                    "wahrscheinlichkeiten_vollzug": wahrscheinlichkeiten_vollzug,
+                    "wahrscheinlichkeiten_sanktionsart": wahrscheinlichkeiten_sanktionsart,
                     "vorhersage_strafmass": vorhersage_strafmass,
                     "prognoseverlauf": prognoseverlauf,
                     "praejudizien_error_message": praejudizien_error_message,
@@ -1159,6 +1187,8 @@ def betm_prognose(request):
                 "eingabeformular_anzeigen": "",
                 "vorhersage_vollzug": vorhersage_vollzug,
                 "vorhersage_hauptsanktion": vorhersage_hauptsanktion,
+                "wahrscheinlichkeiten_vollzug": wahrscheinlichkeiten_vollzug,
+                "wahrscheinlichkeiten_sanktionsart": wahrscheinlichkeiten_sanktionsart,
                 "vorhersage_strafmass": vorhersage_strafmass,
                 "prognoseverlauf": prognoseverlauf,
                 "nachbar1": nachbar1,

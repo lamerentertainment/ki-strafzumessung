@@ -489,3 +489,11 @@ tr[data-kurzsachverhalt]:hover td {
     color: var(--bs-secondary-color, #6c757d);
     margin-top: 0.15rem;
 }
+
+.prognose-wahrscheinlichkeit {
+    /* Signalisiert, dass sich hinter dem Prognosewert die Wahrscheinlichkeiten
+       der uebrigen Optionen als Tooltip verbergen. */
+    text-decoration: underline dotted;
+    text-underline-offset: 0.2em;
+    cursor: help;
+}

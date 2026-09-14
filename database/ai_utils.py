@@ -31,6 +31,52 @@ from .models import (
 )
 
 
+# Klassenbezeichnungen der Classifier-Modelle: je nach Deliktsbereich geben die
+# Modelle entweder die DB-Codes oder bereits die Klartextwerte zurueck, weshalb
+# beide Schreibweisen abgebildet sind.
+VOLLZUGS_LABELS = {
+    "0": "bedingt",
+    "1": "teilbedingt",
+    "2": "unbedingt",
+    "bedingt": "bedingt",
+    "teilbedingt": "teilbedingt",
+    "unbedingt": "unbedingt",
+}
+
+SANKTIONS_LABELS = {
+    "0": "Freiheitsstrafe",
+    "1": "Geldstrafe",
+    "2": "Busse",
+    "Freiheitsstrafe": "Freiheitsstrafe",
+    "Geldstrafe": "Geldstrafe",
+    "Busse": "Busse",
+}
+
+
+def klassenwahrscheinlichkeiten_ermitteln(estimator, prognosemerkmale_df, labels):
+    """Gibt die Klassenwahrscheinlichkeiten eines Classifiers absteigend sortiert zurueck.
+
+    Rueckgabe: Liste von Dicts mit 'label' (Klartextbezeichnung) und
+    'wahrscheinlichkeit' (Prozentwert, eine Nachkommastelle). Leere Liste, falls das
+    Modell keine Wahrscheinlichkeiten liefert.
+    """
+    if not hasattr(estimator, "predict_proba"):
+        return []
+
+    wahrscheinlichkeiten = estimator.predict_proba(prognosemerkmale_df)[0]
+
+    ergebnis = [
+        {
+            "label": labels.get(str(klasse), str(klasse)),
+            "wahrscheinlichkeit": round(float(wert) * 100, 1),
+        }
+        for klasse, wert in zip(estimator.classes_, wahrscheinlichkeiten)
+    ]
+    ergebnis.sort(key=lambda eintrag: eintrag["wahrscheinlichkeit"], reverse=True)
+
+    return ergebnis
+
+
 def onehotx_und_y_erstellen(
     dbmodel,
     categorial_ft_dbfields=None,

@@ -22,7 +22,11 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     facetten: {},
     spannen: {},
     // Sanktionsart, deren Strafhoehen die Kennzahlenleiste auswertet
-    kennzahlenSanktion: "0",
+    kennzahlenSanktion: "k",
+    // Strafmasshistogramm (aufklappbar unterhalb des Filterpanels)
+    histogrammOffen: false,
+    histogrammKarte: null,
+    histogrammKartePos: { x: 0, y: 0 },
 
     init() {
       this.spec = JSON.parse(document.getElementById(spezifikationId).textContent);
@@ -34,6 +38,12 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         this.offeneGruppen[gruppe.titel] = index === 0;
       });
       this.ausUrlLesen();
+      // Die Karte haengt fix im Viewport und wuerde sonst beim Scrollen
+      // neben ihrem Block stehen bleiben.
+      window.addEventListener("scroll", () => this.karteVerbergen(), { passive: true });
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") this.karteVerbergen();
+      });
       this.$watch("q", () => this.anwenden());
       this.$watch("zustand", () => this.anwenden(), { deep: true });
       this.anwenden();
@@ -357,12 +367,31 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
 
     // --- Kennzahlen zur Treffermenge ----------------------------------------
 
+    /** Umrechnungssatz der kombinierten Ansicht: 30 Tagessaetze = 1 Monat. */
+    TAGESSAETZE_JE_MONAT: 30,
+
     /**
      * Sanktionsarten mit auswertbarer Strafhoehe, in der Reihenfolge des
      * Umschaltens. Die Busse ('2') fehlt, weil ihre Hoehe in keinem Modell
      * erfasst ist.
+     *
+     * Die kombinierte Ansicht steht voran und ist damit die Voreinstellung:
+     * Sie rechnet Geldstrafen in Monate um und legt beide Sanktionsarten auf
+     * eine Achse - sonst zerfaellt jede Treffermenge in zwei Teilbestaende,
+     * die man nicht nebeneinander lesen kann.
      */
     sanktionsarten: [
+      {
+        code: "k",
+        label: "Freiheits- und Geldstrafe",
+        kombiniert: true,
+        einheit: "Mt.",
+        einheitDativ: "Monaten",
+        monate: true,
+        // Umgerechnete Werte liegen zwischen den Monatsstufen
+        nachkomma: 1,
+        hinweis: "Geldstrafen zu 30 Tagessätzen je Monat umgerechnet",
+      },
       {
         code: "0",
         label: "Freiheitsstrafe",
@@ -370,6 +399,8 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         einheit: "Mt.",
         einheitDativ: "Monaten",
         monate: true,
+        nachkomma: 0,
+        hinweis: "",
       },
       {
         code: "1",
@@ -378,8 +409,37 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         einheit: "Tagessätze",
         einheitDativ: "Tagessätzen",
         monate: false,
+        nachkomma: 0,
+        hinweis: "",
       },
     ],
+
+    /**
+     * Strafhoehe eines Urteils in der Einheit der gewaehlten Sanktionsart,
+     * oder null, wenn das Urteil dort nicht hineingehoert.
+     *
+     * In der kombinierten Ansicht zaehlen Freiheits- und Geldstrafen
+     * gemeinsam, letztere zum Satz von 30 Tagessaetzen je Monat. Bussen
+     * bleiben ueberall aussen vor: ihre Hoehe ist in keinem Modell erfasst.
+     */
+    strafhoehe(record, art) {
+      const zahl = (wert) => (wert === null || wert === undefined ? null : wert);
+      if (!art.kombiniert) {
+        return record.hauptsanktion === art.code ? zahl(record[art.feld]) : null;
+      }
+      if (record.hauptsanktion === "0") return zahl(record.freiheitsstrafe_in_monaten);
+      if (record.hauptsanktion === "1") {
+        const tagessaetze = zahl(record.anzahl_tagessaetze);
+        return tagessaetze === null ? null : tagessaetze / this.TAGESSAETZE_JE_MONAT;
+      }
+      return null;
+    },
+
+    /** Strafhoehe als Anzeigetext, in der Genauigkeit der Sanktionsart. */
+    formatiert(wert, art) {
+      if (wert === null || wert === undefined) return "";
+      return wert.toFixed(art.nachkomma);
+    },
 
     /**
      * Strafhoehen der Treffer je Sanktionsart, aufsteigend sortiert; nur die
@@ -395,11 +455,10 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       this.trefferPks.forEach((pk) => {
         const record = this.records[pk];
         if (record.in_ki_modell === false) return;
-        const eintrag = stichproben.find((s) => s.art.code === record.hauptsanktion);
-        if (!eintrag) return;
-        const wert = record[eintrag.art.feld];
-        if (wert === null || wert === undefined) return;
-        eintrag.werte.push(wert);
+        stichproben.forEach((eintrag) => {
+          const wert = this.strafhoehe(record, eintrag.art);
+          if (wert !== null) eintrag.werte.push(wert);
+        });
       });
       stichproben.forEach((s) => s.werte.sort((a, b) => a - b));
       return stichproben.filter((s) => s.werte.length > 0);
@@ -454,24 +513,32 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         einheit: art.einheit,
         einheitDativ: art.einheitDativ,
         anzahl: werte.length,
-        median: this.median(werte),
-        mittel: Math.round(mittelwert),
+        median: this.formatiert(this.median(werte), art),
+        mittel: this.formatiert(mittelwert, art),
         // mittlere absolute Abweichung vom (ungerundeten) Mittelwert
-        mad: Math.round(
-          werte.reduce((summe, wert) => summe + Math.abs(wert - mittelwert), 0) / werte.length
+        mad: this.formatiert(
+          werte.reduce((summe, wert) => summe + Math.abs(wert - mittelwert), 0) / werte.length,
+          art
         ),
-        min: werte[0],
-        max: werte[werte.length - 1],
+        min: this.formatiert(werte[0], art),
+        max: this.formatiert(werte[werte.length - 1], art),
         umschaltbar: belegt.length > 1,
-        umschaltTitel:
+        // Der Hinweis zur Umrechnung gehoert an dieselbe Stelle wie der
+        // Umschalter - dort fragt man sich, was die Zahlen bedeuten.
+        umschaltTitel: [
+          art.hinweis,
           belegt.length > 1 ? `Kennzahlen zur ${naechste.label} anzeigen` : "",
+        ]
+          .filter(Boolean)
+          .join(" · "),
       };
     },
 
+    /** Median der (aufsteigend sortierten) Werte, ungerundet. */
     median(werte) {
       if (!werte.length) return null;
       const mitte = Math.floor(werte.length / 2);
-      return werte.length % 2 ? werte[mitte] : Math.round((werte[mitte - 1] + werte[mitte]) / 2);
+      return werte.length % 2 ? werte[mitte] : (werte[mitte - 1] + werte[mitte]) / 2;
     },
 
     /**
@@ -488,14 +555,235 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
      * Tooltip-Anzeige (z.B. bei Median/Durchschnitt der Freiheitsstrafe).
      * Ab 12 Monaten sinnvoll; darunter (oder ohne Wert) leerer String, sodass
      * kein Tooltip erscheint.
+     *
+     * Nimmt auch die formatierten Anzeigewerte der Kennzahlenleiste entgegen,
+     * die in der kombinierten Ansicht eine Nachkommastelle tragen.
      */
     jahreMonateTitel(monate) {
-      if (monate === null || monate === undefined || monate <= 12) return "";
-      const jahre = Math.floor(monate / 12);
-      const rest = monate % 12;
+      const wert = Number(monate);
+      if (monate === null || monate === undefined || monate === "" || Number.isNaN(wert)) {
+        return "";
+      }
+      if (wert <= 12) return "";
+      const jahre = Math.floor(wert / 12);
+      const rest = Math.round((wert % 12) * 10) / 10;
       const teile = [`${jahre} ${jahre === 1 ? "Jahr" : "Jahre"}`];
       if (rest > 0) teile.push(`${rest} ${rest === 1 ? "Monat" : "Monate"}`);
       return teile.join(" ");
+    },
+
+    // --- Strafmasshistogramm -------------------------------------------------
+
+    /**
+     * Klassenbreiten je Sanktionsart, aufsteigend. Die Freiheitsstrafe wird in
+     * Monaten erfasst, soll auf der Achse aber in Jahresschritten lesbar sein -
+     * darum die Sprungfolge 1/3/6/12/24/60 Monate statt einer "schoenen"
+     * Rundung nach Sturges o.ae.
+     */
+    klassenbreiten: {
+      k: [1, 3, 6, 12, 24, 60],
+      "0": [1, 3, 6, 12, 24, 60],
+      "1": [10, 30, 60, 90, 180, 360],
+    },
+
+    /** Kleinste Breite, die die Spannweite auf hoechstens 16 Klassen aufteilt. */
+    klassenbreite(art, min, max) {
+      const kandidaten = this.klassenbreiten[art.code] || [1];
+      const spanne = Math.max(max - min, 1);
+      return (
+        kandidaten.find((breite) => spanne / breite <= 16) ||
+        kandidaten[kandidaten.length - 1]
+      );
+    },
+
+    /**
+     * Histogramm der angezeigten Sanktionsart: je Klasse die einzelnen Urteile,
+     * damit jedes als eigener Block im Balken erscheint und einzeln
+     * angesteuert werden kann.
+     *
+     * Ausgewertet wird dieselbe Stichprobe wie in der Kennzahlenleiste (siehe
+     * sanktionsstichproben()); der Umschalter dort wirkt also auch hier.
+     */
+    histogramm() {
+      const stichprobe = this.aktiveStichprobe();
+      if (stichprobe === null) return null;
+      const { art } = stichprobe;
+
+      const eintraege = [];
+      this.trefferPks.forEach((pk) => {
+        const record = this.records[pk];
+        if (record.in_ki_modell === false) return;
+        const wert = this.strafhoehe(record, art);
+        if (wert === null) return;
+        eintraege.push({
+          pk,
+          wert,
+          // Eigene Sanktionsart des Urteils: sie faerbt den Block und erlaubt
+          // im Tooltip die Angabe der urspruenglichen Tagessaetze.
+          hauptsanktion: record.hauptsanktion,
+          tagessaetze: record.anzahl_tagessaetze,
+          karte: record._karte || {},
+          vollzug: record.vollzug,
+        });
+      });
+      if (eintraege.length === 0) return null;
+
+      const werte = eintraege.map((e) => e.wert);
+      const min = Math.min(...werte);
+      const max = Math.max(...werte);
+      const breite = this.klassenbreite(art, min, max);
+      const untergrenze = Math.floor(min / breite) * breite;
+      const anzahlKlassen = Math.floor((max - untergrenze) / breite) + 1;
+
+      const klassen = Array.from({ length: anzahlKlassen }, (_, i) => ({
+        von: untergrenze + i * breite,
+        bis: untergrenze + (i + 1) * breite,
+        urteile: [],
+      }));
+      eintraege
+        .sort((a, b) => a.wert - b.wert)
+        .forEach((eintrag) => {
+          const index = Math.min(
+            Math.floor((eintrag.wert - untergrenze) / breite),
+            anzahlKlassen - 1
+          );
+          klassen[index].urteile.push(eintrag);
+        });
+
+      const hoechste = Math.max(...klassen.map((k) => k.urteile.length));
+      klassen.forEach((klasse) => {
+        klasse.urteile.sort(
+          (a, b) => this.blockRang(a) - this.blockRang(b) || a.wert - b.wert
+        );
+        klasse.label = this.klassenlabel(art, klasse.von, klasse.bis);
+      });
+      return {
+        art,
+        klassen,
+        breite,
+        hoechste,
+        anzahl: eintraege.length,
+        // Gesamthoehe rund 220 px, aber nie unter 5 px je Urteil
+        blockHoehe: Math.max(5, Math.min(22, Math.round(220 / hoechste))),
+        achstitel: art.monate ? "Strafmass (Jahre)" : "Strafmass (Tagessätze)",
+        // Farblegende: nur die Sanktionsarten, die im Bild vorkommen
+        sanktionen: this.sanktionsarten.filter(
+          (eine) =>
+            !eine.kombiniert && eintraege.some((e) => e.hauptsanktion === eine.code)
+        ),
+      };
+    },
+
+    /**
+     * Beschriftete Stufen der Y-Achse: hoechstens sechs, und nur auf runden
+     * Schritten (1/2/5/10/20/...). Jede Zeile zu beschriften ergaebe bei
+     * hohen Balken eine unlesbare Zahlenkolonne.
+     */
+    histogrammYTicks() {
+      const daten = this.histogramm();
+      if (daten === null) return [];
+      const roh = Math.max(daten.hoechste / 6, 1);
+      const groessenordnung = Math.pow(10, Math.floor(Math.log10(roh)));
+      const schritt =
+        [1, 2, 5, 10].map((f) => f * groessenordnung).find((s) => s >= roh) ||
+        groessenordnung * 10;
+      const stufen = [];
+      for (let i = schritt; i <= daten.hoechste; i += schritt) stufen.push(i);
+      return stufen;
+    },
+
+    /**
+     * Platz eines Urteils im Balken: erste Ordnung die Sanktionsart
+     * (Freiheitsstrafe vor Geldstrafe), zweite der Vollzug von unbedingt nach
+     * bedingt. Die Saeule waechst von unten nach oben (column-reverse), der
+     * erste Rang steht also zuunterst - damit laeuft jeder Balken von
+     * dunkelblau ueber hellblau und dunkelgruen bis hellgruen.
+     */
+    blockRang(eintrag) {
+      const sanktionsrang = { "0": 0, "1": 1 }[eintrag.hauptsanktion];
+      const vollzugsrang = { "2": 0, "1": 1, "0": 2 }[eintrag.vollzug];
+      return (
+        (sanktionsrang === undefined ? 9 : sanktionsrang) * 10 +
+        (vollzugsrang === undefined ? 9 : vollzugsrang)
+      );
+    },
+
+    /** Klassenbeschriftung; Monate ab Jahresbreite als Jahreszahlen. */
+    klassenlabel(art, von, bis) {
+      if (art.monate) {
+        if (this.histogrammInJahren(von, bis)) {
+          const jahr = (monate) => Math.round((monate / 12) * 10) / 10;
+          return `${jahr(von)}–${jahr(bis)} J.`;
+        }
+        return `${von}–${bis} Mt.`;
+      }
+      return `${von}–${bis} TS`;
+    },
+
+    histogrammInJahren(von, bis) {
+      return von % 12 === 0 && (bis - von) % 12 === 0;
+    },
+
+    /** Tooltip-Text einer ganzen Klasse (Achsenbeschriftung, Balkentitel). */
+    klassentitel(klasse) {
+      const anzahl = klasse.urteile.length;
+      return `${klasse.label}: ${anzahl} ${anzahl === 1 ? "Urteil" : "Urteile"}`;
+    },
+
+    /**
+     * Strafmass eines einzelnen Blocks im Klartext. Geldstrafen nennen ihre
+     * Tagessaetze, in der kombinierten Ansicht zusaetzlich den umgerechneten
+     * Monatswert - sonst liesse sich die Lage des Blocks nicht nachvollziehen.
+     */
+    blockStrafmass(eintrag) {
+      const stichprobe = this.aktiveStichprobe();
+      const art = stichprobe ? stichprobe.art : null;
+      if (eintrag.hauptsanktion === "1") {
+        const tagessaetze = `${eintrag.tagessaetze} Tagessätze`;
+        if (art === null || !art.kombiniert) return tagessaetze;
+        return `${tagessaetze} (= ${eintrag.wert.toFixed(1)} Monate)`;
+      }
+      const monate = eintrag.wert;
+      const lang = this.jahreMonateTitel(monate);
+      const kopf = `${monate} ${monate === 1 ? "Monat" : "Monate"}`;
+      return lang ? `${kopf} (${lang})` : kopf;
+    },
+
+    vollzugstext(code) {
+      return { "0": "bedingt", "1": "teilbedingt", "2": "unbedingt" }[code] || "";
+    },
+
+    /**
+     * Hover-Karte zu einem Block. Der Inhalt wird nur beim Betreten
+     * zusammengestellt - waehrend der Mausbewegung wird allein die Position
+     * nachgefuehrt, sonst liefe die Stichprobenauswertung bei jedem Pixel neu.
+     */
+    karteZeigen(eintrag, event) {
+      this.histogrammKarte = {
+        ...eintrag.karte,
+        strafmass: this.blockStrafmass(eintrag),
+        vollzug: this.vollzugstext(eintrag.vollzug),
+      };
+      this.kartePositionieren(event);
+    },
+
+    /** Position am Mauszeiger, an den Viewport-Raendern umgeklappt. */
+    kartePositionieren(event) {
+      if (this.histogrammKarte === null) return;
+      const breite = 400;
+      const hoehe = 220;
+      const abstand = 14;
+      let x = event.clientX + abstand;
+      let y = event.clientY + abstand;
+      if (x + breite > window.innerWidth - 16) x = event.clientX - breite - abstand;
+      if (x < 16) x = 16;
+      if (y + hoehe > window.innerHeight - 16) y = event.clientY - hoehe - abstand;
+      if (y < 16) y = 16;
+      this.histogrammKartePos = { x, y };
+    },
+
+    karteVerbergen() {
+      this.histogrammKarte = null;
     },
 
     // --- URL-Synchronisierung (verlinkbare Filterergebnisse) -----------------

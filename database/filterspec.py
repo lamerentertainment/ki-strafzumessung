@@ -14,6 +14,7 @@ JSON-Struktur normalisiert.
 
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
+from django.urls import reverse
 
 # Feldtypen, die das Frontend kennt
 TYP_CHOICE = "choice"  # Chip-Reihe, Mehrfachauswahl (ODER)
@@ -346,6 +347,7 @@ def datensaetze_erstellen(model, config, queryset, spezifikation):
     volltextfelder = config.get("volltextfelder", [])
     pfade = config.get("beziehungspfade", {})
     berechnete_sortierfelder = config.get("berechnete_sortierfelder", {})
+    karte = config.get("karte")
 
     datensaetze = {}
     for objekt in queryset:
@@ -364,6 +366,8 @@ def datensaetze_erstellen(model, config, queryset, spezifikation):
             if ziel:
                 textteile.append(str(ziel))
         werte["_t"] = " ".join(textteile).lower()
+        if karte is not None:
+            werte["_karte"] = karte(objekt)
         datensaetze[str(objekt.pk)] = werte
     return datensaetze
 
@@ -479,6 +483,51 @@ def _strafmass_sortierschluessel(objekt):
     return None
 
 
+def _karte(objekt, urlname, delikt):
+    """
+    Kurzangaben eines Urteils fuer die Hover-Karte des Strafmasshistogramms
+    (siehe ``strafmasshistogramm.html`` und ``filter.js``, ``histogramm()``).
+
+    Bewusst getrennt von den Filterfeldern: Der Volltextblob ``_t`` ist
+    kleingeschrieben und zusammengezogen, taugt also nicht zur Anzeige, und die
+    Detail-URL laesst sich clientseitig nicht bilden.
+    """
+    return {
+        "fall_nr": objekt.fall_nr,
+        "gericht": objekt.gericht,
+        "datum": objekt.urteilsdatum.strftime("%d.%m.%Y") if objekt.urteilsdatum else "",
+        "delikt": delikt,
+        "sachverhalt": objekt.kurzsachverhalt or "",
+        "url": reverse(urlname, args=[objekt.pk]),
+    }
+
+
+def _deliktsbezeichnung(name, zusaetze):
+    """
+    Deliktsname mit nachgestellten Qualifikationen. Nachgestellt, weil die
+    Bezeichnungen die Gesetzesstelle mitfuehren ("Raub (Art. 140 StGB)") und ein
+    vorangestelltes "mehrfache" dort grammatikalisch danebengreift.
+    """
+    teile = [name] + [zusatz for zusatz, trifft_zu in zusaetze if trifft_zu]
+    return ", ".join(teil for teil in teile if teil)
+
+
+def _karte_sexualdelikt(objekt):
+    delikt = _deliktsbezeichnung(
+        objekt.hauptdelikt.name if objekt.hauptdelikt else "",
+        [("mehrfach begangen", objekt.hauptdelikt_mehrfachbegehung)],
+    )
+    return _karte(objekt, "sexualurteil_detail", delikt)
+
+
+def _karte_gewaltdelikt(objekt):
+    delikt = _deliktsbezeichnung(
+        objekt.get_hauptdelikt_display(),
+        [("mehrfach begangen", objekt.mehrfach), ("versucht", objekt.versuch)],
+    )
+    return _karte(objekt, "gewalturteil_detail", delikt)
+
+
 SEXUALDELIKT_FILTER_CONFIG = {
     "primaer": ["hauptdelikt", "hauptdelikt_tatmittel", "nur_hauptdelikt"],
     "abgeleitete_felder": {
@@ -584,6 +633,7 @@ SEXUALDELIKT_FILTER_CONFIG = {
         "sanktion_sortierschluessel": _sanktion_sortierschluessel,
         "strafmass_sortierschluessel": _strafmass_sortierschluessel,
     },
+    "karte": _karte_sexualdelikt,
 }
 
 
@@ -953,4 +1003,5 @@ GEWALTDELIKT_FILTER_CONFIG = {
         "sanktion_sortierschluessel": _sanktion_sortierschluessel,
         "strafmass_sortierschluessel": _strafmass_sortierschluessel,
     },
+    "karte": _karte_gewaltdelikt,
 }

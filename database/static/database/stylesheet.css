@@ -497,3 +497,126 @@ tr[data-kurzsachverhalt]:hover td {
     text-underline-offset: 0.2em;
     cursor: help;
 }
+
+
+/* ============================================================
+   Strafmasshistogramm (database/includes/strafmasshistogramm.html)
+   ============================================================ */
+
+.histogramm-scroll {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding-bottom: 0.25rem;
+}
+
+.histogramm-flaeche {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+/* Y-Achse: Anzahl Urteile, Beschriftung auf Höhe der jeweiligen Blockmitte */
+.histogramm-yachse {
+    position: relative;
+    flex: 0 0 auto;
+    width: 1.6rem;
+    border-right: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+.histogramm-ytick {
+    position: absolute;
+    right: 0.3rem;
+    transform: translateY(50%);
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--bs-secondary-color, #6c757d);
+}
+
+.histogramm-balken {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.histogramm-spalte {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1 1 0;
+    min-width: 2.6rem;
+}
+
+/* Balken wachsen von der Achse nach oben: Blöcke unten anschlagen lassen */
+.histogramm-saeule {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-start;
+    align-items: stretch;
+    width: 100%;
+    border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+}
+
+/* Ein Block = ein Urteil */
+.histogramm-block {
+    display: block;
+    width: 100%;
+    border: 1px solid var(--bs-body-bg, #ffffff);
+    border-width: 0 0 1px 0;
+    background-color: var(--bs-secondary-color, #6c757d); /* Vollzug ohne Angabe */
+    transition: filter 0.1s ease-out, outline-color 0.1s ease-out;
+    outline: 2px solid transparent;
+    outline-offset: -2px;
+}
+
+.histogramm-block:hover,
+.histogramm-block:focus-visible {
+    filter: brightness(1.08);
+    outline-color: var(--bs-body-color, #212529);
+}
+
+/* Farbton = Sanktionsart des Urteils wie im Badge der Tabelle
+   (Freiheitsstrafe blau .text-bg-primary, Geldstrafe grün .text-bg-success),
+   Helligkeit = Vollzug: unbedingt im vollen Badge-Ton, teilbedingt und bedingt
+   zunehmend aufgehellt. Die Aufhellungen sind Bootstraps eigene Tints derselben
+   Farbe (blue-300/-200 bzw. green-300/-200), damit die Reihe zum übrigen
+   Seitenbild passt. In der kombinierten Ansicht stehen beide Farbtöne im selben
+   Balken - darum haengt der Ton am Block, nicht am Diagramm. */
+.histogramm-block.sanktion-0.vollzug-2,
+.histogramm-legende.sanktion-0.vollzug-2 { background-color: #0d6efd; }
+.histogramm-block.sanktion-0.vollzug-1,
+.histogramm-legende.sanktion-0.vollzug-1 { background-color: #6ea8fe; }
+.histogramm-block.sanktion-0.vollzug-0,
+.histogramm-legende.sanktion-0.vollzug-0 { background-color: #b6d4fe; }
+
+.histogramm-block.sanktion-1.vollzug-2,
+.histogramm-legende.sanktion-1.vollzug-2 { background-color: #198754; }
+.histogramm-block.sanktion-1.vollzug-1,
+.histogramm-legende.sanktion-1.vollzug-1 { background-color: #75b798; }
+.histogramm-block.sanktion-1.vollzug-0,
+.histogramm-legende.sanktion-1.vollzug-0 { background-color: #badbcc; }
+
+.histogramm-xtick {
+    margin-top: 0.25rem;
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--bs-secondary-color, #6c757d);
+    text-align: center;
+    white-space: nowrap;
+    cursor: help;
+}
+
+.histogramm-legende {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    vertical-align: -0.1em;
+}
+
+/* Die Karte des Histogramms wird per Alpine positioniert, nicht per Maus-Handler */
+.histogramm-hovercard {
+    transition: none;
+}

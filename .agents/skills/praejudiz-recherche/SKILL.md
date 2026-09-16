@@ -96,7 +96,7 @@ In `GewaltdeliktUrteil` existiert das Many-to-Many-Feld `besonderheiten`. Folgen
 | **`Geständnisrabatt`** | Wenn das Gericht dem Täter ein Geständnis, Einsicht, Reue oder aktive Tataufdeckung **ausdrücklich strafmindernd** anrechnet. | Das genaue Ausmass bzw. die Begründung des Rabatts zwingend beziffern (z.B. *"Täterkomponente mit 3 Jahren bzw. 4 Monaten strafmindernd berücksichtigt"*). |
 | **`verminderte Schuldfähigkeit`** | Wenn das Gericht **Art. 19 Abs. 2 StGB** anwendet (psychiatrisches Gutachten, psychische Störung, Intoxikation). | Grad der Verminderung (leicht, mittelgradig) und psychiatrische Diagnose in der Zusammenfassung erwähnen. |
 | **`Verletzung Beschleunigungsgebot`** | Wenn das Gericht eine ungerechtfertigte Verfahrensverzögerung (Art. 5 Abs. 2 StPO) feststellt und die Strafe dafür mindert. | Dauer der Überliegezeit und Umfang der Strafminderung (z.B. *-3 Monate*) festhalten. |
-| **`Versuch`** | Wenn das Hauptdelikt beim Versuch geblieben ist (Art. 22 StGB). | Muss zusätzlich zu `versuch=True` auch in `besonderheiten` markiert werden. |
+| **`Versuch`** | Wenn das Hauptdelikt beim Versuch geblieben ist (Art. 22 StGB). **Zwingend:** Lautet der Schuldspruch der Vorinstanz auf Versuch, **muss** `'Versuch'` in `besonderheiten` markiert werden (in Modellen mit `versuch`-Boolean zusätzlich dort auf `True`). |
 | **`jugendlicheR TäterIn`** | Wenn Jugendstrafrecht oder besondere Bestimmungen für junge Erwachsene (Art. 61 StGB) greifen. | In der Zusammenfassung erläutern. |
 
 > [!IMPORTANT]
@@ -127,7 +127,7 @@ Choices **niemals erraten**, sondern bei Unklarheit per Shell prüfen.
 | `freiheitsstrafe_in_monaten` | Integer | Vorinstanzliche Freiheitsstrafe in Monaten. Bei Geldstrafe `0` setzen. |
 | `anzahl_tagessaetze` | Integer | Vorinstanzliche Anzahl Tagessätze. Bei Freiheitsstrafe `0` setzen. |
 | `vollzug` | Choice | `'0'` bedingt, `'1'` teilbedingt, `'2'` unbedingt (Vorinstanz!). Bei Aufschub zugunsten Art. 59/61 StGB im Modell meist `'0'` oder `'2'`. |
-| `nationalitaet` | Choice | `'0'` Schweiz, `'1'` Ausländer/in, `'2'` unbekannt. **Nur** `'0'`/`'1'`, wenn das Urteil explizite Angaben enthält (Heimatort, Staatsangehörigkeit, Aufenthaltsstatus). Das blosse Fehlen einer Landesverweisung beweist keine Schweizer Nationalität! |
+| `nationalitaet` | Choice | `'0'` Schweiz, `'1'` Ausländer/in, `'2'` unbekannt.<br>• **Zwingender Umkehrschluss bei Katalogtaten ab 1. Oktober 2016:** Fand die Tat nach dem 1. Oktober 2016 statt und enthält der Schuldspruch ein obligatorisches Katalogdelikt nach Art. 66a Abs. 1 StGB (z.B. Art. 187 Ziff. 1/1bis, 188, 189 Abs. 2/3, 190, 191, 193, 193a, 195, 197 Abs. 4 Satz 2 StGB bzw. Tötungs-/schwere Gewaltdelikte) und wird im gesamten Urteil eine Landesverweisung mit **keinem Wort thematisiert**, **muss der Täter Schweizer Staatsangehöriger sein (`'0'`)**, da bei einem Ausländer zwingend eine Prüfung nach Art. 66a StGB erfolgen müsste.<br>• In allen anderen Konstellationen gilt: Nur `'0'`/`'1'`, wenn das Urteil explizite Angaben enthält (Heimatort, Staatsangehörigkeit, Aufenthaltsstatus). |
 | `kanton` | FK | ForeignKey auf `Kanton` mit Feld `abk` (z.B. `Kanton.objects.get(abk='BE')`). |
 
 ---

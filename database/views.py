@@ -4,6 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
+from django.db.models import F
 from django.views.generic import ListView, DetailView
 from django.core.files.base import ContentFile
 from .models import Urteil, BetmUrteil, SexualdeliktUrteil, GewaltdeliktUrteil, BetmArt, KIModelPickleFile, DiagrammSVG
@@ -116,13 +117,18 @@ class FilterbareListView(ListView):
         queryset = super().get_queryset()
         if self.filter_prefetch:
             queryset = queryset.prefetch_related(*self.filter_prefetch)
-        return queryset.select_related(
+        queryset = queryset.select_related(
             *[
                 feld.name
                 for feld in self.model._meta.get_fields()
                 if feld.many_to_one
             ]
         )
+        # Zuletzt erfasste Urteile zuoberst; die Meta-Ordering der Modelle
+        # (urteilsdatum bzw. add_time aufsteigend) bleibt fuer alle uebrigen
+        # Verwendungen (KI-Modelle, CSV-Export) unveraendert. add_time ist
+        # nullable, darum nulls_last und die pk als stabiler Zweitschluessel.
+        return queryset.order_by(F("add_time").desc(nulls_last=True), "-pk")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

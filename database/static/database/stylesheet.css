@@ -334,9 +334,7 @@ h1 {
    bewusst unbeschraenkt, damit ihr bei table-layout: auto der von den
    folgenden Nebenspalten eingesparte Platz zufaellt. Zusaetzlich visuell
    hervorgehoben (Farbakzent), damit sie auf Anhieb als zentrales Kriterium
-   erkennbar ist. Die Randlinie wirkt in th UND td (Hintergrundfarbe wird im
-   th von der sticky-Header-Regel oben ueberschrieben, siehe Spezifitaet). */
-.col-betm-wichtig { border-left: 3px solid var(--bs-primary, #0d6efd); }
+   erkennbar ist. */
 td.col-betm-wichtig { background-color: rgba(13, 110, 253, .05); }
 
 /* Reine Nebeninfo-Spalten schmaler halten, damit sie "Betm & Rolle" und

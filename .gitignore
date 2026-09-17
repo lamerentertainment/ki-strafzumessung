@@ -325,3 +325,6 @@ dumps/
 dbdumps/
 # Lokaler Claude-Code-Skill (nicht committen)
 .claude/skills/praejudiz-recherche/
+
+# Lokale Recherche-Notizen (nicht committen)
+/betm-recherche-kandidaten.md

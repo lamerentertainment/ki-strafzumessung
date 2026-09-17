@@ -42,7 +42,11 @@ Massgebend ist: **Überlebt der Schuldspruch zum Hauptdelikt die Berufung in sei
 ### Modell-Abgrenzung (Welches Modell wählen?)
 
 * **`SexualdeliktUrteil`**: Ist ein Sexualdelikt (Art. 189, 190, 191, 187 StGB) das dominante oder auch nur ein mitverurteiltes Delikt, gehört der Fall zwingend in `SexualdeliktUrteil` – selbst wenn daneben erhebliche Körperverletzungen, Drohungen oder Freiheitsberaubungen vorliegen.
-* **`BetmUrteil`**: Reine Betäubungsmitteldelikte (Art. 19 ff. BetmG).
+* **`BetmUrteil`**: Reine Betäubungsmitteldelikte (Art. 19 ff. BetmG). **Ketamin-Achtung:** Ist
+  Ketamin das Hauptbetäubungsmittel, den Fall vorerst überspringen (ML-Modell wurde ohne Ketamin
+  trainiert und wirft bei Ketamin in der DB einen Fehler). Ist Ketamin nur Nebenbestandteil neben
+  einer anderen Hauptdroge, den Fall wie gewohnt eintragen, aber den Ketamin-Anteil nicht als
+  `Betm`-Datensatz erfassen.
 * **`Urteil`**: Reine Vermögensdelikte (Art. 138, 139, 140, 144, 146 StGB etc., sofern kein Waffeneinsatz/Gewalt gegen Leib und Leben dominierte).
 * **`GewaltdeliktUrteil`**: Delikte gegen Leib und Leben (Mord, vorsätzliche Tötung, schwere/einfache Körperverletzung, Tätlichkeiten, Gefährdung des Lebens, Raub, Angriff, Raufhandel).
 * **Komplexe Mehrfachtäter- und Seriendelikte**: Fälle mit mehr als 3–4 Tatkomplexen, unzähligen Opfern über viele Jahre oder unentwirrbaren Anklagepunkten im Zweifel überspringen, da die Reduktion auf ein strukturiertes Schema fehleranfällig ist.

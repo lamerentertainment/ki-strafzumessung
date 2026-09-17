@@ -193,6 +193,14 @@ Vorinstanz-Logik (Abschnitt 3). Vor dem Insert immer `fall_nr` auf Duplikate pr�
 
 **`BetmUrteil`** (`database.models.BetmUrteil`):
 
+- **Ketamin: vorerst nicht erfassen.** Das ML-Modell wurde ohne Ketamin trainiert und wirft
+  aktuell einen Fehler, sobald Ketamin in der DB auftaucht. Konkret:
+  - Ist Ketamin das **Hauptbet채ubungsmittel** (die Einsatzstrafe st체tzt sich darauf ab), den
+    ganzen Fall **nicht** in die DB eintragen.
+  - Ist Ketamin nur ein **Nebenbestandteil** neben einer anderen Hauptdroge, den Fall wie
+    gewohnt eintragen, aber den Ketamin-Anteil **nicht** als `Betm`-Datensatz erfassen (nur
+    die 체brigen Substanzen).
+  - Sobald das Modell mit Ketamin neu trainiert wurde, entf채llt diese Einschr채nkung.
 - Kein `hauptdelikt`-Feld; das Hauptdelikt ergibt sich implizit aus dem Bet채ubungsmittel,
   auf das die Einsatzstrafe abgest체tzt wird.
 - `mengenmaessig` / `bandenmaessig` / `gewerbsmaessig` / `anstaltentreffen` / `mehrfach`

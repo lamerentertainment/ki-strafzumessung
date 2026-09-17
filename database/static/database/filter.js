@@ -414,6 +414,9 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       },
     ],
 
+    /** Platzhalterwert in freiheitsstrafe_in_monaten fuer eine lebenslaengliche Strafe. */
+    LEBENSLAENGLICH_PLATZHALTER: 999,
+
     /**
      * Strafhoehe eines Urteils in der Einheit der gewaehlten Sanktionsart,
      * oder null, wenn das Urteil dort nicht hineingehoert.
@@ -421,13 +424,22 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
      * In der kombinierten Ansicht zaehlen Freiheits- und Geldstrafen
      * gemeinsam, letztere zum Satz von 30 Tagessaetzen je Monat. Bussen
      * bleiben ueberall aussen vor: ihre Hoehe ist in keinem Modell erfasst.
+     * Lebenslaengliche Freiheitsstrafen (Platzhalter 999) verzerren
+     * Mittelwert/Median/Histogrammklassen und bleiben darum aussen vor.
      */
     strafhoehe(record, art) {
       const zahl = (wert) => (wert === null || wert === undefined ? null : wert);
+      const freiheitsstrafe = (wert) =>
+        wert === this.LEBENSLAENGLICH_PLATZHALTER ? null : zahl(wert);
       if (!art.kombiniert) {
+        if (art.code === "0") {
+          return record.hauptsanktion === art.code
+            ? freiheitsstrafe(record.freiheitsstrafe_in_monaten)
+            : null;
+        }
         return record.hauptsanktion === art.code ? zahl(record[art.feld]) : null;
       }
-      if (record.hauptsanktion === "0") return zahl(record.freiheitsstrafe_in_monaten);
+      if (record.hauptsanktion === "0") return freiheitsstrafe(record.freiheitsstrafe_in_monaten);
       if (record.hauptsanktion === "1") {
         const tagessaetze = zahl(record.anzahl_tagessaetze);
         return tagessaetze === null ? null : tagessaetze / this.TAGESSAETZE_JE_MONAT;
@@ -445,16 +457,14 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
      * Strafhoehen der Treffer je Sanktionsart, aufsteigend sortiert; nur die
      * Arten, zu denen die Treffermenge ueberhaupt Werte hergibt.
      *
-     * Urteile mit in_ki_modell=false (z.B. eine lebenslaengliche
-     * Freiheitsstrafe, die als Platzhalterwert codiert ist) verzerren
-     * Mittelwert/Median/Spanne und bleiben darum aussen vor. Teil der
-     * Trefferliste (`anzahl`) und der Vollzugsverteilung bleiben sie.
+     * in_ki_modell=false schliesst ein Urteil nur vom KI-Modelltraining aus,
+     * nicht von der Statistik hier - es zaehlt wie jedes andere zur
+     * Stichprobe.
      */
     sanktionsstichproben() {
       const stichproben = this.sanktionsarten.map((art) => ({ art, werte: [] }));
       this.trefferPks.forEach((pk) => {
         const record = this.records[pk];
-        if (record.in_ki_modell === false) return;
         stichproben.forEach((eintrag) => {
           const wert = this.strafhoehe(record, eintrag.art);
           if (wert !== null) eintrag.werte.push(wert);
@@ -612,7 +622,6 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       const eintraege = [];
       this.trefferPks.forEach((pk) => {
         const record = this.records[pk];
-        if (record.in_ki_modell === false) return;
         const wert = this.strafhoehe(record, art);
         if (wert === null) return;
         eintraege.push({

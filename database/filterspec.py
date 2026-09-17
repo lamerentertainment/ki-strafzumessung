@@ -483,10 +483,14 @@ def _strafmass_sortierschluessel(objekt):
     return None
 
 
-def _karte(objekt, urlname, delikt):
+def _karte(objekt, urlname, delikt, sachverhalt):
     """
     Kurzangaben eines Urteils fuer die Hover-Karte des Strafmasshistogramms
     (siehe ``strafmasshistogramm.html`` und ``filter.js``, ``histogramm()``).
+
+    ``delikt`` und ``sachverhalt`` kommen von den modellspezifischen Aufrufern,
+    weil die Modelle den Sachverhalt unterschiedlich benennen (z.B.
+    ``kurzsachverhalt`` bzw. ``zusammenfassung``).
 
     Bewusst getrennt von den Filterfeldern: Der Volltextblob ``_t`` ist
     kleingeschrieben und zusammengezogen, taugt also nicht zur Anzeige, und die
@@ -497,7 +501,7 @@ def _karte(objekt, urlname, delikt):
         "gericht": objekt.gericht,
         "datum": objekt.urteilsdatum.strftime("%d.%m.%Y") if objekt.urteilsdatum else "",
         "delikt": delikt,
-        "sachverhalt": objekt.kurzsachverhalt or "",
+        "sachverhalt": sachverhalt or "",
         "url": reverse(urlname, args=[objekt.pk]),
     }
 
@@ -517,7 +521,7 @@ def _karte_sexualdelikt(objekt):
         objekt.hauptdelikt.name if objekt.hauptdelikt else "",
         [("mehrfach begangen", objekt.hauptdelikt_mehrfachbegehung)],
     )
-    return _karte(objekt, "sexualurteil_detail", delikt)
+    return _karte(objekt, "sexualurteil_detail", delikt, objekt.kurzsachverhalt)
 
 
 def _karte_gewaltdelikt(objekt):
@@ -525,7 +529,37 @@ def _karte_gewaltdelikt(objekt):
         objekt.get_hauptdelikt_display(),
         [("mehrfach begangen", objekt.mehrfach), ("versucht", objekt.versuch)],
     )
-    return _karte(objekt, "gewalturteil_detail", delikt)
+    return _karte(objekt, "gewalturteil_detail", delikt, objekt.kurzsachverhalt)
+
+
+def _karte_urteil(objekt):
+    delikt = _deliktsbezeichnung(
+        objekt.get_hauptdelikt_display(),
+        [
+            ("mehrfach begangen", objekt.mehrfach),
+            ("gewerbsmässig", objekt.gewerbsmaessig),
+            ("bandenmässig", objekt.bandenmaessig),
+        ],
+    )
+    sachverhalt = (
+        f"Hauptdelikt: {objekt.get_hauptdelikt_display()}, "
+        f"Deliktssumme: CHF {objekt.deliktssumme:,}"
+    )
+    return _karte(objekt, "vmurteil_detail", delikt, sachverhalt)
+
+
+def _karte_betm(objekt):
+    eintraege = list(objekt.betm.all())
+    substanzen = ", ".join(sorted({eintrag.art.name for eintrag in eintraege}))
+    rolle_name = objekt.rolle.name if objekt.rolle_id else ""
+    delikt = " – ".join(teil for teil in (substanzen, rolle_name) if teil)
+    mengen = ", ".join(str(eintrag) for eintrag in eintraege)
+    sachverhalt = ", ".join(
+        teil
+        for teil in (f"Rolle: {rolle_name}" if rolle_name else "", mengen)
+        if teil
+    )
+    return _karte(objekt, "betmurteil_detail", delikt, sachverhalt)
 
 
 SEXUALDELIKT_FILTER_CONFIG = {
@@ -710,6 +744,7 @@ URTEIL_FILTER_CONFIG = {
     "berechnete_sortierfelder": {
         "sanktion_sortierschluessel": _sanktion_sortierschluessel,
     },
+    "karte": _karte_urteil,
 }
 
 
@@ -886,6 +921,7 @@ BETM_FILTER_CONFIG = {
         "taeter_sortierschluessel": _taeter_sortierschluessel,
         "sanktion_sortierschluessel": _sanktion_sortierschluessel,
     },
+    "karte": _karte_betm,
 }
 
 

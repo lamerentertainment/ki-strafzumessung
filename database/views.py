@@ -124,11 +124,12 @@ class FilterbareListView(ListView):
                 if feld.many_to_one
             ]
         )
-        # Zuletzt erfasste Urteile zuoberst; die Meta-Ordering der Modelle
+        # Zuletzt geaenderte Urteile zuoberst, damit frisch nachgefuehrte
+        # Eintraege sofort sichtbar sind; die Meta-Ordering der Modelle
         # (urteilsdatum bzw. add_time aufsteigend) bleibt fuer alle uebrigen
-        # Verwendungen (KI-Modelle, CSV-Export) unveraendert. add_time ist
+        # Verwendungen (KI-Modelle, CSV-Export) unveraendert. update_time ist
         # nullable, darum nulls_last und die pk als stabiler Zweitschluessel.
-        return queryset.order_by(F("add_time").desc(nulls_last=True), "-pk")
+        return queryset.order_by(F("update_time").desc(nulls_last=True), "-pk")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -56,6 +56,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const mehrfach = row.dataset.mehrfach === "1";
     const versuch = row.dataset.versuch === "1";
     const text = row.dataset.kurzsachverhalt || "";
+    // Betaeubungsmittelurteile kennen kein Hauptdelikt; dort beschriftet die
+    // Liste die Zeile selbst (z.B. "Betm & Rolle").
+    const deliktLabel = row.dataset.deliktlabel || "Hauptdelikt";
 
     let delikt = rawDelikt;
     if (delikt) {
@@ -69,7 +72,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     preview.querySelector(".hovercard-title").textContent = fallNr ? `Fall ${fallNr}` : "Kurzsachverhalt";
     preview.querySelector(".hovercard-meta").textContent = [gericht, datum].filter(Boolean).join(", ");
-    preview.querySelector(".hovercard-delikt").textContent = delikt ? `Hauptdelikt: ${delikt}` : "";
+    preview.querySelector(".hovercard-delikt").textContent = delikt ? `${deliktLabel}: ${delikt}` : "";
     preview.querySelector(".hovercard-body").textContent = text;
 
     positionPreview(e);

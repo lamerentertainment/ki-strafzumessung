@@ -352,11 +352,24 @@ class FilterbareAnsichtenTest(TestCase):
             urteilsdatum=date(2024, 2, 2),
             kanton=self.kanton,
             rolle=Rolle.objects.create(name="Transport"),
+            kurzsachverhalt="Transport von 50 Gramm Kokain von Zürich nach Winterthur.",
         )
         urteil.betm.set(
             [Betm.objects.create(art=BetmArt.objects.create(name="Kokain"), menge_in_g=50)]
         )
-        self.ansicht_pruefen("/betmdatabase", urteil)
+        antwort = self.ansicht_pruefen("/betmdatabase", urteil)
+        # Volltext-Suche in filter_records soll kurzsachverhalt enthalten
+        records = antwort.context["filter_records"]
+        self.assertIn("winterthur", records[str(urteil.pk)]["_t"])
+        # HTML soll data-kurzsachverhalt und SV-Badge enthalten
+        self.assertContains(antwort, 'data-kurzsachverhalt="Transport von 50 Gramm Kokain von Zürich nach Winterthur."')
+        self.assertContains(antwort, 'title="Kurzsachverhalt vorhanden (Hover für Vorschau)"')
+        self.assertContains(antwort, 'data-hauptdelikt="Kokain – Transport"')
+        # Detailansicht soll Kurzsachverhalt anzeigen
+        detail_antwort = self.client.get(reverse("betmurteil_detail", kwargs={"pk": urteil.pk}))
+        self.assertEqual(detail_antwort.status_code, 200)
+        self.assertContains(detail_antwort, "Kurzsachverhalt")
+        self.assertContains(detail_antwort, "Transport von 50 Gramm Kokain von Zürich nach Winterthur.")
 
     def test_gewaltdelikte(self):
         urteil = GewaltdeliktUrteil.objects.create(

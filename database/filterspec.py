@@ -554,7 +554,9 @@ def _karte_betm(objekt):
     rolle_name = objekt.rolle.name if objekt.rolle_id else ""
     delikt = " – ".join(teil for teil in (substanzen, rolle_name) if teil)
     mengen = ", ".join(str(eintrag) for eintrag in eintraege)
-    sachverhalt = ", ".join(
+    # Solange der Kurzsachverhalt nicht nachgefuehrt ist, treten wie bisher die
+    # Eckwerte (Rolle und Mengen) an seine Stelle.
+    sachverhalt = objekt.kurzsachverhalt or ", ".join(
         teil
         for teil in (f"Rolle: {rolle_name}" if rolle_name else "", mengen)
         if teil
@@ -835,7 +837,10 @@ BETM_FILTER_CONFIG = {
                 "mehrfach",
             ],
         ),
-        ("Weitere Delikte", ["nur_hauptdelikt", "nebenverurteilungsscore"]),
+        (
+            "Weitere Delikte & Besonderheiten",
+            ["nur_hauptdelikt", "nebenverurteilungsscore", "besonderheiten"],
+        ),
         (
             "Sanktion",
             [
@@ -888,6 +893,7 @@ BETM_FILTER_CONFIG = {
         "anstaltentreffen": "Anstaltentreffen",
         "mehrfach": "mehrfache Begehung",
         "nebenverurteilungsscore": "Nebenverurteilungsscore",
+        "besonderheiten": "Besonderheiten",
         "hauptsanktion": "Hauptsanktion",
         "freiheitsstrafe_in_monaten": "Freiheitsstrafe",
         "anzahl_tagessaetze": "Geldstrafe",
@@ -900,8 +906,15 @@ BETM_FILTER_CONFIG = {
         "freiheitsstrafe_in_monaten": "Monate",
         "anzahl_tagessaetze": "Tagessätze",
     },
-    "volltextfelder": ["fall_nr", "gericht", "rolle__name", "zusammenfassung"],
-    "suchfelder_label": "Fall-Nr., Gericht, Rolle, Zusammenfassung",
+    "volltextfelder": [
+        "fall_nr",
+        "gericht",
+        "rolle__name",
+        "kurzsachverhalt",
+        "zusammenfassung",
+        "bemerkungen",
+    ],
+    "suchfelder_label": "Fall-Nr., Gericht, Rolle, Kurzsachverhalt, Zusammenfassung, Bemerkungen",
     "sortierfelder": [
         {"name": "fall_nr", "label": "Fall-Nr."},
         {"name": "urteilsdatum", "label": "Urteilsdatum"},

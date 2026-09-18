@@ -148,7 +148,7 @@ class BetmUrteilListView(FilterbareListView):
     context_object_name = "betm_urteile"
     template_name = "database/betmurteil_list.html"
     filter_config = BETM_FILTER_CONFIG
-    filter_prefetch = ("betm__art",)
+    filter_prefetch = ("betm__art", "besonderheiten")
 
 
 class InlineBearbeitbarMixin:

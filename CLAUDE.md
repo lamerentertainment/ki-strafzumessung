@@ -221,6 +221,14 @@ Vorinstanz-Logik (Abschnitt 3). Vor dem Insert immer `fall_nr` auf Duplikate pr�
 - `nebenverurteilungsscore`-Berechnung identisch zu `Urteil` (Abschnitt 4), bezogen auf
   alle Schuldsprüche ausser dem Hauptdelikt (z.B. weitere BetmG-Tatbestände, HMG-Vergehen).
 - `kanton` ist FK zu `Kanton` (Feld `abk`, nicht `name`, z.B. `Kanton.objects.get(abk='ZH')`).
+- `kurzsachverhalt` (zwei bis drei Sätze zum Tatgeschehen, wird als Tooltip in der
+  Datenbankansicht angezeigt), `bemerkungen` (freie Notizen) und `besonderheiten`
+  (M2M zu `Besonderheiten`, gleicher Katalog wie bei Sexual- und Gewaltdelikten)
+  sind optional und identisch zu den entsprechenden Feldern von `GewaltdeliktUrteil`.
+  `besonderheiten` erst nach dem Speichern per `.set([...])` zuweisen. Bestehende
+  Katalogwerte prüfen (`Besonderheiten.objects.values_list('name', flat=True)`) und
+  keine neuen Bezeichnungen erfinden — der Katalog wird von allen drei Deliktsmodellen
+  geteilt. Keines der drei Felder fliesst in die ML-Prognose ein.
 
 **`SexualdeliktUrteil`** (`database.models.SexualdeliktUrteil`):
 

@@ -264,11 +264,25 @@ class BetmUrteil(models.Model):
         verbose_name="einschlägig vorbestraft",
         help_text="Ob die verurteilte Person einschlägig vorbestraft ist.",
     )
+    besonderheiten = models.ManyToManyField(
+        "Besonderheiten",
+        related_name="betmdelikte",
+        blank=True,
+        help_text="Strafzumessungsrelevante Besonderheiten (z.B. Geständnis/Reue, "
+        "verminderte Schuldfähigkeit, Verletzung des Beschleunigungsgebots, "
+        "Strafempfindlichkeit).",
+    )
     in_ki_modell = models.BooleanField(default=True)
+    kurzsachverhalt = models.TextField(
+        blank=True,
+        default="",
+        help_text="Kurze Zusammenfassung des Sachverhalts (wird beim Hovern in der Urteilsliste angezeigt)",
+    )
     zusammenfassung = models.TextField(
         blank=True,
         help_text="Die Zusammenfassung der massgebenden Erwägungen für die Strafzumessung",
     )
+    bemerkungen = models.TextField(blank=True, help_text="Besondere Bemerkungen zum Fall")
     add_time = models.DateTimeField(
         auto_now_add=True,
         null=True,

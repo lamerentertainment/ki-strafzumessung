@@ -53,7 +53,8 @@ class BetmUrteilAdminForm(forms.ModelForm):
 class BetmUrteilAdmin(admin.ModelAdmin):
     form = BetmUrteilAdminForm
     list_display = ["fall_nr", "update_time", "urteilsdatum", "gericht", "freiheitsstrafe_in_monaten",
-                    "anzahl_tagessaetze", "has_zusammenfassung"]
+                    "anzahl_tagessaetze", "has_kurzsachverhalt", "has_zusammenfassung"]
+    search_fields = ["fall_nr", "gericht", "kurzsachverhalt", "zusammenfassung", "bemerkungen"]
     ordering = ["-update_time"]
 
     fieldsets = (
@@ -71,15 +72,21 @@ class BetmUrteilAdmin(admin.ModelAdmin):
         ('Delikt & Rolle', {
             'fields': ('mengenmaessig', 'bandenmaessig', 'gewerbsmaessig', 'anstaltentreffen',
                        'mehrfach', 'beschaffungskriminalitaet', 'rolle', 'betm',
-                       'deliktsertrag', 'deliktsdauer_in_monaten', 'nebenverurteilungsscore'),
+                       'deliktsertrag', 'deliktsdauer_in_monaten', 'nebenverurteilungsscore',
+                       'besonderheiten'),
         }),
         ('Sanktion', {
             'fields': ('hauptsanktion', 'freiheitsstrafe_in_monaten', 'anzahl_tagessaetze', 'vollzug', 'verfahrensart'),
         }),
         ('Weitere Informationen', {
-            'fields': ('zusammenfassung', 'in_ki_modell'),
+            'fields': ('kurzsachverhalt', 'zusammenfassung', 'bemerkungen', 'in_ki_modell'),
         }),
     )
+
+    def has_kurzsachverhalt(self, obj):
+        return bool(obj.kurzsachverhalt)
+    has_kurzsachverhalt.boolean = True
+    has_kurzsachverhalt.short_description = "Kurzsachverhalt vorhanden"
 
     def has_zusammenfassung(self, obj):
         return bool(obj.zusammenfassung)

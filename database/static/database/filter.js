@@ -24,7 +24,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     // Sanktionsart, deren Strafhoehen die Kennzahlenleiste auswertet
     kennzahlenSanktion: "k",
     // Strafmasshistogramm (aufklappbar unterhalb des Filterpanels)
-    histogrammOffen: false,
+    histogrammOffen: true,
     histogrammKarte: null,
     histogrammKartePos: { x: 0, y: 0 },
 

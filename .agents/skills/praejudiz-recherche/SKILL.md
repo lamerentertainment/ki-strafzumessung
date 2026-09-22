@@ -140,8 +140,9 @@ Choices **niemals erraten**, sondern bei Unklarheit per Shell prüfen.
 
 ### `kurzsachverhalt`
 * **Länge:** 1 bis 2 prägnante Sätze im Aktiv.
-* **Inhalt:** Konkrete Tathandlung, Tatmittel, Ort/Kontext und Verletzungsfolgen in Klammern.
+* **Inhalt:** Ausschliesslich der gerichtlich (zuletzt, i.d.R. vorinstanzlich) festgestellte Sachverhalt, der zur Strafe geführt hat — konkrete Tathandlung, Tatmittel, Ort/Kontext und Verletzungsfolgen in Klammern.
 * **Keine** abstrakten Floskeln (*"übte Gewalt aus"*), sondern konkrete Aktionen (*"schlug mit der Faust ins Gesicht und trat mit Füssen gegen den Kopf"*).
+* **Keine** Prozess-/Verfahrensangaben und keine Verteidigungsstrategie: nicht ob/wie der Beschuldigte bestritten, gestanden, sich verantwortet oder welche Beweisanträge/Schutzbehauptungen er vorgebracht hat, und nicht wie das Gericht diese gewürdigt hat (z.B. *"wurde als unglaubhafte Schutzbehauptung verworfen"*, *"bestritt den Vorwurf durchgehend"*). Solche Angaben gehören — falls relevant — in `bemerkungen` oder `zusammenfassung`, nicht in `kurzsachverhalt`.
 
 ### `zusammenfassung`
 > [!IMPORTANT]
@@ -241,5 +242,5 @@ Vor dem Beenden jedes Falls diese Punkte abhaken:
 - [ ] **FS/TS-Konvention:** Bei Freiheitsstrafe `anzahl_tagessaetze=0`; bei Geldstrafe `freiheitsstrafe_in_monaten=0`.
 - [ ] **`full_clean()` vor `save()`** ausgeführt.
 - [ ] **`besonderheiten`** nach dem Speichern via `.set(...)` zugewiesen.
-- [ ] **`kurzsachverhalt`** prägnant (1–2 Sätze) im Aktiv verfasst.
+- [ ] **`kurzsachverhalt`** prägnant (1–2 Sätze) im Aktiv verfasst, nur gerichtlich festgestellter Sachverhalt — keine Prozess-/Verteidigungsangaben (siehe Abschnitt 5).
 - [ ] **`zusammenfassung`** ausführlich (1500–3000 Zeichen), vollständig strukturiert (Sachverhalt, Vorinstanz, Berufung, Strafzumessung/Rabatte, Endentscheid) und **ohne vorzeitigen Abbruch** abgeschlossen.

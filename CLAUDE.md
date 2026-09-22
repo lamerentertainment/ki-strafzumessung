@@ -215,6 +215,12 @@ Vorinstanz-Logik (Abschnitt 3). Vor dem Insert immer `fall_nr` auf Duplikate pr�
 - `rolle` (FK zu `Rolle`): existierende Werte prüfen (`Rolle.objects.values_list('name',
   flat=True)`, z.B. "Verkauf Konsumeinheiten", "Grosshandel", "Transport",
   "Aufbewahrung/Besitz") und den zur Tatbeteiligung passenden auswählen.
+  **"Verkauf Konsumeinheiten" vs. "Handel":** "Verkauf Konsumeinheiten" gilt nur, wenn der
+  Täter hauptsächlich in kleinen, konsumfertigen Portionen (v.a. 1g-Einheiten) direkt an
+  Süchtige verkauft hat (sog. "Kügelidealer"). Werden regelmässig mehrere Gramm auf einmal
+  abgegeben (z.B. an Zwischenhändler oder in grösseren Mengen pro Verkauf), ist stattdessen
+  "Handel" die richtige Rolle — unabhängig davon, ob insgesamt nur kleine Gesamtmengen
+  betroffen sind.
 - `deliktsertrag` = Erlös/Vermögensvorteil aus dem Handel (subsidiär die vom Gericht
   festgesetzte Ersatzforderung, falls kein expliziter Ertrag beziffert wird).
 - `deliktsdauer_in_monaten` = Zeitraum der (Haupt-)Deliktsbegehung gemäss Sachverhalt.

@@ -521,7 +521,9 @@ def _karte_sexualdelikt(objekt):
         objekt.hauptdelikt.name if objekt.hauptdelikt else "",
         [("mehrfach begangen", objekt.hauptdelikt_mehrfachbegehung)],
     )
-    return _karte(objekt, "sexualurteil_detail", delikt, objekt.kurzsachverhalt)
+    return _karte(
+        objekt, "sexualurteil_detail", f"Hauptdelikt: {delikt}", objekt.kurzsachverhalt
+    )
 
 
 def _karte_gewaltdelikt(objekt):
@@ -529,7 +531,9 @@ def _karte_gewaltdelikt(objekt):
         objekt.get_hauptdelikt_display(),
         [("mehrfach begangen", objekt.mehrfach), ("versucht", objekt.versuch)],
     )
-    return _karte(objekt, "gewalturteil_detail", delikt, objekt.kurzsachverhalt)
+    return _karte(
+        objekt, "gewalturteil_detail", f"Hauptdelikt: {delikt}", objekt.kurzsachverhalt
+    )
 
 
 def _karte_urteil(objekt):
@@ -545,23 +549,20 @@ def _karte_urteil(objekt):
         f"Hauptdelikt: {objekt.get_hauptdelikt_display()}, "
         f"Deliktssumme: CHF {objekt.deliktssumme:,}"
     )
-    return _karte(objekt, "vmurteil_detail", delikt, sachverhalt)
+    return _karte(objekt, "vmurteil_detail", f"Hauptdelikt: {delikt}", sachverhalt)
 
 
 def _karte_betm(objekt):
     eintraege = list(objekt.betm.all())
-    substanzen = ", ".join(sorted({eintrag.art.name for eintrag in eintraege}))
     rolle_name = objekt.rolle.name if objekt.rolle_id else ""
-    delikt = " – ".join(teil for teil in (substanzen, rolle_name) if teil)
-    mengen = ", ".join(str(eintrag) for eintrag in eintraege)
-    # Solange der Kurzsachverhalt nicht nachgefuehrt ist, treten wie bisher die
-    # Eckwerte (Rolle und Mengen) an seine Stelle.
-    sachverhalt = objekt.kurzsachverhalt or ", ".join(
-        teil
-        for teil in (f"Rolle: {rolle_name}" if rolle_name else "", mengen)
-        if teil
-    )
-    return _karte(objekt, "betmurteil_detail", delikt, sachverhalt)
+    # Rolle und Drogenart/-menge gehoeren in die Kopfzeile (immer sichtbar,
+    # unabhaengig vom Kurzsachverhalt) - sonst gehen sie im Fliesstext des
+    # Kurzsachverhalts unter und sind nicht mehr auf einen Blick erkennbar.
+    # Kein "Hauptdelikt: "-Praefix, da es hier kein Hauptdelikt im Sinne der
+    # anderen Modelle gibt, sondern Rolle + Substanz(en).
+    mengen = "; ".join(str(eintrag) for eintrag in eintraege)
+    delikt = " – ".join(teil for teil in (rolle_name, mengen) if teil)
+    return _karte(objekt, "betmurteil_detail", delikt, objekt.kurzsachverhalt or "")
 
 
 SEXUALDELIKT_FILTER_CONFIG = {

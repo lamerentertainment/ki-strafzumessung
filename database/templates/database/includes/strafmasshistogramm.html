@@ -134,7 +134,7 @@ ohne dieses Feld bleiben die Hover-Karten leer.
                 x-text="[histogrammKarte.gericht, histogrammKarte.datum].filter(Boolean).join(', ')"></span>
         </div>
         <div class="hovercard-delikt small mt-1"
-             x-text="histogrammKarte.delikt ? `Hauptdelikt: ${histogrammKarte.delikt}` : ''"></div>
+             x-text="histogrammKarte.delikt || ''"></div>
         <div class="small mt-1 fw-semibold"
              x-text="[histogrammKarte.strafmass, histogrammKarte.vollzug].filter(Boolean).join(', ')"></div>
       </div>

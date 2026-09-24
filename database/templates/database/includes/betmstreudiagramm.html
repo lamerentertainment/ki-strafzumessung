@@ -17,7 +17,7 @@ Filterpanel keine Substanz gewählt ist (siehe `streudiagramm()`).
           @click="streudiagrammOffen = !streudiagrammOffen"
           :aria-expanded="streudiagrammOffen ? 'true' : 'false'">
     <span x-text="streudiagrammOffen ? '▾' : '▸'"></span>
-    Strafmass über Menge
+    Strafmass über Menge (Streudiagramm)
     <template x-if="streudiagramm()">
       <span class="badge text-bg-secondary ms-1">
         <span x-text="streudiagramm().anzahl"></span> Urteile

@@ -387,6 +387,35 @@ def ws_evaluation(request):
 
 
 # Prognose Views:
+
+# Bootstrap-Klassen für die Differenzanzeige in den nachbar*.html-Templates.
+# Bewusst hier statt inline im Template berechnet: verschachtelte {% if/elif %}-Ketten
+# innerhalb eines einzelnen HTML-Attributs werden von Formattern beim Speichern
+# gerne über mehrere Zeilen umgebrochen, was Django-Templates nicht unterstützt
+# (TemplateSyntaxError "Unclosed tag" bzw. "Could not parse the remainder").
+_DIFF_KLASSE_DANGER = "bg-danger p-2 text-dark bg-opacity-25"
+_DIFF_KLASSE_DANGER_LEICHT = "bg-danger p-2 text-dark bg-opacity-10"
+_DIFF_KLASSE_ERFOLG_LEICHT = "bg-success p-2 text-dark bg-opacity-10"
+_DIFF_KLASSE_ERFOLG = "bg-success p-2 text-dark bg-opacity-25"
+
+
+def _diff_klasse(diff, stufen):
+    """Bootstrap-Hintergrundklasse für eine Differenzanzeige.
+
+    `stufen` ist eine Liste von (bedingung, klasse)-Paaren; die erste zutreffende
+    Bedingung gewinnt. Trifft keine zu (insb. diff == 0), wird die Erfolgs-Klasse
+    zurückgegeben.
+    """
+    for bedingung, klasse in stufen:
+        if bedingung(diff):
+            return klasse
+    return _DIFF_KLASSE_ERFOLG
+
+
+def _entsprechung_klasse(entspricht):
+    return _DIFF_KLASSE_ERFOLG if entspricht else _DIFF_KLASSE_DANGER
+
+
 def prognose(request):
     # if this is a POST request we need to process the form data
     if request.method == "POST":
@@ -557,14 +586,39 @@ def prognose(request):
                 nachbarobjekt.ds_diff = (
                     nachbarobjekt.deliktssumme - formobjekt.cleaned_data["deliktssumme"]
                 )
+                nachbarobjekt.ds_diff_klasse = _diff_klasse(
+                    nachbarobjekt.ds_diff,
+                    [
+                        (lambda d: d >= 100000, _DIFF_KLASSE_DANGER),
+                        (lambda d: d >= 75000, _DIFF_KLASSE_DANGER_LEICHT),
+                        (lambda d: d >= 25000, _DIFF_KLASSE_ERFOLG_LEICHT),
+                        (lambda d: d <= -100000, _DIFF_KLASSE_DANGER),
+                        (lambda d: d <= -75000, _DIFF_KLASSE_DANGER_LEICHT),
+                        (lambda d: d <= -25000, _DIFF_KLASSE_ERFOLG_LEICHT),
+                    ],
+                )
                 nachbarobjekt.nvs_diff = (
                     nachbarobjekt.nebenverurteilungsscore
                     - formobjekt.cleaned_data["nebenverurteilungsscore"]
+                )
+                nachbarobjekt.nvs_diff_klasse = _diff_klasse(
+                    nachbarobjekt.nvs_diff,
+                    [
+                        (lambda d: d >= 5, _DIFF_KLASSE_DANGER),
+                        (lambda d: d >= 3, _DIFF_KLASSE_DANGER_LEICHT),
+                        (lambda d: d >= 1, _DIFF_KLASSE_ERFOLG_LEICHT),
+                        (lambda d: d <= -5, _DIFF_KLASSE_DANGER),
+                        (lambda d: d <= -3, _DIFF_KLASSE_DANGER_LEICHT),
+                        (lambda d: d <= -1, _DIFF_KLASSE_ERFOLG_LEICHT),
+                    ],
                 )
                 nachbarobjekt.entsprechung_hauptdelikt = (
                     True
                     if nachbarobjekt.hauptdelikt == formobjekt.cleaned_data["hauptdelikt"]
                     else False
+                )
+                nachbarobjekt.entsprechung_hauptdelikt_klasse = _entsprechung_klasse(
+                    nachbarobjekt.entsprechung_hauptdelikt
                 )
                 nachbarobjekt.entsprechung_gewerbsmaessig = (
                     True
@@ -572,11 +626,19 @@ def prognose(request):
                     == formobjekt.cleaned_data["gewerbsmaessig"]
                     else False
                 )
+                nachbarobjekt.entsprechung_gewerbsmaessig_klasse = _entsprechung_klasse(
+                    nachbarobjekt.entsprechung_gewerbsmaessig
+                )
                 nachbarobjekt.entsprechung_vorbestraft_einschlaegig = (
                     True
                     if nachbarobjekt.vorbestraft_einschlaegig
                     == formobjekt.cleaned_data["vorbestraft_einschlaegig"]
                     else False
+                )
+                nachbarobjekt.entsprechung_vorbestraft_einschlaegig_klasse = (
+                    _entsprechung_klasse(
+                        nachbarobjekt.entsprechung_vorbestraft_einschlaegig
+                    )
                 )
                 nachbarobjekt.zusammenfassung = nachbarobjekt.zusammenfassung
 
@@ -1103,9 +1165,21 @@ def betm_prognose(request):
                     if nachbarobjekt.rolle == formobjekt.cleaned_data["rolle"]
                     else False
                 )
+                nachbarobjekt.entsprechung_rolle_klasse = _entsprechung_klasse(
+                    nachbarobjekt.entsprechung_rolle
+                )
                 nachbarobjekt.nvs_diff = (
                     nachbarobjekt.nebenverurteilungsscore
                     - formobjekt.cleaned_data["nebenverurteilungsscore"]
+                )
+                nachbarobjekt.nvs_diff_klasse = _diff_klasse(
+                    nachbarobjekt.nvs_diff,
+                    [
+                        (lambda d: d >= 3, _DIFF_KLASSE_DANGER),
+                        (lambda d: d >= 1, _DIFF_KLASSE_ERFOLG_LEICHT),
+                        (lambda d: d <= -3, _DIFF_KLASSE_DANGER),
+                        (lambda d: d <= -1, _DIFF_KLASSE_ERFOLG_LEICHT),
+                    ],
                 )
                 nachbarobjekt.entsprechung_mengenmaessig = (
                     True
@@ -1113,11 +1187,17 @@ def betm_prognose(request):
                     == formobjekt.cleaned_data["mengenmaessig"]
                     else False
                 )
+                nachbarobjekt.entsprechung_mengenmaessig_klasse = _entsprechung_klasse(
+                    nachbarobjekt.entsprechung_mengenmaessig
+                )
                 nachbarobjekt.entsprechung_gewerbsmaessig = (
                     True
                     if nachbarobjekt.gewerbsmaessig
                     == formobjekt.cleaned_data["gewerbsmaessig"]
                     else False
+                )
+                nachbarobjekt.entsprechung_gewerbsmaessig_klasse = _entsprechung_klasse(
+                    nachbarobjekt.entsprechung_gewerbsmaessig
                 )
                 nachbarobjekt.entsprechung_bandenmaessig = (
                     True
@@ -1125,11 +1205,19 @@ def betm_prognose(request):
                     == formobjekt.cleaned_data["bandenmaessig"]
                     else False
                 )
+                nachbarobjekt.entsprechung_bandenmaessig_klasse = _entsprechung_klasse(
+                    nachbarobjekt.entsprechung_bandenmaessig
+                )
                 nachbarobjekt.entsprechung_vorbestraft_einschlaegig = (
                     True
                     if nachbarobjekt.vorbestraft_einschlaegig
                     == formobjekt.cleaned_data["vorbestraft_einschlaegig"]
                     else False
+                )
+                nachbarobjekt.entsprechung_vorbestraft_einschlaegig_klasse = (
+                    _entsprechung_klasse(
+                        nachbarobjekt.entsprechung_vorbestraft_einschlaegig
+                    )
                 )
                 # Da deliktsdauer_in_monaten und deliktsertrag nicht zwingend ausgefüllt sein müssen, zuerst auf 0 setzen
                 if nachbarobjekt.deliktsdauer_in_monaten is None:
@@ -1138,11 +1226,29 @@ def betm_prognose(request):
                     nachbarobjekt.deliktsdauer_in_monaten
                     - formobjekt.cleaned_data["deliktsdauer_in_monaten"]
                 )
+                nachbarobjekt.deliktsdauer_diff_klasse = _diff_klasse(
+                    nachbarobjekt.deliktsdauer_diff,
+                    [
+                        (lambda d: d >= 6, _DIFF_KLASSE_DANGER),
+                        (lambda d: d >= 2, _DIFF_KLASSE_ERFOLG_LEICHT),
+                        (lambda d: d <= -6, _DIFF_KLASSE_DANGER),
+                        (lambda d: d <= -2, _DIFF_KLASSE_ERFOLG_LEICHT),
+                    ],
+                )
                 if nachbarobjekt.deliktsertrag is None:
                     nachbarobjekt.deliktsertrag = 0
                 nachbarobjekt.deliktsertrag_diff = (
                     nachbarobjekt.deliktsertrag
                     - formobjekt.cleaned_data["deliktsertrag"]
+                )
+                nachbarobjekt.deliktsertrag_diff_klasse = _diff_klasse(
+                    nachbarobjekt.deliktsertrag_diff,
+                    [
+                        (lambda d: d >= 20000, _DIFF_KLASSE_DANGER),
+                        (lambda d: d >= 5000, _DIFF_KLASSE_ERFOLG_LEICHT),
+                        (lambda d: d <= -20000, _DIFF_KLASSE_DANGER),
+                        (lambda d: d <= -5000, _DIFF_KLASSE_ERFOLG_LEICHT),
+                    ],
                 )
                 nachbarobjekt.zusammenfassung = nachbarobjekt.zusammenfassung
 

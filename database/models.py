@@ -1,8 +1,28 @@
 import pandas as pd
 from django.db import models
-import locale
 from datetime import timedelta
 
+
+_DEUTSCHE_MONATSNAMEN = {
+    1: "Januar",
+    2: "Februar",
+    3: "März",
+    4: "April",
+    5: "Mai",
+    6: "Juni",
+    7: "Juli",
+    8: "August",
+    9: "September",
+    10: "Oktober",
+    11: "November",
+    12: "Dezember",
+}
+
+
+def datum_deutsch_formatieren(datum):
+    """Formatiert ein Datum als 'd. Monatsname JJJJ' mit deutschen Monatsnamen,
+    unabhängig davon, ob auf dem System eine de_CH-Locale installiert ist."""
+    return f"{datum.day}. {_DEUTSCHE_MONATSNAMEN[datum.month]} {datum.year}"
 
 
 class DataFrameExporter(models.Manager):
@@ -162,11 +182,7 @@ class Urteil(models.Model):
 
     # Methoden
     def __str__(self):
-        try:
-            locale.setlocale(locale.LC_TIME, "de_CH")
-        except:
-            locale.setlocale(locale.LC_ALL, "")
-        return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B %Y')} ({self.fall_nr})"
+        return f"{self.gericht}, Urteil vom {datum_deutsch_formatieren(self.urteilsdatum)} ({self.fall_nr})"
 
     class Meta:
         verbose_name_plural = "Vermögensdelikt-Urteile"
@@ -295,7 +311,7 @@ class BetmUrteil(models.Model):
     )
 
     def __str__(self):
-        return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B %Y')} ({self.fall_nr})"
+        return f"{self.gericht}, Urteil vom {datum_deutsch_formatieren(self.urteilsdatum)} ({self.fall_nr})"
 
     class Meta:
         verbose_name_plural = "Betäubungsmitteldelikt-Urteile"
@@ -559,11 +575,7 @@ class SexualdeliktUrteil(models.Model):
     )
 
     def __str__(self):
-        try:
-            locale.setlocale(locale.LC_TIME, "de_CH")
-        except:
-            locale.setlocale(locale.LC_ALL, "")
-        return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B %Y')} ({self.fall_nr})"
+        return f"{self.gericht}, Urteil vom {datum_deutsch_formatieren(self.urteilsdatum)} ({self.fall_nr})"
 
     class Meta:
         verbose_name_plural = "Sexualdelikt-Urteile"
@@ -861,11 +873,7 @@ class GewaltdeliktUrteil(models.Model):
     update_time = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     def __str__(self):
-        try:
-            locale.setlocale(locale.LC_TIME, "de_CH")
-        except:
-            locale.setlocale(locale.LC_ALL, "")
-        return f"{self.gericht}, Urteil vom {self.urteilsdatum.strftime('%d. %B %Y')} ({self.fall_nr})"
+        return f"{self.gericht}, Urteil vom {datum_deutsch_formatieren(self.urteilsdatum)} ({self.fall_nr})"
 
     class Meta:
         verbose_name_plural = "Gewaltdelikt-Urteile"

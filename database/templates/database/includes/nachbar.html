@@ -2,80 +2,70 @@
 {% load strafmass_formatierung %}
 
 <div class="card">
-    <h5 class="card-header">Präjudiz: <a href="{{ nachbar.url_link }}">{{ nachbar }}</a></h5>
+    <h5 class="card-header">Präjudiz: <a href="{% url 'vmurteil_detail' nachbar.pk %}">{{ nachbar }}</a></h5>
     <div class="card-body">
         <table class="table table-sm table-bordered">
             <thead class="table-light">
                 <tr>
-                    <td><p><b>Merkmale des Präjudiz</b></p></td>
-                    <td><p><b>Differenzen</b></p></td>
+                    <td>
+                        <p><b>Merkmale des Präjudiz</b></p>
+                    </td>
+                    <td>
+                        <p><b>Differenzen</b></p>
+                    </td>
                 </tr>
             </thead>
             <tbody class="table-group-divider">
                 <tr>
-                    <td><p>Deliktssumme: Fr. {{ nachbar.deliktssumme|intcomma }}</p></td>
-                    {% if nachbar.ds_diff > 0 %}
-                    <td {% if nachbar.ds_diff >= 100000 %} class="bg-danger p-2 text-dark bg-opacity-25"
-                        {% elif nachbar.ds_diff >= 75000 %} class="bg-danger p-2 text-dark bg-opacity-10"
-                        {% elif nachbar.ds_diff >= 25000 %} class="bg-success p-2 text-dark bg-opacity-10"
-                        {% else %} class="bg-success p-2 text-dark bg-opacity-25"
-                        {% endif %}
-                    ><p>Differenz: + Fr. {{ nachbar.ds_diff|intcomma }}</p></td>
-                    {% else %}
-                    <td {% if nachbar.ds_diff <= -100000 %} class="bg-danger p-2 text-dark bg-opacity-25"
-                        {% elif nachbar.ds_diff <= -75000 %} class="bg-danger p-2 text-dark bg-opacity-10"
-                        {% elif nachbar.ds_diff <= -25000 %} class="bg-success p-2 text-dark bg-opacity-10"
-                        {% else %} class="bg-success p-2 text-dark bg-opacity-25"
-                        {% endif %}
-                    ><p>Differenz: Fr. {{ nachbar.ds_diff|intcomma }}</p></td>
-                    {% endif %}
+                    <td>
+                        <p>Deliktssumme: Fr. {{ nachbar.deliktssumme|intcomma }}</p>
+                    </td>
+                    <td class="{{ nachbar.ds_diff_klasse }}">
+                        <p>Differenz: {{ nachbar.ds_diff|positives_vorzeichen }} Fr. {{ nachbar.ds_diff|intcomma }}</p>
+                    </td>
                 </tr>
                 <tr>
-                    <td><p>Nebenverurteilungscore: {{ nachbar.nebenverurteilungsscore }}</p></td>
-                    {% if nachbar.nvs_diff > 0 %}
-                    <td {% if nachbar.nvs_diff >= 5 %} class="bg-danger p-2 text-dark bg-opacity-25"
-                        {% elif nachbar.nvs_diff >= 3 %} class="bg-danger p-2 text-dark bg-opacity-10"
-                        {% elif nachbar.nvs_diff >= 1 %} class="bg-success p-2 text-dark bg-opacity-10"
-                        {% else %} class="bg-success p-2 text-dark bg-opacity-25"
-                        {% endif %}
-                    ><p>Differenz: + {{ nachbar.nvs_diff }}</p></td>
-                    {% elif nachbar.nvs_diff <= 0 %}
-                    <td {% if nachbar.nvs_diff <= -5 %} class="bg-danger p-2 text-dark bg-opacity-25"
-                        {% elif nachbar.nvs_diff <= -3 %} class="bg-danger p-2 text-dark bg-opacity-10"
-                        {% elif nachbar.nvs_diff <= -1 %} class="bg-success p-2 text-dark bg-opacity-10"
-                        {% elif nachbar.nvs_diff == 0 %} class="bg-success p-2 text-dark bg-opacity-25"
-                        {% endif %}
-                    ><p>Differenz: {{ nachbar.nvs_diff }}</p></td>
-                    {% endif %}
+                    <td>
+                        <p>Nebenverurteilungscore: {{ nachbar.nebenverurteilungsscore }}</p>
+                    </td>
+                    <td class="{{ nachbar.nvs_diff_klasse }}">
+                        <p>Differenz: {{ nachbar.nvs_diff|positives_vorzeichen }} {{ nachbar.nvs_diff }}</p>
+                    </td>
                 </tr>
                 <tr>
-                    <td><p>Hauptdelikt: {{ nachbar.hauptdelikt }},</p></td>
-                    <td {% if nachbar.entsprechung_hauptdelikt %} class="bg-success p-2 text-dark bg-opacity-25"
-                    {% else %} class="bg-danger p-2 text-dark bg-opacity-25" {% endif %}
-                    ><p>
-                        {% if nachbar.entsprechung_hauptdelikt %}Entspricht Eingabe {% else %} Entspricht nicht
+                    <td>
+                        <p>Hauptdelikt: {{ nachbar.hauptdelikt }},</p>
+                    </td>
+                    <td class="{{ nachbar.entsprechung_hauptdelikt_klasse }}">
+                        <p>
+                            {% if nachbar.entsprechung_hauptdelikt %}Entspricht Eingabe {% else %} Entspricht nicht
                             Eingabe {% endif %}
-                    </p></td>
+                        </p>
+                    </td>
                 </tr>
                 <tr>
-                    <td><p>Gewerbsmässig: {% if nachbar.gewerbsmaessig %} Ja {% else %} Nein {% endif %} </p></td>
-                    <td {% if nachbar.entsprechung_gewerbsmaessig %} class="bg-success p-2 text-dark bg-opacity-25"
-                    {% else %} class="bg-danger p-2 text-dark bg-opacity-25" {% endif %}
-                    ><p>
-                        {% if nachbar.entsprechung_gewerbsmaessig %}Entspricht Eingabe {% else %} Entspricht nicht
+                    <td>
+                        <p>Gewerbsmässig: {% if nachbar.gewerbsmaessig %} Ja {% else %} Nein {% endif %} </p>
+                    </td>
+                    <td class="{{ nachbar.entsprechung_gewerbsmaessig_klasse }}">
+                        <p>
+                            {% if nachbar.entsprechung_gewerbsmaessig %}Entspricht Eingabe {% else %} Entspricht nicht
                             Eingabe {% endif %}
-                    </p></td>
+                        </p>
+                    </td>
                 </tr>
                 <tr>
-                    <td><p>einschlägige Vorstrafe: {% if nachbar.vorbestraft_einschlaegig %} Ja {% else %}
-                        Nein {% endif %} </p></td>
-                    <td {% if nachbar.entsprechung_vorbestraft_einschlaegig %}
-                        class="bg-success p-2 text-dark bg-opacity-25"
-                    {% else %} class="bg-danger p-2 text-dark bg-opacity-25" {% endif %}
-                    ><p>
-                        {% if nachbar.entsprechung_vorbestraft_einschlaegig %}Entspricht Eingabe {% else %} Entspricht
+                    <td>
+                        <p>einschlägige Vorstrafe: {% if nachbar.vorbestraft_einschlaegig %} Ja {% else %}
+                            Nein {% endif %} </p>
+                    </td>
+                    <td class="{{ nachbar.entsprechung_vorbestraft_einschlaegig_klasse }}">
+                        <p>
+                            {% if nachbar.entsprechung_vorbestraft_einschlaegig %}Entspricht Eingabe {% else %}
+                            Entspricht
                             nicht Eingabe {% endif %}
-                    </p></td>
+                        </p>
+                    </td>
                 </tr>
                 <tr>
                     <td colspan="2" class="table-light">
@@ -83,23 +73,23 @@
                             Sanktion:
                             <b>
                                 {% if nachbar.hauptsanktion == '0' %}
-                                    {% if nachbar.vollzug == '0' %}
-                                    bedingte
-                                    {% elif nachbar.vollzug == '1' %}
-                                    teilbedingte
-                                    {% elif nachbar.vollzug == '2' %}
-                                    unbedingte
-                                    {% endif %}
-                                    Freiheitsstrafe von {{ nachbar.freiheitsstrafe_in_monaten|freiheitsstrafe_anzeige:"Monaten" }}.
+                                {% if nachbar.vollzug == '0' %}
+                                bedingte
+                                {% elif nachbar.vollzug == '1' %}
+                                teilbedingte
+                                {% elif nachbar.vollzug == '2' %}
+                                unbedingte
+                                {% endif %}
+                                Freiheitsstrafe von {{ nachbar.freiheitsstrafe_in_monaten|freiheitsstrafe_anzeige:"Monaten" }}.
                                 {% elif nachbar.hauptsanktion == '1' %}
-                                    {% if nachbar.vollzug == '0' %}
-                                    bedingte
-                                    {% elif nachbar.vollzug == '1' %}
-                                    teilbedingte
-                                    {% elif nachbar.vollzug == '2' %}
-                                    unbedingte
-                                    {% endif %}
-                                    Geldstrafe von {{ nachbar.anzahl_tagessaetze }} Tagessätzen.
+                                {% if nachbar.vollzug == '0' %}
+                                bedingte
+                                {% elif nachbar.vollzug == '1' %}
+                                teilbedingte
+                                {% elif nachbar.vollzug == '2' %}
+                                unbedingte
+                                {% endif %}
+                                Geldstrafe von {{ nachbar.anzahl_tagessaetze }} Tagessätzen.
                                 {% endif %}
                             </b>
                         </p>
@@ -115,26 +105,22 @@
                 </tr>
                 <tr>
                     <td colspan="2" class="table-light">
-                        <p>Vergleichbarkeitsscore: 
-                            <span class="badge bg-primary" 
-                                  data-bs-toggle="tooltip" 
-                                  data-bs-placement="top" 
-                                  title="Ein höherer Wert bedeutet eine grössere Ähnlichkeit zu den eingegebenen Sachverhalts-Eckwerten.">
+                        <p>Vergleichbarkeitsscore:
+                            <span class="badge bg-primary" data-bs-toggle="tooltip" data-bs-placement="top"
+                                title="Ein höherer Wert bedeutet eine grössere Ähnlichkeit zu den eingegebenen Sachverhalts-Eckwerten.">
                                 {{ nachbar.vergleichbarkeitsscore }}%
                             </span>
                         </p>
                     </td>
                 </tr>
                 {% if nachbar.zusammenfassung %}
-                    <tr>
-                        <td colspan="2">
-                            <p>Zusammenfassung der massgebenden Erwägungen betreffend die Strafzumessung der 
-                                Berufungsinstanz 
-                                (Achtung, Strafzumessung der Berufungsinstanz weicht i.d.R. von Strafzumessung der
-                                Vorinstanz ab, LLM-generiert und ohne Gewähr):</p>
-                            {{ nachbar.zusammenfassung|linebreaks }}
-                        </td>
-                    </tr>
+                <tr>
+                    <td colspan="2">
+                        <p>Zusammenfassung der massgebenden Erwägungen betreffend die Strafzumessung (KI/LLM-generiert,
+                            keine Gewähr):</p>
+                        {{ nachbar.zusammenfassung|linebreaks }}
+                    </td>
+                </tr>
                 {% endif %}
             </tbody>
         </table>

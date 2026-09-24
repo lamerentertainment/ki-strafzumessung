@@ -8,6 +8,19 @@ LEBENSLAENGLICH_PLATZHALTER = 999
 
 
 @register.filter
+def positives_vorzeichen(wert):
+    """
+    Liefert "+" für positive Zahlen, sonst einen leeren String (negative Zahlen
+    tragen ihr Minus bereits selbst). Für Differenzanzeigen wie
+    "Differenz: {{ diff|positives_vorzeichen }} {{ diff }}" gedacht.
+    """
+    try:
+        return "+" if wert is not None and wert > 0 else ""
+    except TypeError:
+        return ""
+
+
+@register.filter
 def freiheitsstrafe_anzeige(monate, einheit="Monate"):
     """
     Formatiert einen freiheitsstrafe_in_monaten-Wert fuer die Anzeige.

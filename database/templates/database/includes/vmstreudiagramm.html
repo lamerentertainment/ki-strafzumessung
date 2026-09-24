@@ -9,8 +9,8 @@ Betm-Mengen - keine vorgelagerte Auswahl, zu der das Diagramm erst leer
 bleibt. Rein clientseitig berechnet wie das Histogramm, siehe dortiger
 Kommentar.
 
-Zusaetzlich mit Buttons zur Hervorhebung einzelner Hauptdelikte (goldene
-Punkte, unabhaengig vom Filter): siehe ``streudiagrammHervorhebung`` in
+Zusaetzlich mit Buttons zur Hervorhebung einzelner Hauptdelikte (goldener
+Punktrand, unabhaengig vom Filter): siehe ``streudiagrammHervorhebung`` in
 filter.js. Sowie einer optional einblendbaren linearen Regressionsgeraden
 (Strafmass ueber log10(Deliktssumme)) samt Gleichung und einem Eingabefeld,
 das anhand der Regressionsgeraden das Strafmass zu einer frei eingegebenen
@@ -91,7 +91,7 @@ Deliktssumme vorhersagt - siehe
             </div>
 
             <div class="streudiagramm-seitenleiste d-flex flex-column gap-3">
-              {# --- Hervorhebung einzelner Hauptdelikte (goldene Punkte), unabhaengig vom Filter --- #}
+              {# --- Hervorhebung einzelner Hauptdelikte (goldener Punktrand), unabhaengig vom Filter --- #}
               <template x-if="feldNach('hauptdelikt')">
                 <div class="d-flex flex-column gap-1">
                   <span class="small text-body-secondary">Hervorheben:</span>
@@ -140,7 +140,7 @@ Deliktssumme vorhersagt - siehe
           <p class="mb-0 mt-1 small text-body-secondary">
             Jeder Punkt ist ein Urteil; Klick öffnet die Detailseite.
             <span x-show="streudiagrammHervorhebung.length > 0">
-              Golden hervorgehobene Punkte betreffen eines der oben gewählten Hauptdelikte.
+              Golden umrandete Punkte betreffen eines der oben gewählten Hauptdelikte.
             </span>
           </p>
           <p class="mb-0 mt-1 small text-body-secondary font-monospace"

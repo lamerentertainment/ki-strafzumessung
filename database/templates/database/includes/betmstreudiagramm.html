@@ -11,6 +11,10 @@ Mengen unterschiedlicher Substanzen liegen um Grössenordnungen auseinander
 (Kokain vs. Marihuana) - das Diagramm bleibt darum leer, solange im
 Filterpanel keine Substanz gewählt ist (siehe `streudiagramm()`).
 
+Zusaetzlich mit Buttons zur Hervorhebung einzelner Besonderheiten (goldener
+Punktrand, unabhaengig vom Filter): siehe `streudiagrammHervorhebung` in
+filter.js.
+
 Optional mit linearer Regressionsgerade (Strafmass über log10(Menge)) samt
 Gleichung und einem Eingabefeld, das anhand der Regressionsgeraden das
 Strafmass zu einer frei eingegebenen Menge vorhersagt - aus demselben Grund
@@ -105,18 +109,37 @@ nur verfügbar, wenn genau eine Substanz gewählt ist (siehe
               </svg>
             </div>
 
-            {# --- Anzeigen: Regressionsgerade ein-/ausblenden --- #}
-            <div class="streudiagramm-seitenleiste d-flex flex-column gap-1">
-              <span class="small text-body-secondary">Anzeigen:</span>
-              <button type="button" class="btn btn-sm text-start"
-                      :class="streudiagrammRegressionAnzeigen ? 'btn-dark' : 'btn-outline-secondary'"
-                      :disabled="!streudiagramm().regression"
-                      @click="streudiagrammRegressionAnzeigen = !streudiagrammRegressionAnzeigen">
-                Regressionsgerade
-              </button>
-              <span class="small text-body-secondary" x-show="!streudiagramm().regression">
-                Nur bei einer einzigen gewählten Substanz verfügbar.
-              </span>
+            <div class="streudiagramm-seitenleiste d-flex flex-column gap-3">
+              {# --- Hervorhebung einzelner Besonderheiten (goldener Punktrand), unabhaengig vom Filter --- #}
+              <template x-if="feldNach('besonderheiten')">
+                <div class="d-flex flex-column gap-1">
+                  <span class="small text-body-secondary">Hervorheben:</span>
+                  <template x-for="option in feldNach('besonderheiten').optionen" :key="option.value">
+                    <button type="button" class="btn btn-sm text-start"
+                            :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
+                            @click="streudiagrammHervorhebungUmschalten(option.value)">
+                      <span x-text="option.label"></span>
+                    </button>
+                  </template>
+                  <button type="button" class="btn btn-sm btn-link text-decoration-none text-start py-0"
+                          x-show="streudiagrammHervorhebung.length > 0"
+                          @click="streudiagrammHervorhebung = []">zurücksetzen</button>
+                </div>
+              </template>
+
+              {# --- Anzeigen: Regressionsgerade ein-/ausblenden --- #}
+              <div class="d-flex flex-column gap-1">
+                <span class="small text-body-secondary">Anzeigen:</span>
+                <button type="button" class="btn btn-sm text-start"
+                        :class="streudiagrammRegressionAnzeigen ? 'btn-dark' : 'btn-outline-secondary'"
+                        :disabled="!streudiagramm().regression"
+                        @click="streudiagrammRegressionAnzeigen = !streudiagrammRegressionAnzeigen">
+                  Regressionsgerade
+                </button>
+                <span class="small text-body-secondary" x-show="!streudiagramm().regression">
+                  Nur bei einer einzigen gewählten Substanz verfügbar.
+                </span>
+              </div>
             </div>
           </div>
 
@@ -139,6 +162,9 @@ nur verfügbar, wenn genau eine Substanz gewählt ist (siehe
           <p class="mb-0 mt-1 small text-body-secondary">
             Jeder Punkt ist ein Urteil; Klick öffnet die Detailseite. Punkte mit
             dunkelgrauem statt weissem Rand betreffen mehr als eine Betäubungsmittel-Art.
+            <span x-show="streudiagrammHervorhebung.length > 0">
+              Golden umrandete Punkte betreffen eine der oben gewählten Besonderheiten.
+            </span>
           </p>
           <p class="mb-0 mt-1 small text-body-secondary font-monospace"
              x-show="streudiagrammRegressionAnzeigen && streudiagramm().regression"

@@ -32,8 +32,9 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     streudiagrammOffen: true,
     streudiagrammPunktKarte: null,
     streudiagrammPunktKartePos: { x: 0, y: 0 },
-    // Manuelle Hervorhebung bestimmter Hauptdelikte im VM-Streudiagramm
-    // (goldene Punkte), unabhaengig vom Filter - siehe streudiagrammVM() und
+    // Manuelle Hervorhebung bestimmter Hauptdelikte (VM) bzw. Besonderheiten
+    // (Betm) im Streudiagramm (goldener Punktrand), unabhaengig vom Filter -
+    // siehe streudiagrammVM()/streudiagramm() und
     // streudiagrammHervorhebungUmschalten().
     streudiagrammHervorhebung: [],
     // Regressionsgerade im VM- bzw. Betm-Streudiagramm ein-/ausblenden
@@ -903,6 +904,12 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           // faerbt den Rand dunkelgrau, wenn mehr als eine Art beteiligt ist.
           mehrfachBetm: (record.betm || []).length > 1,
           karte: record._karte || {},
+          // Hervorhebung anhand gewaehlter Besonderheiten (z.B. Gestaendnis-
+          // rabatt), ODER-verknuepft wie bei streudiagrammVM() - ein Urteil
+          // kann mehrere Besonderheiten aufweisen, es genuegt eine treffende.
+          hervorgehoben: (record.besonderheiten || []).some((b) =>
+            this.streudiagrammHervorhebung.includes(b)
+          ),
         });
       });
       if (punkte.length === 0) return null;
@@ -1009,12 +1016,15 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     },
 
     /**
-     * Hervorhebung eines Hauptdelikts im VM-Streudiagramm ein-/ausschalten
-     * (ODER-Verknuepfung wie bei den gewoehnlichen Chip-Filtern, siehe
-     * ``umschalten``). Bewusst getrennt von ``zustand``/``trifftZu``: die
-     * Hervorhebung soll die Treffermenge nur farblich markieren, nicht
-     * zusaetzlich filtern - man will ja gerade sehen, wo sich z.B. Betrugs-
-     * faelle innerhalb aller Vermoegensdelikte einordnen.
+     * Hervorhebung eines Werts im Streudiagramm ein-/ausschalten - im
+     * VM-Streudiagramm ein Hauptdelikt, im Betm-Streudiagramm eine
+     * Besonderheit (ODER-Verknuepfung wie bei den gewoehnlichen Chip-Filtern,
+     * siehe ``umschalten``). Bewusst getrennt von ``zustand``/``trifftZu``:
+     * die Hervorhebung soll die Treffermenge nur mit einem goldenen
+     * Punktrand markieren, nicht zusaetzlich filtern - man will ja gerade
+     * sehen, wo sich z.B. Betrugsfaelle innerhalb aller Vermoegensdelikte
+     * bzw. Faelle mit Gestaendnisrabatt innerhalb aller Betm-Urteile
+     * einordnen.
      */
     streudiagrammHervorhebungUmschalten(wert) {
       const index = this.streudiagrammHervorhebung.indexOf(wert);

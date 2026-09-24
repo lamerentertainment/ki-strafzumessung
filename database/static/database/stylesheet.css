@@ -701,15 +701,13 @@ tr[data-kurzsachverhalt]:hover td {
 }
 
 /* Manuell hervorgehobene Punkte (z.B. ein gewaehltes Hauptdelikt im
-   VM-Streudiagramm, siehe streudiagrammHervorhebung in filter.js). Die
-   Faerbung soll immer sichtbar bleiben, unabhaengig von Sanktionsart/Vollzug -
-   !important, weil .sanktion-*.vollzug-* oben mit zwei Klassen spezifischer
-   ist als .hervorgehoben allein und sonst gewinnen wuerde. */
+   VM- bzw. eine gewaehlte Besonderheit im Betm-Streudiagramm, siehe
+   streudiagrammHervorhebung in filter.js). Bewusst nur ein goldener Rahmen,
+   nicht die Fuellfarbe - Sanktions-/Vollzugsart (Fuellfarbe, siehe oben)
+   sollen bei hervorgehobenen Punkten weiter erkennbar bleiben. */
 .streudiagramm-punkt.hervorgehoben {
-    fill: #ffc107 !important;
-    fill-opacity: 1;
-    stroke: #b8860b;
-    stroke-width: 2;
+    stroke: #ffc107;
+    stroke-width: 3;
 }
 
 /* Regressionsgerade (VM-Streudiagramm, streudiagrammRegressionSvg in

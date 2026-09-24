@@ -9,6 +9,12 @@ geholt werden und koennte keine Tooltips je Urteil tragen.
 
 Vorausgesetzt wird `_karte` je Datensatz (siehe filterspec.py, `karte`);
 ohne dieses Feld bleiben die Hover-Karten leer.
+
+Bloecke, die zur Hervorhebungsauswahl des Streudiagramms passen (VM/Betm,
+siehe `vmstreudiagramm.html`/`betmstreudiagramm.html`), erhalten denselben
+goldenen Rahmen wie dort - siehe `istHervorgehoben()` in filter.js. Auf
+Modellen ohne diese Auswahl (Sexual-/Gewaltdelikte) bleibt sie leer, es
+aendert sich also nichts.
 {% endcomment %}
 
 <div class="strafmasshistogramm mb-3" x-cloak>
@@ -74,9 +80,12 @@ ohne dieses Feld bleiben die Hover-Karten leer.
                          :style="`height: ${histogramm().hoechste * histogramm().blockHoehe}px`">
                       {# Ein Block je Urteil, von unten nach oben geschichtet: siehe blockRang #}
                       <template x-for="eintrag in klasse.urteile" :key="eintrag.pk">
-                        {# Farbton = eigene Sanktionsart, Helligkeit = Vollzug (stylesheet.css) #}
+                        {% comment %}
+                          Farbton = eigene Sanktionsart, Helligkeit = Vollzug (stylesheet.css);
+                          golden umrandet, wenn im Streudiagramm dieselbe Hervorhebung aktiv ist.
+                        {% endcomment %}
                         <a class="histogramm-block"
-                           :class="`sanktion-${eintrag.hauptsanktion} vollzug-${eintrag.vollzug}`"
+                           :class="`sanktion-${eintrag.hauptsanktion} vollzug-${eintrag.vollzug}${eintrag.hervorgehoben ? ' hervorgehoben' : ''}`"
                            :href="eintrag.karte.url || '#'"
                            :style="`height: ${histogramm().blockHoehe}px`"
                            :aria-label="`${eintrag.karte.fall_nr || ''} – ${blockStrafmass(eintrag)}`"
@@ -115,6 +124,9 @@ ohne dieses Feld bleiben die Hover-Karten leer.
             Jeder Block ist ein Urteil; Klick öffnet die Detailseite.
             <span x-show="histogramm().art.kombiniert"
                   x-text="histogramm().art.hinweis + '.'"></span>
+            <span x-show="streudiagrammHervorhebung.length > 0">
+              Golden umrandete Blöcke entsprechen der Hervorhebung im Streudiagramm unten.
+            </span>
           </p>
         </div>
       </template>

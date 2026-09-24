@@ -610,6 +610,25 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     // --- Strafmasshistogramm -------------------------------------------------
 
     /**
+     * Ob ein Datensatz zur aktuellen Streudiagramm-Hervorhebungsauswahl passt
+     * (siehe ``streudiagrammHervorhebung``) - VM: Hauptdelikt, Betm: Rolle
+     * und/oder Besonderheiten. Modellunabhaengig und darum hier statt im
+     * Streudiagramm-Abschnitt definiert: sowohl das Histogramm als auch beide
+     * Streudiagramme sollen dieselben Urteile golden markieren, damit sich
+     * die Auswahl (z.B. "Betrug") in beiden Darstellungen wiederfindet. Auf
+     * Modellen ohne Hervorhebungs-UI (Sexual-/Gewaltdelikte) bleibt die
+     * Auswahl immer leer, darum aendert sich dort nichts.
+     */
+    istHervorgehoben(record) {
+      if (this.streudiagrammHervorhebung.length === 0) return false;
+      if (this.streudiagrammHervorhebung.includes(record.hauptdelikt)) return true;
+      if (this.streudiagrammHervorhebung.includes(record.rolle)) return true;
+      return (record.besonderheiten || []).some((b) =>
+        this.streudiagrammHervorhebung.includes(b)
+      );
+    },
+
+    /**
      * Klassenbreiten je Sanktionsart, aufsteigend. Die Freiheitsstrafe wird in
      * Monaten erfasst, soll auf der Achse aber in Jahresschritten lesbar sein -
      * darum die Sprungfolge 1/3/6/12/24/60 Monate statt einer "schoenen"
@@ -658,6 +677,9 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           tagessaetze: record.anzahl_tagessaetze,
           karte: record._karte || {},
           vollzug: record.vollzug,
+          // Golden umrandet, wenn im Streudiagramm dieselbe Hervorhebung
+          // aktiv ist - siehe istHervorgehoben().
+          hervorgehoben: this.istHervorgehoben(record),
         });
       });
       if (eintraege.length === 0) return null;
@@ -920,14 +942,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           // siehe mehrfachBetmFarbe() fuer die graduelle Randfaerbung.
           mehrfachBetmFarbe: this.mehrfachBetmFarbe((record.betm || []).length),
           karte: record._karte || {},
-          // Hervorhebung anhand gewaehlter Rollen und/oder Besonderheiten
-          // (z.B. Gestaendnisrabatt), ODER-verknuepft wie bei
-          // streudiagrammVM() - beide Auswahllisten fuellen dieselbe
-          // ``streudiagrammHervorhebung``, ein Urteil kann zudem mehrere
-          // Besonderheiten aufweisen, es genuegt je eine treffende.
-          hervorgehoben:
-            this.streudiagrammHervorhebung.includes(record.rolle) ||
-            (record.besonderheiten || []).some((b) => this.streudiagrammHervorhebung.includes(b)),
+          hervorgehoben: this.istHervorgehoben(record),
         });
       });
       if (punkte.length === 0) return null;
@@ -1002,7 +1017,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           tagessaetze: record.anzahl_tagessaetze,
           vollzug: record.vollzug,
           karte: record._karte || {},
-          hervorgehoben: this.streudiagrammHervorhebung.includes(record.hauptdelikt),
+          hervorgehoben: this.istHervorgehoben(record),
         });
       });
       if (punkte.length === 0) return null;

@@ -595,6 +595,15 @@ tr[data-kurzsachverhalt]:hover td {
 .histogramm-block.sanktion-1.vollzug-0,
 .histogramm-legende.sanktion-1.vollzug-0 { background-color: #badbcc; }
 
+/* Block passt zur Streudiagramm-Hervorhebung (istHervorgehoben() in
+   filter.js) - derselbe Aussenring wie beim Hover (outline, 2px, kein
+   background-color), damit Sanktions-/Vollzugsfarbe weiter sichtbar bleibt.
+   Ueberschreibt die Hover/Focus-Farbe bewusst (gleiche Spezifitaet, spaeter
+   notiert): die Hervorhebung soll auch beim Hovern golden bleiben. */
+.histogramm-block.hervorgehoben {
+    outline-color: #ffc107;
+}
+
 .histogramm-xtick {
     margin-top: 0.25rem;
     font-size: 0.7rem;

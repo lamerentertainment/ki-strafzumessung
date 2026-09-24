@@ -850,13 +850,16 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     },
 
     /**
-     * Streudiagramm Strafmass (x) / Menge (y) der Treffermenge, ausgewertet
-     * fuer die im Filter gewaehlten Substanzen. Ohne Substanzwahl liefert es
-     * null: Mengen unterschiedlicher Substanzen (Kokain vs. Marihuana) lassen
-     * sich nicht auf einer gemeinsamen Achse vergleichen, siehe
-     * ``spannenBerechnen``. Ausgewertet wird dieselbe Strafmass-Stichprobe wie
-     * im Histogramm (``aktiveStichprobe``), der Umschalter dort wirkt also
-     * auch hier.
+     * Streudiagramm Menge (x) / Strafmass (y) der Treffermenge, ausgewertet
+     * fuer die im Filter gewaehlten Substanzen. Menge auf der x-Achse, weil
+     * sie die erklaerende Groesse ist und das Strafmass das Ergebnis - analog
+     * zum bestehenden Deliktssumme/Strafhoehe-Scatterplot der Vermoegensdelikte
+     * (``db_utils.py``, ``kategorie_scatterplot_erstellen``). Ohne
+     * Substanzwahl liefert es null: Mengen unterschiedlicher Substanzen
+     * (Kokain vs. Marihuana) lassen sich nicht auf einer gemeinsamen Achse
+     * vergleichen, siehe ``spannenBerechnen``. Ausgewertet wird dieselbe
+     * Strafmass-Stichprobe wie im Histogramm (``aktiveStichprobe``), der
+     * Umschalter dort wirkt also auch hier.
      */
     streudiagramm() {
       if (!this.spec.felder.some((feld) => feld.name === "betm")) return null;
@@ -871,14 +874,14 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       const punkte = [];
       this.trefferPks.forEach((pk) => {
         const record = this.records[pk];
-        const x = this.strafhoehe(record, art);
-        if (x === null) return;
-        const y = this.mengeGesamt(record, gewaehlt, basen);
-        if (y === null || y <= 0) return;
+        const strafmass = this.strafhoehe(record, art);
+        if (strafmass === null) return;
+        const menge = this.mengeGesamt(record, gewaehlt, basen);
+        if (menge === null || menge <= 0) return;
         punkte.push({
           pk,
-          x,
-          y,
+          strafmass,
+          menge,
           hauptsanktion: record.hauptsanktion,
           tagessaetze: record.anzahl_tagessaetze,
           vollzug: record.vollzug,
@@ -892,14 +895,14 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         art,
         punkte,
         anzahl: punkte.length,
-        xMax: Math.max(...punkte.map((p) => p.x)) || 1,
-        yDomain: this.streudiagrammYDomain(
-          Math.min(...punkte.map((p) => p.y)),
-          Math.max(...punkte.map((p) => p.y))
+        mengeDomain: this.streudiagrammMengeDomain(
+          Math.min(...punkte.map((p) => p.menge)),
+          Math.max(...punkte.map((p) => p.menge))
         ),
+        strafmassMax: Math.max(...punkte.map((p) => p.strafmass)) || 1,
         mengeLabel: info.label || "Menge",
         einheit: info.einheit || "",
-        achstitelX: art.monate ? "Strafmass (Monate)" : "Strafmass (Tagessätze)",
+        achstitelY: art.monate ? "Strafmass (Monate)" : "Strafmass (Tagessätze)",
         sanktionen: this.sanktionsarten.filter(
           (eine) => !eine.kombiniert && punkte.some((p) => p.hauptsanktion === eine.code)
         ),
@@ -913,44 +916,40 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     },
 
     /**
-     * Wertebereich der logarithmischen Y-Achse: rund 10% Rand ueber/unter den
-     * tatsaechlichen Werten, damit kein Punkt auf dem Achsenrand liegt.
+     * Wertebereich der logarithmischen X-Achse (Menge): rund 10% Rand
+     * ueber/unter den tatsaechlichen Werten, damit kein Punkt auf dem
+     * Achsenrand liegt.
      */
-    streudiagrammYDomain(min, max) {
+    streudiagrammMengeDomain(min, max) {
       const untenLog = Math.log10(min) - 0.1;
       const obenLog = Math.log10(Math.max(max, min)) + 0.1;
       return { min: Math.pow(10, untenLog), max: Math.pow(10, Math.max(obenLog, untenLog + 0.2)) };
     },
 
-    /** x-Pixelposition eines Punkts (linear, Achse beginnt bei 0). */
-    streudiagrammX(daten, wert) {
+    /** x-Pixelposition eines Punkts (Menge, logarithmisch, waechst nach rechts). */
+    streudiagrammX(daten, menge) {
       const { links, rechts } = this.STREUDIAGRAMM_RAND;
       const breite = this.STREUDIAGRAMM_BREITE - links - rechts;
-      return links + (wert / daten.xMax) * breite;
+      const { min, max } = daten.mengeDomain;
+      const anteil = (Math.log10(menge) - Math.log10(min)) / (Math.log10(max) - Math.log10(min));
+      return links + anteil * breite;
     },
 
-    /** y-Pixelposition eines Punkts (logarithmisch, waechst nach oben). */
-    streudiagrammY(daten, wert) {
+    /** y-Pixelposition eines Punkts (Strafmass, linear, Achse beginnt bei 0). */
+    streudiagrammY(daten, strafmass) {
       const { oben, unten } = this.STREUDIAGRAMM_RAND;
       const hoehe = this.STREUDIAGRAMM_HOEHE - oben - unten;
-      const { min, max } = daten.yDomain;
-      const anteil = (Math.log10(wert) - Math.log10(min)) / (Math.log10(max) - Math.log10(min));
-      return oben + (1 - anteil) * hoehe;
-    },
-
-    /** Runde X-Achsenstufen (Strafmass), analog zur Histogramm-Y-Achse. */
-    streudiagrammXTicks(daten) {
-      return this.rundeStufen(daten.xMax, 6);
+      return oben + (1 - strafmass / daten.strafmassMax) * hoehe;
     },
 
     /**
-     * "Schoene" Log-Achsenstufen (1/2/5 je Zehnerpotenz) innerhalb der
+     * "Schoene" Log-Achsenstufen (Menge, 1/2/5 je Zehnerpotenz) innerhalb der
      * Domain. Bei sehr grosser Spannweite (>5 Zehnerpotenzen, z.B. 1g bis
      * mehrere 100kg) nur die vollen Zehnerpotenzen, sonst wird die Achse
      * unlesbar.
      */
-    streudiagrammYTicks(daten) {
-      const { min, max } = daten.yDomain;
+    streudiagrammXTicks(daten) {
+      const { min, max } = daten.mengeDomain;
       const start = Math.floor(Math.log10(min));
       const ende = Math.ceil(Math.log10(max));
       const nurZehnerpotenzen = ende - start > 5;
@@ -962,6 +961,11 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         });
       }
       return stufen;
+    },
+
+    /** Runde Y-Achsenstufen (Strafmass), analog zur Histogramm-Y-Achse. */
+    streudiagrammYTicks(daten) {
+      return this.rundeStufen(daten.strafmassMax, 6);
     },
 
     /**
@@ -1002,22 +1006,24 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
      * ``innerHTML``-Parser den Namensraum des Zielelements uebernimmt.
      */
     streudiagrammAchsenSvg(daten) {
+      // Y-Achse: Strafmass, linear.
       const yAchse = this.streudiagrammYTicks(daten)
         .map((stufe) => {
           const y = this.streudiagrammY(daten, stufe);
-          const text = this.escapeHtml(this.mengeAnzeige(stufe, daten.einheit));
+          // Ohne die Nachkommastelle der kombinierten Ansicht, wenn die
+          // Stufe (anders als einzelne Urteilswerte) ohnehin rund ist.
+          const text = this.escapeHtml(this.formatiert(stufe, daten.art).replace(/\.0+$/, ""));
           return (
             `<line class="streudiagramm-gitter" x1="50" x2="628" y1="${y}" y2="${y}"></line>` +
             `<text class="streudiagramm-tick" x="46" y="${y + 3}" text-anchor="end">${text}</text>`
           );
         })
         .join("");
+      // X-Achse: Menge, logarithmisch.
       const xAchse = this.streudiagrammXTicks(daten)
         .map((stufe) => {
           const x = this.streudiagrammX(daten, stufe);
-          // Ohne die Nachkommastelle der kombinierten Ansicht, wenn die
-          // Stufe (anders als einzelne Urteilswerte) ohnehin rund ist.
-          const text = this.escapeHtml(this.formatiert(stufe, daten.art).replace(/\.0+$/, ""));
+          const text = this.escapeHtml(this.mengeAnzeige(stufe, daten.einheit));
           return (
             `<line class="streudiagramm-gitter" x1="${x}" x2="${x}" y1="12" y2="270"></line>` +
             `<text class="streudiagramm-tick" x="${x}" y="284" text-anchor="middle">${text}</text>`
@@ -1040,10 +1046,10 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         .map((punkt) => {
           const href = this.escapeHtml(punkt.karte.url || "#");
           const label = this.escapeHtml(
-            `${punkt.karte.fall_nr || ""} – ${this.mengeAnzeige(punkt.y, daten.einheit)}`
+            `${punkt.karte.fall_nr || ""} – ${this.mengeAnzeige(punkt.menge, daten.einheit)}`
           );
-          const cx = this.streudiagrammX(daten, punkt.x);
-          const cy = this.streudiagrammY(daten, punkt.y);
+          const cx = this.streudiagrammX(daten, punkt.menge);
+          const cy = this.streudiagrammY(daten, punkt.strafmass);
           return (
             `<a href="${href}" aria-label="${label}">` +
             `<circle class="streudiagramm-punkt sanktion-${punkt.hauptsanktion} vollzug-${punkt.vollzug}" ` +
@@ -1079,13 +1085,13 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       const strafmassEintrag = {
         hauptsanktion: punkt.hauptsanktion,
         tagessaetze: punkt.tagessaetze,
-        wert: punkt.x,
+        wert: punkt.strafmass,
       };
       this.streudiagrammPunktKarte = {
         ...punkt.karte,
         strafmass: this.blockStrafmass(strafmassEintrag),
         vollzug: this.vollzugstext(punkt.vollzug),
-        menge: `${daten.mengeLabel}: ${this.mengeAnzeige(punkt.y, daten.einheit)}`,
+        menge: `${daten.mengeLabel}: ${this.mengeAnzeige(punkt.menge, daten.einheit)}`,
       };
       this.streudiagrammPunktPositionieren(event);
     },

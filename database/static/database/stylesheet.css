@@ -683,5 +683,5 @@ tr[data-kurzsachverhalt]:hover td {
 
 /* Urteil betrifft mehr als eine Betm-Art (unabhaengig von der Filterwahl) */
 .streudiagramm-punkt.mehrfach-betm {
-    stroke: #495057;
+    stroke: #6c757d;
 }

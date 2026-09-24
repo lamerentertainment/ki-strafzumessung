@@ -36,6 +36,9 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     // (goldene Punkte), unabhaengig vom Filter - siehe streudiagrammVM() und
     // streudiagrammHervorhebungUmschalten().
     streudiagrammHervorhebung: [],
+    // Regressionsgerade im VM-Streudiagramm ein-/ausblenden, siehe
+    // streudiagrammRegressionSvg() und streudiagrammRegressionGleichung().
+    streudiagrammRegressionAnzeigen: false,
 
     init() {
       this.spec = JSON.parse(document.getElementById(spezifikationId).textContent);
@@ -978,6 +981,14 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         sanktionen: this.sanktionsarten.filter(
           (eine) => !eine.kombiniert && punkte.some((p) => p.hauptsanktion === eine.code)
         ),
+        // Regression auf log10(Deliktssumme), nicht auf der Deliktssumme
+        // selbst: die X-Achse ist logarithmisch, eine Gerade in diesem Raum
+        // erscheint darum als Gerade im Diagramm (siehe streudiagrammX) - eine
+        // Regression auf den Rohwerten waere zudem von den wenigen sehr hohen
+        // Deliktssummen dominiert und im Bild als Kurve sichtbar.
+        regression: this.linearRegression(
+          punkte.map((p) => ({ x: Math.log10(p.menge), y: p.strafmass }))
+        ),
       };
     },
 
@@ -997,6 +1008,36 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
 
     streudiagrammHervorhebungAktiv(wert) {
       return this.streudiagrammHervorhebung.includes(wert);
+    },
+
+    /**
+     * Einfache lineare Regression y = a + b*x nach der Methode der kleinsten
+     * Quadrate. Liefert null, wenn weniger als zwei Punkte vorliegen oder alle
+     * x-Werte identisch sind (die Steigung waere nicht definiert) - z.B. wenn
+     * nach der Filterung nur noch eine einzige Deliktssumme uebrig bleibt.
+     */
+    linearRegression(paare) {
+      const n = paare.length;
+      if (n < 2) return null;
+      const xMittel = paare.reduce((summe, p) => summe + p.x, 0) / n;
+      const yMittel = paare.reduce((summe, p) => summe + p.y, 0) / n;
+      let sxy = 0;
+      let sxx = 0;
+      let syy = 0;
+      paare.forEach((p) => {
+        const dx = p.x - xMittel;
+        const dy = p.y - yMittel;
+        sxy += dx * dy;
+        sxx += dx * dx;
+        syy += dy * dy;
+      });
+      if (sxx === 0) return null;
+      const steigung = sxy / sxx;
+      const achsenabschnitt = yMittel - steigung * xMittel;
+      // Guetemass R²: bei konstantem y (syy=0) gilt die Gerade als perfekte
+      // Anpassung, statt eine Division durch 0 zu erzeugen.
+      const r2 = syy === 0 ? 1 : (sxy * sxy) / (sxx * syy);
+      return { steigung, achsenabschnitt, r2, n };
     },
 
     /**
@@ -1125,6 +1166,76 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         })
         .join("");
       return yAchse + xAchse;
+    },
+
+    /**
+     * Schneidet ein Geradensegment (u0,y0)-(u1,y1) auf den Y-Bereich
+     * [yMin, yMax] zu (Liang-Barsky, nur in Y - die X-Grenzen sind bereits
+     * durch die Domain vorgegeben, siehe streudiagrammRegressionSvg). Noetig,
+     * weil eine Regressionsgerade ausserhalb der Datenpunkte durchaus
+     * negative oder unrealistisch hohe Strafmass-Werte vorhersagen kann, die
+     * aber nicht ausserhalb des Diagramms gezeichnet werden sollen. Liefert
+     * null, wenn das Segment vollstaendig ausserhalb liegt.
+     */
+    streudiagrammLinieKlippen(u0, y0, u1, y1, yMin, yMax) {
+      let tStart = 0;
+      let tEnde = 1;
+      const dy = y1 - y0;
+      if (dy !== 0) {
+        const t1 = (yMin - y0) / dy;
+        const t2 = (yMax - y0) / dy;
+        tStart = Math.max(tStart, Math.min(t1, t2));
+        tEnde = Math.min(tEnde, Math.max(t1, t2));
+      } else if (y0 < yMin || y0 > yMax) {
+        return null;
+      }
+      if (tStart > tEnde) return null;
+      const lerp = (von, bis, t) => von + (bis - von) * t;
+      return {
+        u0: lerp(u0, u1, tStart),
+        y0: lerp(y0, y1, tStart),
+        u1: lerp(u0, u1, tEnde),
+        y1: lerp(y0, y1, tEnde),
+      };
+    },
+
+    /**
+     * Regressionsgerade als SVG-<line>, auf den sichtbaren Plotbereich
+     * geclippt. Leerer String ohne Regression, ohne eingeschaltete
+     * Anzeige (``streudiagrammRegressionAnzeigen``) oder wenn die Gerade
+     * vollstaendig ausserhalb des sichtbaren Bereichs verlaeuft.
+     */
+    streudiagrammRegressionSvg(daten) {
+      if (!this.streudiagrammRegressionAnzeigen || !daten.regression) return "";
+      const { achsenabschnitt: a, steigung: b } = daten.regression;
+      const { min, max } = daten.mengeDomain;
+      const u0 = Math.log10(min);
+      const u1 = Math.log10(max);
+      const geklippt = this.streudiagrammLinieKlippen(
+        u0, a + b * u0, u1, a + b * u1, 0, daten.strafmassMax
+      );
+      if (geklippt === null) return "";
+      const x1 = this.streudiagrammX(daten, Math.pow(10, geklippt.u0));
+      const y1 = this.streudiagrammY(daten, geklippt.y0);
+      const x2 = this.streudiagrammX(daten, Math.pow(10, geklippt.u1));
+      const y2 = this.streudiagrammY(daten, geklippt.y1);
+      return `<line class="streudiagramm-regression" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line>`;
+    },
+
+    /**
+     * Regressionsgleichung als lesbarer Text inkl. Guetemass, z.B.
+     * "Strafmass (Monate) ≈ 4.1 + 6.8 · log₁₀(Deliktssumme in CHF)
+     * (R² = 0.31, n = 214)". Auf log10(Deliktssumme) bezogen, nicht auf die
+     * Deliktssumme selbst - siehe streudiagrammVM().
+     */
+    streudiagrammRegressionGleichung(daten) {
+      if (!daten.regression) return "";
+      const { achsenabschnitt: a, steigung: b, r2, n } = daten.regression;
+      const vorzeichen = b >= 0 ? "+" : "−";
+      return (
+        `${daten.achstitelY} ≈ ${a.toFixed(2)} ${vorzeichen} ${Math.abs(b).toFixed(2)} · ` +
+        `log₁₀(${daten.mengeLabel} in ${daten.einheit}) (R² = ${r2.toFixed(2)}, n = ${n})`
+      );
     },
 
     /**

@@ -710,3 +710,16 @@ tr[data-kurzsachverhalt]:hover td {
     stroke: #b8860b;
     stroke-width: 2;
 }
+
+/* Regressionsgerade (VM-Streudiagramm, streudiagrammRegressionSvg in
+   filter.js). Gestrichelt statt einer durchgezogenen Linie, damit sie sich
+   von den Achsen/Gitterlinien abhebt und die darunterliegenden Punkte nicht
+   verdeckt; pointer-events:none, damit sie den Klick auf einen Punkt nicht
+   abfaengt. */
+.streudiagramm-regression {
+    stroke: #212529;
+    stroke-width: 2;
+    stroke-dasharray: 7 5;
+    opacity: 0.75;
+    pointer-events: none;
+}

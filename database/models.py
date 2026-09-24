@@ -312,10 +312,14 @@ class Betm(models.Model):
     menge_in_g = models.IntegerField()
     rein = models.BooleanField(default=True)
 
+    def menge_anzeige(self):
+        if self.menge_in_g >= 1000:
+            kg = f"{self.menge_in_g / 1000:.1f}".rstrip("0").rstrip(".")
+            return f"{kg}kg"
+        return f"{self.menge_in_g}g"
+
     def __str__(self):
-        return (
-            f'{self.art}, {str(self.menge_in_g)}g, {"rein" if self.rein else "gemisch"}'
-        )
+        return f'{self.art}, {self.menge_anzeige()}, {"rein" if self.rein else "gemisch"}'
 
 
 class BetmArt(models.Model):

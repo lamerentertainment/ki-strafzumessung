@@ -46,7 +46,7 @@
             <ul class="mb-0">
               {% for betm_mittel in object.betm.all %}
                 <li>
-                  {{ betm_mittel.art }}, {{ betm_mittel.menge_in_g }}g, {% if betm_mittel.rein %}rein{% else %}gemisch{% endif %}
+                  {{ betm_mittel.art }}, {{ betm_mittel.menge_anzeige }}, {% if betm_mittel.rein %}rein{% else %}gemisch{% endif %}
                 </li>
               {% empty %}
                 <li>Keine Angaben</li>

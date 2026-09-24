@@ -165,10 +165,35 @@ class Urteil(models.Model):
     VOLLZUG = (("0", "bedingt"), ("1", "teilbedingt"), ("2", "unbedingt"))
     vollzug = models.CharField(max_length=20, choices=VOLLZUG, default="0")
     in_ki_modell = models.BooleanField(default=True)
+    # Die folgenden Felder (private_geschaedigte, besonderheiten, kurzsachverhalt,
+    # bemerkungen) fliessen (noch) nicht in die ML-Prognose ein.
+    PRIVATE_GESCHAEDIGTE = (("ja", "ja"), ("nein", "nein"), ("unbekannt", "unbekannt"))
+    private_geschaedigte = models.CharField(
+        max_length=10,
+        choices=PRIVATE_GESCHAEDIGTE,
+        default="unbekannt",
+        verbose_name="private Geschädigte",
+        help_text="Ob durch das Hauptdelikt Privatpersonen in ihrem Vermögen geschädigt "
+        "wurden. 'nein', wenn ausschliesslich der Staat oder juristische Personen "
+        "geschädigt wurden.",
+    )
+    besonderheiten = models.ManyToManyField(
+        "Besonderheiten",
+        related_name="vermoegensdelikte",
+        blank=True,
+        help_text="Strafzumessungsrelevante Besonderheiten (z.B. Geständnis/Reue, "
+        "Versuch, Gehilfenschaft, verminderte Schuldfähigkeit).",
+    )
+    kurzsachverhalt = models.TextField(
+        blank=True,
+        default="",
+        help_text="Kurze Zusammenfassung des Sachverhalts (wird beim Hovern in der Urteilsliste angezeigt)",
+    )
     zusammenfassung = models.TextField(
         blank=True,
         help_text="Die Zusammenfassung der massgebenden Erwägungen für die Strafzumessung",
     )
+    bemerkungen = models.TextField(blank=True, help_text="Besondere Bemerkungen zum Fall")
     add_time = models.DateTimeField(
         auto_now_add=True,
         null=True,

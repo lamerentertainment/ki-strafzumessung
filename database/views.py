@@ -218,6 +218,7 @@ class UrteilListView(FilterbareListView):
     context_object_name = "urteile"
     template_name = "database/database.html"
     filter_config = URTEIL_FILTER_CONFIG
+    filter_prefetch = ("besonderheiten",)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

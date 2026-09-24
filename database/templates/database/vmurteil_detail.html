@@ -38,7 +38,22 @@
               <div class="col"><strong>Nebenverurteilungsscore:</strong> {{ object.nebenverurteilungsscore }}</div>
               <div class="col"><strong>Vorbestraft:</strong> {{ object.vorbestraft|yesno:'Ja,Nein' }}</div>
               <div class="col"><strong>Einschlägig vorbestraft:</strong> {{ object.vorbestraft_einschlaegig|yesno:'Ja,Nein' }}</div>
+              {% if object.private_geschaedigte != 'unbekannt' %}
+                <div class="col"><strong>Private Geschädigte:</strong> {{ object.get_private_geschaedigte_display|capfirst }}</div>
+              {% endif %}
             </div>
+
+            {% with besonderheiten=object.besonderheiten.all %}
+              {% if besonderheiten %}
+                <hr />
+                <div class="mb-2"><strong>Besonderheiten:</strong></div>
+                <ul class="mb-0">
+                  {% for besonderheit in besonderheiten %}
+                    <li>{{ besonderheit }}</li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            {% endwith %}
           </div>
         </div>
       </div>
@@ -60,6 +75,24 @@
         </div>
       </div>
     </div>
+
+    {% if object.kurzsachverhalt %}
+      <div class="card my-3">
+        <div class="card-header fw-semibold">Kurzsachverhalt</div>
+        <div class="card-body">
+          <p class="mb-0" style="white-space: pre-line;">{{ object.kurzsachverhalt }}</p>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if object.bemerkungen %}
+      <div class="card my-3">
+        <div class="card-header">Bemerkungen</div>
+        <div class="card-body">
+          <p class="mb-0" style="white-space: pre-line;">{{ object.bemerkungen }}</p>
+        </div>
+      </div>
+    {% endif %}
 
     {% if object.zusammenfassung %}
       <div class="card my-3">

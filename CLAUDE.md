@@ -110,6 +110,11 @@ Praktisch heisst das:
 | `mehrfach` / `gewerbsmaessig` / `bandenmaessig` | beziehen sich nur auf das Hauptdelikt |
 | `deliktssumme` | Deliktsbetrag des Hauptdelikts (subsidiär Gesamtdeliktssumme) |
 | `vorbestraft_einschlaegig` | darf nur `True` sein, wenn `vorbestraft` auch `True` ist |
+| `private_geschaedigte` | `'ja'` / `'nein'` / `'unbekannt'` (Default) — ob durch das Hauptdelikt Privatpersonen in ihrem Vermögen geschädigt wurden; `'nein'`, wenn ausschliesslich Staat/juristische Personen geschädigt wurden |
+| `besonderheiten` / `kurzsachverhalt` / `bemerkungen` | wie bei `BetmUrteil` (Abschnitt 8); `besonderheiten` nach `save()` per `.set([...])` |
+
+`private_geschaedigte`, `besonderheiten`, `kurzsachverhalt` und `bemerkungen` fliessen
+(noch) nicht in die ML-Prognose ein — nicht in die Feature-Listen in `ai_utils.py` aufnehmen.
 
 **`nebenverurteilungsscore`** (nicht in `validate_extracted_data` geprüft, muss manuell
 berechnet werden): Punkte für alle vorinstanzlichen Schuldsprüche **ausser** dem

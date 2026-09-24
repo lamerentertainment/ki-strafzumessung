@@ -258,10 +258,12 @@ class UrteilBearbeitenForm(BearbeitenModelForm):
                 "bandenmaessig",
                 "deliktssumme",
                 "nebenverurteilungsscore",
+                "private_geschaedigte",
+                "besonderheiten",
             ),
         ),
         ("Sanktion", ("hauptsanktion", "freiheitsstrafe_in_monaten", "anzahl_tagessaetze", "vollzug")),
-        ("Weitere Informationen", ("zusammenfassung", "in_ki_modell")),
+        ("Weitere Informationen", ("kurzsachverhalt", "zusammenfassung", "bemerkungen", "in_ki_modell")),
     )
 
 

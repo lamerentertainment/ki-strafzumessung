@@ -1,11 +1,25 @@
 {% load humanize %}
 {% load strafmass_formatierung %}
 
-<tr data-pk="{{ urteil.pk }}">
+<tr data-pk="{{ urteil.pk }}"
+    {% if urteil.kurzsachverhalt %}
+      data-kurzsachverhalt="{{ urteil.kurzsachverhalt }}"
+      data-fall-nr="{{ urteil.fall_nr }}"
+      data-gericht="{{ urteil.gericht }}"
+      data-urteilsdatum="{{ urteil.urteilsdatum|date:'d.m.Y' }}"
+      data-hauptdelikt="{{ urteil.hauptdelikt }}"
+      data-mehrfach="{% if urteil.mehrfach %}1{% else %}0{% endif %}"
+      data-versuch="{% for b in urteil.besonderheiten.all %}{% if b.name == 'Versuch' %}1{% endif %}{% endfor %}"
+    {% endif %}>
     {# Spalte 1: Fall-Nr. #}
     <td>
         <div class="d-flex flex-column">
-            <a href="{% url 'vmurteil_detail' pk=urteil.pk %}" class="fw-semibold">{{ urteil.fall_nr }}</a>
+            <div class="d-flex align-items-center gap-1">
+                <a href="{% url 'vmurteil_detail' pk=urteil.pk %}" class="fw-semibold">{{ urteil.fall_nr }}</a>
+                {% if urteil.kurzsachverhalt %}
+                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-1 py-0" style="font-size: 0.65rem;" title="Kurzsachverhalt vorhanden (Hover für Vorschau)">SV</span>
+                {% endif %}
+            </div>
             {% if urteil.url_link %}
                 <a href="{{ urteil.url_link }}" target="_blank" rel="noopener" class="link-secondary small">PDF öffnen</a>
             {% endif %}
@@ -36,6 +50,14 @@
             {% if urteil.bandenmaessig %}
                 <span class="badge bg-dark-subtle text-dark-emphasis border border-dark-subtle px-1 py-0" style="font-size: 0.7rem;" title="Bandenmässige Begehung">bandenmässig</span>
             {% endif %}
+            {% if urteil.private_geschaedigte == 'ja' %}
+                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-1 py-0" style="font-size: 0.7rem;" title="Durch das Hauptdelikt wurden Privatpersonen geschädigt">private Geschädigte</span>
+            {% elif urteil.private_geschaedigte == 'nein' %}
+                <span class="badge bg-light text-secondary-emphasis border px-1 py-0" style="font-size: 0.7rem;" title="Ausschliesslich Staat oder juristische Personen geschädigt">keine privaten Geschädigten</span>
+            {% endif %}
+            {% for besonderheit in urteil.besonderheiten.all %}
+                <span class="badge bg-primary-subtle text-primary-emphasis border border-primary-subtle px-1 py-0" style="font-size: 0.7rem;" title="Besonderheit">{{ besonderheit }}</span>
+            {% endfor %}
         </div>
     </td>
 

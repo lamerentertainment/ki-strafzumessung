@@ -545,7 +545,9 @@ def _karte_urteil(objekt):
             ("bandenmässig", objekt.bandenmaessig),
         ],
     )
-    sachverhalt = (
+    # Solange kein Kurzsachverhalt nachgefuehrt ist, dienen Delikt und
+    # Deliktssumme als Ersatz.
+    sachverhalt = objekt.kurzsachverhalt or (
         f"Hauptdelikt: {objekt.get_hauptdelikt_display()}, "
         f"Deliktssumme: CHF {objekt.deliktssumme:,}"
     )
@@ -696,9 +698,13 @@ URTEIL_FILTER_CONFIG = {
                 "gewerbsmaessig",
                 "bandenmaessig",
                 "deliktssumme",
+                "private_geschaedigte",
             ],
         ),
-        ("Weitere Delikte", ["nur_hauptdelikt", "nebenverurteilungsscore"]),
+        (
+            "Weitere Delikte & Besonderheiten",
+            ["nur_hauptdelikt", "nebenverurteilungsscore", "besonderheiten"],
+        ),
         (
             "Sanktion",
             [
@@ -720,7 +726,9 @@ URTEIL_FILTER_CONFIG = {
         "mehrfach": "mehrfache Begehung",
         "bandenmaessig": "bandenmässig",
         "deliktssumme": "Deliktssumme",
+        "private_geschaedigte": "private Geschädigte",
         "nebenverurteilungsscore": "Nebenverurteilungsscore",
+        "besonderheiten": "Besonderheiten",
         "hauptsanktion": "Hauptsanktion",
         "freiheitsstrafe_in_monaten": "Freiheitsstrafe",
         "anzahl_tagessaetze": "Geldstrafe",
@@ -732,8 +740,15 @@ URTEIL_FILTER_CONFIG = {
         "freiheitsstrafe_in_monaten": "Monate",
         "anzahl_tagessaetze": "Tagessätze",
     },
-    "volltextfelder": ["fall_nr", "gericht", "hauptdelikt", "zusammenfassung"],
-    "suchfelder_label": "Fall-Nr., Gericht, Delikt, Zusammenfassung",
+    "volltextfelder": [
+        "fall_nr",
+        "gericht",
+        "hauptdelikt",
+        "kurzsachverhalt",
+        "zusammenfassung",
+        "bemerkungen",
+    ],
+    "suchfelder_label": "Fall-Nr., Gericht, Delikt, Kurzsachverhalt, Zusammenfassung, Bemerkungen",
     "sortierfelder": [
         {"name": "fall_nr", "label": "Fall-Nr."},
         {"name": "gericht", "label": "Gericht"},

@@ -27,6 +27,10 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     histogrammOffen: true,
     histogrammKarte: null,
     histogrammKartePos: { x: 0, y: 0 },
+    // Streudiagramm Strafmass/Menge (nur auf der Betm-Liste sichtbar)
+    streudiagrammOffen: true,
+    streudiagrammPunktKarte: null,
+    streudiagrammPunktKartePos: { x: 0, y: 0 },
 
     init() {
       this.spec = JSON.parse(document.getElementById(spezifikationId).textContent);
@@ -38,11 +42,17 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         this.offeneGruppen[gruppe.titel] = index === 0;
       });
       this.ausUrlLesen();
-      // Die Karte haengt fix im Viewport und wuerde sonst beim Scrollen
-      // neben ihrem Block stehen bleiben.
-      window.addEventListener("scroll", () => this.karteVerbergen(), { passive: true });
+      // Die Karten haengen fix im Viewport und wuerden sonst beim Scrollen
+      // neben ihrem Block/Punkt stehen bleiben.
+      window.addEventListener("scroll", () => {
+        this.karteVerbergen();
+        this.streudiagrammPunktVerbergen();
+      }, { passive: true });
       window.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") this.karteVerbergen();
+        if (e.key === "Escape") {
+          this.karteVerbergen();
+          this.streudiagrammPunktVerbergen();
+        }
       });
       this.$watch("q", () => this.anwenden());
       this.$watch("zustand", () => this.anwenden(), { deep: true });
@@ -684,6 +694,25 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     },
 
     /**
+     * Runde Achsenstufen von 0 bis ``hoechste`` (1/2/5/10/20/...), auf ein
+     * Ziel von ``ziel`` Stufen hin. Gemeinsame Grundlage fuer die Y-Achse des
+     * Histogramms (Anzahl Urteile, darum ``mindestSchritt=1`` - Bruchteile
+     * eines Urteils gibt es nicht) und die X-Achse des Streudiagramms
+     * (Strafmass, auch gebrochene Schritte sinnvoll).
+     */
+    rundeStufen(hoechste, ziel, mindestSchritt = 0) {
+      if (hoechste <= 0) return [];
+      const roh = Math.max(hoechste / ziel, mindestSchritt || hoechste / (ziel * 1000));
+      const groessenordnung = Math.pow(10, Math.floor(Math.log10(roh)));
+      const schritt =
+        [1, 2, 5, 10].map((f) => f * groessenordnung).find((s) => s >= roh) ||
+        groessenordnung * 10;
+      const stufen = [];
+      for (let i = schritt; i <= hoechste; i += schritt) stufen.push(i);
+      return stufen;
+    },
+
+    /**
      * Beschriftete Stufen der Y-Achse: hoechstens sechs, und nur auf runden
      * Schritten (1/2/5/10/20/...). Jede Zeile zu beschriften ergaebe bei
      * hohen Balken eine unlesbare Zahlenkolonne.
@@ -691,14 +720,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     histogrammYTicks() {
       const daten = this.histogramm();
       if (daten === null) return [];
-      const roh = Math.max(daten.hoechste / 6, 1);
-      const groessenordnung = Math.pow(10, Math.floor(Math.log10(roh)));
-      const schritt =
-        [1, 2, 5, 10].map((f) => f * groessenordnung).find((s) => s >= roh) ||
-        groessenordnung * 10;
-      const stufen = [];
-      for (let i = schritt; i <= daten.hoechste; i += schritt) stufen.push(i);
-      return stufen;
+      return this.rundeStufen(daten.hoechste, 6, 1);
     },
 
     /**
@@ -777,8 +799,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     },
 
     /** Position am Mauszeiger, an den Viewport-Raendern umgeklappt. */
-    kartePositionieren(event) {
-      if (this.histogrammKarte === null) return;
+    positionAmZeiger(event) {
       const breite = 400;
       const hoehe = 220;
       const abstand = 14;
@@ -788,11 +809,294 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       if (x < 16) x = 16;
       if (y + hoehe > window.innerHeight - 16) y = event.clientY - hoehe - abstand;
       if (y < 16) y = 16;
-      this.histogrammKartePos = { x, y };
+      return { x, y };
+    },
+
+    kartePositionieren(event) {
+      if (this.histogrammKarte === null) return;
+      this.histogrammKartePos = this.positionAmZeiger(event);
     },
 
     karteVerbergen() {
       this.histogrammKarte = null;
+    },
+
+    // --- Streudiagramm Strafmass/Menge (nur BetmUrteil) ---------------------
+
+    STREUDIAGRAMM_BREITE: 640,
+    STREUDIAGRAMM_HOEHE: 300,
+    STREUDIAGRAMM_RAND: { links: 50, rechts: 12, oben: 12, unten: 30 },
+
+    /**
+     * Summe der gewaehlten Substanzen (siehe ``passtSpanne``) fuer ein
+     * einzelnes Urteil, oder null, wenn keine der gewaehlten Substanzen mit
+     * einer Menge in der passenden Bemessungsgrundlage vorliegt.
+     */
+    mengeGesamt(record, gewaehlt, basen) {
+      const mengen = record.betm_menge || {};
+      let summe = 0;
+      let vorhanden = false;
+      gewaehlt.forEach((schluessel) => {
+        const eintrag = mengen[schluessel];
+        if (!eintrag) return;
+        basen.forEach((b) => {
+          const wert = eintrag[b];
+          if (wert === undefined || wert === null) return;
+          summe += wert;
+          vorhanden = true;
+        });
+      });
+      return vorhanden ? summe : null;
+    },
+
+    /**
+     * Streudiagramm Strafmass (x) / Menge (y) der Treffermenge, ausgewertet
+     * fuer die im Filter gewaehlten Substanzen. Ohne Substanzwahl liefert es
+     * null: Mengen unterschiedlicher Substanzen (Kokain vs. Marihuana) lassen
+     * sich nicht auf einer gemeinsamen Achse vergleichen, siehe
+     * ``spannenBerechnen``. Ausgewertet wird dieselbe Strafmass-Stichprobe wie
+     * im Histogramm (``aktiveStichprobe``), der Umschalter dort wirkt also
+     * auch hier.
+     */
+    streudiagramm() {
+      if (!this.spec.felder.some((feld) => feld.name === "betm")) return null;
+      const gewaehlt = this.zustand.betm || [];
+      if (gewaehlt.length === 0) return null;
+      const stichprobe = this.aktiveStichprobe();
+      if (stichprobe === null) return null;
+      const { art } = stichprobe;
+      const basis = (this.zustand.betm_menge || {}).basis ?? null;
+      const basen = basis === null ? ["rein", "gemisch"] : [basis];
+
+      const punkte = [];
+      this.trefferPks.forEach((pk) => {
+        const record = this.records[pk];
+        const x = this.strafhoehe(record, art);
+        if (x === null) return;
+        const y = this.mengeGesamt(record, gewaehlt, basen);
+        if (y === null || y <= 0) return;
+        punkte.push({
+          pk,
+          x,
+          y,
+          hauptsanktion: record.hauptsanktion,
+          tagessaetze: record.anzahl_tagessaetze,
+          vollzug: record.vollzug,
+          karte: record._karte || {},
+        });
+      });
+      if (punkte.length === 0) return null;
+
+      const info = this.spannen.betm_menge || {};
+      return {
+        art,
+        punkte,
+        anzahl: punkte.length,
+        xMax: Math.max(...punkte.map((p) => p.x)) || 1,
+        yDomain: this.streudiagrammYDomain(
+          Math.min(...punkte.map((p) => p.y)),
+          Math.max(...punkte.map((p) => p.y))
+        ),
+        mengeLabel: info.label || "Menge",
+        einheit: info.einheit || "",
+        achstitelX: art.monate ? "Strafmass (Monate)" : "Strafmass (Tagessätze)",
+        sanktionen: this.sanktionsarten.filter(
+          (eine) => !eine.kombiniert && punkte.some((p) => p.hauptsanktion === eine.code)
+        ),
+        basisHinweis:
+          basis === null
+            ? "reine Wirkstoff- und Bruttomengen zusammengefasst"
+            : basis === "rein"
+            ? "reine Wirkstoffmenge"
+            : "Bruttomenge (Gemisch)",
+      };
+    },
+
+    /**
+     * Wertebereich der logarithmischen Y-Achse: rund 10% Rand ueber/unter den
+     * tatsaechlichen Werten, damit kein Punkt auf dem Achsenrand liegt.
+     */
+    streudiagrammYDomain(min, max) {
+      const untenLog = Math.log10(min) - 0.1;
+      const obenLog = Math.log10(Math.max(max, min)) + 0.1;
+      return { min: Math.pow(10, untenLog), max: Math.pow(10, Math.max(obenLog, untenLog + 0.2)) };
+    },
+
+    /** x-Pixelposition eines Punkts (linear, Achse beginnt bei 0). */
+    streudiagrammX(daten, wert) {
+      const { links, rechts } = this.STREUDIAGRAMM_RAND;
+      const breite = this.STREUDIAGRAMM_BREITE - links - rechts;
+      return links + (wert / daten.xMax) * breite;
+    },
+
+    /** y-Pixelposition eines Punkts (logarithmisch, waechst nach oben). */
+    streudiagrammY(daten, wert) {
+      const { oben, unten } = this.STREUDIAGRAMM_RAND;
+      const hoehe = this.STREUDIAGRAMM_HOEHE - oben - unten;
+      const { min, max } = daten.yDomain;
+      const anteil = (Math.log10(wert) - Math.log10(min)) / (Math.log10(max) - Math.log10(min));
+      return oben + (1 - anteil) * hoehe;
+    },
+
+    /** Runde X-Achsenstufen (Strafmass), analog zur Histogramm-Y-Achse. */
+    streudiagrammXTicks(daten) {
+      return this.rundeStufen(daten.xMax, 6);
+    },
+
+    /**
+     * "Schoene" Log-Achsenstufen (1/2/5 je Zehnerpotenz) innerhalb der
+     * Domain. Bei sehr grosser Spannweite (>5 Zehnerpotenzen, z.B. 1g bis
+     * mehrere 100kg) nur die vollen Zehnerpotenzen, sonst wird die Achse
+     * unlesbar.
+     */
+    streudiagrammYTicks(daten) {
+      const { min, max } = daten.yDomain;
+      const start = Math.floor(Math.log10(min));
+      const ende = Math.ceil(Math.log10(max));
+      const nurZehnerpotenzen = ende - start > 5;
+      const stufen = [];
+      for (let zehner = start; zehner <= ende; zehner += 1) {
+        (nurZehnerpotenzen ? [1] : [1, 2, 5]).forEach((faktor) => {
+          const wert = faktor * Math.pow(10, zehner);
+          if (wert >= min && wert <= max) stufen.push(wert);
+        });
+      }
+      return stufen;
+    },
+
+    /**
+     * Menge als Anzeigetext: ab 1000g in Kilogramm (analog zu
+     * ``Betm.menge_anzeige`` im Backend), Substanzen mit Stueckzahlen
+     * (LSD-Trips, Ecstasy-Pillen) unveraendert in ihrer Einheit.
+     */
+    mengeAnzeige(gramm, einheit) {
+      const rundung = (wert) => (wert >= 100 ? Math.round(wert) : Math.round(wert * 10) / 10);
+      if (einheit && einheit !== "g") return `${rundung(gramm)} ${einheit}`;
+      if (gramm >= 1000) {
+        const kg = (gramm / 1000).toFixed(1).replace(/\.0$/, "");
+        return `${kg}kg`;
+      }
+      return `${rundung(gramm)}g`;
+    },
+
+    /** Fuer die per ``x-html`` erzeugten SVG-Textknoten (siehe unten). */
+    escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    },
+
+    /**
+     * Gitterlinien & Achsenbeschriftung des Streudiagramms als SVG-Markup.
+     *
+     * ``x-for`` funktioniert innerhalb von ``<svg>`` nicht: der HTML-Parser
+     * behandelt ein ``<template>`` dort als fremdes SVG-Element ohne
+     * ``.content``-Fragment, Alpine kann es also nicht klonen (bekannte
+     * Einschraenkung, kein Alpine-Bug). Das Markup wird darum als String
+     * gebaut und per ``x-html`` in ein ``<g>`` eingehaengt - anders als ein
+     * ausserhalb des ``<svg>`` liegendes, teleportiertes Template entstehen
+     * die Kindknoten dabei korrekt im SVG-Namensraum, weil der
+     * ``innerHTML``-Parser den Namensraum des Zielelements uebernimmt.
+     */
+    streudiagrammAchsenSvg(daten) {
+      const yAchse = this.streudiagrammYTicks(daten)
+        .map((stufe) => {
+          const y = this.streudiagrammY(daten, stufe);
+          const text = this.escapeHtml(this.mengeAnzeige(stufe, daten.einheit));
+          return (
+            `<line class="streudiagramm-gitter" x1="50" x2="628" y1="${y}" y2="${y}"></line>` +
+            `<text class="streudiagramm-tick" x="46" y="${y + 3}" text-anchor="end">${text}</text>`
+          );
+        })
+        .join("");
+      const xAchse = this.streudiagrammXTicks(daten)
+        .map((stufe) => {
+          const x = this.streudiagrammX(daten, stufe);
+          // Ohne die Nachkommastelle der kombinierten Ansicht, wenn die
+          // Stufe (anders als einzelne Urteilswerte) ohnehin rund ist.
+          const text = this.escapeHtml(this.formatiert(stufe, daten.art).replace(/\.0+$/, ""));
+          return (
+            `<line class="streudiagramm-gitter" x1="${x}" x2="${x}" y1="12" y2="270"></line>` +
+            `<text class="streudiagramm-tick" x="${x}" y="284" text-anchor="middle">${text}</text>`
+          );
+        })
+        .join("");
+      return yAchse + xAchse;
+    },
+
+    /**
+     * Ein Punkt je Urteil als SVG-Markup (siehe ``streudiagrammAchsenSvg`` zum
+     * Grund fuer ``x-html`` statt ``x-for``). Hover/Fokus laufen ueber
+     * Event-Delegation am ``<svg>`` (``streudiagrammHover``), weil in
+     * ``x-html`` eingefuegtes Markup keine Alpine-Direktiven wie ``x-on``
+     * verarbeitet; der Link selbst bleibt normal navigierbar, da ``<a
+     * href>`` als gewoehnliches SVG-Markup unveraendert funktioniert.
+     */
+    streudiagrammPunkteSvg(daten) {
+      return daten.punkte
+        .map((punkt) => {
+          const href = this.escapeHtml(punkt.karte.url || "#");
+          const label = this.escapeHtml(
+            `${punkt.karte.fall_nr || ""} – ${this.mengeAnzeige(punkt.y, daten.einheit)}`
+          );
+          const cx = this.streudiagrammX(daten, punkt.x);
+          const cy = this.streudiagrammY(daten, punkt.y);
+          return (
+            `<a href="${href}" aria-label="${label}">` +
+            `<circle class="streudiagramm-punkt sanktion-${punkt.hauptsanktion} vollzug-${punkt.vollzug}" ` +
+            `data-pk="${punkt.pk}" cx="${cx}" cy="${cy}" r="5" tabindex="0"></circle>` +
+            `</a>`
+          );
+        })
+        .join("");
+    },
+
+    /**
+     * Delegierter Hover-/Fokus-Handler fuer die per ``x-html`` erzeugten
+     * Punkte (siehe ``streudiagrammPunkteSvg``): sucht anhand von
+     * ``data-pk`` am Ereignisziel den zugehoerigen Punkt und zeigt dessen
+     * Karte. ``focusin``/``focusout`` statt ``focus``/``blur``, weil nur
+     * erstere im delegierten Handler am ``<svg>`` ueberhaupt ankommen
+     * (``focus``/``blur`` bubbeln nicht).
+     */
+    streudiagrammHover(event, daten) {
+      const ziel = event.target.closest("[data-pk]");
+      if (!ziel) return;
+      const punkt = daten.punkte.find((p) => String(p.pk) === ziel.dataset.pk);
+      if (!punkt) return;
+      this.streudiagrammPunktZeigen(punkt, daten, event);
+    },
+
+    /**
+     * Hover-Karte zu einem Punkt des Streudiagramms. Wiederverwendet
+     * ``blockStrafmass`` und ``vollzugstext`` aus dem Histogramm, ergaenzt um
+     * die Menge - die Karten sind sonst inhaltlich identisch.
+     */
+    streudiagrammPunktZeigen(punkt, daten, event) {
+      const strafmassEintrag = {
+        hauptsanktion: punkt.hauptsanktion,
+        tagessaetze: punkt.tagessaetze,
+        wert: punkt.x,
+      };
+      this.streudiagrammPunktKarte = {
+        ...punkt.karte,
+        strafmass: this.blockStrafmass(strafmassEintrag),
+        vollzug: this.vollzugstext(punkt.vollzug),
+        menge: `${daten.mengeLabel}: ${this.mengeAnzeige(punkt.y, daten.einheit)}`,
+      };
+      this.streudiagrammPunktPositionieren(event);
+    },
+
+    streudiagrammPunktPositionieren(event) {
+      if (this.streudiagrammPunktKarte === null) return;
+      this.streudiagrammPunktKartePos = this.positionAmZeiger(event);
+    },
+
+    streudiagrammPunktVerbergen() {
+      this.streudiagrammPunktKarte = null;
     },
 
     // --- URL-Synchronisierung (verlinkbare Filterergebnisse) -----------------

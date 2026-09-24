@@ -108,7 +108,8 @@ eines festen Radius nach diesem Score skaliert, siehe
                   <button type="button" class="btn btn-sm btn-link text-decoration-none text-start py-0"
                           x-show="streudiagrammHervorhebung.length > 0"
                           @click="streudiagrammHervorhebung = []">zurücksetzen</button>
-                  <button type="button" class="btn btn-sm text-start mt-1"
+                  <div class="text-center text-body-secondary small">---</div>
+                  <button type="button" class="btn btn-sm text-start"
                           :class="streudiagrammScoreGroesse ? 'btn-dark' : 'btn-outline-secondary'"
                           @click="streudiagrammScoreGroesse = !streudiagrammScoreGroesse">
                     Nebenverurteilungsscore darstellen

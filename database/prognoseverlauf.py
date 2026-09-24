@@ -48,6 +48,22 @@ RAMPE = [
 ]
 
 
+def _jahre_monate_titel(monate):
+    """Formatiert eine Monatszahl als "X Jahr(e) Y Monat(e)" fuer die
+    Tick-Tooltips der Freiheitsstrafe-Achse - analog zu jahreMonateTitel() in
+    filter.js bzw. freiheitsstrafe_monate_tooltip. Ab 12 Monaten sinnvoll;
+    darunter (oder exakt 12) leerer String, da die Achse selbst schon Monate
+    zeigt und kein Tooltip noetig ist.
+    """
+    if monate <= 12:
+        return ""
+    jahre, rest = divmod(monate, 12)
+    teile = [f"{jahre} {'Jahr' if jahre == 1 else 'Jahre'}"]
+    if rest:
+        teile.append(f"{rest} {'Monat' if rest == 1 else 'Monate'}")
+    return " ".join(teile)
+
+
 def _achsenschritt(spanne):
     """Rundes Schrittmass, das die Achse mit etwa sechs Marken beschriftet."""
     roh = spanne / 6
@@ -121,7 +137,12 @@ def verlauf_erstellen(
         # Die Position geht als fertiger String ins Template: bei LANGUAGE_CODE
         # 'de-ch' würde Django eine Fliesskommazahl lokalisiert ausgeben und mit
         # einem Dezimalkomma den CSS-Wert zerstören.
-        ticks.append({"wert": int(wert), "position": f"{position(wert):.2f}"})
+        tick_wert = int(wert)
+        ticks.append({
+            "wert": tick_wert,
+            "position": f"{position(wert):.2f}",
+            "tooltip": "" if geldstrafe else _jahre_monate_titel(tick_wert),
+        })
         wert += schritt
 
     return {

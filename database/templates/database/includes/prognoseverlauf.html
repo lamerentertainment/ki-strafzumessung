@@ -11,7 +11,7 @@
          aria-label="Farbverlauf der Prognose: {{ prognoseverlauf.achstitel }}. Die kräftigste Färbung markiert das prognostizierte Strafmass."></div>
     <div class="prognoseverlauf-achse">
         {% for tick in prognoseverlauf.ticks %}
-            <span class="prognoseverlauf-tick" style="left: {{ tick.position }}%">{{ tick.wert }}</span>
+            <span class="prognoseverlauf-tick" style="left: {{ tick.position }}%" data-tt="{{ tick.tooltip }}">{{ tick.wert }}</span>
         {% endfor %}
     </div>
     <figcaption class="prognoseverlauf-achstitel">{{ prognoseverlauf.achstitel }}</figcaption>

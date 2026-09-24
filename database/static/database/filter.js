@@ -843,6 +843,22 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     STREUDIAGRAMM_RAND: { links: 50, rechts: 12, oben: 12, unten: 30 },
 
     /**
+     * Randfarbe eines Punkts nach Anzahl beteiligter Betm-Arten: ab zwei
+     * Substanzen sichtbar (helles Grau), bei vier oder mehr so dunkel wie
+     * zuvor bei "mehr als eine" (#6c757d) - der Rand wird also zunehmend
+     * dunkler statt abrupt bei "mehr als eine Substanz" umzuschalten. null
+     * bei hoechstens einer Substanz (kein Rand, siehe streudiagrammPunkteSvg).
+     */
+    mehrfachBetmFarbe(anzahl) {
+      if (anzahl < 2) return null;
+      const stufe = Math.min((anzahl - 2) / 2, 1); // 2 -> 0, 3 -> 0.5, 4+ -> 1
+      const hell = [222, 226, 230]; // #dee2e6, dasselbe Grau wie die Gitterlinien
+      const dunkel = [108, 117, 125]; // #6c757d, bisheriger Mehrfach-Rand
+      const kanal = (i) => Math.round(hell[i] + (dunkel[i] - hell[i]) * stufe);
+      return `rgb(${kanal(0)}, ${kanal(1)}, ${kanal(2)})`;
+    },
+
+    /**
      * Summe der gewaehlten Substanzen (siehe ``passtSpanne``) fuer ein
      * einzelnes Urteil, oder null, wenn keine der gewaehlten Substanzen mit
      * einer Menge in der passenden Bemessungsgrundlage vorliegt.
@@ -901,8 +917,8 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           tagessaetze: record.anzahl_tagessaetze,
           vollzug: record.vollzug,
           // Alle Substanzen des Urteils, nicht nur die im Filter gewaehlten -
-          // faerbt den Rand dunkelgrau, wenn mehr als eine Art beteiligt ist.
-          mehrfachBetm: (record.betm || []).length > 1,
+          // siehe mehrfachBetmFarbe() fuer die graduelle Randfaerbung.
+          mehrfachBetmFarbe: this.mehrfachBetmFarbe((record.betm || []).length),
           karte: record._karte || {},
           // Hervorhebung anhand gewaehlter Rollen und/oder Besonderheiten
           // (z.B. Gestaendnisrabatt), ODER-verknuepft wie bei
@@ -1297,8 +1313,8 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
      * verarbeitet; der Link selbst bleibt normal navigierbar, da ``<a
      * href>`` als gewoehnliches SVG-Markup unveraendert funktioniert.
      *
-     * Hervorgehobene Punkte (``streudiagrammHervorhebung``, nur VM) werden
-     * zuletzt gezeichnet, damit ihr goldener Rand nicht von ueberlappenden
+     * Hervorgehobene Punkte (``streudiagrammHervorhebung``) werden zuletzt
+     * gezeichnet, damit ihr goldener Rand nicht von ueberlappenden
      * Nachbarpunkten verdeckt wird - SVG kennt kein z-index, spaetere Elemente
      * liegen automatisch oben.
      */
@@ -1314,13 +1330,20 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           );
           const cx = this.streudiagrammX(daten, punkt.menge);
           const cy = this.streudiagrammY(daten, punkt.strafmass);
-          const mehrfachKlasse = punkt.mehrfachBetm ? " mehrfach-betm" : "";
           const hervorhebungKlasse = punkt.hervorgehoben ? " hervorgehoben" : "";
           const radius = punkt.hervorgehoben ? 7 : 5;
+          // Graduelle Mehrfach-Betm-Randfarbe nur als Inline-Style und nur,
+          // wenn nicht gleichzeitig golden hervorgehoben - Inline-Styles sind
+          // spezifischer als jede Klasse und wuerden den goldenen Rand der
+          // .hervorgehoben-Klasse sonst immer uebersteuern.
+          const randStil =
+            !punkt.hervorgehoben && punkt.mehrfachBetmFarbe
+              ? ` style="stroke: ${punkt.mehrfachBetmFarbe}"`
+              : "";
           return (
             `<a href="${href}" aria-label="${label}">` +
-            `<circle class="streudiagramm-punkt sanktion-${punkt.hauptsanktion} vollzug-${punkt.vollzug}${mehrfachKlasse}${hervorhebungKlasse}" ` +
-            `data-pk="${punkt.pk}" cx="${cx}" cy="${cy}" r="${radius}" tabindex="0"></circle>` +
+            `<circle class="streudiagramm-punkt sanktion-${punkt.hauptsanktion} vollzug-${punkt.vollzug}${hervorhebungKlasse}" ` +
+            `data-pk="${punkt.pk}" cx="${cx}" cy="${cy}" r="${radius}" tabindex="0"${randStil}></circle>` +
             `</a>`
           );
         })

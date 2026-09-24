@@ -699,10 +699,9 @@ tr[data-kurzsachverhalt]:hover td {
 .streudiagramm-punkt.sanktion-1.vollzug-1 { fill: #75b798; }
 .streudiagramm-punkt.sanktion-1.vollzug-0 { fill: #badbcc; }
 
-/* Urteil betrifft mehr als eine Betm-Art (unabhaengig von der Filterwahl) */
-.streudiagramm-punkt.mehrfach-betm {
-    stroke: #6c757d;
-}
+/* Mehrfach-Betm-Randfarbe (Urteile mit mehreren Betm-Arten) wird nicht mehr
+   ueber eine Klasse gesetzt, sondern graduell nach Anzahl als Inline-Style,
+   siehe mehrfachBetmFarbe() in filter.js. */
 
 /* Manuell hervorgehobene Punkte (z.B. ein gewaehltes Hauptdelikt im
    VM- bzw. eine gewaehlte Besonderheit im Betm-Streudiagramm, siehe

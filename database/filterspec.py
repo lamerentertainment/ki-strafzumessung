@@ -822,7 +822,7 @@ def _nur_eine_betm_art(objekt):
 
 
 BETM_FILTER_CONFIG = {
-    "primaer": ["betm", "betm_menge", "nur_eine_betm_art", "nur_hauptdelikt", "rolle"],
+    "primaer": ["betm", "rolle", "betm_menge", "nur_eine_betm_art", "nur_hauptdelikt"],
     "abgeleitete_felder": {
         "nur_eine_betm_art": {
             "label": "nur eine Betm-Art",
@@ -853,9 +853,9 @@ BETM_FILTER_CONFIG = {
             "Betäubungsmittel & Tatbeitrag",
             [
                 "betm",
+                "rolle",
                 "betm_menge",
                 "nur_eine_betm_art",
-                "rolle",
                 "deliktsertrag",
                 "deliktsdauer_in_monaten",
             ],

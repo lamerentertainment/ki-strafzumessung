@@ -23,6 +23,10 @@ nur verfügbar, wenn genau eine Substanz gewählt ist (siehe
 `streudiagrammRegressionAnzeigen`/`linearRegression`/
 `streudiagrammRegressionVorhersage` in filter.js, analog zu
 `vmstreudiagramm.html`).
+
+Ausserdem mit einem Umschalter "Nebenverurteilungsscore darstellen", der die
+Punktgroesse statt eines festen Radius nach diesem Score skaliert, siehe
+`streudiagrammScoreGroesse`/`streudiagrammRadius` in filter.js.
 {% endcomment %}
 
 <div class="streudiagramm mb-3" x-cloak>
@@ -144,6 +148,11 @@ nur verfügbar, wenn genau eine Substanz gewählt ist (siehe
                   <button type="button" class="btn btn-sm btn-link text-decoration-none text-start py-0"
                           x-show="streudiagrammHervorhebung.length > 0"
                           @click="streudiagrammHervorhebung = []">zurücksetzen</button>
+                  <button type="button" class="btn btn-sm text-start mt-1"
+                          :class="streudiagrammScoreGroesse ? 'btn-dark' : 'btn-outline-secondary'"
+                          @click="streudiagrammScoreGroesse = !streudiagrammScoreGroesse">
+                    Nebenverurteilungsscore darstellen
+                  </button>
                 </div>
               </template>
 
@@ -185,6 +194,9 @@ nur verfügbar, wenn genau eine Substanz gewählt ist (siehe
             am dunkelsten.
             <span x-show="streudiagrammHervorhebung.length > 0">
               Golden umrandete Punkte betreffen eine der oben gewählten Rollen und/oder Besonderheiten.
+            </span>
+            <span x-show="streudiagrammScoreGroesse">
+              Die Punktgrösse entspricht dem Nebenverurteilungsscore (grösser = höherer Score).
             </span>
           </p>
           <p class="mb-0 mt-1 small text-body-secondary font-monospace"

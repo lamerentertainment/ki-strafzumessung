@@ -16,7 +16,10 @@ filter.js. Sowie einer optional einblendbaren linearen Regressionsgeraden
 das anhand der Regressionsgeraden das Strafmass zu einer frei eingegebenen
 Deliktssumme vorhersagt - siehe
 ``streudiagrammRegressionAnzeigen``/``linearRegression``/
-``streudiagrammRegressionVorhersage`` in filter.js.
+``streudiagrammRegressionVorhersage`` in filter.js. Ausserdem mit einem
+Umschalter "Nebenverurteilungsscore darstellen", der die Punktgroesse statt
+eines festen Radius nach diesem Score skaliert, siehe
+``streudiagrammScoreGroesse``/``streudiagrammRadius`` in filter.js.
 {% endcomment %}
 
 <div class="streudiagramm mb-3" x-cloak>
@@ -105,6 +108,11 @@ Deliktssumme vorhersagt - siehe
                   <button type="button" class="btn btn-sm btn-link text-decoration-none text-start py-0"
                           x-show="streudiagrammHervorhebung.length > 0"
                           @click="streudiagrammHervorhebung = []">zurücksetzen</button>
+                  <button type="button" class="btn btn-sm text-start mt-1"
+                          :class="streudiagrammScoreGroesse ? 'btn-dark' : 'btn-outline-secondary'"
+                          @click="streudiagrammScoreGroesse = !streudiagrammScoreGroesse">
+                    Nebenverurteilungsscore darstellen
+                  </button>
                 </div>
               </template>
 
@@ -141,6 +149,9 @@ Deliktssumme vorhersagt - siehe
             Jeder Punkt ist ein Urteil; Klick öffnet die Detailseite.
             <span x-show="streudiagrammHervorhebung.length > 0">
               Golden umrandete Punkte betreffen eines der oben gewählten Hauptdelikte.
+            </span>
+            <span x-show="streudiagrammScoreGroesse">
+              Die Punktgrösse entspricht dem Nebenverurteilungsscore (grösser = höherer Score).
             </span>
           </p>
           <p class="mb-0 mt-1 small text-body-secondary font-monospace"

@@ -46,6 +46,9 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     // Strafmass-Vorhersage anhand der Regressionsgeraden, siehe
     // streudiagrammRegressionVorhersage().
     streudiagrammRegressionEingabe: "",
+    // Punktgroesse nach Nebenverurteilungsscore statt fester Radius, siehe
+    // streudiagrammRadius().
+    streudiagrammScoreGroesse: false,
 
     init() {
       this.spec = JSON.parse(document.getElementById(spezifikationId).textContent);
@@ -863,6 +866,9 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     STREUDIAGRAMM_BREITE: 640,
     STREUDIAGRAMM_HOEHE: 300,
     STREUDIAGRAMM_RAND: { links: 50, rechts: 12, oben: 12, unten: 30 },
+    // Radiusspanne bei eingeschaltetem "Nebenverurteilungsscore darstellen"
+    // (streudiagrammScoreGroesse), siehe streudiagrammRadius().
+    STREUDIAGRAMM_SCORE_RADIUS: { min: 3, max: 11 },
 
     /**
      * Randfarbe eines Punkts nach Anzahl beteiligter Betm-Arten: ab zwei
@@ -878,6 +884,43 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       const dunkel = [108, 117, 125]; // #6c757d, bisheriger Mehrfach-Rand
       const kanal = (i) => Math.round(hell[i] + (dunkel[i] - hell[i]) * stufe);
       return `rgb(${kanal(0)}, ${kanal(1)}, ${kanal(2)})`;
+    },
+
+    /** Wertebereich des Nebenverurteilungsscores der Treffermenge (siehe streudiagrammRadius). */
+    streudiagrammScoreDomain(punkte) {
+      const werte = punkte.map((p) => p.score ?? 0);
+      return { min: Math.min(...werte), max: Math.max(...werte) };
+    },
+
+    /**
+     * Punktradius linear zwischen ``STREUDIAGRAMM_SCORE_RADIUS.min``/``.max``
+     * skaliert, je nach Nebenverurteilungsscore innerhalb der Treffermenge.
+     * Score ``null``/``undefined`` (nicht erfasst) zaehlt wie 0 - eine
+     * fehlende Angabe soll den Punkt nicht verschwinden lassen, sondern nur
+     * am unteren Ende der Skala einordnen. Bei durchwegs gleichem Score
+     * (Spanne 0) in der Mitte der Skala, statt durch 0 zu teilen.
+     */
+    streudiagrammScoreRadius(domain, score) {
+      const { min, max } = domain;
+      const anteil = max === min ? 0.5 : ((score ?? 0) - min) / (max - min);
+      const { min: rMin, max: rMax } = this.STREUDIAGRAMM_SCORE_RADIUS;
+      return rMin + anteil * (rMax - rMin);
+    },
+
+    /**
+     * Punktradius: fester Wert (5, hervorgehoben 7) im Normalfall - bei
+     * eingeschaltetem "Nebenverurteilungsscore darstellen"
+     * (``streudiagrammScoreGroesse``) stattdessen nach Score skaliert (siehe
+     * ``streudiagrammScoreRadius``). Hervorgehobene Punkte bekommen in beiden
+     * Faellen 2px mehr, damit die goldene Hervorhebung auch bei variabler
+     * Groesse erkennbar bleibt.
+     */
+    streudiagrammRadius(daten, punkt) {
+      const basis =
+        this.streudiagrammScoreGroesse && daten.scoreDomain
+          ? this.streudiagrammScoreRadius(daten.scoreDomain, punkt.score)
+          : 5;
+      return punkt.hervorgehoben ? basis + 2 : basis;
     },
 
     /**
@@ -943,6 +986,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           mehrfachBetmFarbe: this.mehrfachBetmFarbe((record.betm || []).length),
           karte: record._karte || {},
           hervorgehoben: this.istHervorgehoben(record),
+          score: record.nebenverurteilungsscore,
         });
       });
       if (punkte.length === 0) return null;
@@ -957,6 +1001,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           Math.max(...punkte.map((p) => p.menge))
         ),
         strafmassMax: Math.max(...punkte.map((p) => p.strafmass)) || 1,
+        scoreDomain: this.streudiagrammScoreDomain(punkte),
         mengeLabel: info.label || "Menge",
         einheit: info.einheit || "",
         achstitelY: art.monate ? "Strafmass (Monate)" : "Strafmass (Tagessätze)",
@@ -1018,6 +1063,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           vollzug: record.vollzug,
           karte: record._karte || {},
           hervorgehoben: this.istHervorgehoben(record),
+          score: record.nebenverurteilungsscore,
         });
       });
       if (punkte.length === 0) return null;
@@ -1031,6 +1077,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           Math.max(...punkte.map((p) => p.menge))
         ),
         strafmassMax: Math.max(...punkte.map((p) => p.strafmass)) || 1,
+        scoreDomain: this.streudiagrammScoreDomain(punkte),
         mengeLabel: deliktssummeFeld ? deliktssummeFeld.label : "Deliktssumme",
         einheit: deliktssummeFeld ? deliktssummeFeld.einheit : "CHF",
         achstitelY: art.monate ? "Strafmass (Monate)" : "Strafmass (Tagessätze)",
@@ -1346,7 +1393,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           const cx = this.streudiagrammX(daten, punkt.menge);
           const cy = this.streudiagrammY(daten, punkt.strafmass);
           const hervorhebungKlasse = punkt.hervorgehoben ? " hervorgehoben" : "";
-          const radius = punkt.hervorgehoben ? 7 : 5;
+          const radius = this.streudiagrammRadius(daten, punkt);
           // Graduelle Mehrfach-Betm-Randfarbe nur als Inline-Style und nur,
           // wenn nicht gleichzeitig golden hervorgehoben - Inline-Styles sind
           // spezifischer als jede Klasse und wuerden den goldenen Rand der

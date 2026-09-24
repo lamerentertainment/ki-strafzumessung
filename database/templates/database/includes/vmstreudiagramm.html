@@ -1,0 +1,150 @@
+{% comment %}
+Aufklappbares Streudiagramm Strafmass (y) / Deliktssumme (x) zur gefilterten
+Treffermenge - nur auf der Vermoegensdelikte-Urteilsliste eingebunden.
+
+Analog zu ``betmstreudiagramm.html`` (Betm-Urteile), ruft aber
+``streudiagrammVM()`` statt ``streudiagramm()`` auf: die Deliktssumme ist ein
+einzelnes Zahlenfeld je Urteil, es braucht darum - anders als bei den
+Betm-Mengen - keine vorgelagerte Auswahl, zu der das Diagramm erst leer
+bleibt. Rein clientseitig berechnet wie das Histogramm, siehe dortiger
+Kommentar.
+
+Zusaetzlich mit Buttons zur Hervorhebung einzelner Hauptdelikte (goldene
+Punkte, unabhaengig vom Filter): siehe ``streudiagrammHervorhebung`` in
+filter.js.
+{% endcomment %}
+
+<div class="streudiagramm mb-3" x-cloak>
+  <button type="button" class="btn btn-sm btn-outline-dark"
+          @click="streudiagrammOffen = !streudiagrammOffen"
+          :aria-expanded="streudiagrammOffen ? 'true' : 'false'">
+    <span x-text="streudiagrammOffen ? '▾' : '▸'"></span>
+    Strafmass über Deliktssumme (Streudiagramm)
+    <template x-if="streudiagrammVM()">
+      <span class="badge text-bg-secondary ms-1">
+        <span x-text="streudiagrammVM().anzahl"></span> Urteile
+      </span>
+    </template>
+  </button>
+
+  <div class="mt-2" x-show="streudiagrammOffen" x-collapse>
+    <div class="border rounded-3 p-3 bg-body-tertiary">
+
+      {# --- Keine auswertbaren Paare in der Treffermenge --- #}
+      <template x-if="!streudiagrammVM()">
+        <p class="mb-0 small text-body-secondary">
+          Zu dieser Filterkombination liegt kein auswertbares Strafmass/Deliktssummen-Paar vor.
+        </p>
+      </template>
+
+      <template x-if="streudiagrammVM()">
+        <div>
+          <div class="d-flex flex-wrap align-items-baseline gap-2 mb-2 small text-body-secondary">
+            <span>
+              <button type="button" class="kennzahl-umschalter"
+                      @click="sanktionUmschalten()"
+                      :disabled="!kennzahlen().sanktion.umschaltbar"
+                      :data-tt="kennzahlen().sanktion.umschaltTitel"
+                      x-text="streudiagrammVM().art.label"></button>
+              über <span x-text="streudiagrammVM().mengeLabel"></span>
+              (n=<span x-text="streudiagrammVM().anzahl"></span>)
+            </span>
+          </div>
+
+          {% comment %}
+            Diagramm links, Hervorhebungs-Buttons rechts daneben (auf schmalen
+            Breiten faellt die Button-Spalte per flex-wrap unter das Diagramm).
+          {% endcomment %}
+          <div class="d-flex flex-wrap gap-3 align-items-start">
+            <div class="streudiagramm-scroll flex-grow-1" @mouseleave="streudiagrammPunktVerbergen()">
+              {% comment %}
+                Gitterlinien, Achsenbeschriftung und Punkte werden als
+                SVG-Markup-String erzeugt und per x-html eingehaengt statt mit
+                x-for; siehe Kommentar zu streudiagrammAchsenSvg in filter.js.
+              {% endcomment %}
+              <svg viewBox="0 0 640 300" preserveAspectRatio="xMidYMid meet"
+                   class="streudiagramm-flaeche" role="img"
+                   aria-label="Streudiagramm: Strafmass über Deliktssumme"
+                   @mouseover="streudiagrammHover($event, streudiagrammVM())"
+                   @focusin="streudiagrammHover($event, streudiagrammVM())"
+                   @mousemove="streudiagrammPunktPositionieren($event)"
+                   @mouseout="streudiagrammPunktVerbergen()"
+                   @focusout="streudiagrammPunktVerbergen()">
+
+                <g x-html="streudiagrammAchsenSvg(streudiagrammVM())"></g>
+
+                {# Achsenlinien zuoberst auf den Gitterlinien #}
+                <line class="streudiagramm-achse" x1="50" y1="12" x2="50" y2="270"></line>
+                <line class="streudiagramm-achse" x1="50" y1="270" x2="628" y2="270"></line>
+
+                {# Ein Punkt je Urteil; Farbton/Helligkeit wie beim Histogramm #}
+                <g x-html="streudiagrammPunkteSvg(streudiagrammVM())"></g>
+              </svg>
+            </div>
+
+            {# --- Hervorhebung einzelner Hauptdelikte (goldene Punkte), unabhaengig vom Filter --- #}
+            <template x-if="feldNach('hauptdelikt')">
+              <div class="streudiagramm-hervorhebung d-flex flex-column gap-1">
+                <span class="small text-body-secondary">Hervorheben:</span>
+                <template x-for="option in feldNach('hauptdelikt').optionen" :key="option.value">
+                  <button type="button" class="btn btn-sm text-start"
+                          :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
+                          @click="streudiagrammHervorhebungUmschalten(option.value)">
+                    <span x-text="option.label"></span>
+                  </button>
+                </template>
+                <button type="button" class="btn btn-sm btn-link text-decoration-none text-start py-0"
+                        x-show="streudiagrammHervorhebung.length > 0"
+                        @click="streudiagrammHervorhebung = []">zurücksetzen</button>
+              </div>
+            </template>
+          </div>
+
+          <div class="d-flex flex-wrap gap-3 mt-2 small text-body-secondary">
+            <span x-text="streudiagrammVM().achstitelY + ' / ' + streudiagrammVM().mengeLabel + ' (' + streudiagrammVM().einheit + ', logarithmisch)'"></span>
+            <span class="ms-auto d-flex flex-column align-items-start align-items-sm-end gap-1">
+              <template x-for="sanktion in streudiagrammVM().sanktionen" :key="sanktion.code">
+                <span class="d-flex flex-wrap gap-2 align-items-center">
+                  <span x-text="sanktion.label + ':'"></span>
+                  <span class="histogramm-legende vollzug-0"
+                        :class="`sanktion-${sanktion.code}`"></span> bedingt
+                  <span class="histogramm-legende vollzug-1"
+                        :class="`sanktion-${sanktion.code}`"></span> teilbedingt
+                  <span class="histogramm-legende vollzug-2"
+                        :class="`sanktion-${sanktion.code}`"></span> unbedingt
+                </span>
+              </template>
+            </span>
+          </div>
+          <p class="mb-0 mt-1 small text-body-secondary">
+            Jeder Punkt ist ein Urteil; Klick öffnet die Detailseite.
+            <span x-show="streudiagrammHervorhebung.length > 0">
+              Golden hervorgehobene Punkte betreffen eines der oben gewählten Hauptdelikte.
+            </span>
+          </p>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  {# --- Hover-Karte zum einzelnen Punkt --- #}
+  <template x-if="streudiagrammPunktKarte">
+    <div class="kurzsachverhalt-hovercard visible histogramm-hovercard"
+         role="tooltip"
+         :style="`left: ${streudiagrammPunktKartePos.x}px; top: ${streudiagrammPunktKartePos.y}px`">
+      <div class="hovercard-header">
+        <div class="d-flex justify-content-between align-items-baseline gap-2">
+          <span class="hovercard-title fw-bold"
+                x-text="streudiagrammPunktKarte.fall_nr ? `Fall ${streudiagrammPunktKarte.fall_nr}` : 'Urteil'"></span>
+          <span class="hovercard-meta text-body-secondary small"
+                x-text="[streudiagrammPunktKarte.gericht, streudiagrammPunktKarte.datum].filter(Boolean).join(', ')"></span>
+        </div>
+        <div class="hovercard-delikt small mt-1"
+             x-text="streudiagrammPunktKarte.delikt || ''"></div>
+        <div class="small mt-1 fw-semibold"
+             x-text="[streudiagrammPunktKarte.strafmass, streudiagrammPunktKarte.vollzug, streudiagrammPunktKarte.menge].filter(Boolean).join(', ')"></div>
+      </div>
+      <div class="hovercard-body mt-2" x-text="streudiagrammPunktKarte.sachverhalt"></div>
+    </div>
+  </template>
+</div>

@@ -621,13 +621,26 @@ tr[data-kurzsachverhalt]:hover td {
 
 
 /* ============================================================
-   Streudiagramm Strafmass/Menge (database/includes/betmstreudiagramm.html)
+   Streudiagramm Strafmass/Menge bzw. Strafmass/Deliktssumme
+   (database/includes/betmstreudiagramm.html, vmstreudiagramm.html)
    ============================================================ */
 
 .streudiagramm-scroll {
     overflow-x: auto;
     scrollbar-width: thin;
     padding-bottom: 0.25rem;
+    /* Als Flex-Kind (vmstreudiagramm.html, neben der Hervorhebungsspalte)
+       sonst durch die feste Mindestbreite von .streudiagramm-flaeche
+       blockiert: min-width:auto ist der Flex-Default, nicht 0. */
+    min-width: 0;
+}
+
+/* Buttonspalte rechts neben dem Diagramm zur Hervorhebung einzelner
+   Hauptdelikte (vmstreudiagramm.html), siehe streudiagrammHervorhebung in
+   filter.js. Feste Breite statt Streckung auf den restlichen Platz. */
+.streudiagramm-hervorhebung {
+    flex: 0 0 10rem;
+    width: 10rem;
 }
 
 .streudiagramm-flaeche {
@@ -684,4 +697,16 @@ tr[data-kurzsachverhalt]:hover td {
 /* Urteil betrifft mehr als eine Betm-Art (unabhaengig von der Filterwahl) */
 .streudiagramm-punkt.mehrfach-betm {
     stroke: #6c757d;
+}
+
+/* Manuell hervorgehobene Punkte (z.B. ein gewaehltes Hauptdelikt im
+   VM-Streudiagramm, siehe streudiagrammHervorhebung in filter.js). Die
+   Faerbung soll immer sichtbar bleiben, unabhaengig von Sanktionsart/Vollzug -
+   !important, weil .sanktion-*.vollzug-* oben mit zwei Klassen spezifischer
+   ist als .hervorgehoben allein und sonst gewinnen wuerde. */
+.streudiagramm-punkt.hervorgehoben {
+    fill: #ffc107 !important;
+    fill-opacity: 1;
+    stroke: #b8860b;
+    stroke-width: 2;
 }

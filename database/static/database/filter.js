@@ -27,10 +27,15 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     histogrammOffen: true,
     histogrammKarte: null,
     histogrammKartePos: { x: 0, y: 0 },
-    // Streudiagramm Strafmass/Menge (nur auf der Betm-Liste sichtbar)
+    // Streudiagramm Strafmass/Menge bzw. Strafmass/Deliktssumme (Betm- bzw.
+    // Vermoegensdelikte-Liste; siehe streudiagramm() und streudiagrammVM())
     streudiagrammOffen: true,
     streudiagrammPunktKarte: null,
     streudiagrammPunktKartePos: { x: 0, y: 0 },
+    // Manuelle Hervorhebung bestimmter Hauptdelikte im VM-Streudiagramm
+    // (goldene Punkte), unabhaengig vom Filter - siehe streudiagrammVM() und
+    // streudiagrammHervorhebungUmschalten().
+    streudiagrammHervorhebung: [],
 
     init() {
       this.spec = JSON.parse(document.getElementById(spezifikationId).textContent);
@@ -919,6 +924,82 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     },
 
     /**
+     * Streudiagramm Deliktssumme (x) / Strafmass (y) der Treffermenge
+     * (Vermoegensdelikte). Analog zu ``streudiagramm()`` (Betm-Urteile), aber
+     * ohne vorgelagerte Auswahl: Die Deliktssumme ist ein einzelnes
+     * Zahlenfeld je Urteil, anders als bei den Betm-Mengen gibt es keine
+     * unvergleichbaren "Substanzen", die erst gewaehlt werden muessten - die
+     * Deliktssumme verschiedener Hauptdelikte liegt immer auf derselben
+     * (CHF-)Achse. Nutzt darum dieselbe Geometrie/Render-Logik wie
+     * ``streudiagramm()`` (``streudiagrammX/Y/Ticks/AchsenSvg/PunkteSvg`` etc.
+     * lesen nur die generischen ``mengeDomain``/``mengeLabel``/``einheit``-
+     * Felder des Rueckgabeobjekts, unabhaengig vom Modell). Ausgewertet wird
+     * dieselbe Strafmass-Stichprobe wie im Histogramm (``aktiveStichprobe``).
+     */
+    streudiagrammVM() {
+      if (!this.spec.felder.some((feld) => feld.name === "deliktssumme")) return null;
+      const stichprobe = this.aktiveStichprobe();
+      if (stichprobe === null) return null;
+      const { art } = stichprobe;
+      const deliktssummeFeld = this.feldNach("deliktssumme");
+
+      const punkte = [];
+      this.trefferPks.forEach((pk) => {
+        const record = this.records[pk];
+        const strafmass = this.strafhoehe(record, art);
+        if (strafmass === null) return;
+        const menge = record.deliktssumme;
+        if (menge === null || menge === undefined || menge <= 0) return;
+        punkte.push({
+          pk,
+          strafmass,
+          menge,
+          hauptsanktion: record.hauptsanktion,
+          tagessaetze: record.anzahl_tagessaetze,
+          vollzug: record.vollzug,
+          karte: record._karte || {},
+          hervorgehoben: this.streudiagrammHervorhebung.includes(record.hauptdelikt),
+        });
+      });
+      if (punkte.length === 0) return null;
+
+      return {
+        art,
+        punkte,
+        anzahl: punkte.length,
+        mengeDomain: this.streudiagrammMengeDomain(
+          Math.min(...punkte.map((p) => p.menge)),
+          Math.max(...punkte.map((p) => p.menge))
+        ),
+        strafmassMax: Math.max(...punkte.map((p) => p.strafmass)) || 1,
+        mengeLabel: deliktssummeFeld ? deliktssummeFeld.label : "Deliktssumme",
+        einheit: deliktssummeFeld ? deliktssummeFeld.einheit : "CHF",
+        achstitelY: art.monate ? "Strafmass (Monate)" : "Strafmass (Tagessätze)",
+        sanktionen: this.sanktionsarten.filter(
+          (eine) => !eine.kombiniert && punkte.some((p) => p.hauptsanktion === eine.code)
+        ),
+      };
+    },
+
+    /**
+     * Hervorhebung eines Hauptdelikts im VM-Streudiagramm ein-/ausschalten
+     * (ODER-Verknuepfung wie bei den gewoehnlichen Chip-Filtern, siehe
+     * ``umschalten``). Bewusst getrennt von ``zustand``/``trifftZu``: die
+     * Hervorhebung soll die Treffermenge nur farblich markieren, nicht
+     * zusaetzlich filtern - man will ja gerade sehen, wo sich z.B. Betrugs-
+     * faelle innerhalb aller Vermoegensdelikte einordnen.
+     */
+    streudiagrammHervorhebungUmschalten(wert) {
+      const index = this.streudiagrammHervorhebung.indexOf(wert);
+      if (index === -1) this.streudiagrammHervorhebung.push(wert);
+      else this.streudiagrammHervorhebung.splice(index, 1);
+    },
+
+    streudiagrammHervorhebungAktiv(wert) {
+      return this.streudiagrammHervorhebung.includes(wert);
+    },
+
+    /**
      * Wertebereich der logarithmischen X-Achse (Menge): rund 10% Rand
      * ueber/unter den tatsaechlichen Werten, damit kein Punkt auf dem
      * Achsenrand liegt.
@@ -974,10 +1055,20 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     /**
      * Menge als Anzeigetext: ab 1000g in Kilogramm (analog zu
      * ``Betm.menge_anzeige`` im Backend), Substanzen mit Stueckzahlen
-     * (LSD-Trips, Ecstasy-Pillen) unveraendert in ihrer Einheit.
+     * (LSD-Trips, Ecstasy-Pillen) unveraendert in ihrer Einheit. CHF-Betraege
+     * (Deliktssumme der Vermoegensdelikte, siehe ``streudiagrammVM()``) sind
+     * mit Tausendertrennzeichen und ab 1 Mio. gerundet in Millionen deutlich
+     * lesbarer als eine nackte Zahl mit bis zu acht Stellen.
      */
     mengeAnzeige(gramm, einheit) {
       const rundung = (wert) => (wert >= 100 ? Math.round(wert) : Math.round(wert * 10) / 10);
+      if (einheit === "CHF") {
+        if (gramm >= 1000000) {
+          const mio = gramm / 1000000;
+          return `CHF ${rundung(mio)} Mio.`;
+        }
+        return `CHF ${Math.round(gramm).toLocaleString("de-CH")}`;
+      }
       if (einheit && einheit !== "g") return `${rundung(gramm)} ${einheit}`;
       if (gramm >= 1000) {
         const kg = (gramm / 1000).toFixed(1).replace(/\.0$/, "");
@@ -1043,9 +1134,17 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
      * ``x-html`` eingefuegtes Markup keine Alpine-Direktiven wie ``x-on``
      * verarbeitet; der Link selbst bleibt normal navigierbar, da ``<a
      * href>`` als gewoehnliches SVG-Markup unveraendert funktioniert.
+     *
+     * Hervorgehobene Punkte (``streudiagrammHervorhebung``, nur VM) werden
+     * zuletzt gezeichnet, damit ihr goldener Rand nicht von ueberlappenden
+     * Nachbarpunkten verdeckt wird - SVG kennt kein z-index, spaetere Elemente
+     * liegen automatisch oben.
      */
     streudiagrammPunkteSvg(daten) {
-      return daten.punkte
+      const punkte = daten.punkte
+        .slice()
+        .sort((a, b) => (a.hervorgehoben ? 1 : 0) - (b.hervorgehoben ? 1 : 0));
+      return punkte
         .map((punkt) => {
           const href = this.escapeHtml(punkt.karte.url || "#");
           const label = this.escapeHtml(
@@ -1054,10 +1153,12 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           const cx = this.streudiagrammX(daten, punkt.menge);
           const cy = this.streudiagrammY(daten, punkt.strafmass);
           const mehrfachKlasse = punkt.mehrfachBetm ? " mehrfach-betm" : "";
+          const hervorhebungKlasse = punkt.hervorgehoben ? " hervorgehoben" : "";
+          const radius = punkt.hervorgehoben ? 7 : 5;
           return (
             `<a href="${href}" aria-label="${label}">` +
-            `<circle class="streudiagramm-punkt sanktion-${punkt.hauptsanktion} vollzug-${punkt.vollzug}${mehrfachKlasse}" ` +
-            `data-pk="${punkt.pk}" cx="${cx}" cy="${cy}" r="5" tabindex="0"></circle>` +
+            `<circle class="streudiagramm-punkt sanktion-${punkt.hauptsanktion} vollzug-${punkt.vollzug}${mehrfachKlasse}${hervorhebungKlasse}" ` +
+            `data-pk="${punkt.pk}" cx="${cx}" cy="${cy}" r="${radius}" tabindex="0"></circle>` +
             `</a>`
           );
         })

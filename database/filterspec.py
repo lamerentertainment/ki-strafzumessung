@@ -804,9 +804,34 @@ def _taeter_sortierschluessel(objekt):
     return f"{objekt.nationalitaet}|{objekt.geschlecht}"
 
 
+def _nur_eine_betm_art(objekt):
+    """
+    Ob das Urteil nur eine Art Betäubungsmittel zum Gegenstand hat - unabhaengig
+    von Menge, Rolle oder Bemessungsgrundlage. Mehrere Betm-Datensaetze derselben
+    Art (z.B. eine reine und eine Gemisch-Menge separat erfasst) zaehlen dabei
+    als eine Art, siehe auch ``streudiagramm()``/``mehrfachBetm`` in filter.js,
+    das dieselbe Unterscheidung fuer den Punktrand des Streudiagramms nutzt.
+
+    ``.all()`` statt ``.count()``/``distinct()`` auf der Beziehung, damit der
+    ``filter_prefetch``-Cache der Listenansicht (``betm__art``) greift.
+    """
+    arten = {eintrag.art_id for eintrag in objekt.betm.all()}
+    if not arten:
+        return "nicht erfasst"
+    return "ja" if len(arten) == 1 else "nein"
+
+
 BETM_FILTER_CONFIG = {
-    "primaer": ["betm", "betm_menge", "nur_hauptdelikt", "rolle"],
+    "primaer": ["betm", "rolle", "betm_menge", "nur_eine_betm_art", "nur_hauptdelikt"],
     "abgeleitete_felder": {
+        "nur_eine_betm_art": {
+            "label": "nur eine Betm-Art",
+            "hilfetext": "Nur Urteile, die genau eine Art Betäubungsmittel zum "
+            "Gegenstand haben, statt mehrerer (z.B. Kokain und Heroin im selben Fall).",
+            "choices": NUR_HAUPTDELIKT_CHOICES,
+            "inline": True,
+            "wert": _nur_eine_betm_art,
+        },
         "nur_hauptdelikt": _nur_hauptdelikt_feld(
             "Nur Urteile, bei denen allein das Hauptdelikt die Strafe bestimmt, der Nebenverurteilungsscore also 0 ist.",
             _nur_hauptdelikt("nebenverurteilungsscore"),
@@ -826,7 +851,14 @@ BETM_FILTER_CONFIG = {
         ),
         (
             "Betäubungsmittel & Tatbeitrag",
-            ["betm", "betm_menge", "rolle", "deliktsertrag", "deliktsdauer_in_monaten"],
+            [
+                "betm",
+                "rolle",
+                "betm_menge",
+                "nur_eine_betm_art",
+                "deliktsertrag",
+                "deliktsdauer_in_monaten",
+            ],
         ),
         (
             "Qualifikationen",

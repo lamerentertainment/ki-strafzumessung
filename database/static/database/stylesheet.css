@@ -618,3 +618,70 @@ tr[data-kurzsachverhalt]:hover td {
 .histogramm-hovercard {
     transition: none;
 }
+
+
+/* ============================================================
+   Streudiagramm Strafmass/Menge (database/includes/betmstreudiagramm.html)
+   ============================================================ */
+
+.streudiagramm-scroll {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding-bottom: 0.25rem;
+}
+
+.streudiagramm-flaeche {
+    width: 100%;
+    height: auto;
+    min-width: 480px;
+    max-width: 760px;
+    display: block;
+}
+
+.streudiagramm-achse {
+    stroke: var(--bs-border-color, #dee2e6);
+    stroke-width: 1;
+}
+
+/* Recessiv gehalten: die Punkte, nicht das Gitter, tragen die Information */
+.streudiagramm-gitter {
+    stroke: var(--bs-border-color, #dee2e6);
+    stroke-width: 1;
+    opacity: 0.5;
+}
+
+.streudiagramm-tick {
+    font-size: 9px;
+    font-variant-numeric: tabular-nums;
+    fill: var(--bs-secondary-color, #6c757d);
+}
+
+/* Ein Punkt = ein Urteil; Farbton/Helligkeit wie beim Histogramm-Block
+   (sanktion-* = Freiheits-/Geldstrafe, vollzug-* = Aufhellung, siehe dort). */
+.streudiagramm-punkt {
+    fill: var(--bs-secondary-color, #6c757d); /* Vollzug/Sanktion ohne Angabe */
+    fill-opacity: 0.82;
+    stroke: var(--bs-body-bg, #ffffff);
+    stroke-width: 1.5;
+    cursor: pointer;
+    transition: filter 0.1s ease-out;
+}
+
+.streudiagramm-punkt:hover,
+.streudiagramm-punkt:focus-visible {
+    filter: brightness(1.12);
+    fill-opacity: 1;
+}
+
+.streudiagramm-punkt.sanktion-0.vollzug-2 { fill: #0d6efd; }
+.streudiagramm-punkt.sanktion-0.vollzug-1 { fill: #6ea8fe; }
+.streudiagramm-punkt.sanktion-0.vollzug-0 { fill: #b6d4fe; }
+
+.streudiagramm-punkt.sanktion-1.vollzug-2 { fill: #198754; }
+.streudiagramm-punkt.sanktion-1.vollzug-1 { fill: #75b798; }
+.streudiagramm-punkt.sanktion-1.vollzug-0 { fill: #badbcc; }
+
+/* Urteil betrifft mehr als eine Betm-Art (unabhaengig von der Filterwahl) */
+.streudiagramm-punkt.mehrfach-betm {
+    stroke: #6c757d;
+}

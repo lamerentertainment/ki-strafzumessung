@@ -16,7 +16,7 @@ ohne dieses Feld bleiben die Hover-Karten leer.
           @click="histogrammOffen = !histogrammOffen"
           :aria-expanded="histogrammOffen ? 'true' : 'false'">
     <span x-text="histogrammOffen ? '▾' : '▸'"></span>
-    Verteilung der Strafmasse
+    Verteilung der Strafmasse (Balkendiagramm)
     <template x-if="histogramm()">
       <span class="badge text-bg-secondary ms-1">
         <span x-text="histogramm().anzahl"></span>

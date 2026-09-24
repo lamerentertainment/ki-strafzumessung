@@ -1,0 +1,137 @@
+{% comment %}
+Aufklappbares Streudiagramm Strafmass (x) / Menge (y) zur gefilterten
+Treffermenge - nur auf der Betm-Urteilsliste eingebunden.
+
+Gehoert in den Scope der Alpine-Komponente `urteilsFilter` (filter.js) und
+wird unterhalb von `strafmasshistogramm.html` eingebunden. Rein clientseitig
+berechnet wie das Histogramm, statt eine serverseitige matplotlib-Grafik bei
+jedem Filterklick neu zu holen (vgl. dortiger Kommentar).
+
+Mengen unterschiedlicher Substanzen liegen um Grössenordnungen auseinander
+(Kokain vs. Marihuana) - das Diagramm bleibt darum leer, solange im
+Filterpanel keine Substanz gewählt ist (siehe `streudiagramm()`).
+{% endcomment %}
+
+<div class="streudiagramm mb-3" x-cloak>
+  <button type="button" class="btn btn-sm btn-outline-dark"
+          @click="streudiagrammOffen = !streudiagrammOffen"
+          :aria-expanded="streudiagrammOffen ? 'true' : 'false'">
+    <span x-text="streudiagrammOffen ? '▾' : '▸'"></span>
+    Strafmass über Menge (Streudiagramm)
+    <template x-if="streudiagramm()">
+      <span class="badge text-bg-secondary ms-1">
+        <span x-text="streudiagramm().anzahl"></span> Urteile
+      </span>
+    </template>
+  </button>
+
+  <div class="mt-2" x-show="streudiagrammOffen" x-collapse>
+    <div class="border rounded-3 p-3 bg-body-tertiary">
+
+      {# --- Keine Substanz gewaehlt: Achse ohne Bezug --- #}
+      <template x-if="(zustand.betm || []).length === 0">
+        <p class="mb-0 small text-body-secondary">
+          Bitte im Filterpanel oben mindestens eine Substanz auswählen –
+          Mengen unterschiedlicher Substanzen lassen sich nicht auf einer
+          gemeinsamen Achse vergleichen.
+        </p>
+      </template>
+
+      {# --- Substanz gewaehlt, aber keine auswertbaren Paare --- #}
+      <template x-if="(zustand.betm || []).length > 0 && !streudiagramm()">
+        <p class="mb-0 small text-body-secondary">
+          Zu dieser Filterkombination liegt kein auswertbares Strafmass/Mengen-Paar vor.
+        </p>
+      </template>
+
+      <template x-if="streudiagramm()">
+        <div>
+          <div class="d-flex flex-wrap align-items-baseline gap-2 mb-2 small text-body-secondary">
+            <span>
+              <button type="button" class="kennzahl-umschalter"
+                      @click="sanktionUmschalten()"
+                      :disabled="!kennzahlen().sanktion.umschaltbar"
+                      :data-tt="kennzahlen().sanktion.umschaltTitel"
+                      x-text="streudiagramm().art.label"></button>
+              über <span x-text="streudiagramm().mengeLabel"></span>
+              (n=<span x-text="streudiagramm().anzahl"></span>)
+            </span>
+            <span class="ms-auto" x-text="streudiagramm().basisHinweis"></span>
+          </div>
+
+          <div class="streudiagramm-scroll" @mouseleave="streudiagrammPunktVerbergen()">
+            {% comment %}
+              Gitterlinien, Achsenbeschriftung und Punkte werden als
+              SVG-Markup-String erzeugt und per x-html eingehaengt statt mit
+              x-for: ein <template> innerhalb von <svg> wird vom HTML-Parser
+              als fremdes (SVG-)Element ohne .content-Fragment behandelt,
+              Alpine kann es dort also nicht klonen (siehe streudiagrammAchsenSvg
+              in filter.js). Hover/Fokus laufen deshalb ueber Event-Delegation
+              am <svg> (streudiagrammHover) statt ueber x-on je Punkt.
+            {% endcomment %}
+            <svg viewBox="0 0 640 300" preserveAspectRatio="xMidYMid meet"
+                 class="streudiagramm-flaeche" role="img"
+                 aria-label="Streudiagramm: Strafmass über Menge der gewählten Substanz(en)"
+                 @mouseover="streudiagrammHover($event, streudiagramm())"
+                 @focusin="streudiagrammHover($event, streudiagramm())"
+                 @mousemove="streudiagrammPunktPositionieren($event)"
+                 @mouseout="streudiagrammPunktVerbergen()"
+                 @focusout="streudiagrammPunktVerbergen()">
+
+              <g x-html="streudiagrammAchsenSvg(streudiagramm())"></g>
+
+              {# Achsenlinien zuoberst auf den Gitterlinien #}
+              <line class="streudiagramm-achse" x1="50" y1="12" x2="50" y2="270"></line>
+              <line class="streudiagramm-achse" x1="50" y1="270" x2="628" y2="270"></line>
+
+              {# Ein Punkt je Urteil; Farbton/Helligkeit wie beim Histogramm #}
+              <g x-html="streudiagrammPunkteSvg(streudiagramm())"></g>
+            </svg>
+          </div>
+
+          <div class="d-flex flex-wrap gap-3 mt-2 small text-body-secondary">
+            <span x-text="streudiagramm().achstitelY + ' / ' + streudiagramm().mengeLabel + (streudiagramm().einheit ? ' (' + streudiagramm().einheit + ', logarithmisch)' : ' (logarithmisch)')"></span>
+            <span class="ms-auto d-flex flex-column align-items-start align-items-sm-end gap-1">
+              <template x-for="sanktion in streudiagramm().sanktionen" :key="sanktion.code">
+                <span class="d-flex flex-wrap gap-2 align-items-center">
+                  <span x-text="sanktion.label + ':'"></span>
+                  <span class="histogramm-legende vollzug-0"
+                        :class="`sanktion-${sanktion.code}`"></span> bedingt
+                  <span class="histogramm-legende vollzug-1"
+                        :class="`sanktion-${sanktion.code}`"></span> teilbedingt
+                  <span class="histogramm-legende vollzug-2"
+                        :class="`sanktion-${sanktion.code}`"></span> unbedingt
+                </span>
+              </template>
+            </span>
+          </div>
+          <p class="mb-0 mt-1 small text-body-secondary">
+            Jeder Punkt ist ein Urteil; Klick öffnet die Detailseite. Punkte mit
+            dunkelgrauem statt weissem Rand betreffen mehr als eine Betäubungsmittel-Art.
+          </p>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  {# --- Hover-Karte zum einzelnen Punkt --- #}
+  <template x-if="streudiagrammPunktKarte">
+    <div class="kurzsachverhalt-hovercard visible histogramm-hovercard"
+         role="tooltip"
+         :style="`left: ${streudiagrammPunktKartePos.x}px; top: ${streudiagrammPunktKartePos.y}px`">
+      <div class="hovercard-header">
+        <div class="d-flex justify-content-between align-items-baseline gap-2">
+          <span class="hovercard-title fw-bold"
+                x-text="streudiagrammPunktKarte.fall_nr ? `Fall ${streudiagrammPunktKarte.fall_nr}` : 'Urteil'"></span>
+          <span class="hovercard-meta text-body-secondary small"
+                x-text="[streudiagrammPunktKarte.gericht, streudiagrammPunktKarte.datum].filter(Boolean).join(', ')"></span>
+        </div>
+        <div class="hovercard-delikt small mt-1"
+             x-text="streudiagrammPunktKarte.delikt || ''"></div>
+        <div class="small mt-1 fw-semibold"
+             x-text="[streudiagrammPunktKarte.strafmass, streudiagrammPunktKarte.vollzug, streudiagrammPunktKarte.menge].filter(Boolean).join(', ')"></div>
+      </div>
+      <div class="hovercard-body mt-2" x-text="streudiagrammPunktKarte.sachverhalt"></div>
+    </div>
+  </template>
+</div>

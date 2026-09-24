@@ -12,8 +12,11 @@ Kommentar.
 Zusaetzlich mit Buttons zur Hervorhebung einzelner Hauptdelikte (goldene
 Punkte, unabhaengig vom Filter): siehe ``streudiagrammHervorhebung`` in
 filter.js. Sowie einer optional einblendbaren linearen Regressionsgeraden
-(Strafmass ueber log10(Deliktssumme)) samt Gleichung, siehe
-``streudiagrammRegressionAnzeigen``/``linearRegression`` in filter.js.
+(Strafmass ueber log10(Deliktssumme)) samt Gleichung und einem Eingabefeld,
+das anhand der Regressionsgeraden das Strafmass zu einer frei eingegebenen
+Deliktssumme vorhersagt - siehe
+``streudiagrammRegressionAnzeigen``/``linearRegression``/
+``streudiagrammRegressionVorhersage`` in filter.js.
 {% endcomment %}
 
 <div class="streudiagramm mb-3" x-cloak>
@@ -143,6 +146,32 @@ filter.js. Sowie einer optional einblendbaren linearen Regressionsgeraden
           <p class="mb-0 mt-1 small text-body-secondary font-monospace"
              x-show="streudiagrammRegressionAnzeigen && streudiagrammVM().regression"
              x-text="streudiagrammRegressionGleichung(streudiagrammVM())"></p>
+
+          {# --- Vorhersage: Strafmass fuer eine frei eingegebene Deliktssumme --- #}
+          <template x-if="streudiagrammRegressionAnzeigen && streudiagrammVM().regression">
+            <div class="d-flex flex-wrap align-items-center gap-2 mt-2 small">
+              <label for="streudiagramm-regression-eingabe" class="text-body-secondary mb-0">
+                Vorhersage für Deliktssumme:
+              </label>
+              <div class="input-group input-group-sm" style="max-width: 12rem;">
+                <span class="input-group-text">CHF</span>
+                <input id="streudiagramm-regression-eingabe" type="number" min="1" step="1"
+                       class="form-control" placeholder="z.B. 50000"
+                       x-model="streudiagrammRegressionEingabe">
+              </div>
+              <template x-if="streudiagrammRegressionVorhersage(streudiagrammVM())">
+                <span>
+                  ≈
+                  <span class="fw-semibold"
+                        x-text="streudiagrammRegressionVorhersage(streudiagrammVM()).text"></span>
+                  <span class="text-body-secondary"
+                        x-show="streudiagrammRegressionVorhersage(streudiagrammVM()).ausserhalbBereich">
+                    (ausserhalb des Datenbereichs, Extrapolation)
+                  </span>
+                </span>
+              </template>
+            </div>
+          </template>
         </div>
       </template>
     </div>

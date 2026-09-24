@@ -39,6 +39,9 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     // Regressionsgerade im VM-Streudiagramm ein-/ausblenden, siehe
     // streudiagrammRegressionSvg() und streudiagrammRegressionGleichung().
     streudiagrammRegressionAnzeigen: false,
+    // Frei eingegebene Deliktssumme fuer die Strafmass-Vorhersage anhand der
+    // Regressionsgeraden, siehe streudiagrammRegressionVorhersage().
+    streudiagrammRegressionEingabe: "",
 
     init() {
       this.spec = JSON.parse(document.getElementById(spezifikationId).textContent);
@@ -1236,6 +1239,29 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         `${daten.achstitelY} ≈ ${a.toFixed(2)} ${vorzeichen} ${Math.abs(b).toFixed(2)} · ` +
         `log₁₀(${daten.mengeLabel} in ${daten.einheit}) (R² = ${r2.toFixed(2)}, n = ${n})`
       );
+    },
+
+    /**
+     * Strafmass-Vorhersage fuer die frei eingegebene Deliktssumme
+     * (``streudiagrammRegressionEingabe``, Eingabefeld unter dem Diagramm),
+     * anhand der Regressionsgeraden. Null ohne Regression oder bei leerer/
+     * nicht positiver Eingabe - log10 ist fuer 0 oder negative Werte nicht
+     * definiert. Negative Vorhersagen (moegliche Extrapolation weit unterhalb
+     * der Datenpunkte) werden fuer die Anzeige auf 0 gekappt, der Hinweis
+     * ``ausserhalbBereich`` macht auf die Extrapolation aufmerksam, statt sie
+     * stillschweigend als verlaessliche Prognose auszugeben.
+     */
+    streudiagrammRegressionVorhersage(daten) {
+      if (!daten.regression) return null;
+      const eingabe = Number(this.streudiagrammRegressionEingabe);
+      if (!Number.isFinite(eingabe) || eingabe <= 0) return null;
+      const { achsenabschnitt: a, steigung: b } = daten.regression;
+      const wert = a + b * Math.log10(eingabe);
+      return {
+        text: `${this.formatiert(Math.max(wert, 0), daten.art)} ${daten.art.einheit}`,
+        negativ: wert < 0,
+        ausserhalbBereich: eingabe < daten.mengeDomain.min || eingabe > daten.mengeDomain.max,
+      };
     },
 
     /**

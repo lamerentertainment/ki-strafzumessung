@@ -36,11 +36,14 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     // (goldene Punkte), unabhaengig vom Filter - siehe streudiagrammVM() und
     // streudiagrammHervorhebungUmschalten().
     streudiagrammHervorhebung: [],
-    // Regressionsgerade im VM-Streudiagramm ein-/ausblenden, siehe
-    // streudiagrammRegressionSvg() und streudiagrammRegressionGleichung().
+    // Regressionsgerade im VM- bzw. Betm-Streudiagramm ein-/ausblenden
+    // (bei Betm nur verfuegbar, wenn genau eine Substanz gewaehlt ist, siehe
+    // streudiagramm()), siehe streudiagrammRegressionSvg() und
+    // streudiagrammRegressionGleichung().
     streudiagrammRegressionAnzeigen: false,
-    // Frei eingegebene Deliktssumme fuer die Strafmass-Vorhersage anhand der
-    // Regressionsgeraden, siehe streudiagrammRegressionVorhersage().
+    // Frei eingegebene Deliktssumme bzw. Menge (Gramm/Stk.) fuer die
+    // Strafmass-Vorhersage anhand der Regressionsgeraden, siehe
+    // streudiagrammRegressionVorhersage().
     streudiagrammRegressionEingabe: "",
 
     init() {
@@ -926,6 +929,16 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
             : basis === "rein"
             ? "reine Wirkstoffmenge"
             : "Bruttomenge (Gemisch)",
+        // Regression nur bei genau einer gewaehlten Substanz: Mengen
+        // unterschiedlicher Substanzen (Kokain vs. Marihuana) liegen um
+        // Groessenordnungen auseinander und eine gemeinsame Regressionsgerade
+        // ueber mehrere Substanzen waere ohne Aussagekraft, siehe auch die
+        // gleiche Einschraenkung fuer die Achse selbst oben in diesem
+        // Kommentar. Auf log10(Menge) wie bei streudiagrammVM(), siehe dort.
+        regression:
+          gewaehlt.length === 1
+            ? this.linearRegression(punkte.map((p) => ({ x: Math.log10(p.menge), y: p.strafmass })))
+            : null,
       };
     },
 

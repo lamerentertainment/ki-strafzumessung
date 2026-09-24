@@ -10,6 +10,14 @@ jedem Filterklick neu zu holen (vgl. dortiger Kommentar).
 Mengen unterschiedlicher Substanzen liegen um Grössenordnungen auseinander
 (Kokain vs. Marihuana) - das Diagramm bleibt darum leer, solange im
 Filterpanel keine Substanz gewählt ist (siehe `streudiagramm()`).
+
+Optional mit linearer Regressionsgerade (Strafmass über log10(Menge)) samt
+Gleichung und einem Eingabefeld, das anhand der Regressionsgeraden das
+Strafmass zu einer frei eingegebenen Menge vorhersagt - aus demselben Grund
+nur verfügbar, wenn genau eine Substanz gewählt ist (siehe
+`streudiagrammRegressionAnzeigen`/`linearRegression`/
+`streudiagrammRegressionVorhersage` in filter.js, analog zu
+`vmstreudiagramm.html`).
 {% endcomment %}
 
 <div class="streudiagramm mb-3" x-cloak>
@@ -59,34 +67,57 @@ Filterpanel keine Substanz gewählt ist (siehe `streudiagramm()`).
             <span class="ms-auto" x-text="streudiagramm().basisHinweis"></span>
           </div>
 
-          <div class="streudiagramm-scroll" @mouseleave="streudiagrammPunktVerbergen()">
-            {% comment %}
-              Gitterlinien, Achsenbeschriftung und Punkte werden als
-              SVG-Markup-String erzeugt und per x-html eingehaengt statt mit
-              x-for: ein <template> innerhalb von <svg> wird vom HTML-Parser
-              als fremdes (SVG-)Element ohne .content-Fragment behandelt,
-              Alpine kann es dort also nicht klonen (siehe streudiagrammAchsenSvg
-              in filter.js). Hover/Fokus laufen deshalb ueber Event-Delegation
-              am <svg> (streudiagrammHover) statt ueber x-on je Punkt.
-            {% endcomment %}
-            <svg viewBox="0 0 640 300" preserveAspectRatio="xMidYMid meet"
-                 class="streudiagramm-flaeche" role="img"
-                 aria-label="Streudiagramm: Strafmass über Menge der gewählten Substanz(en)"
-                 @mouseover="streudiagrammHover($event, streudiagramm())"
-                 @focusin="streudiagrammHover($event, streudiagramm())"
-                 @mousemove="streudiagrammPunktPositionieren($event)"
-                 @mouseout="streudiagrammPunktVerbergen()"
-                 @focusout="streudiagrammPunktVerbergen()">
+          {% comment %}
+            Diagramm links, Anzeigen-Buttons rechts daneben (auf schmalen
+            Breiten faellt die Button-Spalte per flex-wrap unter das Diagramm).
+          {% endcomment %}
+          <div class="d-flex flex-wrap gap-3 align-items-start">
+            <div class="streudiagramm-scroll flex-grow-1" @mouseleave="streudiagrammPunktVerbergen()">
+              {% comment %}
+                Gitterlinien, Achsenbeschriftung und Punkte werden als
+                SVG-Markup-String erzeugt und per x-html eingehaengt statt mit
+                x-for: ein <template> innerhalb von <svg> wird vom HTML-Parser
+                als fremdes (SVG-)Element ohne .content-Fragment behandelt,
+                Alpine kann es dort also nicht klonen (siehe streudiagrammAchsenSvg
+                in filter.js). Hover/Fokus laufen deshalb ueber Event-Delegation
+                am <svg> (streudiagrammHover) statt ueber x-on je Punkt.
+              {% endcomment %}
+              <svg viewBox="0 0 640 300" preserveAspectRatio="xMidYMid meet"
+                   class="streudiagramm-flaeche" role="img"
+                   aria-label="Streudiagramm: Strafmass über Menge der gewählten Substanz(en)"
+                   @mouseover="streudiagrammHover($event, streudiagramm())"
+                   @focusin="streudiagrammHover($event, streudiagramm())"
+                   @mousemove="streudiagrammPunktPositionieren($event)"
+                   @mouseout="streudiagrammPunktVerbergen()"
+                   @focusout="streudiagrammPunktVerbergen()">
 
-              <g x-html="streudiagrammAchsenSvg(streudiagramm())"></g>
+                <g x-html="streudiagrammAchsenSvg(streudiagramm())"></g>
 
-              {# Achsenlinien zuoberst auf den Gitterlinien #}
-              <line class="streudiagramm-achse" x1="50" y1="12" x2="50" y2="270"></line>
-              <line class="streudiagramm-achse" x1="50" y1="270" x2="628" y2="270"></line>
+                {# Achsenlinien zuoberst auf den Gitterlinien #}
+                <line class="streudiagramm-achse" x1="50" y1="12" x2="50" y2="270"></line>
+                <line class="streudiagramm-achse" x1="50" y1="270" x2="628" y2="270"></line>
 
-              {# Ein Punkt je Urteil; Farbton/Helligkeit wie beim Histogramm #}
-              <g x-html="streudiagrammPunkteSvg(streudiagramm())"></g>
-            </svg>
+                {# Regressionsgerade unter den Punkten, damit diese weiter anklickbar bleiben #}
+                <g x-html="streudiagrammRegressionSvg(streudiagramm())"></g>
+
+                {# Ein Punkt je Urteil; Farbton/Helligkeit wie beim Histogramm #}
+                <g x-html="streudiagrammPunkteSvg(streudiagramm())"></g>
+              </svg>
+            </div>
+
+            {# --- Anzeigen: Regressionsgerade ein-/ausblenden --- #}
+            <div class="streudiagramm-seitenleiste d-flex flex-column gap-1">
+              <span class="small text-body-secondary">Anzeigen:</span>
+              <button type="button" class="btn btn-sm text-start"
+                      :class="streudiagrammRegressionAnzeigen ? 'btn-dark' : 'btn-outline-secondary'"
+                      :disabled="!streudiagramm().regression"
+                      @click="streudiagrammRegressionAnzeigen = !streudiagrammRegressionAnzeigen">
+                Regressionsgerade
+              </button>
+              <span class="small text-body-secondary" x-show="!streudiagramm().regression">
+                Nur bei einer einzigen gewählten Substanz verfügbar.
+              </span>
+            </div>
           </div>
 
           <div class="d-flex flex-wrap gap-3 mt-2 small text-body-secondary">
@@ -109,6 +140,36 @@ Filterpanel keine Substanz gewählt ist (siehe `streudiagramm()`).
             Jeder Punkt ist ein Urteil; Klick öffnet die Detailseite. Punkte mit
             dunkelgrauem statt weissem Rand betreffen mehr als eine Betäubungsmittel-Art.
           </p>
+          <p class="mb-0 mt-1 small text-body-secondary font-monospace"
+             x-show="streudiagrammRegressionAnzeigen && streudiagramm().regression"
+             x-text="streudiagrammRegressionGleichung(streudiagramm())"></p>
+
+          {# --- Vorhersage: Strafmass fuer eine frei eingegebene Menge --- #}
+          <template x-if="streudiagrammRegressionAnzeigen && streudiagramm().regression">
+            <div class="d-flex flex-wrap align-items-center gap-2 mt-2 small">
+              <label for="streudiagramm-regression-eingabe-betm" class="text-body-secondary mb-0">
+                Vorhersage für <span x-text="streudiagramm().mengeLabel"></span>
+                basierend auf obiger Regressionsgleichung:
+              </label>
+              <div class="input-group input-group-sm" style="max-width: 12rem;">
+                <input id="streudiagramm-regression-eingabe-betm" type="number" min="0" step="any"
+                       class="form-control" placeholder="z.B. 5"
+                       x-model="streudiagrammRegressionEingabe">
+                <span class="input-group-text" x-text="streudiagramm().einheit || 'g'"></span>
+              </div>
+              <template x-if="streudiagrammRegressionVorhersage(streudiagramm())">
+                <span>
+                  ≈
+                  <span class="fw-semibold"
+                        x-text="streudiagrammRegressionVorhersage(streudiagramm()).text"></span>
+                  <span class="text-body-secondary"
+                        x-show="streudiagrammRegressionVorhersage(streudiagramm()).ausserhalbBereich">
+                    (ausserhalb des Datenbereichs, Extrapolation)
+                  </span>
+                </span>
+              </template>
+            </div>
+          </template>
         </div>
       </template>
     </div>

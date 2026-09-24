@@ -629,16 +629,17 @@ tr[data-kurzsachverhalt]:hover td {
     overflow-x: auto;
     scrollbar-width: thin;
     padding-bottom: 0.25rem;
-    /* Als Flex-Kind (vmstreudiagramm.html, neben der Hervorhebungsspalte)
+    /* Als Flex-Kind (vm-/betmstreudiagramm.html, neben der Buttonspalte)
        sonst durch die feste Mindestbreite von .streudiagramm-flaeche
        blockiert: min-width:auto ist der Flex-Default, nicht 0. */
     min-width: 0;
 }
 
-/* Buttonspalte rechts neben dem Diagramm zur Hervorhebung einzelner
-   Hauptdelikte (vmstreudiagramm.html), siehe streudiagrammHervorhebung in
-   filter.js. Feste Breite statt Streckung auf den restlichen Platz. */
-.streudiagramm-hervorhebung {
+/* Buttonspalte rechts neben dem Diagramm (Hervorhebung einzelner Hauptdelikte
+   bei den Vermoegensdelikten, "Anzeigen"/Regressionsgerade bei beiden) -
+   siehe vmstreudiagramm.html/betmstreudiagramm.html. Feste Breite statt
+   Streckung auf den restlichen Platz. */
+.streudiagramm-seitenleiste {
     flex: 0 0 10rem;
     width: 10rem;
 }

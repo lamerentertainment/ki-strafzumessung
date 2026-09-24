@@ -680,3 +680,8 @@ tr[data-kurzsachverhalt]:hover td {
 .streudiagramm-punkt.sanktion-1.vollzug-2 { fill: #198754; }
 .streudiagramm-punkt.sanktion-1.vollzug-1 { fill: #75b798; }
 .streudiagramm-punkt.sanktion-1.vollzug-0 { fill: #badbcc; }
+
+/* Urteil betrifft mehr als eine Betm-Art (unabhaengig von der Filterwahl) */
+.streudiagramm-punkt.mehrfach-betm {
+    stroke: #495057;
+}

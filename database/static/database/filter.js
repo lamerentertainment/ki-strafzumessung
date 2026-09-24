@@ -885,6 +885,9 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           hauptsanktion: record.hauptsanktion,
           tagessaetze: record.anzahl_tagessaetze,
           vollzug: record.vollzug,
+          // Alle Substanzen des Urteils, nicht nur die im Filter gewaehlten -
+          // faerbt den Rand dunkelgrau, wenn mehr als eine Art beteiligt ist.
+          mehrfachBetm: (record.betm || []).length > 1,
           karte: record._karte || {},
         });
       });
@@ -1050,9 +1053,10 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           );
           const cx = this.streudiagrammX(daten, punkt.menge);
           const cy = this.streudiagrammY(daten, punkt.strafmass);
+          const mehrfachKlasse = punkt.mehrfachBetm ? " mehrfach-betm" : "";
           return (
             `<a href="${href}" aria-label="${label}">` +
-            `<circle class="streudiagramm-punkt sanktion-${punkt.hauptsanktion} vollzug-${punkt.vollzug}" ` +
+            `<circle class="streudiagramm-punkt sanktion-${punkt.hauptsanktion} vollzug-${punkt.vollzug}${mehrfachKlasse}" ` +
             `data-pk="${punkt.pk}" cx="${cx}" cy="${cy}" r="5" tabindex="0"></circle>` +
             `</a>`
           );

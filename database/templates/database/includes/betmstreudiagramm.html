@@ -115,30 +115,32 @@ nur verfügbar, wenn genau eine Substanz gewählt ist (siehe
               <template x-if="feldNach('rolle') || feldNach('besonderheiten')">
                 <div class="d-flex flex-column gap-2">
                   <span class="small text-body-secondary">Hervorheben:</span>
-                  <template x-if="feldNach('rolle')">
-                    <div class="d-flex flex-column gap-1">
-                      <span class="small text-body-secondary fst-italic">Rolle</span>
-                      <template x-for="option in feldNach('rolle').optionen" :key="option.value">
-                        <button type="button" class="btn btn-sm text-start"
-                                :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
-                                @click="streudiagrammHervorhebungUmschalten(option.value)">
-                          <span x-text="option.label"></span>
-                        </button>
-                      </template>
-                    </div>
-                  </template>
-                  <template x-if="feldNach('besonderheiten')">
-                    <div class="d-flex flex-column gap-1">
-                      <span class="small text-body-secondary fst-italic">Besonderheiten</span>
-                      <template x-for="option in feldNach('besonderheiten').optionen" :key="option.value">
-                        <button type="button" class="btn btn-sm text-start"
-                                :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
-                                @click="streudiagrammHervorhebungUmschalten(option.value)">
-                          <span x-text="option.label"></span>
-                        </button>
-                      </template>
-                    </div>
-                  </template>
+                  <div class="d-flex flex-row flex-wrap gap-3">
+                    <template x-if="feldNach('rolle')">
+                      <div class="d-flex flex-column gap-1">
+                        <span class="small text-body-secondary fst-italic">Rolle</span>
+                        <template x-for="option in feldNach('rolle').optionen" :key="option.value">
+                          <button type="button" class="btn btn-sm text-start"
+                                  :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
+                                  @click="streudiagrammHervorhebungUmschalten(option.value)">
+                            <span x-text="option.label"></span>
+                          </button>
+                        </template>
+                      </div>
+                    </template>
+                    <template x-if="feldNach('besonderheiten')">
+                      <div class="d-flex flex-column gap-1">
+                        <span class="small text-body-secondary fst-italic">Besonderheiten</span>
+                        <template x-for="option in feldNach('besonderheiten').optionen" :key="option.value">
+                          <button type="button" class="btn btn-sm text-start"
+                                  :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
+                                  @click="streudiagrammHervorhebungUmschalten(option.value)">
+                            <span x-text="option.label"></span>
+                          </button>
+                        </template>
+                      </div>
+                    </template>
+                  </div>
                   <button type="button" class="btn btn-sm btn-link text-decoration-none text-start py-0"
                           x-show="streudiagrammHervorhebung.length > 0"
                           @click="streudiagrammHervorhebung = []">zurücksetzen</button>

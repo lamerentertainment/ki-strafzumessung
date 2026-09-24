@@ -636,12 +636,16 @@ tr[data-kurzsachverhalt]:hover td {
 }
 
 /* Buttonspalte rechts neben dem Diagramm (Hervorhebung einzelner Hauptdelikte
-   bei den Vermoegensdelikten, "Anzeigen"/Regressionsgerade bei beiden) -
-   siehe vmstreudiagramm.html/betmstreudiagramm.html. Feste Breite statt
-   Streckung auf den restlichen Platz. */
+   bei den Vermoegensdelikten bzw. nach Rolle/Besonderheiten nebeneinander bei
+   den Betm-Urteilen, "Anzeigen"/Regressionsgerade bei beiden) - siehe
+   vmstreudiagramm.html/betmstreudiagramm.html. Keine Streckung auf den
+   restlichen Platz (flex-grow 0), aber Breite nach Inhalt statt fest, damit
+   die zwei nebeneinander liegenden Spalten bei Betm nicht gequetscht werden;
+   min-width haelt die einspaltige VM-Liste trotzdem nicht schmaler als vorher.
+   */
 .streudiagramm-seitenleiste {
-    flex: 0 0 10rem;
-    width: 10rem;
+    flex: 0 1 auto;
+    min-width: 10rem;
 }
 
 .streudiagramm-flaeche {

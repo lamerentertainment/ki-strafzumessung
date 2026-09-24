@@ -11,8 +11,9 @@ Mengen unterschiedlicher Substanzen liegen um Grössenordnungen auseinander
 (Kokain vs. Marihuana) - das Diagramm bleibt darum leer, solange im
 Filterpanel keine Substanz gewählt ist (siehe `streudiagramm()`).
 
-Zusaetzlich mit Buttons zur Hervorhebung einzelner Besonderheiten (goldener
-Punktrand, unabhaengig vom Filter): siehe `streudiagrammHervorhebung` in
+Zusaetzlich mit Buttons zur Hervorhebung einzelner Rollen und/oder
+Besonderheiten (goldener Punktrand, unabhaengig vom Filter): siehe
+`streudiagrammHervorhebung` in
 filter.js.
 
 Optional mit linearer Regressionsgerade (Strafmass über log10(Menge)) samt
@@ -110,16 +111,33 @@ nur verfügbar, wenn genau eine Substanz gewählt ist (siehe
             </div>
 
             <div class="streudiagramm-seitenleiste d-flex flex-column gap-3">
-              {# --- Hervorhebung einzelner Besonderheiten (goldener Punktrand), unabhaengig vom Filter --- #}
-              <template x-if="feldNach('besonderheiten')">
-                <div class="d-flex flex-column gap-1">
+              {# --- Hervorhebung nach Rolle und/oder Besonderheit (goldener Punktrand), unabhaengig vom Filter --- #}
+              <template x-if="feldNach('rolle') || feldNach('besonderheiten')">
+                <div class="d-flex flex-column gap-2">
                   <span class="small text-body-secondary">Hervorheben:</span>
-                  <template x-for="option in feldNach('besonderheiten').optionen" :key="option.value">
-                    <button type="button" class="btn btn-sm text-start"
-                            :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
-                            @click="streudiagrammHervorhebungUmschalten(option.value)">
-                      <span x-text="option.label"></span>
-                    </button>
+                  <template x-if="feldNach('rolle')">
+                    <div class="d-flex flex-column gap-1">
+                      <span class="small text-body-secondary fst-italic">Rolle</span>
+                      <template x-for="option in feldNach('rolle').optionen" :key="option.value">
+                        <button type="button" class="btn btn-sm text-start"
+                                :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
+                                @click="streudiagrammHervorhebungUmschalten(option.value)">
+                          <span x-text="option.label"></span>
+                        </button>
+                      </template>
+                    </div>
+                  </template>
+                  <template x-if="feldNach('besonderheiten')">
+                    <div class="d-flex flex-column gap-1">
+                      <span class="small text-body-secondary fst-italic">Besonderheiten</span>
+                      <template x-for="option in feldNach('besonderheiten').optionen" :key="option.value">
+                        <button type="button" class="btn btn-sm text-start"
+                                :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
+                                @click="streudiagrammHervorhebungUmschalten(option.value)">
+                          <span x-text="option.label"></span>
+                        </button>
+                      </template>
+                    </div>
                   </template>
                   <button type="button" class="btn btn-sm btn-link text-decoration-none text-start py-0"
                           x-show="streudiagrammHervorhebung.length > 0"
@@ -163,7 +181,7 @@ nur verfügbar, wenn genau eine Substanz gewählt ist (siehe
             Jeder Punkt ist ein Urteil; Klick öffnet die Detailseite. Punkte mit
             dunkelgrauem statt weissem Rand betreffen mehr als eine Betäubungsmittel-Art.
             <span x-show="streudiagrammHervorhebung.length > 0">
-              Golden umrandete Punkte betreffen eine der oben gewählten Besonderheiten.
+              Golden umrandete Punkte betreffen eine der oben gewählten Rollen und/oder Besonderheiten.
             </span>
           </p>
           <p class="mb-0 mt-1 small text-body-secondary font-monospace"

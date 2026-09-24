@@ -32,9 +32,9 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     streudiagrammOffen: true,
     streudiagrammPunktKarte: null,
     streudiagrammPunktKartePos: { x: 0, y: 0 },
-    // Manuelle Hervorhebung bestimmter Hauptdelikte (VM) bzw. Besonderheiten
-    // (Betm) im Streudiagramm (goldener Punktrand), unabhaengig vom Filter -
-    // siehe streudiagrammVM()/streudiagramm() und
+    // Manuelle Hervorhebung bestimmter Hauptdelikte (VM) bzw. Rollen/
+    // Besonderheiten (Betm) im Streudiagramm (goldener Punktrand),
+    // unabhaengig vom Filter - siehe streudiagrammVM()/streudiagramm() und
     // streudiagrammHervorhebungUmschalten().
     streudiagrammHervorhebung: [],
     // Regressionsgerade im VM- bzw. Betm-Streudiagramm ein-/ausblenden
@@ -904,12 +904,14 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           // faerbt den Rand dunkelgrau, wenn mehr als eine Art beteiligt ist.
           mehrfachBetm: (record.betm || []).length > 1,
           karte: record._karte || {},
-          // Hervorhebung anhand gewaehlter Besonderheiten (z.B. Gestaendnis-
-          // rabatt), ODER-verknuepft wie bei streudiagrammVM() - ein Urteil
-          // kann mehrere Besonderheiten aufweisen, es genuegt eine treffende.
-          hervorgehoben: (record.besonderheiten || []).some((b) =>
-            this.streudiagrammHervorhebung.includes(b)
-          ),
+          // Hervorhebung anhand gewaehlter Rollen und/oder Besonderheiten
+          // (z.B. Gestaendnisrabatt), ODER-verknuepft wie bei
+          // streudiagrammVM() - beide Auswahllisten fuellen dieselbe
+          // ``streudiagrammHervorhebung``, ein Urteil kann zudem mehrere
+          // Besonderheiten aufweisen, es genuegt je eine treffende.
+          hervorgehoben:
+            this.streudiagrammHervorhebung.includes(record.rolle) ||
+            (record.besonderheiten || []).some((b) => this.streudiagrammHervorhebung.includes(b)),
         });
       });
       if (punkte.length === 0) return null;

@@ -331,3 +331,7 @@ dbdumps/
 
 # Lokale Nachführungs-Checkliste Betm-Urteile (nicht committen)
 /betm-nachfuehrung-checkliste.md
+
+# Lokale Nachführungs-Checkliste Vermögensdelikt-Urteile + Generator (nicht committen)
+/vermoegen-nachfuehrung-checkliste.md
+/vermoegen-nachfuehrung-checkliste-erzeugen.py

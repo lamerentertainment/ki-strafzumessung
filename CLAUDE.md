@@ -107,11 +107,12 @@ Praktisch heisst das:
 | `hauptdelikt` | exakt einer von: `Betrug`, `Veruntreuung`, `ung. Geschäftsbesorgung`, `betr. Missbrauch DVA`, `Diebstahl`, `Sachbeschädigung` — dasjenige Delikt, auf das die Vorinstanz die **Einsatzstrafe** abgestützt hat |
 | `hauptsanktion` | `'0'` Freiheitsstrafe, `'1'` Geldstrafe, `'2'` Busse |
 | `vollzug` | `'0'` bedingt, `'1'` teilbedingt, `'2'` unbedingt |
-| `mehrfach` / `gewerbsmaessig` / `bandenmaessig` | beziehen sich nur auf das Hauptdelikt |
-| `deliktssumme` | Deliktsbetrag des Hauptdelikts (subsidiär Gesamtdeliktssumme) |
+| `mehrfach` / `gewerbsmaessig` / `bandenmaessig` | beziehen sich nur auf das Hauptdelikt; `mehrfach` nur, wenn der Schuldspruch beim Hauptdelikt ausdrücklich auf »mehrfach« lautet (gewerbsmässig ≠ mehrfach) |
+| `deliktssumme` | Deliktsbetrag des Hauptdelikts, d.h. nur der für die Einsatzstrafe massgebende Betrag (subsidiär Gesamtdeliktssumme) |
+| `freiheitsstrafe_in_monaten` / `anzahl_tagessaetze` | wird mit dem neuen Urteil eine Gesamtstrafe zusammen mit einer widerrufenen früheren Strafe gebildet, nur die neu ausgesprochene Grundstrafe erfassen; ebenso bei einer Zusatzstrafe (Art. 49 Abs. 2 StGB) nur die Strafe für die nach dem früheren Urteil begangenen Taten (falls nicht separat beziffert, proportional herleiten und in `bemerkungen` begründen) |
 | `vorbestraft_einschlaegig` | darf nur `True` sein, wenn `vorbestraft` auch `True` ist |
-| `private_geschaedigte` | `'ja'` / `'nein'` / `'unbekannt'` (Default) — ob durch das Hauptdelikt Privatpersonen in ihrem Vermögen geschädigt wurden; `'nein'`, wenn ausschliesslich Staat/juristische Personen geschädigt wurden |
-| `besonderheiten` / `kurzsachverhalt` / `bemerkungen` | wie bei `BetmUrteil` (Abschnitt 8); `besonderheiten` nach `save()` per `.set([...])` |
+| `private_geschaedigte` | `'ja'` / `'nein'` / `'unbekannt'` (Default) — ob durch das Hauptdelikt (als Ganzes, bei mehrfacher Begehung alle Einzeltaten) Privatpersonen in ihrem Vermögen geschädigt wurden; `'nein'` nur, wenn ausschliesslich Staat/juristische Personen geschädigt wurden |
+| `besonderheiten` / `kurzsachverhalt` / `bemerkungen` | wie bei `BetmUrteil` (Abschnitt 8); `besonderheiten` nach `save()` per `.set([...])`; `'Gehilfenschaft'` vergeben, wenn der Schuldspruch auf Gehilfenschaft (Art. 25 StGB) zum Hauptdelikt lautet |
 
 `private_geschaedigte`, `besonderheiten`, `kurzsachverhalt` und `bemerkungen` fliessen
 (noch) nicht in die ML-Prognose ein — nicht in die Feature-Listen in `ai_utils.py` aufnehmen.
@@ -140,6 +141,8 @@ from database.models import Urteil
 print(Urteil.objects.filter(fall_nr__icontains='<FALL_NR>').count())
 "
 ```
+
+**Duplikate (Erstinstanz vs. Obergericht):** Auf Publikationsplattformen (wie `gerichte-zh.ch`) werden zunehmend auch erstinstanzliche Urteile veröffentlicht. Liegt für denselben Fall sowohl das erstinstanzliche als auch das zweitinstanzliche Urteil vor (oder ist der Fall schon als OG-Urteil `SB...` erfasst): **Stets das erstinstanzliche Urteil (`DG...`, `GG...`) als Originalquelle bevorzugen.** Begründung: Das erstinstanzliche Gericht verfügt über die **volle Kognition bei der Strafzumessung** und unterliegt **keinem Verschlechterungsverbot** (Art. 391 Abs. 2 StPO / *reformatio in peius*); die Strafzumessung ist dort regelmässig ausführlicher und unverfälschter. Der OG-Eintrag wird gelöscht, und der weitere Instanzenzug wird in den `bemerkungen` sowie der `zusammenfassung` des erstinstanzlichen Eintrags festgehalten.
 
 ### 6. Eintrag erstellen
 

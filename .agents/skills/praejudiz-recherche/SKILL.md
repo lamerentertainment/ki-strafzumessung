@@ -17,9 +17,18 @@ Daraus ergibt sich das fundamentale **Zwei-Ebenen-Prinzip**:
 
 1. **Strukturierte Datenbankfelder = VORINSTANZ:**
    Die Felder `gericht`, `urteilsdatum`, `hauptsanktion`, `freiheitsstrafe_in_monaten`, `anzahl_tagessaetze`, `vollzug`, `lebensgefahr`, `besondere_gefaehrlichkeit` etc. bilden konsequent das **vorinstanzliche Urteil** ab. Selbst wenn das Berufungsgericht die Strafe später senkt, erhöht oder den Vollzug anpasst, bleiben in diesen Feldern die Werte der Vorinstanz stehen!
-   *Einzige Ausnahme:* `fall_nr` ist die Geschäfts-Nr. des Obergerichts (z.B. `SST.2023.141`, `SK 22 32`), und `url_link` verlinkt das Dokument des Obergerichts.
+   *Regelfall bei Berufungsurteilen als Quelle:* `fall_nr` ist die Geschäfts-Nr. des Obergerichts (z.B. `SST.2023.141`, `SK 22 32`), und `url_link` verlinkt das Dokument des Obergerichts.
 2. **`zusammenfassung` = BEIDE INSTANZEN:**
    Die Zusammenfassung ist der einzige Ort in der Datenbank, der den vollständigen Verfahrensverlauf dokumentiert. Sie muss sowohl den Vorinstanzentscheid als auch den **Berufungsausgang mit allen Abweichungen, Gutheissungen, Strafänderungen und Rabatten** wahrheitsgetreu und präzise festhalten.
+
+### Präferenzentscheidung: Erstinstanzliche Urteile als Originalquelle bei Duplikaten
+
+Auf Publikationsplattformen (insbesondere auf `gerichte-zh.ch`) werden zunehmend auch erstinstanzliche Urteile (Bezirksgerichte, z.B. Geschäftsnummern `DG...`, `GG...`) direkt veröffentlicht. Liegt für denselben Fall sowohl das erstinstanzliche Urteil als auch ein oberinstanzliches Berufungsurteil (z.B. Obergericht `SB...`) vor (Duplikat):
+
+* **Vorrang des erstinstanzlichen Urteils:** Das erstinstanzliche Urteil wird **als Originalquelle bevorzugt** (`fall_nr` und `url_link` verweisen auf den erstinstanzlichen Entscheid). Der oberinstanzliche Duplikat-Eintrag wird gelöscht.
+* **Juristische Begründung:** Das erstinstanzliche Gericht verfügt über die **volle Kognition bei der Strafzumessung** und unterliegt **keinem Verschlechterungsverbot** (Art. 391 Abs. 2 StPO / *reformatio in peius*). Die Strafzumessungserwägungen sind erstinstanzlich regelmässig deutlich ausführlicher, differenzierter und unverfälschter dargelegt, während das Berufungsgericht oft nur selektiv auf beanstandete Punkte eingeht oder an die vorinstanzliche Strafe gebunden ist.
+* **Dokumentation des Instanzenzugs:** Der weitere Instanzenzug (Berufungsentscheid des Ober-/Kantonsgerichts mit Geschäftsnummer, Datum, allfälligen Freisprüchen/Strafkorrekturen) sowie die Löschung des Duplikats werden im Feld `bemerkungen` und in der `zusammenfassung` des verbleibenden erstinstanzlichen Eintrags festgehalten.
+* **Subsidiär:** Ist der erstinstanzliche Entscheid nicht als separates Dokument publiziert, bleibt das Obergerichtsurteil als Quelle bestehen, bildet jedoch inhaltlich die Vorinstanz ab.
 
 ---
 

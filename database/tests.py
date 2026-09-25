@@ -35,7 +35,6 @@ from .models import (
     Betm,
     BetmArt,
     BetmUrteil,
-    DiagrammSVG,
     GewaltdeliktUrteil,
     Hauptdelikt,
     Kanton,
@@ -318,13 +317,6 @@ class FilterbareAnsichtenTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.kanton = Kanton.objects.create(abk="ZH")
-        for name in (
-            "vollzug_scatterplot_200000",
-            "vollzug_scatterplot_1000000",
-            "hauptdelikt_scatterplot_200000",
-            "hauptdelikt_scatterplot_1000000",
-        ):
-            DiagrammSVG.objects.create(name=name, file="diagramme/platzhalter.svg")
 
     def ansicht_pruefen(self, pfad, objekt):
         antwort = self.client.get(pfad)

@@ -200,33 +200,33 @@ Punktgroesse statt eines festen Radius nach diesem Score skaliert, siehe
               Die Punktgrösse entspricht dem Nebenverurteilungsscore (grösser = höherer Score).
             </span>
           </p>
-          <p class="mb-0 mt-1 small text-body-secondary font-monospace"
-             x-show="streudiagrammRegressionAnzeigen && streudiagramm().regression"
-             x-text="streudiagrammRegressionGleichung(streudiagramm())"></p>
-
-          {# --- Vorhersage: Strafmass fuer eine frei eingegebene Menge --- #}
+          {# --- Regressionsgleichung + Vorhersage fuer eine frei eingegebene Menge --- #}
           <template x-if="streudiagrammRegressionAnzeigen && streudiagramm().regression">
-            <div class="d-flex flex-wrap align-items-center gap-2 mt-2 small">
-              <label for="streudiagramm-regression-eingabe-betm" class="text-body-secondary mb-0">
-                Vorhersage für Strafmass basierend auf obiger Regressionsgleichung:
-              </label>
-              <div class="input-group input-group-sm" style="max-width: 12rem;">
-                <input id="streudiagramm-regression-eingabe-betm" type="number" min="0" step="any"
-                       class="form-control" placeholder="z.B. 5"
-                       x-model="streudiagrammRegressionEingabe">
-                <span class="input-group-text" x-text="streudiagramm().einheit || 'g'"></span>
-              </div>
-              <template x-if="streudiagrammRegressionVorhersage(streudiagramm())">
-                <span>
-                  ≈
-                  <span class="fw-semibold"
-                        x-text="streudiagrammRegressionVorhersage(streudiagramm()).text"></span>
-                  <span class="text-body-secondary"
-                        x-show="streudiagrammRegressionVorhersage(streudiagramm()).ausserhalbBereich">
-                    (ausserhalb des Datenbereichs, Extrapolation)
+            <div class="rounded-3 border bg-body-tertiary p-3 mt-2 small">
+              <p class="mb-2 text-body-secondary font-monospace"
+                 x-text="streudiagrammRegressionGleichung(streudiagramm())"></p>
+              <div class="d-flex flex-wrap align-items-center gap-2">
+                <label for="streudiagramm-regression-eingabe-betm" class="text-body-secondary mb-0">
+                  Vorhersage für Strafmass basierend auf obiger Regressionsgleichung:
+                </label>
+                <div class="input-group input-group-sm" style="max-width: 12rem;">
+                  <input id="streudiagramm-regression-eingabe-betm" type="number" min="0" step="any"
+                         class="form-control" placeholder="z.B. 5"
+                         x-model="streudiagrammRegressionEingabe">
+                  <span class="input-group-text" x-text="streudiagramm().einheit || 'g'"></span>
+                </div>
+                <template x-if="streudiagrammRegressionVorhersage(streudiagramm())">
+                  <span>
+                    ≈
+                    <span class="fw-semibold"
+                          x-text="streudiagrammRegressionVorhersage(streudiagramm()).text"></span>
+                    <span class="text-body-secondary"
+                          x-show="streudiagrammRegressionVorhersage(streudiagramm()).ausserhalbBereich">
+                      (ausserhalb des Datenbereichs, Extrapolation)
+                    </span>
                   </span>
-                </span>
-              </template>
+                </template>
+              </div>
             </div>
           </template>
         </div>

@@ -45,9 +45,6 @@ from .ai_utils import (
     VOLLZUGS_LABELS,
     SANKTIONS_LABELS,
 )
-from .db_utils import (
-    kategorie_scatterplot_erstellen,
-)
 from .prognoseverlauf import (
     BETM_AUSBLENDUNG_IN_MONATEN,
     BETM_KERNBREITE_IN_MONATEN,
@@ -219,21 +216,6 @@ class UrteilListView(FilterbareListView):
     template_name = "database/database.html"
     filter_config = URTEIL_FILTER_CONFIG
     filter_prefetch = ("besonderheiten",)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update(
-            {
-                name: DiagrammSVG.objects.get(name=name)
-                for name in (
-                    "vollzug_scatterplot_200000",
-                    "vollzug_scatterplot_1000000",
-                    "hauptdelikt_scatterplot_200000",
-                    "hauptdelikt_scatterplot_1000000",
-                )
-            }
-        )
-        return context
 
 
 class SexualdeliktUrteilListView(FilterbareListView):
@@ -2282,33 +2264,6 @@ def csv_in_notebooks_speichern(dbmodel):
     # kodiert abgespeicherte Variablen paraphrasieren
     df = vermoegensstrafrechts_urteile_codes_aufloesen(df)
     df.to_csv("notebooks/urteile.csv")
-
-
-def datenbank_scatterplots_aktualisieren():
-    kategorie_scatterplot_erstellen(
-        Urteil,
-        kategorie_feld="vollzug",
-        titel="Deliktsumme/Strafhöhe Gegenüberstellung nach Vollzug",
-        xlim=1000000,
-    )
-    kategorie_scatterplot_erstellen(
-        Urteil,
-        kategorie_feld="vollzug",
-        titel="Deliktsumme/Strafhöhe Gegenüberstellung nach Vollzug (bis Fr. 200'000.--)",
-        xlim=200000,
-    )
-    kategorie_scatterplot_erstellen(
-        Urteil,
-        kategorie_feld="hauptdelikt",
-        titel="Deliktsumme/Strafhöhe Gegenüberstellung nach Deliktsart",
-        xlim=1000000,
-    )
-    kategorie_scatterplot_erstellen(
-        Urteil,
-        kategorie_feld="hauptdelikt",
-        titel="Deliktsumme/Strafhöhe Gegenüberstellung nach Deliktsart (bis Fr. 200'000.--)",
-        xlim=200000,
-    )
 
 
 def csv_erstellen(request):

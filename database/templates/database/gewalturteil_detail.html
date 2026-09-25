@@ -104,20 +104,20 @@
       </div>
     {% endif %}
 
-    {% if object.bemerkungen %}
-      <div class="card my-3">
-        <div class="card-header">Bemerkungen</div>
-        <div class="card-body">
-          <p class="mb-0" style="white-space: pre-line;">{{ object.bemerkungen }}</p>
-        </div>
-      </div>
-    {% endif %}
-
     {% if object.zusammenfassung %}
       <div class="card my-3">
         <div class="card-header">Zusammenfassung</div>
         <div class="card-body">
           <p class="mb-0" style="white-space: pre-line;">{{ object.zusammenfassung }}</p>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if object.bemerkungen %}
+      <div class="card my-3">
+        <div class="card-header">Bemerkungen</div>
+        <div class="card-body">
+          <p class="mb-0" style="white-space: pre-line;">{{ object.bemerkungen }}</p>
         </div>
       </div>
     {% endif %}

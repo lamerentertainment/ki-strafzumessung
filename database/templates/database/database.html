@@ -44,26 +44,4 @@
         </section>
         <p class="text-body-secondary small mt-2">Es befinden sich insgesamt {{ urteile|length }} Urteile in der Datenbank.</p>
     </section>
-
-    <section id="darstellungen" class="col-12 mt-4">
-        <h2 class="h4 matplotlib">Urteilsdatenbank in grafischen Darstellungen</h2>
-        <div class="rounded border border-2 p-3 bg-body-tertiary">
-            <div class="row g-3">
-                <div class="col-xl-6">
-                    <img src="{{ vollzug_scatterplot_1000000.file.url }}" class="img-fluid rounded border" alt="Vollzug Scatterplot bis 1 Mio.">
-                </div>
-                <div class="col-xl-6">
-                    <img src="{{ vollzug_scatterplot_200000.file.url }}" class="img-fluid rounded border" alt="Vollzug Scatterplot bis 200k">
-                </div>
-            </div>
-            <div class="row g-3 mt-1">
-                <div class="col-xl-6">
-                    <img src="{{ hauptdelikt_scatterplot_1000000.file.url }}" class="img-fluid rounded border" alt="Hauptdelikt Scatterplot bis 1 Mio.">
-                </div>
-                <div class="col-xl-6">
-                    <img src="{{ hauptdelikt_scatterplot_200000.file.url }}" class="img-fluid rounded border" alt="Hauptdelikt Scatterplot bis 200k">
-                </div>
-            </div>
-        </div>
-    </section>
 {% endblock body %}

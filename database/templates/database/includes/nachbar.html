@@ -113,6 +113,13 @@
                         </p>
                     </td>
                 </tr>
+                {% if nachbar.kurzsachverhalt %}
+                <tr>
+                    <td colspan="2" class="fst-italic">
+                        {{ nachbar.kurzsachverhalt|linebreaks }}
+                    </td>
+                </tr>
+                {% endif %}
                 {% if nachbar.zusammenfassung %}
                 <tr>
                     <td colspan="2">

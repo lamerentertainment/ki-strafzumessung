@@ -334,8 +334,21 @@ class FilterbareAnsichtenTest(TestCase):
             gericht="Bezirksgericht Zürich",
             urteilsdatum=date(2024, 2, 2),
             deliktssumme=15000,
+            kurzsachverhalt="Veruntreuung von Stiftungsgeldern über mehrere Jahre.",
         )
-        self.ansicht_pruefen("/database", urteil)
+        antwort = self.ansicht_pruefen("/database", urteil)
+        self.assertContains(
+            antwort,
+            'data-kurzsachverhalt="Veruntreuung von Stiftungsgeldern über mehrere Jahre."',
+        )
+        self.assertContains(antwort, 'data-deliktssumme="CHF 15')
+        records = antwort.context["filter_records"]
+        karte = records[str(urteil.pk)]["_karte"]
+        self.assertEqual(karte["delikt"], "Hauptdelikt: Betrug, Deliktssumme: CHF 15'000")
+        self.assertEqual(
+            karte["sachverhalt"],
+            "Veruntreuung von Stiftungsgeldern über mehrere Jahre.",
+        )
 
     def test_betaeubungsmittel(self):
         urteil = BetmUrteil.objects.create(

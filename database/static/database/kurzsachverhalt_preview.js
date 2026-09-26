@@ -56,6 +56,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const mehrfach = row.dataset.mehrfach === "1";
     const versuch = row.dataset.versuch === "1";
     const text = row.dataset.kurzsachverhalt || "";
+    const deliktssumme = row.dataset.deliktssumme || "";
     // Betaeubungsmittelurteile kennen kein Hauptdelikt; dort beschriftet die
     // Liste die Zeile selbst (z.B. "Betm & Rolle").
     const deliktLabel = row.dataset.deliktlabel || "Hauptdelikt";
@@ -70,9 +71,24 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
 
+    const teile = [];
+    if (delikt) {
+      teile.push(`${deliktLabel}: ${delikt}`);
+    }
+    if (deliktssumme) {
+      const summeFormatiert = deliktssumme.startsWith("CHF")
+        ? deliktssumme
+        : (deliktssumme.startsWith("Deliktssumme") ? deliktssumme : `CHF ${deliktssumme}`);
+      teile.push(
+        summeFormatiert.startsWith("Deliktssumme")
+          ? summeFormatiert
+          : `Deliktssumme: ${summeFormatiert}`
+      );
+    }
+
     preview.querySelector(".hovercard-title").textContent = fallNr ? `Fall ${fallNr}` : "Kurzsachverhalt";
     preview.querySelector(".hovercard-meta").textContent = [gericht, datum].filter(Boolean).join(", ");
-    preview.querySelector(".hovercard-delikt").textContent = delikt ? `${deliktLabel}: ${delikt}` : "";
+    preview.querySelector(".hovercard-delikt").textContent = teile.join(", ");
     preview.querySelector(".hovercard-body").textContent = text;
 
     positionPreview(e);

@@ -204,7 +204,7 @@ eines festen Radius nach diesem Score skaliert, siehe
         <div class="hovercard-delikt small mt-1"
              x-text="streudiagrammPunktKarte.delikt || ''"></div>
         <div class="small mt-1 fw-semibold"
-             x-text="[streudiagrammPunktKarte.strafmass, streudiagrammPunktKarte.vollzug, streudiagrammPunktKarte.menge].filter(Boolean).join(', ')"></div>
+             x-text="[streudiagrammPunktKarte.strafmass, streudiagrammPunktKarte.vollzug].filter(Boolean).join(', ')"></div>
       </div>
       <div class="hovercard-body mt-2" x-text="streudiagrammPunktKarte.sachverhalt"></div>
     </div>

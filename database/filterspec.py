@@ -545,13 +545,12 @@ def _karte_urteil(objekt):
             ("bandenmässig", objekt.bandenmaessig),
         ],
     )
-    # Solange kein Kurzsachverhalt nachgefuehrt ist, dienen Delikt und
-    # Deliktssumme als Ersatz.
-    sachverhalt = objekt.kurzsachverhalt or (
-        f"Hauptdelikt: {objekt.get_hauptdelikt_display()}, "
-        f"Deliktssumme: CHF {objekt.deliktssumme:,}"
-    )
-    return _karte(objekt, "vmurteil_detail", f"Hauptdelikt: {delikt}", sachverhalt)
+    if objekt.deliktssumme is not None:
+        summe = f"CHF {objekt.deliktssumme:,}".replace(",", "'")
+        delikt_kopf = f"Hauptdelikt: {delikt}, Deliktssumme: {summe}"
+    else:
+        delikt_kopf = f"Hauptdelikt: {delikt}"
+    return _karte(objekt, "vmurteil_detail", delikt_kopf, objekt.kurzsachverhalt or "")
 
 
 def _karte_betm(objekt):

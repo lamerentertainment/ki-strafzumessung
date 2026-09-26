@@ -22,6 +22,12 @@ from .prognoseverlauf import (
     verlauf_erstellen,
 )
 
+from .templatetags.strafmass_formatierung import (
+    freiheitsstrafe_anzeige,
+    freiheitsstrafe_detail_anzeige,
+    freiheitsstrafe_jahre_monate_anzeige,
+    freiheitsstrafe_monate_tooltip,
+)
 from .filterspec import (
     BETM_FILTER_CONFIG,
     GEWALTDELIKT_FILTER_CONFIG,
@@ -981,3 +987,38 @@ class PrognoseverlaufTest(SimpleTestCase):
         )
         # Der Kern liegt mittig: gleich viel Ausblendung links wie rechts.
         self.assertAlmostEqual(min(vollton), 100 - max(vollton), places=1)
+
+
+class StrafmassFormatierungTest(SimpleTestCase):
+    """Prueft die Formatierungsfilter fuer Freiheitsstrafen."""
+
+    def test_freiheitsstrafe_detail_anzeige_unter_oder_gleich_12_monate(self):
+        self.assertEqual(freiheitsstrafe_detail_anzeige(None), "")
+        self.assertEqual(freiheitsstrafe_detail_anzeige(1), "1 Monat")
+        self.assertEqual(freiheitsstrafe_detail_anzeige(6), "6 Monate")
+        self.assertEqual(freiheitsstrafe_detail_anzeige(12), "12 Monate")
+
+    def test_freiheitsstrafe_detail_anzeige_ueber_12_monate_mit_klammer(self):
+        self.assertEqual(
+            freiheitsstrafe_detail_anzeige(13), "13 Monate (1 Jahr 1 Monat)"
+        )
+        self.assertEqual(
+            freiheitsstrafe_detail_anzeige(18), "18 Monate (1 Jahr 6 Monate)"
+        )
+        self.assertEqual(freiheitsstrafe_detail_anzeige(24), "24 Monate (2 Jahre)")
+        self.assertEqual(
+            freiheitsstrafe_detail_anzeige(25), "25 Monate (2 Jahre 1 Monat)"
+        )
+        self.assertEqual(freiheitsstrafe_detail_anzeige(36), "36 Monate (3 Jahre)")
+        self.assertEqual(
+            freiheitsstrafe_detail_anzeige(42), "42 Monate (3 Jahre 6 Monate)"
+        )
+
+    def test_freiheitsstrafe_detail_anzeige_lebenslaenglich(self):
+        self.assertEqual(freiheitsstrafe_detail_anzeige(999), "lebenslänglich")
+
+    def test_freiheitsstrafe_anzeige(self):
+        self.assertEqual(freiheitsstrafe_anzeige(18), "18 Monate")
+        self.assertEqual(freiheitsstrafe_anzeige(18, "Monaten"), "18 Monaten")
+        self.assertEqual(freiheitsstrafe_anzeige(999), "lebenslänglich")
+        self.assertEqual(freiheitsstrafe_anzeige(1), "1 Monat")

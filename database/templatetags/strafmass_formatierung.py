@@ -42,7 +42,38 @@ def freiheitsstrafe_anzeige(monate, einheit="Monate"):
         return f"{monate} {einheit}"
     if monate_int == LEBENSLAENGLICH_PLATZHALTER:
         return "lebenslänglich"
-    return f"{monate_int} {einheit}"
+    angepasste_einheit = "Monat" if einheit == "Monate" and monate_int == 1 else einheit
+    return f"{monate_int} {angepasste_einheit}"
+
+
+@register.filter
+def freiheitsstrafe_detail_anzeige(monate):
+    """
+    Formatiert einen freiheitsstrafe_in_monaten-Wert fuer die Detailansicht.
+
+    Stehen bei der Sanktionsdauer ueber 12 Monate, wird in einer Klammerbemerkung
+    die Anzahl Jahre und Monate angezeigt (unter Wiederverwendung von
+    freiheitsstrafe_jahre_monate_anzeige aus der Listenansicht).
+    - 18  -> "18 Monate (1 Jahr 6 Monate)"
+    - 24  -> "24 Monate (2 Jahre)"
+    - 12  -> "12 Monate"
+    - 6   -> "6 Monate"
+    - 1   -> "1 Monat"
+    - 999 -> "lebenslänglich"
+    """
+    if monate is None:
+        return ""
+    try:
+        monate_int = int(monate)
+    except (TypeError, ValueError):
+        return f"{monate} Monate"
+    if monate_int == LEBENSLAENGLICH_PLATZHALTER:
+        return "lebenslänglich"
+    einheit = "Monat" if monate_int == 1 else "Monate"
+    basis = f"{monate_int} {einheit}"
+    if monate_int > 12:
+        return f"{basis} ({freiheitsstrafe_jahre_monate_anzeige(monate_int)})"
+    return basis
 
 
 @register.filter

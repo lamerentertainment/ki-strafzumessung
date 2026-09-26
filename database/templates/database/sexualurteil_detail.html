@@ -79,7 +79,7 @@
           <div class="card-body">
             <p class="mb-2"><strong>Hauptsanktion:</strong> {{ object.get_hauptsanktion_display }}</p>
             {% if object.hauptsanktion == '0' %}
-              <p class="mb-2"><strong>Dauer:</strong> {{ object.freiheitsstrafe_in_monaten|freiheitsstrafe_anzeige }}</p>
+              <p class="mb-2"><strong>Dauer:</strong> {{ object.freiheitsstrafe_in_monaten|freiheitsstrafe_detail_anzeige }}</p>
             {% elif object.hauptsanktion == '1' %}
               <p class="mb-2"><strong>Anzahl Tagessätze:</strong> {{ object.anzahl_tagessaetze }}</p>
             {% endif %}

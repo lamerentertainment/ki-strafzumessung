@@ -1,9 +1,9 @@
 # Vermögensdelikt-Präjudizien-Recherche: Kandidatenliste (entscheidsuche.ch)
 
 Gesamtschweizerische Recherche nach kantonalen Vermögensdelikt-Präjudizien für
-`database.models.Urteil`. Die DB enthält aktuell **258 Fälle, ausschliesslich aus dem
-Kanton Zürich** — gesucht sind Kandidaten aus **allen übrigen Kantonen** für die Hauptdelikte
-Betrug (Art. 146 StGB), Veruntreuung (Art. 138 StGB), ungetreue Geschäftsbesorgung
+`database.models.Urteil`. Die DB enthält aktuell **263 Fälle** (ursprünglich 258 ausschliesslich
+aus dem Kanton Zürich, ergänzt um die ersten kantonalen Entscheide) — gesucht sind Kandidaten aus
+**allen übrigen Kantonen** für die Hauptdelikte Betrug (Art. 146 StGB), Veruntreuung (Art. 138 StGB), ungetreue Geschäftsbesorgung
 (Art. 158 StGB), betrügerischer Missbrauch einer Datenverarbeitungsanlage (Art. 147 StGB),
 Diebstahl (Art. 139 StGB) und Sachbeschädigung (Art. 144 StGB) — dasjenige Delikt, auf das
 die vorinstanzliche Einsatzstrafe abgestützt wurde.
@@ -30,14 +30,14 @@ Erfassung unbedingt im vollständigen PDF/HTML verifizieren.
 
 ## Aargau (Obergericht, Signatur `SST.*`)
 
-1. https://entscheidsuche.ch/docs/AG_OG/AG_OG_008_SST-2022-272_2023-03-21.html — gewerbsmässiger betrügerischer Missbrauch DVA (12 Trickdiebstähle Kredit-/Debitkarten, ~CHF 51'400 + EUR 2'000), Schuldspruch unangefochten, 4½ Jahre FS unbedingt identisch bestätigt trotz Reduktionsantrag, Landesverweisung 15J
-2. https://entscheidsuche.ch/docs/AG_OG/AG_OG_008_SST-2023-42_2023-11-15.html — gewerbsmässiger Betrug + mehrfache Urkundenfälschung, 12 Monate FS bedingt identisch bestätigt trotz Freispruchsantrag, Landesverweisung 5J
-3. https://entscheidsuche.ch/docs/AG_OG/AG_OG_008_SST-2023-43_2023-11-15.html — Mittäterin desselben Betrugskomplexes, gewerbsmässiger Betrug + mehrfache Urkundenfälschung, 11 Monate FS bedingt identisch bestätigt, Landesverweisung 5J (dritte Mitbeschuldigte bereits separat rechtskräftig)
-4. https://entscheidsuche.ch/docs/AG_OG/AG_OG_008_SST-2022-279_2023-10-31.html — gewerbsmässiger Betrug + mehrfacher Verweisungsbruch, 3½ Jahre FS unbedingt identisch bestätigt, Landesverweisung 20J
+1. ✅ **[ERFASST - ID 334]** https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2022-272_2023-03-21.pdf — gewerbsmässiger betrügerischer Missbrauch DVA (12 Trickdiebstähle Kredit-/Debitkarten, ~CHF 51'400 + EUR 2'000 / Deliktssumme CHF 55'000), Vorinstanz Bezirksgericht Baden 10.06.2022, 54 Monate FS unbedingt (4½ Jahre), Landesverweisung 15J
+2. ✅ **[ERFASST - ID 335]** https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2023-42_2023-11-15.pdf — gewerbsmässiger Betrug + mehrfache Urkundenfälschung (Score 3), Vorinstanz Bezirksgericht Aarau 21.11.2022, 12 Monate FS bedingt, Verbindungsbusse CHF 2'000, Landesverweisung 5J (SIS angeordnet)
+3. ✅ **[ERFASST - ID 336]** https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2023-43_2023-11-15.pdf — Mittäterin desselben Betrugskomplexes, gewerbsmässiger Betrug + mehrfache Urkundenfälschung (Score 3), Vorinstanz Bezirksgericht Aarau 21.11.2022, 11 Monate FS bedingt, Verbindungsbusse CHF 2'000, Landesverweisung 5J (SIS angeordnet)
+4. ✅ **[ERFASST - ID 337]** https://entscheidsuche.ch/docs/AG_Gerichte/AG_OG_008_SST-2022-279_2023-10-31.pdf — gewerbsmässiger Betrug (Romance Scam, Deliktssumme CHF 130'000) + mehrfacher Verweisungsbruch (Score 2), Vorinstanz Bezirksgericht Aarau 18.08.2022, 42 Monate FS unbedingt (3½ Jahre), Rückfall-Landesverweisung 20J
 
 ## Genf (Cour de Justice, `GE_CJ_009`)
 
-1. https://entscheidsuche.ch/docs/GE_Gerichte/GE_CJ_009_P-13930-2020_2024-04-04.pdf — Escroquerie + abus de confiance + faux dans les titres + AHVG-Widerhandlung, Berufung vollständig abgewiesen, Vorinstanz Tribunal de police 11.07.2023
+1. ✅ **[ERFASST - ID 338]** https://entscheidsuche.ch/docs/GE_Gerichte/GE_CJ_009_P-13930-2020_2024-04-04.pdf — COVID-19-Kredite: Betrug (CHF 15'000) + mehrfache Veruntreuung + Urkundenfälschung + AHVG-Widerhandlung (Score 6), Vorinstanz Tribunal de police 11.07.2023, 6 Monate FS unbedingt
 2. https://entscheidsuche.ch/docs/GE_Gerichte/GE_CJ_009_P-12558-2021_2022-11-14.pdf — Vol en bande et par métier + betrügerischer Missbrauch DVA gewerbsmässig (Art. 147 — seltenes Hauptdelikt) + abus de confiance, Berufung abgewiesen, Vorinstanz Tribunal correctionnel 10.03.2022, 4J FS unbed., Landesverweisung 8J, CHF 22'194.45 + EUR 1'200
 3. https://entscheidsuche.ch/docs/GE_Gerichte/GE_CJ_009_P-1438-2020_2021-12-08.pdf — Abus de confiance (Reisebüro-Betreiberin, nicht erbrachte Leistungen), volle Anfechtung des Schuldspruchs abgewiesen, Vorinstanz Tribunal de police 20.05.2021
 4. https://entscheidsuche.ch/docs/GE_Gerichte/GE_CJ_009_P-25348-2018_2023-07-06.pdf — Escroquerie + Art. 151 StGB, Schuldspruch selbst unangefochten (nur Strafmass/Vollzug angefochten), Vorinstanz Tribunal de police 11.08.2022

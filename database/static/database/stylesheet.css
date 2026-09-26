@@ -445,7 +445,11 @@ tr[data-kurzsachverhalt] {
     cursor: pointer;
 }
 
-tr[data-kurzsachverhalt]:hover td {
+/* Hover-Feedback fuer jede Urteilszeile, nicht nur solche mit Kurzsachverhalt:
+   das Histogramm/Streudiagramm hebt beim Zeilen-Hover den zugehoerigen Block
+   bzw. Punkt hervor (siehe .zeilen-hover unten und kurzsachverhalt_preview.js),
+   darum bekommt jede Zeile denselben leichten Tint als Hinweis. */
+tr[data-pk]:hover td {
     background-color: rgba(13, 110, 253, 0.05);
 }
 
@@ -600,6 +604,16 @@ tr[data-kurzsachverhalt]:hover td {
     outline-color: #ffc107;
 }
 
+/* Beim Hover einer Urteilszeile in der Liste wird der zugehoerige Block
+   markiert (siehe kurzsachverhalt_preview.js, Verknuepfung ueber data-pk).
+   Nach der Hervorhebung notiert, damit die blaue Zeilen-Markierung auch bei
+   gleichzeitig aktiver goldener Hervorhebung sichtbar bleibt. */
+.histogramm-block.zeilen-hover {
+    outline-color: var(--bs-primary, #0d6efd);
+    outline-width: 3px;
+    outline-offset: -3px;
+}
+
 .histogramm-xtick {
     margin-top: 0.25rem;
     font-size: 0.7rem;
@@ -715,6 +729,15 @@ tr[data-kurzsachverhalt]:hover td {
    sollen bei hervorgehobenen Punkten weiter erkennbar bleiben. */
 .streudiagramm-punkt.hervorgehoben {
     stroke: #ffc107;
+    stroke-width: 3;
+}
+
+/* Beim Hover einer Urteilszeile in der Liste wird der zugehoerige Punkt
+   markiert (siehe kurzsachverhalt_preview.js, Verknuepfung ueber data-pk).
+   Nach der Hervorhebung notiert, damit die blaue Zeilen-Markierung Vorrang
+   vor dem goldenen Rand hat, wenn beide gleichzeitig zutreffen. */
+.streudiagramm-punkt.zeilen-hover {
+    stroke: var(--bs-primary, #0d6efd);
     stroke-width: 3;
 }
 

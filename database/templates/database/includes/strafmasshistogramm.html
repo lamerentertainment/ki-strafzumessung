@@ -86,6 +86,7 @@ aendert sich also nichts.
                         {% endcomment %}
                         <a class="histogramm-block"
                            :class="`sanktion-${eintrag.hauptsanktion} vollzug-${eintrag.vollzug}${eintrag.hervorgehoben ? ' hervorgehoben' : ''}`"
+                           :data-pk="eintrag.pk"
                            :href="eintrag.karte.url || '#'"
                            :style="`height: ${histogramm().blockHoehe}px`"
                            :aria-label="`${eintrag.karte.fall_nr || ''} – ${blockStrafmass(eintrag)}`"

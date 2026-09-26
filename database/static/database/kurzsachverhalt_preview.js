@@ -23,6 +23,31 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let hoverTimer = null;
   let activeRow = null;
+  let highlightedPk = null;
+
+  // Verknuepft eine Urteilszeile mit ihrem Block im Strafmasshistogramm bzw.
+  // ihrem Punkt im Streudiagramm (beide tragen dasselbe data-pk, siehe
+  // strafmasshistogramm.html/filter.js) und hebt beide beim Zeilen-Hover
+  // hervor - unabhaengig von der Kurzsachverhalt-Vorschau, darum eigenes
+  // Tracking (highlightedPk) statt Wiederverwendung von activeRow.
+  function highlightChart(pk) {
+    if (pk === highlightedPk) return;
+    clearChartHighlight();
+    if (!pk) return;
+    document
+      .querySelectorAll(
+        `.histogramm-block[data-pk="${CSS.escape(pk)}"], .streudiagramm-punkt[data-pk="${CSS.escape(pk)}"]`
+      )
+      .forEach((el) => el.classList.add("zeilen-hover"));
+    highlightedPk = pk;
+  }
+
+  function clearChartHighlight() {
+    document
+      .querySelectorAll(".zeilen-hover")
+      .forEach((el) => el.classList.remove("zeilen-hover"));
+    highlightedPk = null;
+  }
 
   function positionPreview(e) {
     const cardWidth = 440;
@@ -105,6 +130,11 @@ document.addEventListener("DOMContentLoaded", function () {
   const tbody = document.querySelector("[data-urteilsliste]");
   if (tbody) {
     tbody.addEventListener("mouseover", function (e) {
+      const pkRow = e.target.closest("tr[data-pk]");
+      if (pkRow) {
+        highlightChart(pkRow.dataset.pk);
+      }
+
       const row = e.target.closest("tr[data-kurzsachverhalt]");
       if (row) {
         if (row !== activeRow) {
@@ -126,6 +156,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
     tbody.addEventListener("mouseout", function (e) {
       const related = e.relatedTarget;
+
+      const pkRow = e.target.closest("tr[data-pk]");
+      if (pkRow && (!related || !pkRow.contains(related))) {
+        clearChartHighlight();
+      }
+
       const row = e.target.closest("tr[data-kurzsachverhalt]");
       if (row && (!related || !row.contains(related))) {
         hidePreview();
@@ -133,9 +169,13 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // Bei Scrollen oder ESC-Taste Vorschau schliessen
+  // Bei Scrollen oder ESC-Taste Vorschau und Diagramm-Hervorhebung schliessen
   window.addEventListener("scroll", hidePreview, { passive: true });
+  window.addEventListener("scroll", clearChartHighlight, { passive: true });
   window.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") hidePreview();
+    if (e.key === "Escape") {
+      hidePreview();
+      clearChartHighlight();
+    }
   });
 });

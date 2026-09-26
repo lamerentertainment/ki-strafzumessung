@@ -9,9 +9,15 @@ Betm-Mengen - keine vorgelagerte Auswahl, zu der das Diagramm erst leer
 bleibt. Rein clientseitig berechnet wie das Histogramm, siehe dortiger
 Kommentar.
 
-Zusaetzlich mit Buttons zur Hervorhebung einzelner Hauptdelikte (goldener
+Zusaetzlich mit Buttons zur Hervorhebung einzelner Hauptdelikte,
+Besonderheiten und/oder ob private Geschaedigte betroffen waren (goldener
 Punktrand, unabhaengig vom Filter): siehe ``streudiagrammHervorhebung`` in
-filter.js. Sowie einer optional einblendbaren linearen Regressionsgeraden
+filter.js, analog zu Rolle/Besonderheiten bei ``betmstreudiagramm.html``. Die
+gesamte Seitenleiste (Hervorhebung + "Anzeigen") laesst sich seitwaerts
+wegschieben (``streudiagrammSeitenleisteOffen``), sodass nur noch das
+Diagramm als einzige Spalte auf der Seite steht; ein schmaler Griff bleibt
+zum Wiedereinblenden sichtbar, die getroffene Hervorhebung geht dabei nicht
+verloren. Sowie einer optional einblendbaren linearen Regressionsgeraden
 (Strafmass ueber log10(Deliktssumme)) samt Gleichung und einem Eingabefeld,
 das anhand der Regressionsgeraden das Strafmass zu einer frei eingegebenen
 Deliktssumme vorhersagt - siehe
@@ -70,8 +76,16 @@ eines festen Radius nach diesem Score skaliert, siehe
                 SVG-Markup-String erzeugt und per x-html eingehaengt statt mit
                 x-for; siehe Kommentar zu streudiagrammAchsenSvg in filter.js.
               {% endcomment %}
+              {% comment %}
+                max-width per Stylesheet auf 760px begrenzt; bei
+                weggeschobener Seitenleiste (streudiagrammSeitenleisteOffen)
+                per Inline-Style aufgehoben, damit das Diagramm dann wirklich
+                die volle verfuegbare Breite ausnutzt statt bei 760px zu
+                stoppen.
+              {% endcomment %}
               <svg viewBox="0 0 640 300" preserveAspectRatio="xMidYMid meet"
                    class="streudiagramm-flaeche" role="img"
+                   :style="!streudiagrammSeitenleisteOffen ? 'max-width: none' : ''"
                    aria-label="Streudiagramm: Strafmass über Deliktssumme"
                    @mouseover="streudiagrammHover($event, streudiagrammVM())"
                    @focusin="streudiagrammHover($event, streudiagrammVM())"
@@ -93,18 +107,77 @@ eines festen Radius nach diesem Score skaliert, siehe
               </svg>
             </div>
 
-            <div class="streudiagramm-seitenleiste d-flex flex-column gap-3">
-              {# --- Hervorhebung einzelner Hauptdelikte (goldener Punktrand), unabhaengig vom Filter --- #}
-              <template x-if="feldNach('hauptdelikt')">
-                <div class="d-flex flex-column gap-1">
+            {# --- Schmaler Griff, wenn die Seitenleiste weggeschoben ist --- #}
+            <button type="button" class="btn btn-sm btn-outline-dark px-1"
+                    x-show="!streudiagrammSeitenleisteOffen"
+                    @click="streudiagrammSeitenleisteOffen = true"
+                    aria-label="Hervorheben/Anzeigen einblenden">
+              <span>◂</span>
+              <span class="badge text-bg-warning ms-1" x-show="streudiagrammHervorhebung.length > 0"
+                    x-text="streudiagrammHervorhebung.length"></span>
+            </button>
+
+            {% comment %}
+              Sichtbarkeit ueber Klassenwechsel (d-flex/d-none) statt x-show:
+              Bootstraps Utility-Klassen sind !important gesetzt und wuerden
+              ein per x-show inline gesetztes "display: none" sonst
+              ueberschreiben - die Seitenleiste bliebe sichtbar, obwohl Alpine
+              sie intern als eingeklappt fuehrt.
+            {% endcomment %}
+            <div class="streudiagramm-seitenleiste flex-column gap-3"
+                 :class="streudiagrammSeitenleisteOffen ? 'd-flex' : 'd-none'">
+              <button type="button" class="btn btn-sm btn-outline-dark px-1 py-0 align-self-end"
+                      @click="streudiagrammSeitenleisteOffen = false"
+                      aria-label="Hervorheben/Anzeigen ausblenden">
+                <span>▸</span>
+              </button>
+
+              {# --- Hervorhebung nach Hauptdelikt und/oder Besonderheit und/oder privaten Geschaedigten (goldener Punktrand), unabhaengig vom Filter --- #}
+              <template x-if="feldNach('hauptdelikt') || feldNach('besonderheiten') || feldNach('private_geschaedigte')">
+                <div class="d-flex flex-column gap-2">
                   <span class="small text-body-secondary">Hervorheben:</span>
-                  <template x-for="option in feldNach('hauptdelikt').optionen" :key="option.value">
-                    <button type="button" class="btn btn-sm text-start"
-                            :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
-                            @click="streudiagrammHervorhebungUmschalten(option.value)">
-                      <span x-text="option.label"></span>
-                    </button>
-                  </template>
+                  <div class="d-flex flex-row flex-wrap gap-3">
+                    <template x-if="feldNach('hauptdelikt')">
+                      <div class="d-flex flex-column gap-1">
+                        <span class="small text-body-secondary fst-italic">Hauptdelikt</span>
+                        <template x-for="option in feldNach('hauptdelikt').optionen" :key="option.value">
+                          <button type="button" class="btn btn-sm text-start"
+                                  :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
+                                  @click="streudiagrammHervorhebungUmschalten(option.value)">
+                            <span x-text="option.label"></span>
+                          </button>
+                        </template>
+                      </div>
+                    </template>
+                    <template x-if="feldNach('besonderheiten') || feldNach('private_geschaedigte')">
+                      <div class="d-flex flex-column gap-2">
+                        <template x-if="feldNach('besonderheiten')">
+                          <div class="d-flex flex-column gap-1">
+                            <span class="small text-body-secondary fst-italic">Besonderheiten</span>
+                            <template x-for="option in feldNach('besonderheiten').optionen" :key="option.value">
+                              <button type="button" class="btn btn-sm text-start"
+                                      :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
+                                      @click="streudiagrammHervorhebungUmschalten(option.value)">
+                                <span x-text="option.label"></span>
+                              </button>
+                            </template>
+                          </div>
+                        </template>
+                        <template x-if="feldNach('private_geschaedigte')">
+                          <div class="d-flex flex-column gap-1">
+                            <span class="small text-body-secondary fst-italic">private Geschädigte</span>
+                            <template x-for="option in feldNach('private_geschaedigte').optionen" :key="option.value">
+                              <button type="button" class="btn btn-sm text-start"
+                                      :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
+                                      @click="streudiagrammHervorhebungUmschalten(option.value)">
+                                <span x-text="option.label"></span>
+                              </button>
+                            </template>
+                          </div>
+                        </template>
+                      </div>
+                    </template>
+                  </div>
                   <button type="button" class="btn btn-sm btn-link text-decoration-none text-start py-0"
                           x-show="streudiagrammHervorhebung.length > 0"
                           @click="streudiagrammHervorhebung = []">zurücksetzen</button>
@@ -112,7 +185,7 @@ eines festen Radius nach diesem Score skaliert, siehe
                   <button type="button" class="btn btn-sm text-start"
                           :class="streudiagrammScoreGroesse ? 'btn-dark' : 'btn-outline-secondary'"
                           @click="streudiagrammScoreGroesse = !streudiagrammScoreGroesse">
-                    Nebenverurteilungsscore darstellen
+                    Nebenverurteilungsscore (Anzahl Schuldsprüche) darstellen
                   </button>
                 </div>
               </template>
@@ -149,7 +222,8 @@ eines festen Radius nach diesem Score skaliert, siehe
           <p class="mb-0 mt-1 small text-body-secondary">
             Jeder Punkt ist ein Urteil; Klick öffnet die Detailseite.
             <span x-show="streudiagrammHervorhebung.length > 0">
-              Golden umrandete Punkte betreffen eines der oben gewählten Hauptdelikte.
+              Golden umrandete Punkte betreffen eines der oben gewählten Hauptdelikte,
+              Besonderheiten und/oder private Geschädigte.
             </span>
             <span x-show="streudiagrammScoreGroesse">
               Die Punktgrösse entspricht dem Nebenverurteilungsscore (grösser = höherer Score).
@@ -157,7 +231,7 @@ eines festen Radius nach diesem Score skaliert, siehe
           </p>
           {# --- Regressionsgleichung + Vorhersage fuer eine frei eingegebene Deliktssumme --- #}
           <template x-if="streudiagrammRegressionAnzeigen && streudiagrammVM().regression">
-            <div class="rounded-3 border bg-body-tertiary p-3 mt-2 small">
+            <div class="rounded-3 border bg-body-secondary p-3 mt-2 small">
               <p class="mb-2 text-body-secondary font-monospace"
                  x-text="streudiagrammRegressionGleichung(streudiagrammVM())"></p>
               <div class="d-flex flex-wrap align-items-center gap-2">

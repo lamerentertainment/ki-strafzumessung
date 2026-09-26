@@ -32,11 +32,18 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     streudiagrammOffen: true,
     streudiagrammPunktKarte: null,
     streudiagrammPunktKartePos: { x: 0, y: 0 },
-    // Manuelle Hervorhebung bestimmter Hauptdelikte (VM) bzw. Rollen/
-    // Besonderheiten (Betm) im Streudiagramm (goldener Punktrand),
-    // unabhaengig vom Filter - siehe streudiagrammVM()/streudiagramm() und
-    // streudiagrammHervorhebungUmschalten().
+    // Manuelle Hervorhebung bestimmter Hauptdelikte/Besonderheiten/privater
+    // Geschaedigter (VM) bzw. Rollen/Besonderheiten (Betm) im Streudiagramm
+    // (goldener Punktrand), unabhaengig vom Filter - siehe
+    // streudiagrammVM()/streudiagramm() und streudiagrammHervorhebungUmschalten().
     streudiagrammHervorhebung: [],
+    // Ob die Seitenleiste neben dem Streudiagramm (Hervorhebung + "Anzeigen")
+    // sichtbar ist - seitwaerts wegschiebbar (statt wie streudiagrammOffen/
+    // histogrammOffen der Hoehe nach), sodass auf der Seite bei Bedarf nur
+    // noch eine Spalte (das Diagramm in voller Breite) uebrig bleibt. Ein
+    // schmaler Griff bleibt sichtbar, um sie wieder einzublenden, die
+    // getroffene Hervorhebung geht dabei nicht verloren.
+    streudiagrammSeitenleisteOffen: true,
     // Regressionsgerade im VM- bzw. Betm-Streudiagramm ein-/ausblenden
     // (bei Betm nur verfuegbar, wenn genau eine Substanz gewaehlt ist, siehe
     // streudiagramm()), siehe streudiagrammRegressionSvg() und
@@ -614,8 +621,9 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
 
     /**
      * Ob ein Datensatz zur aktuellen Streudiagramm-Hervorhebungsauswahl passt
-     * (siehe ``streudiagrammHervorhebung``) - VM: Hauptdelikt, Betm: Rolle
-     * und/oder Besonderheiten. Modellunabhaengig und darum hier statt im
+     * (siehe ``streudiagrammHervorhebung``) - VM: Hauptdelikt und/oder
+     * Besonderheiten und/oder private Geschaedigte, Betm: Rolle und/oder
+     * Besonderheiten. Modellunabhaengig und darum hier statt im
      * Streudiagramm-Abschnitt definiert: sowohl das Histogramm als auch beide
      * Streudiagramme sollen dieselben Urteile golden markieren, damit sich
      * die Auswahl (z.B. "Betrug") in beiden Darstellungen wiederfindet. Auf
@@ -626,6 +634,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       if (this.streudiagrammHervorhebung.length === 0) return false;
       if (this.streudiagrammHervorhebung.includes(record.hauptdelikt)) return true;
       if (this.streudiagrammHervorhebung.includes(record.rolle)) return true;
+      if (this.streudiagrammHervorhebung.includes(record.private_geschaedigte)) return true;
       return (record.besonderheiten || []).some((b) =>
         this.streudiagrammHervorhebung.includes(b)
       );

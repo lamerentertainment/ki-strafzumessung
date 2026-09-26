@@ -13,8 +13,11 @@ Filterpanel keine Substanz gewählt ist (siehe `streudiagramm()`).
 
 Zusaetzlich mit Buttons zur Hervorhebung einzelner Rollen und/oder
 Besonderheiten (goldener Punktrand, unabhaengig vom Filter): siehe
-`streudiagrammHervorhebung` in
-filter.js.
+`streudiagrammHervorhebung` in filter.js. Die gesamte Seitenleiste
+(Hervorhebung + "Anzeigen") laesst sich seitwaerts wegschieben
+(`streudiagrammSeitenleisteOffen`), sodass nur noch das Diagramm als einzige
+Spalte auf der Seite steht; ein schmaler Griff bleibt zum Wiedereinblenden
+sichtbar, die getroffene Hervorhebung geht dabei nicht verloren.
 
 Optional mit linearer Regressionsgerade (Strafmass über log10(Menge)) samt
 Gleichung und einem Eingabefeld, das anhand der Regressionsgeraden das
@@ -91,8 +94,16 @@ Punktgroesse statt eines festen Radius nach diesem Score skaliert, siehe
                 in filter.js). Hover/Fokus laufen deshalb ueber Event-Delegation
                 am <svg> (streudiagrammHover) statt ueber x-on je Punkt.
               {% endcomment %}
+              {% comment %}
+                max-width per Stylesheet auf 760px begrenzt; bei
+                weggeschobener Seitenleiste (streudiagrammSeitenleisteOffen)
+                per Inline-Style aufgehoben, damit das Diagramm dann wirklich
+                die volle verfuegbare Breite ausnutzt statt bei 760px zu
+                stoppen.
+              {% endcomment %}
               <svg viewBox="0 0 640 300" preserveAspectRatio="xMidYMid meet"
                    class="streudiagramm-flaeche" role="img"
+                   :style="!streudiagrammSeitenleisteOffen ? 'max-width: none' : ''"
                    aria-label="Streudiagramm: Strafmass über Menge der gewählten Substanz(en)"
                    @mouseover="streudiagrammHover($event, streudiagramm())"
                    @focusin="streudiagrammHover($event, streudiagramm())"
@@ -114,7 +125,31 @@ Punktgroesse statt eines festen Radius nach diesem Score skaliert, siehe
               </svg>
             </div>
 
-            <div class="streudiagramm-seitenleiste d-flex flex-column gap-3">
+            {# --- Schmaler Griff, wenn die Seitenleiste weggeschoben ist --- #}
+            <button type="button" class="btn btn-sm btn-outline-dark px-1"
+                    x-show="!streudiagrammSeitenleisteOffen"
+                    @click="streudiagrammSeitenleisteOffen = true"
+                    aria-label="Hervorheben/Anzeigen einblenden">
+              <span>◂</span>
+              <span class="badge text-bg-warning ms-1" x-show="streudiagrammHervorhebung.length > 0"
+                    x-text="streudiagrammHervorhebung.length"></span>
+            </button>
+
+            {% comment %}
+              Sichtbarkeit ueber Klassenwechsel (d-flex/d-none) statt x-show:
+              Bootstraps Utility-Klassen sind !important gesetzt und wuerden
+              ein per x-show inline gesetztes "display: none" sonst
+              ueberschreiben - die Seitenleiste bliebe sichtbar, obwohl Alpine
+              sie intern als eingeklappt fuehrt.
+            {% endcomment %}
+            <div class="streudiagramm-seitenleiste flex-column gap-3"
+                 :class="streudiagrammSeitenleisteOffen ? 'd-flex' : 'd-none'">
+              <button type="button" class="btn btn-sm btn-outline-dark px-1 py-0 align-self-end"
+                      @click="streudiagrammSeitenleisteOffen = false"
+                      aria-label="Hervorheben/Anzeigen ausblenden">
+                <span>▸</span>
+              </button>
+
               {# --- Hervorhebung nach Rolle und/oder Besonderheit (goldener Punktrand), unabhaengig vom Filter --- #}
               <template x-if="feldNach('rolle') || feldNach('besonderheiten')">
                 <div class="d-flex flex-column gap-2">
@@ -152,7 +187,7 @@ Punktgroesse statt eines festen Radius nach diesem Score skaliert, siehe
                   <button type="button" class="btn btn-sm text-start"
                           :class="streudiagrammScoreGroesse ? 'btn-dark' : 'btn-outline-secondary'"
                           @click="streudiagrammScoreGroesse = !streudiagrammScoreGroesse">
-                    Nebenverurteilungsscore darstellen
+                    Nebenverurteilungsscore (Anzahl Schuldsprüche) darstellen
                   </button>
                 </div>
               </template>
@@ -202,7 +237,7 @@ Punktgroesse statt eines festen Radius nach diesem Score skaliert, siehe
           </p>
           {# --- Regressionsgleichung + Vorhersage fuer eine frei eingegebene Menge --- #}
           <template x-if="streudiagrammRegressionAnzeigen && streudiagramm().regression">
-            <div class="rounded-3 border bg-body-tertiary p-3 mt-2 small">
+            <div class="rounded-3 border bg-body-secondary p-3 mt-2 small">
               <p class="mb-2 text-body-secondary font-monospace"
                  x-text="streudiagrammRegressionGleichung(streudiagramm())"></p>
               <div class="d-flex flex-wrap align-items-center gap-2">

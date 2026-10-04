@@ -132,6 +132,9 @@ def onehotx_und_y_erstellen(
     df["urteilsdatum"] = pd.to_datetime(df["urteilsdatum"])
     df["urteilsdatum"] = df["urteilsdatum"].map(lambda a: a.year)
     df.rename(columns={"urteilsdatum": "urteilsjahr"}, inplace=True)
+    # urteilsdatum ist nullable; fehlendes urteilsjahr mit dem Median auffüllen,
+    # da z.B. LinearRegression keine NaN-Werte akzeptiert
+    df["urteilsjahr"] = df["urteilsjahr"].fillna(df["urteilsjahr"].median())
 
     # 1hot encoding der kategorialen variablen
     encoder = OneHotEncoder(sparse_output=False)

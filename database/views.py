@@ -46,8 +46,11 @@ from .ai_utils import (
     SANKTIONS_LABELS,
 )
 from .prognoseverlauf import (
+    AUSBLENDUNG_IN_MONATEN,
     BETM_AUSBLENDUNG_IN_MONATEN,
     BETM_KERNBREITE_IN_MONATEN,
+    KERNBREITE_IN_MONATEN,
+    RAMPE,
     verlauf_erstellen,
 )
 from .filterspec import (
@@ -400,10 +403,11 @@ def _entsprechung_klasse(entspricht):
 
 
 # Anzahl der nächsten Nachbarn (nach KNN-Distanz), die im Streudiagramm der
-# Prognoseseite als ähnliche Präjudizien eingezeichnet werden - deutlich mehr als
-# die vier als Karten angezeigten, damit sich die Streuung der Strafmasse im
-# Umfeld der Eingabe ablesen lässt.
-STREUDIAGRAMM_ANZAHL_PRAEJUDIZIEN = 30
+# Prognoseseite als ähnliche Präjudizien eingezeichnet werden - mehr als die vier
+# als Karten angezeigten, damit sich die Streuung der Strafmasse im Umfeld der
+# Eingabe ablesen lässt, aber wenige genug, dass nur wirklich ähnliche Fälle
+# erscheinen.
+STREUDIAGRAMM_ANZAHL_PRAEJUDIZIEN = 10
 
 
 def _praejudizien_streudiagramm_daten(
@@ -416,7 +420,9 @@ def _praejudizien_streudiagramm_daten(
     ergänzt um den Rang nach KNN-Distanz und ob das Präjudiz oben als Karte
     angezeigt wird (``angezeigt``, goldener Punktrand). ``prognose_in_monaten``
     ist None, wenn keine Prognose angezeigt wird (Bagatelldelikt); dann wird nur
-    die eingegebene Deliktssumme markiert.
+    die eingegebene Deliktssumme markiert. Kernbreite, Ausblendung und
+    Farbrampe des Prognoseverlaufs kommen aus ``prognoseverlauf.py``, damit der
+    Verlauf im Streudiagramm dem Verlaufsdiagramm oberhalb entspricht.
     """
     # pks stammen aus dem pandas-Index (numpy-Integer), darum explizit in int
     rang_nach_pk = {int(pk): rang for rang, pk in enumerate(kandidaten_pks, start=1)}
@@ -442,6 +448,11 @@ def _praejudizien_streudiagramm_daten(
             "strafmass": (
                 float(prognose_in_monaten) if prognose_in_monaten is not None else None
             ),
+        },
+        "verlauf": {
+            "kernbreite": KERNBREITE_IN_MONATEN,
+            "ausblendung": AUSBLENDUNG_IN_MONATEN,
+            "rampe": RAMPE,
         },
     }
 

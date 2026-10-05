@@ -89,6 +89,11 @@
         {{ praejudizien_error_message|linebreaksbr }}
     </div>
     {% else %}
+    {% if praejudizien_streudiagramm %}
+    {{ praejudizien_streudiagramm|json_script:"praejudizien-streudiagramm" }}
+    {% include "database/includes/prognose_streudiagramm.html" %}
+    {% endif %}
+
     <div class="row">
         <div class="col">{% include "database/includes/nachbar.html" with nachbar=nachbar %}</div>
         <div class="col">{% include "database/includes/nachbar.html" with nachbar=nachbar2 %}</div>
@@ -111,11 +116,6 @@
     </div>
     {% endif %}
 
-    {% if praejudizien_streudiagramm %}
-    <h2 class="h4 mt-4">Ähnliche Präjudizien im Streudiagramm</h2>
-    {{ praejudizien_streudiagramm|json_script:"praejudizien-streudiagramm" }}
-    {% include "database/includes/prognose_streudiagramm.html" %}
-    {% endif %}
     {% endif %}
 </div>
 {% endif %}

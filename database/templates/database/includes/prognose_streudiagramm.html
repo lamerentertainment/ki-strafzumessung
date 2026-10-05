@@ -3,10 +3,25 @@ Streudiagramm Strafmass (y) / Deliktssumme (x) der naechsten Nachbarn (KNN)
 zur Eingabe auf der Prognoseseite. Markup und Darstellung analog zu
 ``vmstreudiagramm.html`` (Urteilsliste), Logik in
 ``praejudizien_streudiagramm.js`` (baut auf filter.js auf). Erwartet die
-Daten im json_script-Block ``praejudizien-streudiagramm``.
+Daten im json_script-Block ``praejudizien-streudiagramm``. Steht oberhalb
+der Praejudiz-Karten und ist wie in der Urteilsliste ueber
+``streudiagrammOffen`` auf-/zuklappbar (standardmaessig offen).
 {% endcomment %}
 
 <div class="streudiagramm mb-3" x-data="praejudizienStreudiagramm('praejudizien-streudiagramm')" x-cloak>
+  <button type="button" class="btn btn-sm btn-outline-dark"
+          @click="streudiagrammOffen = !streudiagrammOffen"
+          :aria-expanded="streudiagrammOffen ? 'true' : 'false'">
+    <span x-text="streudiagrammOffen ? '▾' : '▸'"></span>
+    Ähnliche Präjudizien im Streudiagramm
+    <template x-if="streudiagrammVM()">
+      <span class="badge text-bg-secondary ms-1">
+        <span x-text="streudiagrammVM().anzahl"></span> Urteile
+      </span>
+    </template>
+  </button>
+
+  <div class="mt-2" x-show="streudiagrammOffen" x-collapse>
   <template x-if="streudiagrammVM()">
     <div class="border rounded-3 p-3 bg-body-tertiary">
       <div class="d-flex flex-wrap align-items-baseline gap-2 mb-2 small text-body-secondary">
@@ -36,10 +51,11 @@ Daten im json_script-Block ``praejudizien-streudiagramm``.
           <line class="streudiagramm-achse" x1="50" y1="12" x2="50" y2="270"></line>
           <line class="streudiagramm-achse" x1="50" y1="270" x2="628" y2="270"></line>
 
-          <g x-html="streudiagrammPunkteSvg(streudiagrammVM())"></g>
-
-          {# Eingabe/Prognose zuletzt, damit die Raute nicht von Punkten verdeckt wird #}
+          {# Prognoseverlauf und Eingabelinie unter den Punkten, damit diese anklickbar bleiben #}
+          <g x-html="prognoseSvg(streudiagrammVM())"></g>
           <g x-html="eingabeSvg(streudiagrammVM())"></g>
+
+          <g x-html="streudiagrammPunkteSvg(streudiagrammVM())"></g>
         </svg>
       </div>
 
@@ -57,9 +73,10 @@ Daten im json_script-Block ``praejudizien-streudiagramm``.
         </span>
       </div>
       <p class="mb-0 mt-1 small text-body-secondary">
-        Jeder Punkt ist ein Präjudiz; Klick öffnet die Detailseite. Golden umrandet sind die oben
+        Jeder Punkt ist ein Präjudiz; Klick öffnet die Detailseite. Golden umrandet sind die unten
         als Karten angezeigten Präjudizien. Die gestrichelte Linie markiert die eingegebene Deliktssumme<span
-          x-show="eingabe.strafmass !== null">, die rote Raute die Strafmassprognose des KI-Modells</span>.
+          x-show="eingabe.strafmass !== null">, der blaue Farbverlauf darauf die Strafmassprognose des
+          KI-Modells (kräftigste Färbung beim prognostizierten Strafmass, wie im Verlaufsdiagramm oben)</span>.
         Geldstrafen sind zu 30 Tagessätzen je Monat umgerechnet.
         <span x-show="streudiagrammScoreGroesse">
           Die Punktgrösse entspricht dem Nebenverurteilungsscore (grösser = höherer Score).
@@ -67,6 +84,7 @@ Daten im json_script-Block ``praejudizien-streudiagramm``.
       </p>
     </div>
   </template>
+  </div>
 
   {# --- Hover-Karte zum einzelnen Punkt --- #}
   <template x-if="streudiagrammPunktKarte">

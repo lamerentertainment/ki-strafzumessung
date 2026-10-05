@@ -1,0 +1,93 @@
+{% comment %}
+Streudiagramm Strafmass (y) / Deliktssumme (x) der naechsten Nachbarn (KNN)
+zur Eingabe auf der Prognoseseite. Markup und Darstellung analog zu
+``vmstreudiagramm.html`` (Urteilsliste), Logik in
+``praejudizien_streudiagramm.js`` (baut auf filter.js auf). Erwartet die
+Daten im json_script-Block ``praejudizien-streudiagramm``.
+{% endcomment %}
+
+<div class="streudiagramm mb-3" x-data="praejudizienStreudiagramm('praejudizien-streudiagramm')" x-cloak>
+  <template x-if="streudiagrammVM()">
+    <div class="border rounded-3 p-3 bg-body-tertiary">
+      <div class="d-flex flex-wrap align-items-baseline gap-2 mb-2 small text-body-secondary">
+        <span>
+          <span x-text="streudiagrammVM().art.label"></span>
+          über <span x-text="streudiagrammVM().mengeLabel"></span>
+          der <span x-text="streudiagrammVM().anzahl"></span> ähnlichsten Präjudizien
+        </span>
+        <button type="button" class="btn btn-sm ms-auto"
+                :class="streudiagrammScoreGroesse ? 'btn-dark' : 'btn-outline-secondary'"
+                @click="streudiagrammScoreGroesse = !streudiagrammScoreGroesse">
+          Nebenverurteilungsscore darstellen
+        </button>
+      </div>
+
+      <div class="streudiagramm-scroll" @mouseleave="streudiagrammPunktVerbergen()">
+        <svg viewBox="0 0 640 300" preserveAspectRatio="xMidYMid meet"
+             class="streudiagramm-flaeche" role="img"
+             aria-label="Streudiagramm: Strafmass über Deliktssumme der ähnlichsten Präjudizien"
+             @mouseover="streudiagrammHover($event, streudiagrammVM())"
+             @focusin="streudiagrammHover($event, streudiagrammVM())"
+             @mousemove="streudiagrammPunktPositionieren($event)"
+             @mouseout="streudiagrammPunktVerbergen()"
+             @focusout="streudiagrammPunktVerbergen()">
+          <g x-html="streudiagrammAchsenSvg(streudiagrammVM())"></g>
+
+          <line class="streudiagramm-achse" x1="50" y1="12" x2="50" y2="270"></line>
+          <line class="streudiagramm-achse" x1="50" y1="270" x2="628" y2="270"></line>
+
+          <g x-html="streudiagrammPunkteSvg(streudiagrammVM())"></g>
+
+          {# Eingabe/Prognose zuletzt, damit die Raute nicht von Punkten verdeckt wird #}
+          <g x-html="eingabeSvg(streudiagrammVM())"></g>
+        </svg>
+      </div>
+
+      <div class="d-flex flex-wrap gap-3 mt-2 small text-body-secondary">
+        <span x-text="streudiagrammVM().achstitelY + ' / ' + streudiagrammVM().mengeLabel + ' (' + streudiagrammVM().einheit + ', logarithmisch)'"></span>
+        <span class="ms-auto d-flex flex-column align-items-start align-items-sm-end gap-1">
+          <template x-for="sanktion in streudiagrammVM().sanktionen" :key="sanktion.code">
+            <span class="d-flex flex-wrap gap-2 align-items-center">
+              <span x-text="sanktion.label + ':'"></span>
+              <span class="histogramm-legende vollzug-0" :class="`sanktion-${sanktion.code}`"></span> bedingt
+              <span class="histogramm-legende vollzug-1" :class="`sanktion-${sanktion.code}`"></span> teilbedingt
+              <span class="histogramm-legende vollzug-2" :class="`sanktion-${sanktion.code}`"></span> unbedingt
+            </span>
+          </template>
+        </span>
+      </div>
+      <p class="mb-0 mt-1 small text-body-secondary">
+        Jeder Punkt ist ein Präjudiz; Klick öffnet die Detailseite. Golden umrandet sind die oben
+        als Karten angezeigten Präjudizien. Die gestrichelte Linie markiert die eingegebene Deliktssumme<span
+          x-show="eingabe.strafmass !== null">, die rote Raute die Strafmassprognose des KI-Modells</span>.
+        Geldstrafen sind zu 30 Tagessätzen je Monat umgerechnet.
+        <span x-show="streudiagrammScoreGroesse">
+          Die Punktgrösse entspricht dem Nebenverurteilungsscore (grösser = höherer Score).
+        </span>
+      </p>
+    </div>
+  </template>
+
+  {# --- Hover-Karte zum einzelnen Punkt --- #}
+  <template x-if="streudiagrammPunktKarte">
+    <div class="kurzsachverhalt-hovercard visible histogramm-hovercard"
+         role="tooltip"
+         :style="`left: ${streudiagrammPunktKartePos.x}px; top: ${streudiagrammPunktKartePos.y}px`">
+      <div class="hovercard-header">
+        <div class="d-flex justify-content-between align-items-baseline gap-2">
+          <span class="hovercard-title fw-bold"
+                x-text="streudiagrammPunktKarte.fall_nr ? `Fall ${streudiagrammPunktKarte.fall_nr}` : 'Urteil'"></span>
+          <span class="hovercard-meta text-body-secondary small"
+                x-text="[streudiagrammPunktKarte.gericht, streudiagrammPunktKarte.datum].filter(Boolean).join(', ')"></span>
+        </div>
+        <div class="small text-body-secondary"
+             x-text="`${streudiagrammPunktKarte.rang}. ähnlichstes Präjudiz`"></div>
+        <div class="hovercard-delikt small mt-1"
+             x-text="streudiagrammPunktKarte.delikt || ''"></div>
+        <div class="small mt-1 fw-semibold"
+             x-text="[streudiagrammPunktKarte.strafmass, streudiagrammPunktKarte.vollzug].filter(Boolean).join(', ')"></div>
+      </div>
+      <div class="hovercard-body mt-2" x-text="streudiagrammPunktKarte.sachverhalt"></div>
+    </div>
+  </template>
+</div>

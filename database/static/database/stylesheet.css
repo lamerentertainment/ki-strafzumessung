@@ -753,3 +753,22 @@ tr[data-pk]:hover td {
     opacity: 0.75;
     pointer-events: none;
 }
+
+/* Eingabe/Prognose im Praejudizien-Streudiagramm der Prognoseseite
+   (prognose_streudiagramm.html, eingabeSvg in praejudizien_streudiagramm.js):
+   gestrichelte senkrechte Linie bei der eingegebenen Deliktssumme, rote Raute
+   beim prognostizierten Strafmass. Rot, weil die Sanktions-/Vollzugsfarben der
+   Punkte (blau/gruen) bereits vergeben sind. */
+.streudiagramm-eingabe {
+    stroke: #dc3545;
+    stroke-width: 1.5;
+    stroke-dasharray: 4 4;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.streudiagramm-prognose {
+    fill: #dc3545;
+    stroke: var(--bs-body-bg, #ffffff);
+    stroke-width: 1.5;
+}

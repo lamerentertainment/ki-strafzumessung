@@ -399,6 +399,53 @@ def _entsprechung_klasse(entspricht):
     return _DIFF_KLASSE_ERFOLG if entspricht else _DIFF_KLASSE_DANGER
 
 
+# Anzahl der nächsten Nachbarn (nach KNN-Distanz), die im Streudiagramm der
+# Prognoseseite als ähnliche Präjudizien eingezeichnet werden - deutlich mehr als
+# die vier als Karten angezeigten, damit sich die Streuung der Strafmasse im
+# Umfeld der Eingabe ablesen lässt.
+STREUDIAGRAMM_ANZAHL_PRAEJUDIZIEN = 30
+
+
+def _praejudizien_streudiagramm_daten(
+    kandidaten_pks, angezeigte_pks, deliktssumme, prognose_in_monaten
+):
+    """Daten für das Streudiagramm ähnlicher Präjudizien auf der Prognoseseite.
+
+    Die Datensätze haben dieselbe Form wie jene der Urteilsliste
+    (``datensaetze_erstellen``), soweit sie das Streudiagramm in filter.js liest,
+    ergänzt um den Rang nach KNN-Distanz und ob das Präjudiz oben als Karte
+    angezeigt wird (``angezeigt``, goldener Punktrand). ``prognose_in_monaten``
+    ist None, wenn keine Prognose angezeigt wird (Bagatelldelikt); dann wird nur
+    die eingegebene Deliktssumme markiert.
+    """
+    # pks stammen aus dem pandas-Index (numpy-Integer), darum explizit in int
+    rang_nach_pk = {int(pk): rang for rang, pk in enumerate(kandidaten_pks, start=1)}
+    angezeigte_pks = {int(pk) for pk in angezeigte_pks}
+    karte = URTEIL_FILTER_CONFIG["karte"]
+    records = {}
+    for urteil in Urteil.objects.filter(pk__in=rang_nach_pk.keys()):
+        rang = rang_nach_pk[urteil.pk]
+        records[str(urteil.pk)] = {
+            "deliktssumme": urteil.deliktssumme,
+            "hauptsanktion": urteil.hauptsanktion,
+            "freiheitsstrafe_in_monaten": urteil.freiheitsstrafe_in_monaten,
+            "anzahl_tagessaetze": urteil.anzahl_tagessaetze,
+            "vollzug": urteil.vollzug,
+            "nebenverurteilungsscore": urteil.nebenverurteilungsscore,
+            "angezeigt": urteil.pk in angezeigte_pks,
+            "_karte": {**karte(urteil), "rang": rang},
+        }
+    return {
+        "records": records,
+        "eingabe": {
+            "deliktssumme": deliktssumme,
+            "strafmass": (
+                float(prognose_in_monaten) if prognose_in_monaten is not None else None
+            ),
+        },
+    }
+
+
 def prognose(request):
     # if this is a POST request we need to process the form data
     if request.method == "POST":
@@ -541,6 +588,17 @@ def prognose(request):
 
                 nachbar_pks = [pk for pk, _ in gefilterte_nachbarn[:4]]
                 distances = [dist for _, dist in gefilterte_nachbarn[:4]]
+                streudiagramm_kandidaten = [pk for pk, _ in gefilterte_nachbarn]
+            else:
+                streudiagramm_kandidaten = list(alle_nachbar_pks)
+
+            praejudizien_streudiagramm = _praejudizien_streudiagramm_daten(
+                streudiagramm_kandidaten[:STREUDIAGRAMM_ANZAHL_PRAEJUDIZIEN],
+                set(nachbar_pks),
+                deliktssumme,
+                # Bei Bagatelldelikten wird keine Prognose angezeigt (siehe Template)
+                vorhersage_strafmass[0] if deliktssumme >= 5000 else None,
+            )
 
             nachbar = Urteil.objects.get(pk=nachbar_pks[0])
             nachbar2 = Urteil.objects.get(pk=nachbar_pks[1])
@@ -722,6 +780,7 @@ def prognose(request):
                     "nachbar3": nachbar3,
                     "nachbar4": nachbar4,
                     "has_more_nachbarn": nachbar3 is not None,
+                    "praejudizien_streudiagramm": praejudizien_streudiagramm,
                 },
             )
 

@@ -1,6 +1,7 @@
 {% comment %}
-Streudiagramm Strafmass (y) / Deliktssumme (x) der naechsten Nachbarn (KNN)
-zur Eingabe auf der Prognoseseite. Markup und Darstellung analog zu
+Streudiagramm Strafmass (y) / Deliktssumme bzw. Substanzmenge (x) der
+naechsten Nachbarn (KNN) zur Eingabe auf den Prognoseseiten (Vermoegens- und
+Betm-Delikte; die x-Achse legt der View fest). Markup und Darstellung analog zu
 ``vmstreudiagramm.html`` (Urteilsliste), Logik in
 ``praejudizien_streudiagramm.js`` (baut auf filter.js auf). Erwartet die
 Daten im json_script-Block ``praejudizien-streudiagramm``. Steht oberhalb
@@ -14,21 +15,26 @@ der Praejudiz-Karten und ist wie in der Urteilsliste ueber
           :aria-expanded="streudiagrammOffen ? 'true' : 'false'">
     <span x-text="streudiagrammOffen ? '▾' : '▸'"></span>
     Ähnliche Präjudizien im Streudiagramm
-    <template x-if="streudiagrammVM()">
+    <template x-if="praejudizienDiagramm()">
       <span class="badge text-bg-secondary ms-1">
-        <span x-text="streudiagrammVM().anzahl"></span> Urteile
+        <span x-text="praejudizienDiagramm().anzahl"></span> Urteile
       </span>
     </template>
   </button>
 
   <div class="mt-2" x-show="streudiagrammOffen" x-collapse>
-  <template x-if="streudiagrammVM()">
+  {# --- Kein Nachbar mit Wert auf der x-Achse (Betm: keiner unter den KNN-Kandidaten enthaelt die Substanz) --- #}
+  <template x-if="!praejudizienDiagramm()">
+    <p class="mb-0 small text-body-secondary border rounded-3 p-3 bg-body-tertiary"
+       x-text="`Unter den ähnlichsten Präjudizien findet sich keines mit einer darstellbaren ${achse.label}.`"></p>
+  </template>
+  <template x-if="praejudizienDiagramm()">
     <div class="border rounded-3 p-3 bg-body-tertiary">
       <div class="d-flex flex-wrap align-items-baseline gap-2 mb-2 small text-body-secondary">
         <span>
-          <span x-text="streudiagrammVM().art.label"></span>
-          über <span x-text="streudiagrammVM().mengeLabel"></span>
-          der <span x-text="streudiagrammVM().anzahl"></span> ähnlichsten Präjudizien
+          <span x-text="praejudizienDiagramm().art.label"></span>
+          über <span x-text="praejudizienDiagramm().mengeLabel"></span>
+          der <span x-text="praejudizienDiagramm().anzahl"></span> ähnlichsten Präjudizien
         </span>
         <button type="button" class="btn btn-sm ms-auto"
                 :class="streudiagrammScoreGroesse ? 'btn-dark' : 'btn-outline-secondary'"
@@ -40,29 +46,29 @@ der Praejudiz-Karten und ist wie in der Urteilsliste ueber
       <div class="streudiagramm-scroll" @mouseleave="streudiagrammPunktVerbergen()">
         <svg viewBox="0 0 640 300" preserveAspectRatio="xMidYMid meet"
              class="streudiagramm-flaeche" role="img"
-             aria-label="Streudiagramm: Strafmass über Deliktssumme der ähnlichsten Präjudizien"
-             @mouseover="streudiagrammHover($event, streudiagrammVM())"
-             @focusin="streudiagrammHover($event, streudiagrammVM())"
+             :aria-label="`Streudiagramm: Strafmass über ${achse.label} der ähnlichsten Präjudizien`"
+             @mouseover="streudiagrammHover($event, praejudizienDiagramm())"
+             @focusin="streudiagrammHover($event, praejudizienDiagramm())"
              @mousemove="streudiagrammPunktPositionieren($event)"
              @mouseout="streudiagrammPunktVerbergen()"
              @focusout="streudiagrammPunktVerbergen()">
-          <g x-html="streudiagrammAchsenSvg(streudiagrammVM())"></g>
+          <g x-html="streudiagrammAchsenSvg(praejudizienDiagramm())"></g>
 
           <line class="streudiagramm-achse" x1="50" y1="12" x2="50" y2="270"></line>
           <line class="streudiagramm-achse" x1="50" y1="270" x2="628" y2="270"></line>
 
           {# Prognoseverlauf und Eingabelinie unter den Punkten, damit diese anklickbar bleiben #}
-          <g x-html="prognoseSvg(streudiagrammVM())"></g>
-          <g x-html="eingabeSvg(streudiagrammVM())"></g>
+          <g x-html="prognoseSvg(praejudizienDiagramm())"></g>
+          <g x-html="eingabeSvg(praejudizienDiagramm())"></g>
 
-          <g x-html="streudiagrammPunkteSvg(streudiagrammVM())"></g>
+          <g x-html="streudiagrammPunkteSvg(praejudizienDiagramm())"></g>
         </svg>
       </div>
 
       <div class="d-flex flex-wrap gap-3 mt-2 small text-body-secondary">
-        <span x-text="streudiagrammVM().achstitelY + ' / ' + streudiagrammVM().mengeLabel + ' (' + streudiagrammVM().einheit + ', logarithmisch)'"></span>
+        <span x-text="praejudizienDiagramm().achstitelY + ' / ' + praejudizienDiagramm().mengeLabel + ' (' + praejudizienDiagramm().einheit + ', logarithmisch)'"></span>
         <span class="ms-auto d-flex flex-column align-items-start align-items-sm-end gap-1">
-          <template x-for="sanktion in streudiagrammVM().sanktionen" :key="sanktion.code">
+          <template x-for="sanktion in praejudizienDiagramm().sanktionen" :key="sanktion.code">
             <span class="d-flex flex-wrap gap-2 align-items-center">
               <span x-text="sanktion.label + ':'"></span>
               <span class="histogramm-legende vollzug-0" :class="`sanktion-${sanktion.code}`"></span> bedingt
@@ -74,10 +80,12 @@ der Praejudiz-Karten und ist wie in der Urteilsliste ueber
       </div>
       <p class="mb-0 mt-1 small text-body-secondary">
         Jeder Punkt ist ein Präjudiz; Klick öffnet die Detailseite. Golden umrandet sind die unten
-        als Karten angezeigten Präjudizien. Die gestrichelte Linie markiert die eingegebene Deliktssumme<span
+        als Karten angezeigten Präjudizien. Die gestrichelte Linie markiert die eingegebene <span x-text="achse.label"></span><span
           x-show="eingabe.strafmass !== null">, der blaue Farbverlauf darauf die Strafmassprognose des
           KI-Modells (kräftigste Färbung beim prognostizierten Strafmass, wie im Verlaufsdiagramm oben)</span>.
         Geldstrafen sind zu 30 Tagessätzen je Monat umgerechnet.
+        <span x-show="achse.typ === 'betm'"
+              x-text="`Gezeigt sind die ähnlichsten Präjudizien, die ${achse.substanz} enthalten; reine Wirkstoff- und Bruttomengen sind zusammengefasst.`"></span>
         <span x-show="streudiagrammScoreGroesse">
           Die Punktgrösse entspricht dem Nebenverurteilungsscore (grösser = höherer Score).
         </span>

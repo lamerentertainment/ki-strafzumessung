@@ -1,4 +1,10 @@
 {% extends "./base.html" %}
+{% load static %}
+
+{% block alpine_komponenten %}
+<script defer src="{% static 'database/filter.js' %}"></script>
+<script defer src="{% static 'database/praejudizien_streudiagramm.js' %}"></script>
+{% endblock alpine_komponenten %}
 
 {% block body %}
 
@@ -112,6 +118,11 @@
         {{ praejudizien_error_message|linebreaksbr }}
     </div>
     {% else %}
+    {% if praejudizien_streudiagramm %}
+    {{ praejudizien_streudiagramm|json_script:"praejudizien-streudiagramm" }}
+    {% include "database/includes/prognose_streudiagramm.html" %}
+    {% endif %}
+
     <div class="row">
         <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar1 %}</div>
         <div class="col">{% include "database/includes/betm_nachbar.html" with nachbar=nachbar2 %}</div>

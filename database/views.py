@@ -54,6 +54,7 @@ from .prognoseverlauf import (
     verlauf_erstellen,
 )
 from .filterspec import (
+    _mengen_aggregieren,
     filterspezifikation_erstellen,
     datensaetze_erstellen,
     URTEIL_FILTER_CONFIG,
@@ -411,49 +412,80 @@ STREUDIAGRAMM_ANZAHL_PRAEJUDIZIEN = 10
 
 
 def _praejudizien_streudiagramm_daten(
-    kandidaten_pks, angezeigte_pks, deliktssumme, prognose_in_monaten
+    urteile_in_rangfolge,
+    angezeigte_pks,
+    achse,
+    eingabe_menge,
+    prognose_in_monaten,
+    kernbreite_in_monaten,
+    ausblendung_in_monaten,
+    record_erstellen,
 ):
-    """Daten für das Streudiagramm ähnlicher Präjudizien auf der Prognoseseite.
+    """Daten für das Streudiagramm ähnlicher Präjudizien auf den Prognoseseiten.
 
-    Die Datensätze haben dieselbe Form wie jene der Urteilsliste
-    (``datensaetze_erstellen``), soweit sie das Streudiagramm in filter.js liest,
-    ergänzt um den Rang nach KNN-Distanz und ob das Präjudiz oben als Karte
-    angezeigt wird (``angezeigt``, goldener Punktrand). ``prognose_in_monaten``
-    ist None, wenn keine Prognose angezeigt wird (Bagatelldelikt); dann wird nur
-    die eingegebene Deliktssumme markiert. Kernbreite, Ausblendung und
-    Farbrampe des Prognoseverlaufs kommen aus ``prognoseverlauf.py``, damit der
-    Verlauf im Streudiagramm dem Verlaufsdiagramm oberhalb entspricht.
+    ``urteile_in_rangfolge`` sind die nächsten Nachbarn nach KNN-Distanz
+    (nächster zuerst). Die Datensätze haben dieselbe Form wie jene der
+    Urteilslisten (``datensaetze_erstellen``), soweit sie das Streudiagramm in
+    filter.js liest - die modellspezifischen Felder liefert ``record_erstellen``
+    -, ergänzt um den Rang nach KNN-Distanz und ob das Präjudiz als Karte
+    angezeigt wird (``angezeigt``, goldener Punktrand).
+
+    ``achse`` beschreibt die x-Achse für praejudizien_streudiagramm.js
+    (Deliktssumme bzw. Menge einer Substanz), ``eingabe_menge`` ist der
+    eingegebene Wert darauf. ``prognose_in_monaten`` ist None, wenn keine
+    Prognose angezeigt wird (z.B. Bagatelldelikt); dann wird nur die Eingabe
+    markiert. Kernbreite, Ausblendung und Farbrampe entsprechen dem
+    Verlaufsdiagramm oberhalb (``prognoseverlauf.py``).
     """
-    # pks stammen aus dem pandas-Index (numpy-Integer), darum explizit in int
-    rang_nach_pk = {int(pk): rang for rang, pk in enumerate(kandidaten_pks, start=1)}
-    angezeigte_pks = {int(pk) for pk in angezeigte_pks}
-    karte = URTEIL_FILTER_CONFIG["karte"]
     records = {}
-    for urteil in Urteil.objects.filter(pk__in=rang_nach_pk.keys()):
-        rang = rang_nach_pk[urteil.pk]
-        records[str(urteil.pk)] = {
-            "deliktssumme": urteil.deliktssumme,
-            "hauptsanktion": urteil.hauptsanktion,
-            "freiheitsstrafe_in_monaten": urteil.freiheitsstrafe_in_monaten,
-            "anzahl_tagessaetze": urteil.anzahl_tagessaetze,
-            "vollzug": urteil.vollzug,
-            "nebenverurteilungsscore": urteil.nebenverurteilungsscore,
-            "angezeigt": urteil.pk in angezeigte_pks,
-            "_karte": {**karte(urteil), "rang": rang},
-        }
+    for rang, urteil in enumerate(urteile_in_rangfolge, start=1):
+        record = record_erstellen(urteil)
+        record.update(
+            {
+                "hauptsanktion": urteil.hauptsanktion,
+                "freiheitsstrafe_in_monaten": urteil.freiheitsstrafe_in_monaten,
+                "anzahl_tagessaetze": urteil.anzahl_tagessaetze,
+                "vollzug": urteil.vollzug,
+                "nebenverurteilungsscore": urteil.nebenverurteilungsscore,
+                "angezeigt": urteil.pk in angezeigte_pks,
+                "_karte": {**record["_karte"], "rang": rang},
+            }
+        )
+        records[str(urteil.pk)] = record
     return {
+        "achse": achse,
         "records": records,
         "eingabe": {
-            "deliktssumme": deliktssumme,
+            "menge": eingabe_menge,
             "strafmass": (
                 float(prognose_in_monaten) if prognose_in_monaten is not None else None
             ),
         },
         "verlauf": {
-            "kernbreite": KERNBREITE_IN_MONATEN,
-            "ausblendung": AUSBLENDUNG_IN_MONATEN,
+            "kernbreite": kernbreite_in_monaten,
+            "ausblendung": ausblendung_in_monaten,
             "rampe": RAMPE,
         },
+    }
+
+
+def _vm_streudiagramm_record(urteil):
+    return {
+        "deliktssumme": urteil.deliktssumme,
+        "_karte": URTEIL_FILTER_CONFIG["karte"](urteil),
+    }
+
+
+def _betm_streudiagramm_record(urteil):
+    """Mengen je Substanz und rein/Gemisch wie in der Betm-Urteilsliste."""
+    return {
+        "betm_menge": _mengen_aggregieren(
+            urteil,
+            BETM_FILTER_CONFIG["abhaengige_spannen"]["betm_menge"],
+            BETM_FILTER_CONFIG["beziehungspfade"],
+        ),
+        "betm": sorted({eintrag.art.name for eintrag in urteil.betm.all()}),
+        "_karte": BETM_FILTER_CONFIG["karte"](urteil),
     }
 
 
@@ -603,12 +635,22 @@ def prognose(request):
             else:
                 streudiagramm_kandidaten = list(alle_nachbar_pks)
 
+            # pks stammen aus dem pandas-Index (numpy-Integer), darum explizit in int
+            streudiagramm_pks = [
+                int(pk)
+                for pk in streudiagramm_kandidaten[:STREUDIAGRAMM_ANZAHL_PRAEJUDIZIEN]
+            ]
+            urteile_nach_pk = Urteil.objects.in_bulk(streudiagramm_pks)
             praejudizien_streudiagramm = _praejudizien_streudiagramm_daten(
-                streudiagramm_kandidaten[:STREUDIAGRAMM_ANZAHL_PRAEJUDIZIEN],
-                set(nachbar_pks),
+                [urteile_nach_pk[pk] for pk in streudiagramm_pks],
+                {int(pk) for pk in nachbar_pks},
+                {"typ": "deliktssumme", "label": "Deliktssumme", "einheit": "CHF"},
                 deliktssumme,
                 # Bei Bagatelldelikten wird keine Prognose angezeigt (siehe Template)
                 vorhersage_strafmass[0] if deliktssumme >= 5000 else None,
+                KERNBREITE_IN_MONATEN,
+                AUSBLENDUNG_IN_MONATEN,
+                _vm_streudiagramm_record,
             )
 
             nachbar = Urteil.objects.get(pk=nachbar_pks[0])
@@ -1347,6 +1389,52 @@ def betm_prognose(request):
             nachbar3 = differenzengenerator(nachbar_objs[2], form, nachbarposliste[2])
             nachbar4 = differenzengenerator(nachbar_objs[3], form, nachbarposliste[3])
 
+            # Streudiagramm ähnlicher Präjudizien: x-Achse ist die Menge der
+            # eingegebenen Hauptsubstanz (Betm 1) - Mengen verschiedener
+            # Substanzen lassen sich nicht auf einer Achse vergleichen (siehe
+            # streudiagramm() in filter.js). Darum die nächsten Nachbarn (nach
+            # KNN-Distanz, allfällige Filter berücksichtigt), die diese Substanz
+            # enthalten - unter den strikt nächsten zehn wären es oft nur wenige.
+            # Karten-Präjudizien ohne die Substanz fehlen deshalb im Diagramm.
+            substanz = form.cleaned_data["betm1"].name
+            fall_nrs_mit_substanz = set(
+                BetmUrteil.objects.filter(
+                    fall_nr__in=[fall_nr for fall_nr, _, _ in selected_neighbors],
+                    betm__art__name=substanz,
+                ).values_list("fall_nr", flat=True)
+            )
+            streudiagramm_fall_nrs = [
+                fall_nr
+                for fall_nr, _, _ in selected_neighbors
+                if fall_nr in fall_nrs_mit_substanz
+            ][:STREUDIAGRAMM_ANZAHL_PRAEJUDIZIEN]
+            betm_urteile_nach_fall_nr = {
+                urteil.fall_nr: urteil
+                for urteil in BetmUrteil.objects.filter(fall_nr__in=streudiagramm_fall_nrs)
+                .select_related("rolle")
+                .prefetch_related("betm__art")
+            }
+            praejudizien_streudiagramm = _praejudizien_streudiagramm_daten(
+                [betm_urteile_nach_fall_nr[fall_nr] for fall_nr in streudiagramm_fall_nrs],
+                {nachbar.pk for nachbar in nachbar_objs},
+                {
+                    "typ": "betm",
+                    "substanz": substanz,
+                    "label": f"Menge {substanz}",
+                    "einheit": BETM_FILTER_CONFIG["abhaengige_spannen"]["betm_menge"][
+                        "einheiten_je_schluessel"
+                    ].get(substanz, "g"),
+                },
+                form.cleaned_data["betm1_menge"],
+                # Nur bei Freiheits-/Geldstrafe wird ein Strafmass angezeigt (siehe Template)
+                vorhersage_strafmass
+                if vorhersage_hauptsanktion in ("Freiheitsstrafe", "Geldstrafe")
+                else None,
+                BETM_KERNBREITE_IN_MONATEN,
+                BETM_AUSBLENDUNG_IN_MONATEN,
+                _betm_streudiagramm_record,
+            )
+
             context = {
                 "form": form,
                 "display_eingabeformular_button": "d-inline-flex",
@@ -1357,6 +1445,7 @@ def betm_prognose(request):
                 "wahrscheinlichkeiten_sanktionsart": wahrscheinlichkeiten_sanktionsart,
                 "vorhersage_strafmass": vorhersage_strafmass,
                 "prognoseverlauf": prognoseverlauf,
+                "praejudizien_streudiagramm": praejudizien_streudiagramm,
                 "nachbar1": nachbar1,
                 "nachbar2": nachbar2,
                 "nachbar3": nachbar3,

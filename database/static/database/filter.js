@@ -89,6 +89,11 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       });
       this.$watch("q", () => this.anwenden());
       this.$watch("zustand", () => this.anwenden(), { deep: true });
+      // Hervorhebung und Regressions-Schalter filtern nicht, gehoeren aber
+      // ebenfalls in den kopierbaren Link (siehe inUrlSchreiben()).
+      this.$watch("streudiagrammHervorhebung", () => this.inUrlSchreiben(), { deep: true });
+      this.$watch("streudiagrammRegressionAnzeigen", () => this.inUrlSchreiben());
+      this.$watch("streudiagrammRegressionAufteilen", () => this.inUrlSchreiben());
       this.anwenden();
     },
 
@@ -1620,6 +1625,15 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           if (zustand.max !== "") params.set(`${feld.name}_max`, zustand.max);
         }
       });
+      // Hervorhebungen je als eigener ``hl``-Parameter ``feld:wert`` (statt
+      // mit "|" verkettet), damit Feldwerte beliebige Zeichen enthalten
+      // koennen; Bool-Werte als "1"/"0" wie bei den Bool-Filtern.
+      this.streudiagrammHervorhebung.forEach(({ feld, wert }) => {
+        const text = typeof wert === "boolean" ? (wert ? "1" : "0") : wert;
+        params.append("hl", `${feld}:${text}`);
+      });
+      if (this.streudiagrammRegressionAnzeigen) params.set("reg", "1");
+      if (this.streudiagrammRegressionAufteilen) params.set("reg_split", "1");
       const suchteil = params.toString();
       const ziel = suchteil ? `${location.pathname}?${suchteil}` : location.pathname;
       history.replaceState(null, "", ziel);
@@ -1649,6 +1663,16 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           }
         }
       });
+      this.streudiagrammHervorhebung = params.getAll("hl").flatMap((eintrag) => {
+        const trenner = eintrag.indexOf(":");
+        if (trenner === -1) return [];
+        const feld = eintrag.slice(0, trenner);
+        const text = eintrag.slice(trenner + 1);
+        const wert = this.feldNach(feld)?.typ === "bool" ? text === "1" : text;
+        return [{ feld, wert }];
+      });
+      this.streudiagrammRegressionAnzeigen = params.get("reg") === "1";
+      this.streudiagrammRegressionAufteilen = params.get("reg_split") === "1";
       if (this.anzahlAktiv() > 0) this.aufgeklappt = true;
     },
 

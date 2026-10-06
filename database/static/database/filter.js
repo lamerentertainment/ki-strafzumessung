@@ -32,10 +32,14 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     streudiagrammOffen: true,
     streudiagrammPunktKarte: null,
     streudiagrammPunktKartePos: { x: 0, y: 0 },
-    // Manuelle Hervorhebung bestimmter Hauptdelikte/Besonderheiten/privater
-    // Geschaedigter (VM) bzw. Rollen/Besonderheiten (Betm) im Streudiagramm
-    // (goldener Punktrand), unabhaengig vom Filter - siehe
-    // streudiagrammVM()/streudiagramm() und streudiagrammHervorhebungUmschalten().
+    // Manuelle Hervorhebung bestimmter Feldwerte (goldener Punkt-/Blockrand),
+    // unabhaengig vom Filter - je Eintrag ``{ feld, wert }``, damit gleiche
+    // Codes verschiedener Felder (z.B. '0' bei Geschlecht und Nationalitaet)
+    // nicht zusammenfallen. Gesetzt ueber die Seitenleiste neben dem
+    // Streudiagramm (VM: Hauptdelikt/Besonderheiten/private Geschaedigte,
+    // Betm: Rolle/Besonderheiten) oder auf allen Listen ueber den goldenen
+    // Rand um jeden Chip im Filtermenue (filterfeld.html);
+    // siehe istHervorgehoben() und streudiagrammHervorhebungUmschalten().
     streudiagrammHervorhebung: [],
     // Ob die Seitenleiste neben dem Streudiagramm (Hervorhebung + "Anzeigen")
     // sichtbar ist - seitwaerts wegschiebbar (statt wie streudiagrammOffen/
@@ -620,24 +624,22 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     // --- Strafmasshistogramm -------------------------------------------------
 
     /**
-     * Ob ein Datensatz zur aktuellen Streudiagramm-Hervorhebungsauswahl passt
-     * (siehe ``streudiagrammHervorhebung``) - VM: Hauptdelikt und/oder
-     * Besonderheiten und/oder private Geschaedigte, Betm: Rolle und/oder
-     * Besonderheiten. Modellunabhaengig und darum hier statt im
+     * Ob ein Datensatz zur aktuellen Hervorhebungsauswahl passt (siehe
+     * ``streudiagrammHervorhebung``). Modellunabhaengig und darum hier statt im
      * Streudiagramm-Abschnitt definiert: sowohl das Histogramm als auch beide
      * Streudiagramme sollen dieselben Urteile golden markieren, damit sich
      * die Auswahl (z.B. "Betrug") in beiden Darstellungen wiederfindet. Auf
-     * Modellen ohne Hervorhebungs-UI (Sexual-/Gewaltdelikte) bleibt die
-     * Auswahl immer leer, darum aendert sich dort nichts.
+     * Listen ohne Streudiagramm (Sexual-/Gewaltdelikte) wirkt sie nur im
+     * Histogramm.
      */
     istHervorgehoben(record) {
-      if (this.streudiagrammHervorhebung.length === 0) return false;
-      if (this.streudiagrammHervorhebung.includes(record.hauptdelikt)) return true;
-      if (this.streudiagrammHervorhebung.includes(record.rolle)) return true;
-      if (this.streudiagrammHervorhebung.includes(record.private_geschaedigte)) return true;
-      return (record.besonderheiten || []).some((b) =>
-        this.streudiagrammHervorhebung.includes(b)
-      );
+      // ODER ueber alle gewaehlten Eintraege, auch felduebergreifend
+      return this.streudiagrammHervorhebung.some(({ feld, wert }) => {
+        const feldwert = record[feld];
+        if (Array.isArray(feldwert)) return feldwert.includes(wert);
+        if (typeof wert === "boolean") return feldwert === wert;
+        return String(feldwert) === wert;
+      });
     },
 
     /**
@@ -1105,9 +1107,10 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     },
 
     /**
-     * Hervorhebung eines Werts im Streudiagramm ein-/ausschalten - im
+     * Hervorhebung eines Feldwerts ein-/ausschalten - z.B. im
      * VM-Streudiagramm ein Hauptdelikt, im Betm-Streudiagramm eine
-     * Besonderheit (ODER-Verknuepfung wie bei den gewoehnlichen Chip-Filtern,
+     * Besonderheit, auf allen Listen auch jeder Chip im Filtermenue ueber
+     * seinen goldenen Rand (ODER-Verknuepfung wie bei den gewoehnlichen Chip-Filtern,
      * siehe ``umschalten``). Bewusst getrennt von ``zustand``/``trifftZu``:
      * die Hervorhebung soll die Treffermenge nur mit einem goldenen
      * Punktrand markieren, nicht zusaetzlich filtern - man will ja gerade
@@ -1115,14 +1118,37 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
      * bzw. Faelle mit Gestaendnisrabatt innerhalb aller Betm-Urteile
      * einordnen.
      */
-    streudiagrammHervorhebungUmschalten(wert) {
-      const index = this.streudiagrammHervorhebung.indexOf(wert);
-      if (index === -1) this.streudiagrammHervorhebung.push(wert);
+    streudiagrammHervorhebungUmschalten(feld, wert) {
+      const index = this.streudiagrammHervorhebung.findIndex(
+        (eintrag) => eintrag.feld === feld && eintrag.wert === wert
+      );
+      if (index === -1) this.streudiagrammHervorhebung.push({ feld, wert });
       else this.streudiagrammHervorhebung.splice(index, 1);
     },
 
-    streudiagrammHervorhebungAktiv(wert) {
-      return this.streudiagrammHervorhebung.includes(wert);
+    streudiagrammHervorhebungAktiv(feld, wert) {
+      return this.streudiagrammHervorhebung.some(
+        (eintrag) => eintrag.feld === feld && eintrag.wert === wert
+      );
+    },
+
+    /**
+     * Gewaehlte Hervorhebungen als einzeln entfernbare Chips fuers
+     * Filterpanel (analog zu aktiveChips()) - sonst waere eine ueber den
+     * Chip-Rand gesetzte Hervorhebung bei zugeklapptem Filtermenue nirgends
+     * mehr als Auswahl sichtbar.
+     */
+    hervorhebungChips() {
+      return this.streudiagrammHervorhebung.map(({ feld, wert }) => {
+        const spec = this.feldNach(feld);
+        let bezeichnung = wert;
+        if (typeof wert === "boolean") bezeichnung = wert ? "ja" : "nein";
+        else if (spec && spec.optionen) {
+          const option = spec.optionen.find((o) => o.value === wert);
+          if (option) bezeichnung = option.label;
+        }
+        return { feld, wert, label: `${spec ? spec.label : feld}: ${bezeichnung}` };
+      });
     },
 
     /**

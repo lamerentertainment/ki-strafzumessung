@@ -9,7 +9,8 @@ Das umgebende Template muss die Alpine-Komponente bereitstellen
 (`x-data="urteilsFilter('filter-spec', 'filter-records')"`), damit auch die
 sortierbaren Spaltenkoepfe der Tabelle im selben Scope liegen. Die Tabelle
 muss `data-urteilsliste` am <tbody> und `data-pk="{{ pk }}"` an jeder <tr>
-    tragen. Ohne JavaScript bleibt die vollstaendige Liste sichtbar, das Panel
+    tragen. Die Chips im Filtermenue haben einen anklickbaren Rand zum blossen
+    Hervorheben (siehe filterfeld.html). Ohne JavaScript bleibt die vollstaendige Liste sichtbar, das Panel
     bleibt dank x-cloak verborgen.
     {% endcomment %}
     {{ filter_spec|json_script:"filter-spec" }}
@@ -138,6 +139,19 @@ muss `data-urteilsliste` am <tbody> und `data-pk="{{ pk }}"` an jeder <tr>
         </template>
         <button type="button" class="btn btn-sm btn-link text-decoration-none py-0" @click="zuruecksetzen()">alle
           zurücksetzen</button>
+      </div>
+
+      {# --- Zeile 2b: Hervorhebungen (goldener Chip-Rand bzw. Seitenleiste beim Streudiagramm), filtern nicht --- #}
+      <div class="d-flex flex-wrap gap-1 align-items-center mt-2" x-show="streudiagrammHervorhebung.length > 0">
+        <span class="small text-body-secondary me-1">Hervorgehoben:</span>
+        <template x-for="chip in hervorhebungChips()" :key="chip.label">
+          <button type="button" class="btn btn-sm btn-warning rounded-pill py-0"
+            @click="streudiagrammHervorhebungUmschalten(chip.feld, chip.wert)">
+            <span x-text="chip.label"></span> <span aria-hidden="true">&times;</span>
+          </button>
+        </template>
+        <button type="button" class="btn btn-sm btn-link text-decoration-none py-0"
+          @click="streudiagrammHervorhebung = []">alle zurücksetzen</button>
       </div>
 
       {# --- Zeile 3: alle Felder, thematisch gruppiert --- #}

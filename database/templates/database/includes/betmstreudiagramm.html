@@ -160,8 +160,8 @@ Punktgroesse statt eines festen Radius nach diesem Score skaliert, siehe
                         <span class="small text-body-secondary fst-italic">Rolle</span>
                         <template x-for="option in feldNach('rolle').optionen" :key="option.value">
                           <button type="button" class="btn btn-sm text-start"
-                                  :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
-                                  @click="streudiagrammHervorhebungUmschalten(option.value)">
+                                  :class="streudiagrammHervorhebungAktiv('rolle', option.value) ? 'btn-warning' : 'btn-outline-secondary'"
+                                  @click="streudiagrammHervorhebungUmschalten('rolle', option.value)">
                             <span x-text="option.label"></span>
                           </button>
                         </template>
@@ -172,8 +172,8 @@ Punktgroesse statt eines festen Radius nach diesem Score skaliert, siehe
                         <span class="small text-body-secondary fst-italic">Besonderheiten</span>
                         <template x-for="option in feldNach('besonderheiten').optionen" :key="option.value">
                           <button type="button" class="btn btn-sm text-start"
-                                  :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
-                                  @click="streudiagrammHervorhebungUmschalten(option.value)">
+                                  :class="streudiagrammHervorhebungAktiv('besonderheiten', option.value) ? 'btn-warning' : 'btn-outline-secondary'"
+                                  @click="streudiagrammHervorhebungUmschalten('besonderheiten', option.value)">
                             <span x-text="option.label"></span>
                           </button>
                         </template>

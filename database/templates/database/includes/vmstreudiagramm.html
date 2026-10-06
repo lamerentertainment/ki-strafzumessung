@@ -142,8 +142,8 @@ eines festen Radius nach diesem Score skaliert, siehe
                         <span class="small text-body-secondary fst-italic">Hauptdelikt</span>
                         <template x-for="option in feldNach('hauptdelikt').optionen" :key="option.value">
                           <button type="button" class="btn btn-sm text-start"
-                                  :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
-                                  @click="streudiagrammHervorhebungUmschalten(option.value)">
+                                  :class="streudiagrammHervorhebungAktiv('hauptdelikt', option.value) ? 'btn-warning' : 'btn-outline-secondary'"
+                                  @click="streudiagrammHervorhebungUmschalten('hauptdelikt', option.value)">
                             <span x-text="option.label"></span>
                           </button>
                         </template>
@@ -156,8 +156,8 @@ eines festen Radius nach diesem Score skaliert, siehe
                             <span class="small text-body-secondary fst-italic">Besonderheiten</span>
                             <template x-for="option in feldNach('besonderheiten').optionen" :key="option.value">
                               <button type="button" class="btn btn-sm text-start"
-                                      :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
-                                      @click="streudiagrammHervorhebungUmschalten(option.value)">
+                                      :class="streudiagrammHervorhebungAktiv('besonderheiten', option.value) ? 'btn-warning' : 'btn-outline-secondary'"
+                                      @click="streudiagrammHervorhebungUmschalten('besonderheiten', option.value)">
                                 <span x-text="option.label"></span>
                               </button>
                             </template>
@@ -168,8 +168,8 @@ eines festen Radius nach diesem Score skaliert, siehe
                             <span class="small text-body-secondary fst-italic">private Geschädigte</span>
                             <template x-for="option in feldNach('private_geschaedigte').optionen" :key="option.value">
                               <button type="button" class="btn btn-sm text-start"
-                                      :class="streudiagrammHervorhebungAktiv(option.value) ? 'btn-warning' : 'btn-outline-secondary'"
-                                      @click="streudiagrammHervorhebungUmschalten(option.value)">
+                                      :class="streudiagrammHervorhebungAktiv('private_geschaedigte', option.value) ? 'btn-warning' : 'btn-outline-secondary'"
+                                      @click="streudiagrammHervorhebungUmschalten('private_geschaedigte', option.value)">
                                 <span x-text="option.label"></span>
                               </button>
                             </template>
@@ -222,8 +222,8 @@ eines festen Radius nach diesem Score skaliert, siehe
           <p class="mb-0 mt-1 small text-body-secondary">
             Jeder Punkt ist ein Urteil; Klick öffnet die Detailseite.
             <span x-show="streudiagrammHervorhebung.length > 0">
-              Golden umrandete Punkte betreffen eines der oben gewählten Hauptdelikte,
-              Besonderheiten und/oder private Geschädigte.
+              Golden umrandete Punkte entsprechen mindestens einem der hervorgehobenen
+              Kriterien (Seitenleiste bzw. goldener Chip-Rand im Filtermenü).
             </span>
             <span x-show="streudiagrammScoreGroesse">
               Die Punktgrösse entspricht dem Nebenverurteilungsscore (grösser = höherer Score).

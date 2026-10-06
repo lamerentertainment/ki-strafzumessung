@@ -3,6 +3,13 @@ Ein einzelnes Bedienelement des Filterpanels. Erwartet `feld` aus der
 Filterspezifikation (database/filterspec.py). Das Bedienelement richtet sich
 nach dem Feldtyp: Chips fuer Auswahlfelder, Dreizustands-Schalter fuer
 Boolesche Felder, Von/Bis-Paare fuer Zahlen und Daten.
+
+Um jeden Auswahl-Chip bzw. um "ja"/"nein" ein schmaler,
+anklickbarer Rand (.hervorhebungsrand): Klick auf den Chip filtert wie
+gewohnt, Klick auf den Rand hebt die betreffenden Urteile in Histogramm und
+Streudiagramm nur golden hervor (streudiagrammHervorhebung in filter.js),
+ohne die Treffermenge einzuschraenken. @click.self, damit ein Klick auf den
+Chip selbst nicht zusaetzlich die Hervorhebung umschaltet.
 {% endcomment %}
 <div class="filterfeld mb-3">
   <label class="form-label mb-1 small fw-semibold d-flex align-items-center gap-1">
@@ -24,6 +31,10 @@ Boolesche Felder, Von/Bis-Paare fuer Zahlen und Daten.
   {% elif feld.typ == 'choice' or feld.typ == 'multi' %}
     <div class="d-flex flex-wrap gap-1">
       {% for option in feld.optionen %}
+        <span class="hervorhebungsrand"
+              :class="streudiagrammHervorhebungAktiv('{{ feld.name }}', '{{ option.value|escapejs }}') ? 'aktiv' : ''"
+              title="Rand anklicken: Urteile nur hervorheben statt filtern"
+              @click.self="streudiagrammHervorhebungUmschalten('{{ feld.name }}', '{{ option.value|escapejs }}')">
         <button type="button"
                 class="btn btn-sm filterchip"
                 :class="istGewaehlt('{{ feld.name }}', '{{ option.value|escapejs }}')
@@ -38,26 +49,42 @@ Boolesche Felder, Von/Bis-Paare fuer Zahlen und Daten.
           <span class="badge rounded-pill text-bg-light ms-1"
                 x-text="anzahl('{{ feld.name }}', '{{ option.value|escapejs }}')"></span>
         </button>
+        </span>
       {% endfor %}
     </div>
 
   {% elif feld.typ == 'bool' %}
-    <div class="btn-group btn-group-sm" role="group">
+    {% comment %}
+      Wegen des Hervorhebungsrands keine btn-group: deren Kanten-Styling setzt
+      direkt benachbarte .btn voraus und bricht, sobald ein Rand dazwischen
+      liegt.
+    {% endcomment %}
+    <div class="d-flex flex-wrap align-items-center gap-1 filterfeld-bool" role="group">
       <button type="button" class="btn"
               :class="zustand['{{ feld.name }}'] === null ? 'btn-secondary' : 'btn-outline-secondary'"
               @click="zustand['{{ feld.name }}'] = null">egal</button>
+      <span class="hervorhebungsrand"
+            :class="streudiagrammHervorhebungAktiv('{{ feld.name }}', true) ? 'aktiv' : ''"
+            title="Rand anklicken: Urteile nur hervorheben statt filtern"
+            @click.self="streudiagrammHervorhebungUmschalten('{{ feld.name }}', true)">
       <button type="button" class="btn"
               :class="zustand['{{ feld.name }}'] === true ? 'btn-primary' : 'btn-outline-secondary'"
               :disabled="zustand['{{ feld.name }}'] !== true && anzahl('{{ feld.name }}', true) === 0"
               @click="boolSetzen('{{ feld.name }}', true)">
         ja <span class="badge rounded-pill text-bg-light ms-1" x-text="anzahl('{{ feld.name }}', true)"></span>
       </button>
+      </span>
+      <span class="hervorhebungsrand"
+            :class="streudiagrammHervorhebungAktiv('{{ feld.name }}', false) ? 'aktiv' : ''"
+            title="Rand anklicken: Urteile nur hervorheben statt filtern"
+            @click.self="streudiagrammHervorhebungUmschalten('{{ feld.name }}', false)">
       <button type="button" class="btn"
               :class="zustand['{{ feld.name }}'] === false ? 'btn-primary' : 'btn-outline-secondary'"
               :disabled="zustand['{{ feld.name }}'] !== false && anzahl('{{ feld.name }}', false) === 0"
               @click="boolSetzen('{{ feld.name }}', false)">
         nein <span class="badge rounded-pill text-bg-light ms-1" x-text="anzahl('{{ feld.name }}', false)"></span>
       </button>
+      </span>
     </div>
 
   {% else %}

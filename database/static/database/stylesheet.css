@@ -308,6 +308,34 @@ h1 {
     --bs-btn-font-size: .8rem;
 }
 .filterpanel .filterchip .badge { font-weight: 500; }
+
+/* Anklickbarer Rand um einen Filter-Chip (filterfeld.html):
+   Klick auf den Rand hebt hervor statt zu filtern. Beim Hovern ueber den
+   Rand (nicht ueber den Chip selbst, daher :has) leicht golden, bei aktiver
+   Hervorhebung voll golden wie die btn-warning-Buttons neben dem
+   Streudiagramm. */
+.filterpanel .hervorhebungsrand {
+    display: inline-flex;
+    padding: 3px;
+    border-radius: calc(var(--bs-border-radius-sm, .25rem) + 3px);
+    cursor: pointer;
+    transition: background-color .1s ease-in-out;
+}
+.filterpanel .hervorhebungsrand:hover:not(:has(> .btn:hover)) {
+    background-color: rgba(255, 193, 7, .55);
+}
+.filterpanel .hervorhebungsrand.aktiv,
+.filterpanel .hervorhebungsrand.aktiv:hover {
+    background-color: #ffc107;
+}
+/* Ja/Nein-Schalter mit Hervorhebungsrand stehen ohne btn-group-sm da (siehe
+   filterfeld.html) - Groesse darum hier wie bei .btn-sm setzen. */
+.filterpanel .filterfeld-bool .btn {
+    --bs-btn-padding-y: .25rem;
+    --bs-btn-padding-x: .5rem;
+    --bs-btn-font-size: .875rem;
+    --bs-btn-border-radius: var(--bs-border-radius-sm);
+}
 .filterpanel .accordion-button::after { margin-left: .5rem; }
 .filterpanel .accordion-button:not(.collapsed) { color: inherit; box-shadow: none; }
 .filterpanel .filterfeld .form-label { margin-bottom: .25rem; }

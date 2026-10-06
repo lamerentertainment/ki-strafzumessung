@@ -782,6 +782,27 @@ tr[data-pk]:hover td {
     pointer-events: none;
 }
 
+/* Aufgeteilte Regression (streudiagrammRegressionAufteilen in filter.js):
+   Gerade der hervorgehobenen Urteile im Gold der Hervorhebung (etwas
+   dunkler und dicker, damit sie auf hellem Grund sichtbar bleibt), die der
+   uebrigen Urteile grau. Die Legende in der Gleichungszeile zeigt dieselbe
+   Strichart. */
+.streudiagramm-regression.hervorgehoben {
+    stroke: #e0a800;
+    stroke-width: 3;
+    opacity: 1;
+}
+.streudiagramm-regression.uebrige { stroke: #6c757d; }
+.streudiagramm-regression-legende {
+    display: inline-block;
+    flex: 0 0 1.75rem;
+    width: 1.75rem;
+    border-top: 2px dashed #212529;
+    transform: translateY(-.25em);
+}
+.streudiagramm-regression-legende.hervorgehoben { border-top: 3px dashed #e0a800; }
+.streudiagramm-regression-legende.uebrige { border-top-color: #6c757d; }
+
 /* Eingabe/Prognose im Praejudizien-Streudiagramm der Prognoseseite
    (prognose_streudiagramm.html, eingabeSvg/prognoseSvg in
    praejudizien_streudiagramm.js): gestrichelte senkrechte Linie bei der

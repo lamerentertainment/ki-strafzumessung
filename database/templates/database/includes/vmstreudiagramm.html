@@ -26,6 +26,10 @@ Deliktssumme vorhersagt - siehe
 Umschalter "Nebenverurteilungsscore darstellen", der die Punktgroesse statt
 eines festen Radius nach diesem Score skaliert, siehe
 ``streudiagrammScoreGroesse``/``streudiagrammRadius`` in filter.js.
+Bei aktiver Hervorhebung laesst sich die Regressionsgerade "nach
+Hervorhebung aufteilen" (``streudiagrammRegressionAufteilen``): je eine
+Gerade samt Gleichung/Vorhersage nur ueber die hervorgehobenen und nur ueber
+die uebrigen Urteile, siehe ``streudiagrammRegressionsVarianten``.
 {% endcomment %}
 
 <div class="streudiagramm mb-3" x-cloak>
@@ -199,6 +203,13 @@ eines festen Radius nach diesem Score skaliert, siehe
                         @click="streudiagrammRegressionAnzeigen = !streudiagrammRegressionAnzeigen">
                   Regressionsgerade
                 </button>
+                {# Nur bei aktiver Hervorhebung: getrennte Geraden fuer hervorgehobene/uebrige Urteile #}
+                <button type="button" class="btn btn-sm text-start"
+                        x-show="streudiagrammRegressionAnzeigen && streudiagrammHervorhebung.length > 0"
+                        :class="streudiagrammRegressionAufteilen ? 'btn-warning' : 'btn-outline-secondary'"
+                        @click="streudiagrammRegressionAufteilen = !streudiagrammRegressionAufteilen">
+                  nach Hervorhebung aufteilen
+                </button>
               </div>
             </div>
           </div>
@@ -232,11 +243,23 @@ eines festen Radius nach diesem Score skaliert, siehe
           {# --- Regressionsgleichung + Vorhersage fuer eine frei eingegebene Deliktssumme --- #}
           <template x-if="streudiagrammRegressionAnzeigen && streudiagrammVM().regression">
             <div class="rounded-3 border bg-body-secondary p-3 mt-2 small">
-              <p class="mb-2 text-body-secondary font-monospace"
-                 x-text="streudiagrammRegressionGleichung(streudiagrammVM())"></p>
+              <template x-for="variante in streudiagrammRegressionsVarianten(streudiagrammVM())" :key="variante.key">
+                <p class="mb-2 text-body-secondary font-monospace d-flex align-items-baseline gap-2">
+                  <span class="streudiagramm-regression-legende" x-show="variante.label"
+                        :class="variante.klasse"></span>
+                  <span x-text="(variante.label ? variante.label + ': ' : '')
+                                + (variante.regression
+                                    ? streudiagrammRegressionGleichung(streudiagrammVM(), variante.regression)
+                                    : 'zu wenige Urteile für eine Regressionsgerade')"></span>
+                </p>
+              </template>
+              {# Nur wenn sich die aufgeteilten Geraden im gemeinsamen Bereich nicht schneiden #}
+              <template x-if="streudiagrammRegressionHinweis(streudiagrammVM())">
+                <p class="mb-2 fw-semibold" x-text="streudiagrammRegressionHinweis(streudiagrammVM())"></p>
+              </template>
               <div class="d-flex flex-wrap align-items-center gap-2">
                 <label for="streudiagramm-regression-eingabe" class="text-body-secondary mb-0">
-                  Vorhersage für Strafmass basierend auf obiger Regressionsgleichung:
+                  Vorhersage für Strafmass basierend auf obiger Regressionsgleichung (bzw. -gleichungen):
                 </label>
                 <div class="input-group input-group-sm" style="max-width: 12rem;">
                   <span class="input-group-text">CHF</span>
@@ -244,16 +267,19 @@ eines festen Radius nach diesem Score skaliert, siehe
                          class="form-control" placeholder="z.B. 50000"
                          x-model="streudiagrammRegressionEingabe">
                 </div>
-                <template x-if="streudiagrammRegressionVorhersage(streudiagrammVM())">
-                  <span>
-                    ≈
-                    <span class="fw-semibold"
-                          x-text="streudiagrammRegressionVorhersage(streudiagrammVM()).text"></span>
-                    <span class="text-body-secondary"
-                          x-show="streudiagrammRegressionVorhersage(streudiagrammVM()).ausserhalbBereich">
-                      (ausserhalb des Datenbereichs, Extrapolation)
+                <template x-for="variante in streudiagrammRegressionsVarianten(streudiagrammVM())" :key="variante.key">
+                  <template x-if="streudiagrammRegressionVorhersage(streudiagrammVM(), variante.regression)">
+                    <span>
+                      <span class="text-body-secondary" x-show="variante.label" x-text="variante.label + ':'"></span>
+                      ≈
+                      <span class="fw-semibold"
+                            x-text="streudiagrammRegressionVorhersage(streudiagrammVM(), variante.regression).text"></span>
+                      <span class="text-body-secondary"
+                            x-show="streudiagrammRegressionVorhersage(streudiagrammVM(), variante.regression).ausserhalbBereich">
+                        (ausserhalb des Datenbereichs, Extrapolation)
+                      </span>
                     </span>
-                  </span>
+                  </template>
                 </template>
               </div>
             </div>

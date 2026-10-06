@@ -53,6 +53,10 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     // streudiagramm()), siehe streudiagrammRegressionSvg() und
     // streudiagrammRegressionGleichung().
     streudiagrammRegressionAnzeigen: false,
+    // Bei aktiver Hervorhebung statt einer gemeinsamen zwei getrennte
+    // Regressionsgeraden zeigen - eine nur ueber die hervorgehobenen, eine
+    // nur ueber die uebrigen Urteile, siehe streudiagrammRegressionsVarianten().
+    streudiagrammRegressionAufteilen: false,
     // Frei eingegebene Deliktssumme bzw. Menge (Gramm/Stk.) fuer die
     // Strafmass-Vorhersage anhand der Regressionsgeraden, siehe
     // streudiagrammRegressionVorhersage().
@@ -1031,10 +1035,9 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         // ueber mehrere Substanzen waere ohne Aussagekraft, siehe auch die
         // gleiche Einschraenkung fuer die Achse selbst oben in diesem
         // Kommentar. Auf log10(Menge) wie bei streudiagrammVM(), siehe dort.
-        regression:
-          gewaehlt.length === 1
-            ? this.linearRegression(punkte.map((p) => ({ x: Math.log10(p.menge), y: p.strafmass })))
-            : null,
+        ...(gewaehlt.length === 1
+          ? this.streudiagrammRegressionen(punkte)
+          : { regression: null, regressionHervorgehoben: null, regressionUebrige: null }),
       };
     },
 
@@ -1100,9 +1103,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         // erscheint darum als Gerade im Diagramm (siehe streudiagrammX) - eine
         // Regression auf den Rohwerten waere zudem von den wenigen sehr hohen
         // Deliktssummen dominiert und im Bild als Kurve sichtbar.
-        regression: this.linearRegression(
-          punkte.map((p) => ({ x: Math.log10(p.menge), y: p.strafmass }))
-        ),
+        ...this.streudiagrammRegressionen(punkte),
       };
     },
 
@@ -1149,6 +1150,104 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
         }
         return { feld, wert, label: `${spec ? spec.label : feld}: ${bezeichnung}` };
       });
+    },
+
+    /**
+     * Regression Strafmass ueber log10(Menge bzw. Deliktssumme) ueber alle
+     * Punkte sowie getrennt nur ueber die hervorgehobenen bzw. nur ueber die
+     * uebrigen Punkte (fuer streudiagrammRegressionAufteilen). Die Teil-
+     * Regressionen sind null, wenn die jeweilige Teilmenge weniger als zwei
+     * verschiedene x-Werte hat, siehe linearRegression().
+     */
+    streudiagrammRegressionen(punkte) {
+      const paare = (liste) =>
+        liste.map((p) => ({ x: Math.log10(p.menge), y: p.strafmass }));
+      return {
+        regression: this.linearRegression(paare(punkte)),
+        regressionHervorgehoben: this.linearRegression(
+          paare(punkte.filter((p) => p.hervorgehoben))
+        ),
+        regressionUebrige: this.linearRegression(
+          paare(punkte.filter((p) => !p.hervorgehoben))
+        ),
+      };
+    },
+
+    /** Ob die Regressionsgerade aktuell in zwei Geraden aufgeteilt erscheint. */
+    streudiagrammRegressionAufgeteilt() {
+      return this.streudiagrammRegressionAufteilen && this.streudiagrammHervorhebung.length > 0;
+    },
+
+    /**
+     * Die anzuzeigenden Regressionsgeraden: normalerweise nur die gemeinsame
+     * ueber alle Punkte, bei aufgeteilter Anzeige (siehe
+     * streudiagrammRegressionAufgeteilt()) stattdessen je eine fuer die
+     * hervorgehobenen und die uebrigen Urteile. ``regression`` kann bei den
+     * Teilmengen null sein (zu wenige Punkte) - die Gerade entfaellt dann,
+     * die Gleichungszeile nennt den Grund.
+     */
+    streudiagrammRegressionsVarianten(daten) {
+      if (!this.streudiagrammRegressionAufgeteilt()) {
+        return [{ key: "alle", label: "", klasse: "", regression: daten.regression }];
+      }
+      return [
+        {
+          key: "hervorgehoben",
+          label: "Hervorgehobene Urteile",
+          klasse: "hervorgehoben",
+          regression: daten.regressionHervorgehoben,
+        },
+        {
+          key: "uebrige",
+          label: "Übrige Urteile",
+          klasse: "uebrige",
+          regression: daten.regressionUebrige,
+        },
+      ];
+    },
+
+    /**
+     * Hinweis zur aufgeteilten Regression, wenn sich die beiden Geraden im
+     * gemeinsamen Wertebereich beider Teilmengen nicht schneiden - dann liegt
+     * die eine Gruppe bei gleicher Menge/Deliktssumme durchgehend hoeher, und
+     * der Abstand laesst sich als eine Zahl ausdruecken. Verglichen wird nur
+     * dort, wo beide Gruppen Datenpunkte haben (Ueberlappung der x-Bereiche),
+     * sonst waere es eine Extrapolation. Der Abstand ist linear in
+     * log10(Menge), sein Mittel ueber den Bereich daher der Wert in dessen
+     * (logarithmischer) Mitte. Null, wenn nicht aufgeteilt, eine Gerade
+     * fehlt, die Bereiche sich nicht ueberlappen oder die Geraden sich darin
+     * schneiden.
+     */
+    streudiagrammRegressionHinweis(daten) {
+      if (!this.streudiagrammRegressionAufgeteilt()) return null;
+      const h = daten.regressionHervorgehoben;
+      const u = daten.regressionUebrige;
+      if (!h || !u) return null;
+      const bereich = (liste) => {
+        const werte = liste.map((p) => Math.log10(p.menge));
+        return [Math.min(...werte), Math.max(...werte)];
+      };
+      const [hMin, hMax] = bereich(daten.punkte.filter((p) => p.hervorgehoben));
+      const [uMin, uMax] = bereich(daten.punkte.filter((p) => !p.hervorgehoben));
+      const von = Math.max(hMin, uMin);
+      const bis = Math.min(hMax, uMax);
+      if (von >= bis) return null;
+      const abstand = (x) =>
+        h.achsenabschnitt + h.steigung * x - (u.achsenabschnitt + u.steigung * x);
+      const amAnfang = abstand(von);
+      const amEnde = abstand(bis);
+      // Vorzeichenwechsel (oder Beruehrung) = Schnittpunkt im Bereich
+      if (amAnfang * amEnde <= 0) return null;
+      const mittel = abstand((von + bis) / 2);
+      const betrag = Math.abs(mittel).toFixed(1).replace(".", ",");
+      const einheit = daten.art.monate ? "Monate" : "Tagessätze";
+      return (
+        `Die hervorgehobenen Urteile haben bei gleicher ${daten.mengeLabel} ` +
+        `durchschnittlich eine um ${betrag} ${einheit} ${mittel > 0 ? "höhere" : "tiefere"} Strafe ` +
+        `(gemittelt über den gemeinsamen Bereich ` +
+        `${this.mengeAnzeige(Math.pow(10, von), daten.einheit)} bis ` +
+        `${this.mengeAnzeige(Math.pow(10, bis), daten.einheit)}).`
+      );
     },
 
     /**
@@ -1341,14 +1440,24 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     },
 
     /**
-     * Regressionsgerade als SVG-<line>, auf den sichtbaren Plotbereich
-     * geclippt. Leerer String ohne Regression, ohne eingeschaltete
-     * Anzeige (``streudiagrammRegressionAnzeigen``) oder wenn die Gerade
-     * vollstaendig ausserhalb des sichtbaren Bereichs verlaeuft.
+     * Regressionsgerade(n) als SVG-<line>, auf den sichtbaren Plotbereich
+     * geclippt - eine je Eintrag aus streudiagrammRegressionsVarianten().
+     * Leerer String ohne Regression oder ohne eingeschaltete Anzeige
+     * (``streudiagrammRegressionAnzeigen``); eine Gerade, die vollstaendig
+     * ausserhalb des sichtbaren Bereichs verlaeuft, entfaellt.
      */
     streudiagrammRegressionSvg(daten) {
       if (!this.streudiagrammRegressionAnzeigen || !daten.regression) return "";
-      const { achsenabschnitt: a, steigung: b } = daten.regression;
+      return this.streudiagrammRegressionsVarianten(daten)
+        .filter((variante) => variante.regression)
+        .map((variante) =>
+          this.streudiagrammRegressionLinieSvg(daten, variante.regression, variante.klasse)
+        )
+        .join("");
+    },
+
+    streudiagrammRegressionLinieSvg(daten, regression, klasse) {
+      const { achsenabschnitt: a, steigung: b } = regression;
       const { min, max } = daten.mengeDomain;
       const u0 = Math.log10(min);
       const u1 = Math.log10(max);
@@ -1360,7 +1469,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
       const y1 = this.streudiagrammY(daten, geklippt.y0);
       const x2 = this.streudiagrammX(daten, Math.pow(10, geklippt.u1));
       const y2 = this.streudiagrammY(daten, geklippt.y1);
-      return `<line class="streudiagramm-regression" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line>`;
+      return `<line class="streudiagramm-regression ${klasse}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line>`;
     },
 
     /**
@@ -1369,9 +1478,9 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
      * (R² = 0.31, n = 214)". Auf log10(Deliktssumme) bezogen, nicht auf die
      * Deliktssumme selbst - siehe streudiagrammVM().
      */
-    streudiagrammRegressionGleichung(daten) {
-      if (!daten.regression) return "";
-      const { achsenabschnitt: a, steigung: b, r2, n } = daten.regression;
+    streudiagrammRegressionGleichung(daten, regression = daten.regression) {
+      if (!regression) return "";
+      const { achsenabschnitt: a, steigung: b, r2, n } = regression;
       const vorzeichen = b >= 0 ? "+" : "−";
       return (
         `${daten.achstitelY} ≈ ${a.toFixed(2)} ${vorzeichen} ${Math.abs(b).toFixed(2)} · ` +
@@ -1389,11 +1498,11 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
      * ``ausserhalbBereich`` macht auf die Extrapolation aufmerksam, statt sie
      * stillschweigend als verlaessliche Prognose auszugeben.
      */
-    streudiagrammRegressionVorhersage(daten) {
-      if (!daten.regression) return null;
+    streudiagrammRegressionVorhersage(daten, regression = daten.regression) {
+      if (!regression) return null;
       const eingabe = Number(this.streudiagrammRegressionEingabe);
       if (!Number.isFinite(eingabe) || eingabe <= 0) return null;
-      const { achsenabschnitt: a, steigung: b } = daten.regression;
+      const { achsenabschnitt: a, steigung: b } = regression;
       const wert = a + b * Math.log10(eingabe);
       return {
         text: `${this.formatiert(Math.max(wert, 0), daten.art)} ${daten.art.einheit}`,

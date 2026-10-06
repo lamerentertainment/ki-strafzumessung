@@ -247,7 +247,7 @@ class UrteilBearbeitenForm(BearbeitenModelForm):
         model = Urteil
 
     FELDGRUPPEN = (
-        ("Grunddaten", ("fall_nr", "url_link", "gericht", "urteilsdatum", "verfahrensart")),
+        ("Grunddaten", ("fall_nr", "url_link", "gericht", "urteilsdatum", "kanton", "verfahrensart")),
         ("Person", ("geschlecht", "nationalitaet", "vorbestraft", "vorbestraft_einschlaegig")),
         (
             "Delikt",

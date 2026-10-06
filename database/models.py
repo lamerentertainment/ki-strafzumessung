@@ -83,6 +83,11 @@ class Urteil(models.Model):
         null=True,
         help_text="Das Datum, an welchem das Gericht das Urteil gefällt hat.",
     )
+    kanton = models.ForeignKey(
+        "Kanton",
+        on_delete=models.CASCADE,
+        help_text="Der Kanton des vorinstanzlichen Gerichts.",
+    )
     fall_nr = models.CharField(
         max_length=15, unique=True, help_text="Die Verfahrensnummer des Urteils."
     )

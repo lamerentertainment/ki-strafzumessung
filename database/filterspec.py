@@ -684,7 +684,7 @@ URTEIL_FILTER_CONFIG = {
         )
     },
     "gruppen": [
-        ("Fall & Gericht", ["gericht", "urteilsdatum", "verfahrensart"]),
+        ("Fall & Gericht", ["gericht", "kanton", "urteilsdatum", "verfahrensart"]),
         (
             "Täter",
             ["geschlecht", "nationalitaet", "vorbestraft", "vorbestraft_einschlaegig"],
@@ -717,6 +717,7 @@ URTEIL_FILTER_CONFIG = {
     ],
     "labels": {
         "gericht": "Gericht",
+        "kanton": "Kanton",
         "urteilsdatum": "Urteilsdatum",
         "verfahrensart": "Verfahrensart",
         "geschlecht": "Geschlecht Täter",

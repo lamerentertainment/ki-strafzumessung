@@ -337,6 +337,7 @@ class FilterbareAnsichtenTest(TestCase):
     def test_vermoegensdelikte(self):
         urteil = Urteil.objects.create(
             fall_nr="SB240020",
+            kanton=self.kanton,
             gericht="Bezirksgericht Zürich",
             urteilsdatum=date(2024, 2, 2),
             deliktssumme=15000,
@@ -600,6 +601,7 @@ class NurHauptdeliktTest(TestCase):
     def test_vermoegensdelikt_zweiwertig(self):
         Urteil.objects.create(
             fall_nr="V-ja",
+            kanton=self.kanton,
             gericht="Bezirksgericht Zürich",
             urteilsdatum=date(2024, 1, 1),
             deliktssumme=1000,
@@ -607,6 +609,7 @@ class NurHauptdeliktTest(TestCase):
         )
         Urteil.objects.create(
             fall_nr="V-nein",
+            kanton=self.kanton,
             gericht="Bezirksgericht Zürich",
             urteilsdatum=date(2024, 1, 1),
             deliktssumme=2000,
@@ -746,6 +749,7 @@ class InlineBearbeitungTest(TestCase):
 
         cls.urteil = Urteil.objects.create(
             fall_nr="SB240501",
+            kanton=cls.kanton,
             gericht="Bezirksgericht Zürich",
             urteilsdatum=date(2024, 2, 2),
             deliktssumme=15000,

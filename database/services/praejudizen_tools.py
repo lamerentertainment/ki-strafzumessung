@@ -87,7 +87,7 @@ SEARCH_VERMOEGENSDELIKT_TOOL = {
 
 
 def execute_search_vermoegensdelikt_urteile(params: dict) -> dict:
-    qs = Urteil.objects.all()
+    qs = Urteil.objects.select_related("kanton")
     if params.get("hauptdelikt"):
         qs = qs.filter(hauptdelikt=params["hauptdelikt"])
     if params.get("deliktssumme_min") is not None:
@@ -107,6 +107,7 @@ def execute_search_vermoegensdelikt_urteile(params: dict) -> dict:
             "gericht": u.gericht,
             "urteilsdatum": str(u.urteilsdatum) if u.urteilsdatum else None,
             "fall_nr": u.fall_nr,
+            "kanton": u.kanton.abk,
             "hauptdelikt": u.hauptdelikt,
             "deliktssumme": u.deliktssumme,
             "mehrfach": u.mehrfach,

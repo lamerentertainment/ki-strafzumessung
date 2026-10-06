@@ -102,6 +102,7 @@ Praktisch heisst das:
 
 | Feld | Codierung |
 |---|---|
+| `kanton` | FK zu `Kanton` (nur Feld `abk`, z.B. `Kanton.objects.get(abk='ZH')`) — Kanton des **vorinstanzlichen** Gerichts (`gericht`) |
 | `geschlecht` | `'0'` männlich, `'1'` weiblich |
 | `nationalitaet` | `'0'` CH, `'1'` Ausländer/in, `'2'` unbekannt |
 | `hauptdelikt` | exakt einer von: `Betrug`, `Veruntreuung`, `ung. Geschäftsbesorgung`, `betr. Missbrauch DVA`, `Diebstahl`, `Sachbeschädigung` — dasjenige Delikt, auf das die Vorinstanz die **Einsatzstrafe** abgestützt hat |
@@ -150,12 +151,13 @@ Objekt mit allen Pflichtfeldern instanziieren, `full_clean()` vor `save()` aufru
 (führt Model-Validierung inkl. Choices-Check aus, bevor in die DB geschrieben wird):
 
 ```python
-from database.models import Urteil
+from database.models import Urteil, Kanton
 from datetime import date
 
 u = Urteil(
     gericht=...,
     urteilsdatum=date(...),
+    kanton=Kanton.objects.get(abk=...),  # Kanton der Vorinstanz
     fall_nr=...,
     url_link=...,
     verfahrensart='0',  # '0' ordentlich, '1' abgekürzt — meist '0', prüfen falls abgekürztes Verfahren erwähnt wird
@@ -192,7 +194,7 @@ Vollzug, und jede Besonderheit, bei der Obergericht von der Vorinstanz abgewiche
 
 ### 8. Besonderheiten von `BetmUrteil` und `SexualdeliktUrteil`
 
-Beide Modelle teilen `gericht`, `urteilsdatum`, `fall_nr`, `url_link`, `geschlecht`,
+Beide Modelle teilen `gericht`, `urteilsdatum`, `kanton`, `fall_nr`, `url_link`, `geschlecht`,
 `nationalitaet`, `hauptsanktion`/`freiheitsstrafe_in_monaten`/`anzahl_tagessaetze`/
 `vollzug`, `verfahrensart`, `vorbestraft`/`vorbestraft_einschlaegig` und
 `zusammenfassung` mit denselben Codierungen wie `Urteil` (siehe Abschnitt 4) und dieselbe

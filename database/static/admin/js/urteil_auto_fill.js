@@ -148,6 +148,7 @@
             setSelectValue('id_hauptdelikt', data.hauptdelikt);
             setSelectValue('id_hauptsanktion', data.hauptsanktion);
             setSelectValue('id_vollzug', data.vollzug);
+            setSelectValue('id_kanton', data.kanton);
 
             // Nummer Felder
             setFieldValue('id_deliktssumme', data.deliktssumme);

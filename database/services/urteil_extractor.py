@@ -20,6 +20,9 @@ class UrteilExtraction(BaseModel):
         default=None,
         description="Das Datum, an welchem das vorinstanzliche Gericht das Urteil gefällt hat, im Format YYYY-MM-DD."
     )
+    kanton: str = Field(
+        description="Abkürzung des Kantons, in welchem das vorinstanzliche Gericht sich befindet (z.B. 'ZH', 'BE', 'AG', 'SG')."
+    )
     fall_nr: str = Field(
         description="Die Verfahrensnummer des obergerichtlichen Urteils, aus welchem die Informationen entstammen (z.B. 'SB190145')."
     )
@@ -200,6 +203,7 @@ WICHTIGE HINWEISE ZUR EXTRAKTION:
 - Fokussiere auf die/den Beschuldigte/n 1, wenn es mehrere Beschuldigte gibt.
 - Gericht: Das vorinstanzliche Gericht, welches das vorinstanzliche Urteil gefällt hat.
 - Urteilsdatum: Das Datum, an welchem das vorinstanzliche Gericht das Urteil gefällt hat. Bitte im Format YYYY-MM-DD extrahieren.
+- Kanton: Abkürzung des Kantons, in welchem das vorinstanzliche Gericht sich befindet (z.B. 'ZH').
 - Fall nr: Die Verfahrensnummer des obergerichtlichen Urteils, aus welchem die Informationen entstammen.
 - Geschlecht: der beschuldigten Person ('0' = männlich, '1' = weiblich).
 - Nationalität: der beschuldigten Person ('0' = Schweizerin/Schweizer, '1' = Ausländer/Ausländerin, '2' = unbekannt).
@@ -315,7 +319,7 @@ def validate_extracted_data(data: dict) -> tuple[bool, list[str]]:
     errors = []
 
     # Pflichtfelder prüfen
-    required_fields = ['gericht', 'fall_nr', 'geschlecht',
+    required_fields = ['gericht', 'kanton', 'fall_nr', 'geschlecht',
                       'nationalitaet', 'hauptdelikt', 'hauptsanktion', 'vollzug']
 
     for field in required_fields:

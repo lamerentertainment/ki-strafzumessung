@@ -205,7 +205,7 @@ class UrteilAdmin(admin.ModelAdmin):
             'description': 'Fügen Sie entweder den Volltext ein ODER geben Sie einen PDF-Link an und klicken Sie auf "Formular automatisch ausfüllen".'
         }),
         ('Grunddaten', {
-            'fields': ('fall_nr', 'url_link', 'gericht', 'urteilsdatum'),
+            'fields': ('fall_nr', 'url_link', 'gericht', 'urteilsdatum', 'kanton'),
         }),
         ('Person', {
             'fields': ('geschlecht', 'nationalitaet', 'vorbestraft', 'vorbestraft_einschlaegig'),

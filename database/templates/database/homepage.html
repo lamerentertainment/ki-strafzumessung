@@ -39,6 +39,7 @@
             <div class="col-md-5 mx-1 p-4 border rounded bg-light position-relative" style="--bs-bg-opacity: .5;">
                 <p class="lead">
                     Präjudizen anzeigen und KI-Strafmassprognose bei <strong>Betäubungsmittel&shykriminalität</strong>
+                    <br><small class="text-muted">(basierend auf {{ anzahl_betm_urteile_ki }} Urteilen)</small>
                 </p>
                 <a class="stretched-link" href="{% url 'betm_prognose' %}">
                     Zum KI-Tool
@@ -47,6 +48,7 @@
             <div class="col-md-5 mx-1 p-4 border rounded bg-light position-relative" style="--bs-bg-opacity: .5;">
                 <p class="lead">
                     Präjudizen anzeigen und KI-Strafmassprognose bei <strong>Wirtschaftskriminalität</strong>
+                    <br><small class="text-muted">(basierend auf {{ anzahl_urteile_ki }} Urteilen)</small>
                 </p>
                 <a class="stretched-link " href="{% url 'prognose' %}">
                     Zum KI-Tool
@@ -58,6 +60,7 @@
             <div class="col-md-5 mx-1 p-4 border rounded bg-light position-relative" style="--bs-bg-opacity: .5;">
                 <p class="lead">
                     Datenbank der Urteile betreffend die Betäubungsmittelkriminalität
+                    <br><small class="text-muted">({{ anzahl_betm_urteile }} Urteile)</small>
                 </p>
                 <a class="stretched-link " href="{% url 'betmdatabase' %}">
                     betrachten
@@ -66,6 +69,7 @@
             <div class="col-md-5 mx-1 p-4 border rounded bg-light position-relative" style="--bs-bg-opacity: .5;">
                 <p class="lead">
                     Datenbank der Urteile betreffend die Wirtschaftskriminalität
+                    <br><small class="text-muted">({{ anzahl_urteile }} Urteile)</small>
                 </p>
                 <a class="stretched-link " href="{% url 'database' %}">
                     betrachten
@@ -121,6 +125,7 @@
             <div class="col-md-5 mx-1 p-4 border rounded bg-light position-relative" style="--bs-bg-opacity: .5;">
                 <p class="lead">
                     Datenbank der Sexualdelikte
+                    <br><small class="text-muted">({{ anzahl_sexual_urteile }} Urteile)</small>
                 </p>
                 <a class="stretched-link" href="{% url 'sexualdatabase' %}">
                     durchsuchen
@@ -129,6 +134,7 @@
             <div class="col-md-5 mx-1 p-4 border rounded bg-light position-relative" style="--bs-bg-opacity: .5;">
                 <p class="lead">
                     Datenbank der Gewaltdelikte
+                    <br><small class="text-muted">({{ anzahl_gewalt_urteile }} Urteile)</small>
                 </p>
                 <a class="stretched-link" href="{% url 'gewaltdatabase' %}">
                     durchsuchen

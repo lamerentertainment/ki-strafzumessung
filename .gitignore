@@ -337,3 +337,7 @@ dbdumps/
 # Lokale Nachführungs-Checkliste Vermögensdelikt-Urteile + Generator (nicht committen)
 /vermoegen-nachfuehrung-checkliste.md
 /vermoegen-nachfuehrung-checkliste-erzeugen.py
+
+# Lokale Arbeitsliste Nachführung Zusammenfassung/Score Vermögensdelikte (nicht committen)
+/vermoegen-zf-nachfuehrung.md
+/vermoegen-zf-nachfuehrung-erzeugen.py

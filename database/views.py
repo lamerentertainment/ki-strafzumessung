@@ -71,7 +71,14 @@ from sklearn.model_selection import cross_val_score
 
 
 def homepage(request):
-    context = {}
+    context = {
+        "anzahl_urteile": Urteil.objects.count(),
+        "anzahl_urteile_ki": Urteil.objects.filter(in_ki_modell=True).count(),
+        "anzahl_betm_urteile": BetmUrteil.objects.count(),
+        "anzahl_betm_urteile_ki": BetmUrteil.objects.filter(in_ki_modell=True).count(),
+        "anzahl_sexual_urteile": SexualdeliktUrteil.objects.count(),
+        "anzahl_gewalt_urteile": GewaltdeliktUrteil.objects.count(),
+    }
     return render(request, "database/homepage.html", context)
 
 

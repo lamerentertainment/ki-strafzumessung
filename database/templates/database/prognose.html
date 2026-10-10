@@ -1,5 +1,6 @@
 {% extends "./base.html" %}
 {% load static %}
+{% load urteilsanzahl %}
 
 {% block alpine_komponenten %}
 <script defer src="{% static 'database/filter.js' %}"></script>
@@ -7,10 +8,11 @@
 {% endblock alpine_komponenten %}
 
 {% block body %}
+{% anzahl_ki_urteile "vermoegen" as anzahl_urteile_ki %}
 
 <h1>Strafprognose bei Wirtschaftsdelikt vornehmen und Präjudizien anzeigen</h1>
-<p>Die Prognose erfolgt auf Grundlage des folgendem <a href="{% url 'database' %}">Datensatzes</a> und der darauf
-    aufbauendem <a href="{% url 'ws_evaluation' %}">KI-Modelle</a>. Die Funktionsweise der KI-Modelle wird <a
+<p>Die Prognose erfolgt auf Grundlage des folgenden <a href="{% url 'database' %}">Datensatzes</a>, welcher auf {{ anzahl_urteile_ki }} Urteilen basiert, und der darauf
+    aufbauenden <a href="{% url 'ws_evaluation' %}">Machine Learning (ML)-Modelle</a>. Die Funktionsweise der ML-Modelle wird <a
         href="{% url 'text_funktionsweise' %}">hier</a> erklärt.</p>
 
 <p class="{{ display_eingabeformular_button }}">
@@ -53,12 +55,13 @@
 {% if form.is_valid %}
 <div>
     <h1>Vorhersage</h1>
+    <p class="text-muted">(basierend auf {{ anzahl_urteile_ki }} Urteilen)</p>
     {% if form.cleaned_data.deliktssumme < 5000 %} <p>Sie haben die Werte eines Bagatelldelikts (Deliktssumme < Fr.
-            5'000.--) abgefragt. Da das KI-Modell nicht mit entsprechenden Urteilen trainiert worden ist, ist es nicht
+            5'000.--) abgefragt. Da das ML-Modell nicht mit entsprechenden Urteilen trainiert worden ist, ist es nicht
             in der Lage, eine zuverlässige Strafmassprognose abzugeben</p>
             {% else %}
             {# Die beiden include-Tags muessen je auf EINER Zeile bleiben (Djangos Lexer kennt kein DOTALL). #}
-    <p>Das KI-Modell sagt eine <b>{% include "database/includes/prognose_wahrscheinlichkeit.html" with text=vorhersage_vollzug wahrscheinlichkeiten=wahrscheinlichkeiten_vollzug %}{% include "database/includes/prognose_wahrscheinlichkeit.html" with text=vorhersage_sanktionsart wahrscheinlichkeiten=wahrscheinlichkeiten_sanktionsart %}</b> in folgendem Wahrscheinlichkeitsbereich voraus:</p>
+    <p>Das ML-Modell sagt eine <b>{% include "database/includes/prognose_wahrscheinlichkeit.html" with text=vorhersage_vollzug wahrscheinlichkeiten=wahrscheinlichkeiten_vollzug %}{% include "database/includes/prognose_wahrscheinlichkeit.html" with text=vorhersage_sanktionsart wahrscheinlichkeiten=wahrscheinlichkeiten_sanktionsart %}</b> in folgendem Wahrscheinlichkeitsbereich voraus:</p>
 
             {% if prognoseverlauf %}
             {% include "database/includes/prognoseverlauf.html" with prognoseverlauf=prognoseverlauf %}
@@ -66,14 +69,14 @@
 
             <p><span class="text-muted">Diese Werte basieren ausschliesslich auf einer Auswertung von einzelnen (nicht
                     vollständig erfassten) objektiven Tatbestandsmerkmalen und ersetzen keinesfalls eine gesetzesmässige
-                    Strafzumessung, welche auch konkret vorliegende subjektive Tatbestandsmerkmale und Täterkomponenten
+                    Strafzumessung, welche auch konkret vorliegende subjektive Tatmerkmale und Täterkomponenten
                     zu würdigen hat.</span></p>
             <p><span class="text-muted">Eine Bemerkung zur Datengrundlage: Die Daten, mit denen das vorliegende
-                    KI-Modell trainiert wurde, basieren auf veröffentlichten Gerichtsurteilen, meist einer
+                    ML-Modell trainiert wurde, basieren auf veröffentlichten Gerichtsurteilen, meist einer
                     Rechtsmittelinstanz. Massen- und Bagatelldelinquenz (geringfügige Vermögensdelikte) findet selten
                     den Weg ans Gericht und in die Publika und sind daher in der Datengrundlage untervertreten. In
                     diesen Bereichen wird
-                    das KI-Modell eine zu hohe Strafe anzeigen, da es durch die Datengrundlage verzerrt wird.</span></p>
+                    das ML-Modell eine zu hohe Strafe anzeigen, da es durch die Datengrundlage verzerrt wird.</span></p>
             {% endif %}
 </div>
 {% endif %}

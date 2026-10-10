@@ -1,4 +1,4 @@
-import pickle, math
+import copy, math, pickle, warnings
 from io import StringIO, BytesIO
 
 import matplotlib
@@ -56,6 +56,27 @@ VM_CAT_FTS = [
     "private_geschaedigte",
 ]
 VM_NUM_FTS = ["deliktssumme", "nebenverurteilungsscore"]
+
+
+def vm_merkmale_onehot_kodieren(encoder, merkmale_df):
+    """Kodiert die kategorialen Prognosemerkmale mit dem gespeicherten OneHotEncoder.
+
+    Werte, die beim Training nicht vorkamen (z.B. private_geschaedigte='unbekannt' bei
+    einem nach dem letzten Training erfassten Urteil), fuehren nicht zu einem Fehler,
+    sondern werden fuer das betreffende Merkmal als lauter Nullen kodiert. Aeltere
+    Encoder-Pickles wurden mit handle_unknown='error' gefittet; sie werden hier
+    kopiert und umgestellt, damit das Verhalten nicht vom Trainingszeitpunkt abhaengt.
+    """
+    if encoder.handle_unknown == "error":
+        encoder = copy.copy(encoder)
+        encoder.handle_unknown = "ignore"
+    with warnings.catch_warnings():
+        # sklearn warnt bei unbekannten Kategorien, das ist hier beabsichtigt
+        warnings.simplefilter("ignore", UserWarning)
+        cat_fts_onehot = encoder.transform(merkmale_df[VM_CAT_FTS])
+    return pd.DataFrame(
+        cat_fts_onehot, columns=encoder.get_feature_names_out(VM_CAT_FTS)
+    )
 
 SANKTIONS_LABELS = {
     "0": "Freiheitsstrafe",
@@ -152,7 +173,7 @@ def onehotx_und_y_erstellen(
     df["urteilsjahr"] = df["urteilsjahr"].fillna(df["urteilsjahr"].median())
 
     # 1hot encoding der kategorialen variablen
-    encoder = OneHotEncoder(sparse_output=False)
+    encoder = OneHotEncoder(sparse_output=False, handle_unknown="ignore")
     encoder.fit(df[categorial_ft_dbfields])
     categorical_1hot = encoder.transform(df[categorial_ft_dbfields])
     encoder_categorical_ft_names = encoder.get_feature_names_out(categorial_ft_dbfields)
@@ -630,7 +651,6 @@ def formulareingaben_in_abfragesample_konvertieren(cleaned_data_dict, encoder=No
     """nimmt die Formulareingaben, erstellt davon ein pandas dataframe und macht das preprocessing, um ein
     estimate abfragesample zu generieren; der OneHotEncoder kann übergeben werden, damit er bei
     wiederholten Aufrufen nicht jedes Mal neu aus dem AWS-Bucket geladen wird"""
-    cat_fts = VM_CAT_FTS
     num_fts = VM_NUM_FTS
 
     urteilsmerkmale_als_pandas_df = pd.DataFrame(
@@ -643,9 +663,7 @@ def formulareingaben_in_abfragesample_konvertieren(cleaned_data_dict, encoder=No
         encoder = kimodell_von_pickle_file_aus_aws_bucket_laden(
             "encoders/one_hot_encoder_fuer_rf_regr_val.pkl"
         )
-    cat_fts_onehot = encoder.transform(urteilsmerkmale_als_pandas_df[cat_fts])
-    enc_cat_fts_names = encoder.get_feature_names_out(cat_fts)
-    df_cat_fts = pd.DataFrame(cat_fts_onehot, columns=enc_cat_fts_names)
+    df_cat_fts = vm_merkmale_onehot_kodieren(encoder, urteilsmerkmale_als_pandas_df)
     urteilsmerkmale_df_preprocessed = pd.concat(
         [df_cat_fts, urteilsmerkmale_als_pandas_df[num_fts]], axis=1
     )
@@ -654,7 +672,9 @@ def formulareingaben_in_abfragesample_konvertieren(cleaned_data_dict, encoder=No
 
 def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich=1.2, n_neighbors=4):
     """nimmt als Input ein Pandas DF der merkmale und der zielwerte"""
-    cat_ohe_step = ("ohe", OneHotEncoder(drop="if_binary"))
+    # handle_unknown="ignore": eine Eingabe mit einem Wert, der in keinem Urteil vorkommt,
+    # soll die Präjudiziensuche nicht abbrechen lassen
+    cat_ohe_step = ("ohe", OneHotEncoder(drop="if_binary", handle_unknown="ignore"))
     cat_steps = [cat_ohe_step]
     cat_pipe = Pipeline(cat_steps)
     cat_features = [
@@ -662,6 +682,7 @@ def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich
         "hauptdelikt",
         "vorbestraft_einschlaegig",
         "vorbestraft",
+        "private_geschaedigte",
     ]
 
     num_mm_step = ("mm", StandardScaler())
@@ -713,6 +734,7 @@ def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich
         "vorbestraft",
         "deliktssumme",
         "nebenverurteilungsscore",
+        "private_geschaedigte",
     ]
     urteil_features_transformed = ct.transform(urteil_features_df)
     feature_names = ct.get_feature_names_out()
@@ -787,7 +809,6 @@ def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich
 def nachbar_mit_sanktionsbewertung_anreichern(
     nachbarobjekt, strafmass_estimator, hauptsanktion_estimator, vollzug_estimator
 ):
-    cat_fts = VM_CAT_FTS
     num_fts = VM_NUM_FTS
 
     urteilsmerkmale_als_pandas_df = pd.DataFrame(
@@ -799,9 +820,7 @@ def nachbar_mit_sanktionsbewertung_anreichern(
     encoder = kimodell_von_pickle_file_aus_aws_bucket_laden(
         "encoders/one_hot_encoder_fuer_rf_regr_val.pkl"
     )
-    cat_fts_onehot = encoder.transform(urteilsmerkmale_als_pandas_df[cat_fts])
-    enc_cat_fts_names = encoder.get_feature_names_out(cat_fts)
-    df_cat_fts = pd.DataFrame(cat_fts_onehot, columns=enc_cat_fts_names)
+    df_cat_fts = vm_merkmale_onehot_kodieren(encoder, urteilsmerkmale_als_pandas_df)
     urteilsmerkmale_df_preprocessed = pd.concat(
         [df_cat_fts, urteilsmerkmale_als_pandas_df[num_fts]], axis=1
     )

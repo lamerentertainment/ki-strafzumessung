@@ -568,6 +568,7 @@ def prognose(request):
                 "vorbestraft",
                 "vorbestraft_einschlaegig",
                 "hauptdelikt",
+                "private_geschaedigte",
                 exclude_unmarked=True,
             )
             y_train_df = Urteil.pandas.return_y_zielwerte(exclude_unmarked=True)
@@ -578,7 +579,9 @@ def prognose(request):
             gewerbsmaessig = form.cleaned_data["gewerbsmaessig"]
             vorbestraft = form.cleaned_data["vorbestraft"]
             vorbestraft_einschlaegig = form.cleaned_data["vorbestraft_einschlaegig"]
+            private_geschaedigte = form.cleaned_data["private_geschaedigte"]
 
+            # Reihenfolge muss den Spaltennamen in knn_pipeline entsprechen
             urteil_features_list = [
                 gewerbsmaessig,
                 hauptdelikt,
@@ -586,6 +589,7 @@ def prognose(request):
                 vorbestraft,
                 deliktssumme,
                 nebenverurteilungsscore,
+                private_geschaedigte,
             ]
             urteil_features_series = pd.Series(urteil_features_list)
 
@@ -741,6 +745,15 @@ def prognose(request):
                         nachbarobjekt.entsprechung_vorbestraft_einschlaegig
                     )
                 )
+                nachbarobjekt.entsprechung_private_geschaedigte = (
+                    nachbarobjekt.private_geschaedigte
+                    == formobjekt.cleaned_data["private_geschaedigte"]
+                )
+                nachbarobjekt.entsprechung_private_geschaedigte_klasse = (
+                    _entsprechung_klasse(
+                        nachbarobjekt.entsprechung_private_geschaedigte
+                    )
+                )
                 nachbarobjekt.zusammenfassung = nachbarobjekt.zusammenfassung
 
                 # Vergleichbarkeitsscore berechnen, wenn index vorhanden
@@ -760,6 +773,7 @@ def prognose(request):
                         or not nachbarobjekt.entsprechung_hauptdelikt
                         or not nachbarobjekt.entsprechung_gewerbsmaessig
                         or not nachbarobjekt.entsprechung_vorbestraft_einschlaegig
+                        or not nachbarobjekt.entsprechung_private_geschaedigte
                         or (
                             formobjekt.cleaned_data.get("vorbestraft") is not None
                             and nachbarobjekt.vorbestraft != formobjekt.cleaned_data.get("vorbestraft")

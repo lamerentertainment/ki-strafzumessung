@@ -68,6 +68,17 @@
                     </td>
                 </tr>
                 <tr>
+                    <td>
+                        <p>Private Geschädigte: {{ nachbar.get_private_geschaedigte_display|capfirst }} </p>
+                    </td>
+                    <td class="{{ nachbar.entsprechung_private_geschaedigte_klasse }}">
+                        <p>
+                            {% if nachbar.entsprechung_private_geschaedigte %}Entspricht Eingabe {% else %} Entspricht
+                            nicht Eingabe {% endif %}
+                        </p>
+                    </td>
+                </tr>
+                <tr>
                     <td colspan="2" class="table-light">
                         <p>
                             Sanktion:

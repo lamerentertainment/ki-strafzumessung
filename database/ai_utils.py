@@ -43,6 +43,20 @@ VOLLZUGS_LABELS = {
     "unbedingt": "unbedingt",
 }
 
+# Merkmale der Vermoegensdelikt-Prognosemodelle (rf_regr_val, rf_clf_val,
+# rf_clf_sanktionsart_val). Training und Prognose muessen dieselben Listen verwenden,
+# da der OneHotEncoder und die Modelle auf genau diese Spalten gefittet werden.
+VM_CAT_FTS = [
+    "hauptdelikt",
+    "mehrfach",
+    "gewerbsmaessig",
+    "bandenmaessig",
+    "vorbestraft",
+    "vorbestraft_einschlaegig",
+    "private_geschaedigte",
+]
+VM_NUM_FTS = ["deliktssumme", "nebenverurteilungsscore"]
+
 SANKTIONS_LABELS = {
     "0": "Freiheitsstrafe",
     "1": "Geldstrafe",
@@ -114,6 +128,7 @@ def onehotx_und_y_erstellen(
             "gewerbsmaessig",
             "vorbestraft",
             "vorbestraft_einschlaegig",
+            "private_geschaedigte",
         ]
 
     # Queryset aller Urteile holen, welche in_ki_modell True haben
@@ -222,6 +237,7 @@ def sortierte_features_importance_list_erstellen(
             "vorbestraft",
             "vorbestraft_einschlaegig",
             "hauptdelikt",
+            "private_geschaedigte",
         ]
 
     # sortierte Liste mit Kriteriengewichtigkeit erstellen
@@ -366,18 +382,11 @@ def prognoseleistung_dict_ausgeben(instanziertes_kimodel, x, y):
 
 def kimodelle_neu_kalibrieren_und_abspeichern():
     # nur valide features verwenden
-    categorial_ft_dbfields = [
-        "hauptdelikt",
-        "mehrfach",
-        "gewerbsmaessig",
-        "bandenmaessig",
-        "vorbestraft",
-        "vorbestraft_einschlaegig",
-    ]
+    categorial_ft_dbfields = list(VM_CAT_FTS)
     x_val, y, onehot_encoder_val = onehotx_und_y_erstellen(
         Urteil,
         categorial_ft_dbfields=categorial_ft_dbfields,
-        numerical_ft_dbfields=["deliktssumme", "nebenverurteilungsscore"],
+        numerical_ft_dbfields=list(VM_NUM_FTS),
         return_encoder=True,
     )
 
@@ -621,48 +630,11 @@ def formulareingaben_in_abfragesample_konvertieren(cleaned_data_dict, encoder=No
     """nimmt die Formulareingaben, erstellt davon ein pandas dataframe und macht das preprocessing, um ein
     estimate abfragesample zu generieren; der OneHotEncoder kann übergeben werden, damit er bei
     wiederholten Aufrufen nicht jedes Mal neu aus dem AWS-Bucket geladen wird"""
-    cat_fts = [
-        "hauptdelikt",
-        "mehrfach",
-        "gewerbsmaessig",
-        "bandenmaessig",
-        "vorbestraft",
-        "vorbestraft_einschlaegig",
-    ]
-    num_fts = ["deliktssumme", "nebenverurteilungsscore"]
-
-    hauptdelikt = cleaned_data_dict["hauptdelikt"]
-    mehrfach = cleaned_data_dict["mehrfach"]
-    gewerbsmaessig = cleaned_data_dict["gewerbsmaessig"]
-    bandenmaessig = cleaned_data_dict["bandenmaessig"]
-    deliktssumme = cleaned_data_dict["deliktssumme"]
-    nebenverurteilungsscore = cleaned_data_dict["nebenverurteilungsscore"]
-    vorbestraft = cleaned_data_dict["vorbestraft"]
-    vorbestraft_einschlaegig = cleaned_data_dict["vorbestraft_einschlaegig"]
-
-    liste_mit_urteilsmerkmalen = [
-        hauptdelikt,
-        mehrfach,
-        gewerbsmaessig,
-        bandenmaessig,
-        deliktssumme,
-        nebenverurteilungsscore,
-        vorbestraft,
-        vorbestraft_einschlaegig,
-    ]
+    cat_fts = VM_CAT_FTS
+    num_fts = VM_NUM_FTS
 
     urteilsmerkmale_als_pandas_df = pd.DataFrame(
-        [liste_mit_urteilsmerkmalen],
-        columns=[
-            "hauptdelikt",
-            "mehrfach",
-            "gewerbsmaessig",
-            "bandenmaessig",
-            "deliktssumme",
-            "nebenverurteilungsscore",
-            "vorbestraft",
-            "vorbestraft_einschlaegig",
-        ],
+        [{ft: cleaned_data_dict[ft] for ft in VM_CAT_FTS + VM_NUM_FTS}]
     )
     urteilsmerkmale_als_pandas_df = vermoegensstrafrechts_urteile_codes_aufloesen(
         urteilsmerkmale_als_pandas_df
@@ -815,48 +787,11 @@ def knn_pipeline(train_X_df, train_y_df, urteil_features_series, skalenausgleich
 def nachbar_mit_sanktionsbewertung_anreichern(
     nachbarobjekt, strafmass_estimator, hauptsanktion_estimator, vollzug_estimator
 ):
-    cat_fts = [
-        "hauptdelikt",
-        "mehrfach",
-        "gewerbsmaessig",
-        "bandenmaessig",
-        "vorbestraft",
-        "vorbestraft_einschlaegig",
-    ]
-    num_fts = ["deliktssumme", "nebenverurteilungsscore"]
-
-    hauptdelikt = nachbarobjekt.hauptdelikt
-    mehrfach = nachbarobjekt.mehrfach
-    gewerbsmaessig = nachbarobjekt.gewerbsmaessig
-    bandenmaessig = nachbarobjekt.bandenmaessig
-    deliktssumme = nachbarobjekt.deliktssumme
-    nebenverurteilungsscore = nachbarobjekt.nebenverurteilungsscore
-    vorbestraft = nachbarobjekt.vorbestraft
-    vorbestraft_einschlaegig = nachbarobjekt.vorbestraft_einschlaegig
-
-    liste_mit_urteilsmerkmalen = [
-        hauptdelikt,
-        mehrfach,
-        gewerbsmaessig,
-        bandenmaessig,
-        deliktssumme,
-        nebenverurteilungsscore,
-        vorbestraft,
-        vorbestraft_einschlaegig,
-    ]
+    cat_fts = VM_CAT_FTS
+    num_fts = VM_NUM_FTS
 
     urteilsmerkmale_als_pandas_df = pd.DataFrame(
-        [liste_mit_urteilsmerkmalen],
-        columns=[
-            "hauptdelikt",
-            "mehrfach",
-            "gewerbsmaessig",
-            "bandenmaessig",
-            "deliktssumme",
-            "nebenverurteilungsscore",
-            "vorbestraft",
-            "vorbestraft_einschlaegig",
-        ],
+        [{ft: getattr(nachbarobjekt, ft) for ft in VM_CAT_FTS + VM_NUM_FTS}]
     )
     urteilsmerkmale_als_pandas_df = vermoegensstrafrechts_urteile_codes_aufloesen(
         urteilsmerkmale_als_pandas_df
@@ -1448,6 +1383,7 @@ def introspection_plot_und_lesehinweis_abspeichern(
         nebenverurteilungsscore = 0
         vorbestraft = False
         vorbestraft_einschlaegig = False
+        private_geschaedigte = "ja"
 
     else:
         geschlecht = cleaned_data_dict["geschlecht"]
@@ -1457,6 +1393,7 @@ def introspection_plot_und_lesehinweis_abspeichern(
         nebenverurteilungsscore = cleaned_data_dict["nebenverurteilungsscore"]
         vorbestraft = cleaned_data_dict["vorbestraft"]
         vorbestraft_einschlaegig = cleaned_data_dict["vorbestraft_einschlaegig"]
+        private_geschaedigte = cleaned_data_dict.get("private_geschaedigte", "ja")
 
     strafmass_model = kimodell_von_pickle_file_aus_aws_bucket_laden(
         "pickles/random_forest_regressor_val_fts.pkl"
@@ -1482,6 +1419,7 @@ def introspection_plot_und_lesehinweis_abspeichern(
                 "vorbestraft": vorbestraft,
                 "vorbestraft_einschlaegig": vorbestraft_einschlaegig,
                 "hauptdelikt": hauptdelikt,
+                "private_geschaedigte": private_geschaedigte,
             }
             urteilsmerkmale_als_pandas_df_ohe = (
                 formulareingaben_in_abfragesample_konvertieren(fts_dict, encoder=encoder)
@@ -1515,7 +1453,8 @@ def introspection_plot_und_lesehinweis_abspeichern(
             f"<li>Vorbestraft: "
             f'{"zutreffend" if vorbestraft is True else "nicht zutreffend"}, </li>'
             f"<li>Einschlägig vorbestraft: "
-            f'{"zutreffend" if vorbestraft_einschlaegig is True else "nicht zutreffend"} </li></ul>'
+            f'{"zutreffend" if vorbestraft_einschlaegig is True else "nicht zutreffend"}, </li>'
+            f"<li>Private Geschädigte: {private_geschaedigte} </li></ul>"
         )
 
         return html_string

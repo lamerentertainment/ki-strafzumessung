@@ -170,8 +170,8 @@ class Urteil(models.Model):
     VOLLZUG = (("0", "bedingt"), ("1", "teilbedingt"), ("2", "unbedingt"))
     vollzug = models.CharField(max_length=20, choices=VOLLZUG, default="0")
     in_ki_modell = models.BooleanField(default=True)
-    # Die folgenden Felder (private_geschaedigte, besonderheiten, kurzsachverhalt,
-    # bemerkungen) fliessen (noch) nicht in die ML-Prognose ein.
+    # private_geschaedigte fliesst in die ML-Prognose ein (ai_utils.VM_CAT_FTS);
+    # besonderheiten, kurzsachverhalt und bemerkungen (noch) nicht.
     PRIVATE_GESCHAEDIGTE = (("ja", "ja"), ("nein", "nein"), ("unbekannt", "unbekannt"))
     private_geschaedigte = models.CharField(
         max_length=10,

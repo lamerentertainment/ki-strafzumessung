@@ -129,8 +129,10 @@ Praktisch heisst das:
 | `private_geschaedigte` | `'ja'` / `'nein'` / `'unbekannt'` (Default) — ob durch das Hauptdelikt (als Ganzes, bei mehrfacher Begehung alle Einzeltaten) Privatpersonen in ihrem Vermögen geschädigt wurden; `'nein'` nur, wenn ausschliesslich Staat/juristische Personen geschädigt wurden |
 | `besonderheiten` / `kurzsachverhalt` / `bemerkungen` | wie bei `BetmUrteil` (Abschnitt 8); `besonderheiten` nach `save()` per `.set([...])`; `'Gehilfenschaft'` vergeben, wenn der Schuldspruch auf Gehilfenschaft (Art. 25 StGB) zum Hauptdelikt lautet |
 
-`private_geschaedigte`, `besonderheiten`, `kurzsachverhalt` und `bemerkungen` fliessen
-(noch) nicht in die ML-Prognose ein — nicht in die Feature-Listen in `ai_utils.py` aufnehmen.
+`private_geschaedigte` fliesst als kategoriales Merkmal in die Vermögensdelikt-Prognose ein
+(`VM_CAT_FTS` in `ai_utils.py`); deshalb bei neuen Einträgen möglichst `'ja'`/`'nein'` statt
+`'unbekannt'` setzen. `besonderheiten`, `kurzsachverhalt` und `bemerkungen` fliessen (noch)
+nicht in die ML-Prognose ein — nicht in die Feature-Listen in `ai_utils.py` aufnehmen.
 
 **`nebenverurteilungsscore`** (nicht in `validate_extracted_data` geprüft, muss manuell
 berechnet werden): Punkte für alle vorinstanzlichen Schuldsprüche **ausser** dem

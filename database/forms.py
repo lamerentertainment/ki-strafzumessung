@@ -25,6 +25,17 @@ class UrteilsEckpunkteAbfrageFormular(ModelForm):
                   "im Formular ausgewählt angezeigt.",
     )
 
+    # ohne 'unbekannt': das ML-Modell kennt nur die Werte, die im Trainingsdatensatz
+    # vorkommen, und der OneHotEncoder bricht bei unbekannten Kategorien ab
+    private_geschaedigte = forms.ChoiceField(
+        choices=[("ja", "ja"), ("nein", "nein")],
+        initial="ja",
+        label="Private Geschädigte",
+        help_text="Ob durch das Hauptdelikt Privatpersonen in ihrem Vermögen geschädigt "
+        "wurden. 'nein', wenn ausschliesslich der Staat oder juristische Personen "
+        "geschädigt wurden.",
+    )
+
     class Meta:
         model = Urteil
         fields = [
@@ -36,6 +47,7 @@ class UrteilsEckpunkteAbfrageFormular(ModelForm):
             "bandenmaessig",
             "vorbestraft",
             "vorbestraft_einschlaegig",
+            "private_geschaedigte",
         ]
 
 

@@ -97,6 +97,9 @@ Praktisch heisst das:
   vorinstanzliche Erwägungen/Strafe UND was das Obergericht geändert hat
   (Freisprüche, abweichende Strafzumessung, Landesverweisung etc.) — das ist der
   einzige Ort, an dem der Berufungsausgang für spätere Leser festgehalten wird.
+  Verbindliche Struktur, Mindestumfang und delikt-spezifische Pflichtangaben (auch für
+  Vermögensdelikte): Skill `praejudiz-recherche`
+  (`.agents/skills/praejudiz-recherche/SKILL.md`), Abschnitt 5.
 
 ### 4. Feldlogik / Choices von `database.models.Urteil`
 
@@ -124,6 +127,10 @@ Hauptdelikt:
 - **+1** pro weiterem **Vergehen** (Strafandrohung: Freiheitsstrafe bis 3 Jahre oder Geldstrafe)
 - **+2** pro weiterem **Verbrechen** (Strafandrohung: Freiheitsstrafe > 3 Jahre)
 - **+1** zusätzlich, wenn dieses Nebendelikt selbst mehrfach begangen wurde
+
+Massgebend ist immer der **vorinstanzliche** Schuldspruch: Spricht das Berufungsgericht
+bei einem Nebendelikt frei oder zusätzlich schuldig, bleibt der Score unverändert; die
+Änderung gehört in `zusammenfassung` und `bemerkungen`.
 
 Verbrechen/Vergehen-Einstufung anhand der Strafandrohung im Gesetzestext prüfen
 (nicht raten) — z.B. Art. 146/165/251 StGB (Höchststrafe 5 Jahre) = Verbrechen,
@@ -218,9 +225,13 @@ Vorinstanz-Logik (Abschnitt 3). Vor dem Insert immer `fall_nr` auf Duplikate pr�
 - `beschaffungskriminalitaet` = `True` nur, wenn dem Täter im Urteil explizit ein
   Suchtdruck/eigene Konsumabhängigkeit attestiert wird (nicht selbst herleiten).
 - `betm` (M2M zu `Betm`, das wiederum auf `BetmArt` verweist): pro sichergestellter/
-  gehandelter Substanz einen `Betm`-Datensatz anlegen (`menge_in_g` als Integer runden,
-  `rein=True` nur wenn die Menge als reine Wirkstoffmenge gutachterlich festgestellt
-  wurde, sonst `rein=False` für Bruttomenge). Existierende `BetmArt`-Werte vorher prüfen
+  gehandelter Substanz einen `Betm`-Datensatz anlegen (`menge_in_g` als Integer runden).
+  `rein=True`, wenn das Urteil die Reinmenge beziffert **oder** eine analysierte bzw.
+  vom Gericht angewandte Reinheit nennt: dann Reinmenge = Nettomenge × Reinheit (bei
+  Spannen der untere Wert; Rechnung in `bemerkungen` festhalten). Immer die
+  **vorinstanzliche** Menge verwenden und nie Zahlen aus im Urteil zitierten
+  Vergleichsfällen übernehmen. Teilmengen ohne Analyse als zusätzlichen Datensatz mit
+  `rein=False` erfassen (pro Substanz höchstens ein reiner und ein Gemisch-Datensatz). Existierende `BetmArt`-Werte vorher prüfen
   (`BetmArt.objects.values_list('name', flat=True)`), nicht neue Substanznamen erfinden.
 - `rolle` (FK zu `Rolle`): existierende Werte prüfen (`Rolle.objects.values_list('name',
   flat=True)`, z.B. "Verkauf Konsumeinheiten", "Grosshandel", "Transport",

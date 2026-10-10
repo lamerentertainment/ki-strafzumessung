@@ -40,8 +40,8 @@ Massgebend ist: **Überlebt der Schuldspruch zum Hauptdelikt die Berufung in sei
 |---|:---:|---|
 | Schuldsprüche vollumfänglich bestätigt, Strafe bestätigt oder leicht angepasst | **Ja (Idealfall)** | Vorinstanz-Werte in Felder; Berufungsausgang in Zusammenfassung |
 | Nur Privatkläger/Staatsanwaltschaft erhob Berufung, Schuldspruch unangefochten rechtskräftig | **Ja** | Sehr sauber; Vorinstanz-Werte direkt übernehmen |
-| Hauptdelikt bestätigt, aber Teilfreispruch bei einem **Nebendelikt** | **Ja** | `deliktsscore_uebrige_delikte` um das weggefallene Nebendelikt bereinigen |
-| Hauptdelikt bestätigt, Obergericht spricht bei einem **Nebendelikt zusätzlich schuldig** | **Ja** | `deliktsscore_uebrige_delikte` um das neue Nebendelikt erhöhen (Score bildet finalen Stand ab) |
+| Hauptdelikt bestätigt, aber Teilfreispruch bei einem **Nebendelikt** | **Ja** | Score bleibt beim vorinstanzlichen Stand (Nebendelikt mitzählen); Teilfreispruch in `zusammenfassung`/`bemerkungen` festhalten |
+| Hauptdelikt bestätigt, Obergericht spricht bei einem **Nebendelikt zusätzlich schuldig** | **Ja** | Score bleibt beim vorinstanzlichen Stand (neues Nebendelikt nicht mitzählen); zusätzlichen Schuldspruch in `zusammenfassung`/`bemerkungen` festhalten |
 | Berufungsgericht korrigiert Strafmass (Erhöhung oder Senkung) oder Vollzug (z.B. unbedingt → bedingt) | **Ja** | Strukturierte Felder = Vorinstanz! Die Änderung wird detailliert in der Zusammenfassung begründet |
 | Hauptdelikt wird **herabgestuft** (z.B. schwere Körperverletzung → einfache Körperverletzung, einfache Körperverletzung → Tätlichkeiten) | **Nein** | Verwerfen – die vorinstanzliche Qualifikation wurde verworfen |
 | Hauptdelikt wird **freigesprochen** (z.B. in dubio pro reo) | **Nein** | Verwerfen |
@@ -51,13 +51,11 @@ Massgebend ist: **Überlebt der Schuldspruch zum Hauptdelikt die Berufung in sei
 ### Modell-Abgrenzung (Welches Modell wählen?)
 
 * **`SexualdeliktUrteil`**: Ist ein Sexualdelikt (Art. 189, 190, 191, 187 StGB) das dominante oder auch nur ein mitverurteiltes Delikt, gehört der Fall zwingend in `SexualdeliktUrteil` – selbst wenn daneben erhebliche Körperverletzungen, Drohungen oder Freiheitsberaubungen vorliegen.
-* **`BetmUrteil`**: Reine Betäubungsmitteldelikte (Art. 19 ff. BetmG). **Ketamin-Achtung:** Ist
-  Ketamin das Hauptbetäubungsmittel, den Fall vorerst überspringen (ML-Modell wurde ohne Ketamin
-  trainiert und wirft bei Ketamin in der DB einen Fehler). Ist Ketamin nur Nebenbestandteil neben
-  einer anderen Hauptdroge, den Fall wie gewohnt eintragen, aber den Ketamin-Anteil nicht als
-  `Betm`-Datensatz erfassen.
-* **`Urteil`**: Reine Vermögensdelikte (Art. 138, 139, 140, 144, 146 StGB etc., sofern kein Waffeneinsatz/Gewalt gegen Leib und Leben dominierte).
-* **`GewaltdeliktUrteil`**: Delikte gegen Leib und Leben (Mord, vorsätzliche Tötung, schwere/einfache Körperverletzung, Tätlichkeiten, Gefährdung des Lebens, Raub, Angriff, Raufhandel).
+* **`BetmUrteil`**: Reine oder dominante Betäubungsmitteldelikte (Art. 19 ff. BetmG).
+  * **Zwingendes Einsatzstrafen-Prinzip (Keine reinen Annex-Urteile):** Das Betäubungsmitteldelikt **muss** die vorinstanzliche **Einsatzstrafe** tragen! Ist das Betm-Delikt lediglich ein Nebendelikt, das zu einer schwereren Straftat (z.B. Art. 285 StGB Gewalt und Drohung gegen Behörden, Art. 140 StGB Raub, Art. 111 StGB Tötung) hinzuasperiert wurde (wie in Fall ID 426), darf das Urteil **nicht** in `BetmUrteil` aufgenommen werden bzw. muss gelöscht werden (inkl. allfälliger `Betm`-Kinddatensätze).
+  * **Ketamin-Achtung:** Ist Ketamin das Hauptbetäubungsmittel, den Fall vorerst überspringen (ML-Modell wurde ohne Ketamin trainiert und wirft bei Ketamin in der DB einen Fehler). Ist Ketamin nur Nebenbestandteil neben einer anderen Hauptdroge, den Fall wie gewohnt eintragen, aber den Ketamin-Anteil nicht als `Betm`-Datensatz erfassen.
+* **`Urteil`**: Reine Vermögensdelikte (Art. 138, 139, 140, 144, 146 StGB etc., sofern kein Waffeneinsatz/Gewalt gegen Leib und Leben dominierte). Auch hier gilt: Eines der Hauptdelikte des Modells (`Betrug`, `Veruntreuung`, `ung. Geschäftsbesorgung`, `betr. Missbrauch DVA`, `Diebstahl`, `Sachbeschädigung`) muss die vorinstanzliche Einsatzstrafe tragen; wurde das Vermögensdelikt nur zu einem schwereren Delikt hinzuasperiert, gehört der Fall nicht in `Urteil`.
+* **`GewaltdeliktUrteil`**: Delikte gegen Leib und Leben (Mord, vorsätzliche Tötung, schwere/einfache Körperverletzung, Tätlichkeiten, Gefährdung des Lebens, Raub, Angriff, Raufhandel). Auch hier gilt: Das Gewaltdelikt muss das tragende Hauptdelikt (Einsatzstrafe) sein.
 * **Komplexe Mehrfachtäter- und Seriendelikte**: Fälle mit mehr als 3–4 Tatkomplexen, unzähligen Opfern über viele Jahre oder unentwirrbaren Anklagepunkten im Zweifel überspringen, da die Reduktion auf ein strukturiertes Schema fehleranfällig ist.
 
 ---
@@ -135,7 +133,7 @@ Choices **niemals erraten**, sondern bei Unklarheit per Shell prüfen.
 | `verletzungsfolge` | Choice | `'keine'`, `'Tätlichkeit'`, `'leicht'`, `'erheblich'`, `'schwer'`, `'lebensgefährlich'`, `'Tod'`. **Massgebend ist die tatsächlich eingetretene Folge**, nicht die hypothetische Gefahr. |
 | `lebensgefahr` | Boolean | `True`, wenn eine konkrete Lebensgefahr für das Opfer geschaffen wurde (auch wenn z.B. Art. 129 StGB mangels Skrupellosigkeit verneint oder Art. 140 Ziff. 4 StGB bejaht wurde). |
 | `besondere_gefaehrlichkeit` | Boolean | `True`, wenn besondere Skrupellosigkeit, Grausamkeit oder besondere Gefährlichkeit vorliegt (z.B. Art. 112 oder Art. 140 Ziff. 3 StGB). |
-| `deliktsscore_uebrige_delikte` | Integer | Punktesumme aller **weiteren Schuldsprüche ausser dem Hauptdelikt** (finaler Stand nach Berufung):<br>• **+1** pro Vergehen (Höchststrafe bis 3 Jahre)<br>• **+2** pro Verbrechen (Höchststrafe > 3 Jahre)<br>• **+1 zusätzlich**, wenn dieses Nebendelikt mehrfach begangen wurde<br>• Übertretungen zählen 0 Punkte. |
+| `deliktsscore_uebrige_delikte` | Integer | Punktesumme aller **weiteren Schuldsprüche ausser dem Hauptdelikt** (**Stand der Vorinstanz**, Änderungen durch das Berufungsgericht bleiben unberücksichtigt; Berechnung in `bemerkungen` festhalten). Gilt gleich für `nebenverurteilungsscore` (`Urteil`, `BetmUrteil`):<br>• **+1** pro Vergehen (Höchststrafe bis 3 Jahre)<br>• **+2** pro Verbrechen (Höchststrafe > 3 Jahre)<br>• **+1 zusätzlich**, wenn dieses Nebendelikt mehrfach begangen wurde<br>• Übertretungen zählen 0 Punkte. |
 | `hauptsanktion` | Choice | `'0'` Freiheitsstrafe, `'1'` Geldstrafe, `'2'` Busse (Vorinstanz!). |
 | `freiheitsstrafe_in_monaten` | Integer | Vorinstanzliche Freiheitsstrafe in Monaten. Bei Geldstrafe `0` setzen. |
 | `anzahl_tagessaetze` | Integer | Vorinstanzliche Anzahl Tagessätze. Bei Freiheitsstrafe `0` setzen. |
@@ -155,23 +153,44 @@ Choices **niemals erraten**, sondern bei Unklarheit per Shell prüfen.
 
 ### `zusammenfassung`
 > [!IMPORTANT]
-> **Die Zusammenfassung darf nicht zu kurz sein!**
-> Richtwert: **2 bis 4 strukturierte Absätze (ca. 1500–3000 Zeichen)**. Niemals den Berufungsausgang auslassen oder mittendrin abbrechen!
+> **Verbindliche Mindestanforderungen an das Feld `zusammenfassung`:**
+> 1. **Umfang:** Mindestens **1'500 Zeichen** (Richtwert: **1'500 bis 3'000+ Zeichen**). Texte unter 1'500 Zeichen gelten als unvollständig und werden im Audit beanstandet.
+> 2. **Form:** Wenn es sich um ein Urteil eine Rechtsmittelinstanz handelt: Exakt **vier nummerierte/gegliederte Absätze**, die im Textfeld zwingend durch eine Leerzeile (`\n\n`) getrennt sind. Keine Stichpunktlisten als Absätze, keine vorzeitigen Abbrüche! Wenn es sich um ein Urteil der Erstinstanz handelt: Zwei Absätze (Sachverhalt & Tatausführungen; Urteil & massgebende Strafzumessungsüberlegungen.)
+> 3. **Vollständigkeit:** Sowohl die vorinstanzliche Zumessung als auch das vollständige Berufungsdispositiv mit allen Anträgen, Rechtsfragen und der exakten Strafzumessungsmechanik müssen lückenlos abgebildet sein.
 
-Struktur der Zusammenfassung:
-1. **Absatz 1: Sachverhalt & Tatausführung:**
-   Wer, wann, wo, wie und warum? Konkrete Handlung, eingesetzte Tatmittel/Waffen, Rolle von Mittätern, Dynamik (Streit, Eifersucht, Überforderung), konkrete Verletzungen des Opfers (Brüche, Hämatome, Schnittwunden, Traumata, Arbeitsunfähigkeit).
-2. **Absatz 2: Vorinstanzliches Urteil (Erstinstanz):**
-   Welches Gericht sprach wann welches Urteil aus? Schuldsprüche (Haupt- und Nebendelikte), verhängte Sanktion (Freiheitsstrafe in Monaten/Jahren, Geldstrafe, Tagessatzhöhe), Vollzugsform (Probezeit), allfällige Landesverweisung und Zivilansprüche (Genugtuung, Schadenersatz).
-3. **Absatz 3: Berufungsverfahren & Anträge:**
-   Wer hat Berufung / Anschlussberufung erhoben? Was wurde verlangt (Freispruch, Schuldspruchänderung, Strafreduktion, Strafverschärfung, Aufhebung der Landesverweisung)? Standpunkt der Verteidigung (z.B. Notwehr, fehlender Vorsatz, Beweisanträge).
-4. **Absatz 4: Entscheid des Berufungsgerichts & Strafzumessung:**
-   Wie hat das Berufungsgericht entschieden? Wurde der Schuldspruch bestätigt oder geändert?
-   *Detaillierte Darlegung der Strafzumessung:*
-   * Einsatzstrafe für das Hauptdelikt (objektive und subjektive Tatschwere).
-   * Asperation der Nebendelikte.
-   * **Strafminderungen:** Wurde ein **Geständnisrabatt** gewährt (in welchem Umfang)? Wurde eine **verminderte Schuldfähigkeit** (Art. 19 Abs. 2 StGB) berücksichtigt? Wurde das **Beschleunigungsgebot** verletzt (wieviele Monate Abzug)?
-   * **Definitive Endstrafe:** Das vom Berufungsgericht definitiv ausgefällte Strafmass, der Vollzug und die Entscheidung über die Landesverweisung.
+#### Die vier Pflicht-Absätze im Detail:
+
+1. **Absatz 1: Sachverhalt & Tatausführung**
+   * *Bei Betäubungsmitteldelikten (`BetmUrteil`):* Detaillierte Darlegung der Drogenmengen (Brutto-, Netto- und insbesondere **Reinstoffmengen** gemäss Gutachten), Art der Betäubungsmittel (Kokain, Heroin, Marihuana etc.), Täterrolle (z.B. internationaler Drogenkurier, Grosshändler, Bunkerhalter, Zwischenhändler, Strassenverkäufer/Läufer), Tatzeitraum und geografischer Handlungsradius (Grenzübertritte, Kantone, Übergabeorte), Handlungsformen (Einfuhr, Besitz, Feilbieten, Handel, Lagerung), erzielter bzw. angestrebter Gewinn/Umsatz, Bezahlung/Entlohnung (Kurierlohn, Deckung des Eigenkonsums), allfällige Waffen oder Sicherungsmassnahmen.
+   * *Bei Gewaltdelikten (`GewaltdeliktUrteil`):* Wer, wann, wo, wie und warum? Konkrete Handlung, eingesetzte Tatmittel/Waffen, Rolle von Mittätern, Dynamik (Streit, Eifersucht, Überforderung, Provokation), konkrete Verletzungen des Opfers (Brüche, Hämatome, Schnittwunden, Traumata, Hospitalisierung, Arbeitsunfähigkeit).
+   * *Bei Sexualdelikten (`SexualdeliktUrteil`):* Konkrete Tathandlungen, Nötigungsmittel/Gewalt, Alter und Schutzbedürftigkeit des Opfers, Tatdynamik, psychische und physische Folgen.
+   * *Bei Vermögensdelikten (`Urteil`):* Konkrete Tatmethode je Tatbestand (Betrug: Täuschungshandlung und worin die Arglist lag; Veruntreuung: welche Vermögenswerte anvertraut waren und wie sie zweckwidrig verwendet wurden; ungetreue Geschäftsbesorgung: Vermögensfürsorgepflicht/Stellung und Pflichtverletzung; betrügerischer Missbrauch DVA: Art der Manipulation bzw. unbefugten Datenverwendung; Diebstahl: Modus wie Einbruch, Taschen-, Laden- oder Trickdiebstahl; Sachbeschädigung: Objekt und Schadensbild), Anzahl Einzeltaten, Tatzeitraum, Rolle von Mittätern bzw. Bande, **Deliktssumme** (Gesamtbetrag und der für das Hauptdelikt bzw. die Einsatzstrafe massgebende Betrag — dieser muss mit dem Feld `deliktssumme` übereinstimmen), Art der Geschädigten (Privatpersonen, Unternehmen, Staat/Sozialversicherungen; Vertrauensverhältnis oder besondere Verletzlichkeit, z.B. betagte Opfer), Verwendung des Deliktsgutes (Lebensunterhalt, Schulden, Spielsucht, Luxus), Indizien für Gewerbsmässigkeit (Einkommensanteil, Zeitaufwand, Planmässigkeit) sowie allfällige Schadenswiedergutmachung oder Rückzahlungen.
+
+2. **Absatz 2: Vorinstanzliches Urteil (Erstinstanz)**
+   * Welches Gericht sprach an welchem Datum das erstinstanzliche Urteil aus (z.B. *Bezirksgericht Aarau*, *Strafgericht Basel-Stadt*, *Tribunal de police de Genève*)?
+   * Sämtliche Schuldsprüche (Hauptdelikt und Nebendelikte) sowie eventuelle vorinstanzliche Freisprüche.
+   * Exakt verhängte Hauptsanktion: Dauer der Freiheitsstrafe in Monaten/Jahren bzw. Anzahl Tagessätze der Geldstrafe mit Tagessatzhöhe.
+   * Vollzugsform: unbedingt, bedingt (unter Angabe der Probezeit) oder teilbedingt (mit genauem Verhältnis von unbedingtem und bedingtem Teil).
+   * Allfällige Massnahmen (Art. 59, 60, 63 StGB), Verbindungsstrafen/Bussen, Landesverweisung (Dauer und Rechtsgrundlage Art. 66a StGB) sowie Zivilforderungen/Genugtuungen.
+   * *Bei Vermögensdelikten (`Urteil`) zusätzlich:* Qualifikationen des Hauptdelikts so, wie sie im Schuldspruch stehen (mehrfach, gewerbsmässig, bandenmässig, Gehilfenschaft), Ersatzforderung/Einziehung und Schadenersatz. Bei Widerruf mit Gesamtstrafe bzw. bei Zusatzstrafe (Art. 49 Abs. 2 StGB) klar trennen, welcher Teil auf die neuen Taten entfällt (= Wert im Feld) und welcher auf die widerrufene bzw. frühere Strafe.
+
+3. **Absatz 3 (nur, wenn es sich um ein Urteil einer Rechtsmittel- bzw. Berufungsinstanz handelt): Berufungsverfahren & Parteianträge**
+   * Wer hat Berufung bzw. Anschlussberufung erhoben (Beschuldigter, Staatsanwaltschaft, Privatkläger)?
+   * Genaue Rechtsbegehren und Anträge der Parteien (z.B. Freispruch von Haupt- oder Nebenvorwürfen, Reduktion des Strafmasses auf ein bestimmtes Quantum, Gewährung des bedingten/teilbedingten Vollzugs, Verzicht auf Landesverweisung oder Verschärfungsantrag der Staatsanwaltschaft).
+   * Standpunkt und Rügen der Verteidigung: Bestreitung des Tatnachweises, Geltendmachung von Notwehr/Notwehrexzess, fehlender Vorsatz/Fahrlässigkeit, Beweisanträge, persönliche Notlage, psychische Verfassung oder Verletzung des Beschleunigungsgebots.
+
+4. **Absatz 4: Berufungsentscheid (nur bei Urteilen von Rechtsmittel- bzw. Berufungsinstanzen) & Detaillierte wiedergabe der wichtigsten Strafzumessungserwägungen des Gerichts (wichtigste Info: immer!)**
+   * Entscheid des Berufungsgerichts im Dispositiv: Wurde die Berufung abgewiesen, gutgeheissen oder teilweise gutgeheissen? Bestätigung oder Änderung der Schuldsprüche.
+   * **Strafzumessungsmechanik im Detail:**
+     * **Einsatzstrafe:** Festlegung der Einsatzstrafe für das Hauptdelikt nach objektiver und subjektiver Tatschwere (z.B. Berücksichtigung von Täterrolle, Verschuldensgrad, Hierarchiestufe). Welche Strafzumessungsmerkmale / Gründe hat das Gericht besonders hervorgehoben?
+     * **Asperation (Art. 49 Abs. 1 StGB):** Konkrete Strafschärfung für die weiteren Delikte (wie viele Monate/Tage wurden für welches Nebendelikt hinzuasperiert?).
+     * **Täterkomponenten & Strafminderungen:**
+       * **Geständnisrabatt:** Wurde ein Geständnis, Reue oder Kooperation strafmindernd honoriert? Das Ausmass ist zwingend präzise zu beziffern (z.B. *"Geständnisrabatt von 20% bzw. 8 Monaten"*).
+       * **Verminderte Schuldfähigkeit (Art. 19 Abs. 2 StGB):** Wurde eine Einschränkung bejaht (leicht, mittel, schwer), welche Diagnose lag vor und wie stark wurde die Strafe reduziert?
+       * **Verletzung des Beschleunigungsgebots (Art. 5 Abs. 2 StPO):** Dauer der Überliegezeit und genaue Kompensation (z.B. Strafminderung um 3 Monate).
+       * Vorstrafen, Vorleben und persönliche Verhältnisse.
+       * *Bei Vermögensdelikten (`Urteil`):* Gewichtung der Deliktssumme und der Anzahl Geschädigten für die Tatschwere, Strafrahmen bei Gewerbsmässigkeit, Strafmilderung wegen aufrichtiger Reue bzw. Wiedergutmachung (Art. 48 lit. d, Art. 53 StGB) oder wegen Rückzahlungen, einschlägige Vorstrafen bzw. Delinquenz während laufender Probezeit sowie die Legalprognose für den Vollzug.
+     * **Definitive Endstrafe:** Das vom Berufungsgericht definitiv ausgefällte Strafmass, die endgültige Vollzugsform (inkl. Probezeit), Entscheid über die Landesverweisung und Kostenregelung.
 
 ---
 
@@ -247,7 +266,7 @@ Vor dem Beenden jedes Falls diese Punkte abhaken:
 - [ ] **Geständnisrabatt:** Geprüft, ob Geständnis/Reue strafmindernd gewürdigt wurde → falls ja: `besonderheiten` enthält `'Geständnisrabatt'` und Zusammenfassung beziffert den Rabatt.
 - [ ] **Verminderte Schuldfähigkeit:** Geprüft, ob Art. 19 Abs. 2 StGB angewandt wurde → falls ja: `besonderheiten` enthält `'verminderte Schuldfähigkeit'`.
 - [ ] **Tatmittel-Präzision:** Abgebrochene Glasflaschen/Scherben = `'Messer/Stichwaffe'` (*"auch Glas/Flasche"*); Krücken/Stangen = `'stumpfer Gegenstand'`.
-- [ ] **`deliktsscore_uebrige_delikte`** anhand der finalen (post-Berufung) Schuldsprüche berechnet.
+- [ ] **`deliktsscore_uebrige_delikte`** bzw. `nebenverurteilungsscore` anhand der **vorinstanzlichen** Schuldsprüche berechnet.
 - [ ] **FS/TS-Konvention:** Bei Freiheitsstrafe `anzahl_tagessaetze=0`; bei Geldstrafe `freiheitsstrafe_in_monaten=0`.
 - [ ] **`full_clean()` vor `save()`** ausgeführt.
 - [ ] **`besonderheiten`** nach dem Speichern via `.set(...)` zugewiesen.

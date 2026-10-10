@@ -16,7 +16,9 @@ Die Datenbank sammelt systematisch **erstinstanzliche Strafzumessungsentscheide*
 Daraus ergibt sich das fundamentale **Zwei-Ebenen-Prinzip**:
 
 1. **Strukturierte Datenbankfelder = VORINSTANZ:**
-   Die Felder `gericht`, `urteilsdatum`, `hauptsanktion`, `freiheitsstrafe_in_monaten`, `anzahl_tagessaetze`, `vollzug`, `lebensgefahr`, `besondere_gefaehrlichkeit` etc. bilden konsequent das **vorinstanzliche Urteil** ab. Selbst wenn das Berufungsgericht die Strafe später senkt, erhöht oder den Vollzug anpasst, bleiben in diesen Feldern die Werte der Vorinstanz stehen!
+   Die Felder `gericht`, `urteilsdatum`, `hauptsanktion`, `freiheitsstrafe_in_monaten`, `anzahl_tagessaetze`, `vollzug`, `lebensgefahr`, `besondere_gefaehrlichkeit` etc. bilden konsequent das **vorinstanzliche Urteil** ab. Selbst wenn das Berufungsgericht die Strafe später senkt, erhöht oder den Vollzug anpasst, bleiben in diesen Feldern die Werte der Vorinstanz stehen! Davon gibt es zwei Ausnahmen (Nutzerentscheid 10.10.2026, siehe unten).
+   * **Ausnahme 1, freie Strafzumessung der Berufungsinstanz:** Konnte die Berufungsinstanz die Strafe frei festlegen, also ohne Einschränkung durch das Verschlechterungsverbot (Art. 391 Abs. 2 StPO), z.B. auf Berufung der Staatsanwaltschaft oder bei einem Schuldspruch erst im Berufungsverfahren auf Berufung der Privatklägerschaft, dürfen die Felder ausnahmsweise **aus Sicht der Berufungsinstanz** ausgefüllt werden (`gericht`, `urteilsdatum`, Sanktion und Vollzug, Score nach deren Schuldsprüchen). Das ist v.a. nötig, wenn die Vorinstanz vom Hauptdelikt freigesprochen hat. Begründung in `bemerkungen` festhalten.
+   * **Ausnahme 2, Freispruch durch die Berufungsinstanz:** Der Eintrag darf mit den vorinstanzlichen Werten bestehen bleiben, wenn (a) alle Felder aus den Erwägungen erkennbar sind (Vorstrafen, vorinstanzliche Sanktion und Strafzumessung usw.) **und** (b) das erstinstanzliche Urteil nur einen Schuldspruch wegen der Haupttat enthält, ohne weitere Vergehens- oder Verbrechensschuldsprüche, die keinen Konnex zum Hauptdelikt haben. Fehlt eine der Bedingungen, ist der Eintrag zu verwerfen.
    *Regelfall bei Berufungsurteilen als Quelle:* `fall_nr` ist die Geschäfts-Nr. des Obergerichts (z.B. `SST.2023.141`, `SK 22 32`), und `url_link` verlinkt das Dokument des Obergerichts.
 2. **`zusammenfassung` = BEIDE INSTANZEN:**
    Die Zusammenfassung ist der einzige Ort in der Datenbank, der den vollständigen Verfahrensverlauf dokumentiert. Sie muss sowohl den Vorinstanzentscheid als auch den **Berufungsausgang mit allen Abweichungen, Gutheissungen, Strafänderungen und Rabatten** wahrheitsgetreu und präzise festhalten.
@@ -42,11 +44,11 @@ Massgebend ist: **Überlebt der Schuldspruch zum Hauptdelikt die Berufung in sei
 | Nur Privatkläger/Staatsanwaltschaft erhob Berufung, Schuldspruch unangefochten rechtskräftig | **Ja** | Sehr sauber; Vorinstanz-Werte direkt übernehmen |
 | Hauptdelikt bestätigt, aber Teilfreispruch bei einem **Nebendelikt** | **Ja** | Score bleibt beim vorinstanzlichen Stand (Nebendelikt mitzählen); Teilfreispruch in `zusammenfassung`/`bemerkungen` festhalten |
 | Hauptdelikt bestätigt, Obergericht spricht bei einem **Nebendelikt zusätzlich schuldig** | **Ja** | Score bleibt beim vorinstanzlichen Stand (neues Nebendelikt nicht mitzählen); zusätzlichen Schuldspruch in `zusammenfassung`/`bemerkungen` festhalten |
-| Berufungsgericht korrigiert Strafmass (Erhöhung oder Senkung) oder Vollzug (z.B. unbedingt → bedingt) | **Ja** | Strukturierte Felder = Vorinstanz! Die Änderung wird detailliert in der Zusammenfassung begründet |
+| Berufungsgericht korrigiert Strafmass (Erhöhung oder Senkung) oder Vollzug (z.B. unbedingt → bedingt) | **Ja** | Strukturierte Felder = Vorinstanz! Die Änderung wird detailliert in der Zusammenfassung begründet. Ausnahme: War die Berufungsinstanz nicht durch das Verschlechterungsverbot gebunden, dürfen die Felder aus ihrer Sicht ausgefüllt werden (Ausnahme 1) |
 | Hauptdelikt wird **herabgestuft** (z.B. schwere Körperverletzung → einfache Körperverletzung, einfache Körperverletzung → Tätlichkeiten) | **Nein** | Verwerfen – die vorinstanzliche Qualifikation wurde verworfen |
-| Hauptdelikt wird **freigesprochen** (z.B. in dubio pro reo) | **Nein** | Verwerfen |
-| Vollständiger Freispruch oder Rückweisung an die Vorinstanz | **Nein** | Verwerfen |
-| Vorinstanz hatte **freigesprochen**, erst Obergericht verurteilt | **Nein** | Verwerfen – es existieren keine vorinstanzlichen Strafzumessungsdaten |
+| Hauptdelikt wird **freigesprochen** (z.B. in dubio pro reo) oder vollständiger Freispruch | **Nur ausnahmsweise** | Grundsätzlich verwerfen. Behalten (mit Vorinstanz-Werten) nur, wenn alle Felder aus den Erwägungen erkennbar sind **und** die Vorinstanz nur wegen der Haupttat verurteilt hatte, ohne weitere Vergehens-/Verbrechensschuldsprüche ohne Konnex zum Hauptdelikt (Ausnahme 2) |
+| Rückweisung an die Vorinstanz | **Nein** | Verwerfen |
+| Vorinstanz hatte **freigesprochen**, erst Obergericht verurteilt | **Ja, wenn frei zugemessen** | Felder aus Sicht der Berufungsinstanz, sofern sie die Strafe frei festlegen konnte (kein Verschlechterungsverbot, z.B. Berufung der Staatsanwaltschaft oder Privatklägerschaft; Ausnahme 1). Sonst verwerfen |
 
 ### Modell-Abgrenzung (Welches Modell wählen?)
 
@@ -133,7 +135,7 @@ Choices **niemals erraten**, sondern bei Unklarheit per Shell prüfen.
 | `verletzungsfolge` | Choice | `'keine'`, `'Tätlichkeit'`, `'leicht'`, `'erheblich'`, `'schwer'`, `'lebensgefährlich'`, `'Tod'`. **Massgebend ist die tatsächlich eingetretene Folge**, nicht die hypothetische Gefahr. |
 | `lebensgefahr` | Boolean | `True`, wenn eine konkrete Lebensgefahr für das Opfer geschaffen wurde (auch wenn z.B. Art. 129 StGB mangels Skrupellosigkeit verneint oder Art. 140 Ziff. 4 StGB bejaht wurde). |
 | `besondere_gefaehrlichkeit` | Boolean | `True`, wenn besondere Skrupellosigkeit, Grausamkeit oder besondere Gefährlichkeit vorliegt (z.B. Art. 112 oder Art. 140 Ziff. 3 StGB). |
-| `deliktsscore_uebrige_delikte` | Integer | Punktesumme aller **weiteren Schuldsprüche ausser dem Hauptdelikt** (**Stand der Vorinstanz**, Änderungen durch das Berufungsgericht bleiben unberücksichtigt; Berechnung in `bemerkungen` festhalten). Gilt gleich für `nebenverurteilungsscore` (`Urteil`, `BetmUrteil`):<br>• **+1** pro Vergehen (Höchststrafe bis 3 Jahre)<br>• **+2** pro Verbrechen (Höchststrafe > 3 Jahre)<br>• **+1 zusätzlich**, wenn dieses Nebendelikt mehrfach begangen wurde<br>• Übertretungen zählen 0 Punkte.<br>• Gezählt wird **pro Schuldspruch** im vorinstanzlichen Dispositiv: Separate Schuldsprüche nach demselben Artikel zählen je einzeln, auch neben dem Hauptdelikt (z.B. versuchter Betrug neben gewerbsmässigem Betrug). |
+| `deliktsscore_uebrige_delikte` | Integer | Punktesumme aller **weiteren Schuldsprüche ausser dem Hauptdelikt** (**Stand der Vorinstanz**, Änderungen durch das Berufungsgericht bleiben unberücksichtigt, ausser bei Ausnahme 1 im Überblick; Berechnung in `bemerkungen` festhalten). Gilt gleich für `nebenverurteilungsscore` (`Urteil`, `BetmUrteil`):<br>• **+1** pro Vergehen (Höchststrafe bis 3 Jahre)<br>• **+2** pro Verbrechen (Höchststrafe > 3 Jahre)<br>• **+1 zusätzlich**, wenn dieses Nebendelikt mehrfach begangen wurde<br>• Übertretungen zählen 0 Punkte.<br>• Gezählt wird **pro Schuldspruch** im vorinstanzlichen Dispositiv: Separate Schuldsprüche nach demselben Artikel zählen je einzeln, auch neben dem Hauptdelikt (z.B. versuchter Betrug neben gewerbsmässigem Betrug). |
 | `hauptsanktion` | Choice | `'0'` Freiheitsstrafe, `'1'` Geldstrafe, `'2'` Busse (Vorinstanz!). |
 | `freiheitsstrafe_in_monaten` | Integer | Vorinstanzliche Freiheitsstrafe in Monaten. Bei Geldstrafe `0` setzen. |
 | `anzahl_tagessaetze` | Integer | Vorinstanzliche Anzahl Tagessätze. Bei Freiheitsstrafe `0` setzen. |
@@ -258,10 +260,10 @@ EOF
 
 Vor dem Beenden jedes Falls diese Punkte abhaken:
 
-- [ ] **Schuldspruch zum Hauptdelikt** übersteht die Berufung in seiner Qualifikation unverändert.
+- [ ] **Schuldspruch zum Hauptdelikt** übersteht die Berufung in seiner Qualifikation unverändert (sonst nur nach Ausnahme 1 oder 2 aus dem Überblick behalten).
 - [ ] **Modellabgrenzung** beachtet (keine Sexualdelikte in `GewaltdeliktUrteil`).
 - [ ] **Duplikat-Check** auf `fall_nr` durchgeführt.
-- [ ] **Vorinstanz-Werte in Feldern:** `gericht`, `urteilsdatum`, `hauptsanktion`, `freiheitsstrafe_in_monaten`, `anzahl_tagessaetze`, `vollzug` bilden exakt das erstinstanzliche Dispositiv ab.
+- [ ] **Vorinstanz-Werte in Feldern:** `gericht`, `urteilsdatum`, `hauptsanktion`, `freiheitsstrafe_in_monaten`, `anzahl_tagessaetze`, `vollzug` bilden exakt das erstinstanzliche Dispositiv ab (bzw. das der Berufungsinstanz, wenn Ausnahme 1 greift; Begründung in `bemerkungen`).
 - [ ] **Dispositiv-Abgleich:** Berufungsdispositiv Satz für Satz mit der Vorinstanz verglichen (Strafänderungen, Vollzug, Landesverweisung).
 - [ ] **Geständnisrabatt:** Geprüft, ob Geständnis/Reue strafmindernd gewürdigt wurde → falls ja: `besonderheiten` enthält `'Geständnisrabatt'` und Zusammenfassung beziffert den Rabatt.
 - [ ] **Verminderte Schuldfähigkeit:** Geprüft, ob Art. 19 Abs. 2 StGB angewandt wurde → falls ja: `besonderheiten` enthält `'verminderte Schuldfähigkeit'`.

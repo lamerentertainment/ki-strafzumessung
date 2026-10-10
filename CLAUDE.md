@@ -87,8 +87,19 @@ Praktisch heisst das:
   Verschlechterung, nicht vor Bestätigung).
 - Nur wenn das Obergericht selbst *strenger* urteilen musste/durfte (z.B. weil auch
   die Staatsanwaltschaft Berufung/Anschlussberufung erhoben hat), können vorinstanzliche
-  und Enddispositiv-Werte auseinanderfallen in die andere Richtung — auch dann gilt:
-  vorinstanzlicher Wert ins DB-Feld.
+  und Enddispositiv-Werte auseinanderfallen in die andere Richtung — auch dann gilt
+  grundsätzlich: vorinstanzlicher Wert ins DB-Feld.
+- **Ausnahme 1 (Nutzerentscheid 10.10.2026):** Konnte die Berufungsinstanz die Strafe frei
+  festlegen, also ohne Einschränkung durch das Verschlechterungsverbot (z.B. Berufung der
+  Staatsanwaltschaft, oder Schuldspruch erst im Berufungsverfahren auf Berufung der
+  Privatklägerschaft), dürfen die Felder ausnahmsweise aus Sicht der Berufungsinstanz
+  ausgefüllt werden (`gericht`, `urteilsdatum`, Sanktion, Score nach deren Schuldsprüchen).
+  Das ist v.a. nötig, wenn die Vorinstanz vom Hauptdelikt freigesprochen hat.
+- **Ausnahme 2 (Nutzerentscheid 10.10.2026), Freispruch durch die Berufungsinstanz:** Der
+  Eintrag darf mit den vorinstanzlichen Werten bestehen bleiben, wenn (a) alle Felder aus
+  den Erwägungen erkennbar sind und (b) das erstinstanzliche Urteil nur einen Schuldspruch
+  wegen der Haupttat enthält, ohne weitere Vergehens- oder Verbrechensschuldsprüche, die
+  keinen Konnex zum Vermögensdelikt haben. Sonst ist der Eintrag zu verwerfen.
 - `fall_nr` = die **Geschäfts-Nr. des Obergerichtsurteils** (z.B. `SB240509`), nicht die
   der Vorinstanz (steht so auch in der Feldbeschreibung: "Verfahrensnummer des
   obergerichtlichen Urteils, aus welchem die Informationen entstammen").

@@ -262,6 +262,15 @@ h1 {
 .kommentar .befund p { margin: 0; font-size: .95rem; color: var(--k-ink-2); }
 .kommentar .befund p + p { margin-top: .7rem; }
 
+/* Warnhinweis (z.B. KI-Disclaimer): rot-beige hinterlegt */
+.kommentar .befund.befund-warnung {
+    background: #f6e9e1;
+    border: 1px solid #e3c3b3;
+    border-left: 4px solid var(--k-sev-3);
+}
+.kommentar .befund.befund-warnung .tag { color: var(--k-sev-3); font-weight: 600; }
+.kommentar .befund.befund-warnung p { color: #4a2c22; }
+
 /* --- Quellenverzeichnis --- */
 .kommentar ol.quellen {
     list-style: decimal;

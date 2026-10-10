@@ -132,6 +132,12 @@ Massgebend ist immer der **vorinstanzliche** Schuldspruch: Spricht das Berufungs
 bei einem Nebendelikt frei oder zusätzlich schuldig, bleibt der Score unverändert; die
 Änderung gehört in `zusammenfassung` und `bemerkungen`.
 
+Gezählt wird **pro Schuldspruch** (pro Zeile im vorinstanzlichen Dispositiv), nicht pro
+Gesetzesartikel: Zwei separate Schuldsprüche nach demselben Artikel (z.B. Art. 251 Ziff. 1
+Abs. 2 und Abs. 3 StGB) zählen je einzeln, ebenso ein separater Schuldspruch nach dem Artikel
+des Hauptdelikts (z.B. einfacher oder versuchter Betrug neben dem gewerbsmässigen Betrug,
+versuchter Diebstahl neben dem mehrfachen Diebstahl). Nutzerentscheid vom 10.10.2026.
+
 Verbrechen/Vergehen-Einstufung anhand der Strafandrohung im Gesetzestext prüfen
 (nicht raten) — z.B. Art. 146/165/251 StGB (Höchststrafe 5 Jahre) = Verbrechen,
 Art. 166/305bis StGB (Höchststrafe 3 Jahre) = Vergehen, Art. 148a StGB Abs. 1

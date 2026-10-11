@@ -99,7 +99,16 @@ Praktisch heisst das:
   Eintrag darf mit den vorinstanzlichen Werten bestehen bleiben, wenn (a) alle Felder aus
   den Erwägungen erkennbar sind und (b) das erstinstanzliche Urteil nur einen Schuldspruch
   wegen der Haupttat enthält, ohne weitere Vergehens- oder Verbrechensschuldsprüche, die
-  keinen Konnex zum Vermögensdelikt haben. Sonst ist der Eintrag zu verwerfen.
+  keinen Konnex zum Vermögensdelikt haben. Sonst ist der Eintrag zu verwerfen. Gelockert durch Nutzerentscheid
+  vom 11.10.2026: Für (a) genügt, dass die **erfassten Feldwerte** bekannt sind (Vorinstanz-Sanktion und Vollzug,
+  Vorstrafen, Deliktssumme, Schuldsprüche usw.); dass das Berufungsurteil die Strafzumessungserwägungen der
+  Vorinstanz wiedergibt, ist nicht nötig.
+- **Herabstufung oder Tatbestandswechsel beim Hauptdelikt (Nutzerentscheide 11.10.2026):** Stuft die
+  Berufungsinstanz das Hauptdelikt herab, sei es nur durch Wegfall der Qualifikation (z.B. gewerbsmässiger →
+  einfacher Betrug), durch Wechsel zu einem anderen Tatbestand (z.B. Betrug → Art. 141bis StGB) oder bis zur
+  Übertretung (z.B. qualifizierte → geringfügige Sachbeschädigung), bleibt der Eintrag mit den vorinstanzlichen
+  Werten bestehen, sofern die erfassten Feldwerte bekannt sind. Fälle, bei denen das unklar ist, dem Nutzer melden
+  statt selbst löschen.
 - `fall_nr` = die **Geschäfts-Nr. des Obergerichtsurteils** (z.B. `SB240509`), nicht die
   der Vorinstanz (steht so auch in der Feldbeschreibung: "Verfahrensnummer des
   obergerichtlichen Urteils, aus welchem die Informationen entstammen").

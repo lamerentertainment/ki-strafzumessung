@@ -341,3 +341,6 @@ dbdumps/
 # Lokale Arbeitsliste Nachführung Zusammenfassung/Score Vermögensdelikte (nicht committen)
 /vermoegen-zf-nachfuehrung.md
 /vermoegen-zf-nachfuehrung-erzeugen.py
+
+# lokales Sync-Skript
+sync_to_staging.sh

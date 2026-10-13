@@ -417,16 +417,6 @@ class KIModelPickleFile(models.Model):
         return self.name
 
 
-class DiagrammSVG(models.Model):
-    name = models.CharField(max_length=50)
-    file = models.ImageField(upload_to="diagramme/")
-    lesehinweis = models.CharField(max_length=1000, blank=True, null=True)
-    last_updated = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.name
-
-
 class SexualdeliktUrteil(models.Model):
     fall_nr = models.CharField(
         max_length=15,

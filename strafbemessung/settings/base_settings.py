@@ -121,8 +121,6 @@ TIME_ZONE = 'Europe/Zurich'
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
 
 
@@ -137,15 +135,17 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# heroku 12 factor tutorial
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
 # test, vielleicht kann man so errno13 vermeiden
 MEDIA_URL = '/files/'
 MEDIA_ROOT = BASE_DIR / 'files'
 
 
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STORAGES = {
+    # Media (KI-Pickles, Encoder) liegen im S3-Bucket
+    "default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
+    # heroku 12 factor tutorial
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
 AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")

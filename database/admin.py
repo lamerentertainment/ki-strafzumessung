@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.utils.decorators import method_decorator
 import json
-from .models import (Urteil, KIModelPickleFile, DiagrammSVG, BetmUrteil, BetmArt, Betm, Rolle, Kanton,
+from .models import (Urteil, KIModelPickleFile, BetmUrteil, BetmArt, Betm, Rolle, Kanton,
                      SexualdeliktUrteil, Besonderheiten, Hauptdelikt, ZusaetzlicheSexualdelikte, Tatmittel,
                      GewaltdeliktUrteil, PraejudizensucheLog)
 from .services.urteil_extractor import (
@@ -477,7 +477,6 @@ class GewaltdeliktUrteilAdmin(admin.ModelAdmin):
 
 # Register your models here.
 admin.site.register(KIModelPickleFile)
-admin.site.register(DiagrammSVG)
 admin.site.register(BetmArt)
 admin.site.register(Betm),
 admin.site.register(Rolle),

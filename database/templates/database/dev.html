@@ -5,8 +5,6 @@
         <div class="col">
         <a type="button" class="btn btn-primary" href="{% url 'ws_kimodelle_neu_generieren' %}">KI-Modelle neu
             kalibrieren</a>
-            <a type="button" class="btn btn-primary" href="{% url 'ws_db_scatterplots_aktualisieren' %}">Scatterplots der 
-            Wirtschaftsdelikte neu kalibrieren</a>
         </div>
     </section>
     <h1>Eckwerte der verwendeten KI-Modelle</h1>
@@ -71,19 +69,6 @@
                     <span>Standardabweichung String:</span>
                     {{ val_rf_kimodel.prognoseleistung_dict.standardabweichung_string }}
                 </p>
-            </section>
-        </div>
-
-        <div class="row introspection-plot-section">
-            <section id="feature-importance-rf-regressor" class="col-4 mb-3">
-                <h4> Lesehinweis </h4>
-                {% autoescape off %}
-                <div>{{ introspection_plot.lesehinweis }}</div>
-                {% endautoescape %}
-            </section>
-            <section class="col-6 mb-3 erklaerungsstring">
-                <h4>Prognose-Plot</h4>
-                <img src="{{ introspection_plot.file.url }}" style="max-width: 100%">
             </section>
         </div>
 

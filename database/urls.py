@@ -38,11 +38,6 @@ urlpatterns = [
         views.ws_kimodelle_neu_generieren,
         name="ws_kimodelle_neu_generieren",
     ),
-    path(
-        "ws_db_scatterplots_aktualisieren",
-        views.ws_db_scatterplots_aktualisieren,
-        name="ws_db_scatterplots_aktualisieren",
-    ),
     path("csv_neu_speichern", views.csv_erstellen, name="csv_neu_speichern"),
     path("text_funktionsweise", views.text_funktionsweise, name="text_funktionsweise"),
     path(

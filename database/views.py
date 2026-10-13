@@ -7,7 +7,7 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import F
 from django.views.generic import ListView, DetailView
 from django.core.files.base import ContentFile
-from .models import Urteil, BetmUrteil, SexualdeliktUrteil, GewaltdeliktUrteil, BetmArt, KIModelPickleFile, DiagrammSVG
+from .models import Urteil, BetmUrteil, SexualdeliktUrteil, GewaltdeliktUrteil, BetmArt, KIModelPickleFile
 from .forms import (
     UrteilModelForm,
     UrteilsEckpunkteAbfrageFormular,
@@ -26,11 +26,9 @@ from .ai_utils import (
     y_und_x_erstellen,
     preprocessing_x,
     knn_pipeline,
-    introspection_plot_und_lesehinweis_ausgeben,
     kimodelle_neu_kalibrieren_und_abspeichern,
     sortierte_koeff_list_erstellen,
     vermoegensstrafrechts_urteile_codes_aufloesen,
-    introspection_plot_und_lesehinweis_abspeichern,
     betmurteile_onehotencoding,
     betmurteile_zusammenfuegen,
     betmurteile_fehlende_werte_auffuellen,
@@ -80,15 +78,6 @@ def homepage(request):
         "anzahl_gewalt_urteile": GewaltdeliktUrteil.objects.count(),
     }
     return render(request, "database/homepage.html", context)
-
-
-def ws_db_scatterplots_aktualisieren(request):
-    datenbank_scatterplots_aktualisieren()
-    messages.success(
-        request,
-        "Die Datenbank Scatterplots für Wirtschafsdelikte wurden erfolgreich neu erstellt",
-    )
-    return redirect("dev")
 
 
 class UrteilErstellenView(LoginRequiredMixin, generic.CreateView):
@@ -305,35 +294,12 @@ def ws_evaluation(request):
                 for tup in sortierte_feature_wichtigkeit_tuple_liste_vollzugsmodel
             ]
 
-            # introspection plot
-            (
-                introspection_plot,
-                lesehinweis,
-            ) = introspection_plot_und_lesehinweis_ausgeben(
-                Urteil,
-                xlim=200000,
-                titel="Prognose (Deliktssumme bis Fr. 200'000)",
-                cleaned_data_dict=form.cleaned_data,
-            )
-            (
-                introspection_plot2,
-                lesehinweis2,
-            ) = introspection_plot_und_lesehinweis_ausgeben(
-                Urteil,
-                xlim=1000000,
-                titel="Prognose (Deliktssumme bis Fr. 1'000'000)",
-                cleaned_data_dict=form.cleaned_data,
-            )
-
             # kontext füllen
             context = {
                 "mae": scores1,
                 "durchschnittliche_fehlerquote": round(sum(scores1) / 5, 2),
                 "zip": sortierte_feature_wichtigkeit_tuple_liste_in_prozenten,
                 "zip_vollzugsmodel": sortierte_feature_wichtigkeit_tuple_liste_in_prozenten_vollzugsmodel,
-                "introspection_plot": introspection_plot,
-                "introspection_plot2": introspection_plot2,
-                "lesehinweis": lesehinweis,
                 "form": form,
             }
             return render(request, "database/ws_evaluation.html", context)
@@ -364,15 +330,12 @@ def ws_evaluation(request):
         all_rf_kimodel = KIModelPickleFile.objects.get(name="rf_regr_all")
         lr_kimodel = KIModelPickleFile.objects.get(name="lr_regr_all")
 
-        introspection_plot = DiagrammSVG.objects.get(name="introspection_plot")
-
         # kontext füllen
         context = {
             "val_rf_kimodel": val_rf_kimodel,
             "val_rf_clf_kimodel_vollzugsart": val_rf_clf_kimodel_vollzugsart,
             "val_rf_clf_kimodel_sanktionsart": val_rf_clf_kimodel_sanktionsart,
             "all_rf_kimodel": all_rf_kimodel,
-            "introspection_plot": introspection_plot,
             "konformes_urteil": konformes_urteil,
             "unkonformes_urteil": unkonformes_urteil,
         }
@@ -1517,15 +1480,12 @@ def dev(request):
     )
     koeffizientenliste = sortierte_koeff_list_erstellen(linear_regression_regressor)
 
-    introspection_plot = DiagrammSVG.objects.get(name="introspection_plot")
-
     context = {
         "val_rf_kimodel": val_rf_kimodel,
         "val_rf_clf_kimodel": val_rf_clf_kimodel,
         "all_rf_kimodel": all_rf_kimodel,
         "lr_kimodel": lr_kimodel,
         "koeff_liste": koeffizientenliste,
-        "introspection_plot": introspection_plot,
         "unkonformes_urteil": unkonformes_urteil,
         "konformes_urteil": konformes_urteil,
     }
@@ -1535,9 +1495,7 @@ def dev(request):
 @login_required
 def ws_kimodelle_neu_generieren(request):
     kimodelle_neu_kalibrieren_und_abspeichern()
-    introspection_plot_und_lesehinweis_abspeichern()
     messages.success(request, "Die KI-Modelle wurden erfolgreich aktualisiert.")
-    messages.success(request, "Der Introspection Plot wurde erfolgreich neu erstellt")
     return redirect("dev")
 
 

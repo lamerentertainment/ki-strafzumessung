@@ -84,7 +84,7 @@ WSGI_APPLICATION = 'strafbemessung.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'kizumessung',
+        'NAME': env('LOCAL_DB_NAME', default='kizumessung'),
         'USER': 'djangouser',
         'PASSWORD': 'dummy_pw',
         'HOST': 'localhost',

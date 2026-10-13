@@ -11,7 +11,6 @@ from .models import Urteil, BetmUrteil, SexualdeliktUrteil, GewaltdeliktUrteil, 
 from .forms import (
     UrteilModelForm,
     UrteilsEckpunkteAbfrageFormular,
-    CeteribusParibusFormular,
     BetmUrteilsEckpunkteAbfrageFormular,
     UrteilBearbeitenForm,
     BetmUrteilBearbeitenForm,
@@ -23,8 +22,6 @@ from django.views import generic
 from django.urls import reverse, reverse_lazy
 from .ai_utils import (
     formulareingaben_in_abfragesample_konvertieren,
-    y_und_x_erstellen,
-    preprocessing_x,
     knn_pipeline,
     kimodelle_neu_kalibrieren_und_abspeichern,
     sortierte_koeff_list_erstellen,
@@ -65,7 +62,6 @@ from .aws_helpers import (
     ki_modell_als_pickle_file_speichern,
 )
 import pickle
-from sklearn.model_selection import cross_val_score
 
 
 def homepage(request):
@@ -248,97 +244,40 @@ class GewaltdeliktUrteilDetailView(InlineBearbeitbarMixin, DetailView):
 
 # KI-Model Views:
 def ws_evaluation(request):
-    if request.method == "POST":
-        form = CeteribusParibusFormular(request.POST)
+    # kimodelle mit nur validen features laden
+    val_rf_kimodel = KIModelPickleFile.objects.get(name="rf_regr_val")
+    val_rf_clf_kimodel_vollzugsart = KIModelPickleFile.objects.get(
+        name="rf_clf_val"
+    )
+    val_rf_clf_kimodel_sanktionsart = KIModelPickleFile.objects.get(
+        name="rf_clf_sanktionsart_val"
+    )
 
-        if form.is_valid():
-            # strafhöhe-ki-modell
-            loaded_model = pickle.load(open("database/ai-model/model.pkl", "rb"))
-            y, x = y_und_x_erstellen(urteil_model=Urteil, zielwert="hoehe_strafe")
-            x = preprocessing_x(x)
-            scores1 = -1 * cross_val_score(
-                loaded_model, x, y, cv=5, scoring="neg_mean_absolute_error"
-            )
+    # Urteile mit bester und schlechtester Prognoseleistung laden, um im template darauf verlinken zu können
+    konformes_urteil = Urteil.objects.get(
+        fall_nr=val_rf_kimodel.prognoseleistung_dict[
+            "beste_prognoseleistung_urteil"
+        ]
+    )
+    unkonformes_urteil = Urteil.objects.get(
+        fall_nr=val_rf_kimodel.prognoseleistung_dict[
+            "schlechteste_prognoseleistung_urteil"
+        ]
+    )
 
-            # strafhöhe-ki-modell features wichtigkeitsliste erstellen
-            zip_liste_mit_feauture_wichtigkeit_tuples = list(
-                zip(loaded_model.feature_names_in_, loaded_model.feature_importances_)
-            )
-            sortierte_feature_wichtigkeit_tuple_liste = sorted(
-                zip_liste_mit_feauture_wichtigkeit_tuples,
-                key=lambda tup: tup[1],
-                reverse=True,
-            )
-            sortierte_feature_wichtigkeit_tuple_liste_in_prozenten = [
-                (tup[0], tup[1] * 100)
-                for tup in sortierte_feature_wichtigkeit_tuple_liste
-            ]
+    # kimodelle mit allen features laden
+    all_rf_kimodel = KIModelPickleFile.objects.get(name="rf_regr_all")
+    lr_kimodel = KIModelPickleFile.objects.get(name="lr_regr_all")
 
-            # vollzugs-ki-modell features wichtigkeitsliste erstellen
-            loaded_vollzugsmodel = pickle.load(
-                open("database/ai-model/model2.pkl", "rb")
-            )
-            zip_liste_mit_feauture_wichtigkeit_tuples_vollzugsmodel = list(
-                zip(
-                    loaded_vollzugsmodel.feature_names_in_,
-                    loaded_vollzugsmodel.feature_importances_,
-                )
-            )
-            sortierte_feature_wichtigkeit_tuple_liste_vollzugsmodel = sorted(
-                zip_liste_mit_feauture_wichtigkeit_tuples_vollzugsmodel,
-                key=lambda tup: tup[1],
-                reverse=True,
-            )
-            sortierte_feature_wichtigkeit_tuple_liste_in_prozenten_vollzugsmodel = [
-                (tup[0], tup[1] * 100)
-                for tup in sortierte_feature_wichtigkeit_tuple_liste_vollzugsmodel
-            ]
-
-            # kontext füllen
-            context = {
-                "mae": scores1,
-                "durchschnittliche_fehlerquote": round(sum(scores1) / 5, 2),
-                "zip": sortierte_feature_wichtigkeit_tuple_liste_in_prozenten,
-                "zip_vollzugsmodel": sortierte_feature_wichtigkeit_tuple_liste_in_prozenten_vollzugsmodel,
-                "form": form,
-            }
-            return render(request, "database/ws_evaluation.html", context)
-
-    else:
-        # kimodelle mit nur validen features laden
-        val_rf_kimodel = KIModelPickleFile.objects.get(name="rf_regr_val")
-        val_rf_clf_kimodel_vollzugsart = KIModelPickleFile.objects.get(
-            name="rf_clf_val"
-        )
-        val_rf_clf_kimodel_sanktionsart = KIModelPickleFile.objects.get(
-            name="rf_clf_sanktionsart_val"
-        )
-
-        # Urteile mit bester und schlechtester Prognoseleistung laden, um im template darauf verlinken zu können
-        konformes_urteil = Urteil.objects.get(
-            fall_nr=val_rf_kimodel.prognoseleistung_dict[
-                "beste_prognoseleistung_urteil"
-            ]
-        )
-        unkonformes_urteil = Urteil.objects.get(
-            fall_nr=val_rf_kimodel.prognoseleistung_dict[
-                "schlechteste_prognoseleistung_urteil"
-            ]
-        )
-
-        # kimodelle mit allen features laden
-        all_rf_kimodel = KIModelPickleFile.objects.get(name="rf_regr_all")
-        lr_kimodel = KIModelPickleFile.objects.get(name="lr_regr_all")
-
-        # kontext füllen
-        context = {
-            "val_rf_kimodel": val_rf_kimodel,
-            "val_rf_clf_kimodel_vollzugsart": val_rf_clf_kimodel_vollzugsart,
-            "val_rf_clf_kimodel_sanktionsart": val_rf_clf_kimodel_sanktionsart,
-            "all_rf_kimodel": all_rf_kimodel,
-            "konformes_urteil": konformes_urteil,
-            "unkonformes_urteil": unkonformes_urteil,
-        }
+    # kontext füllen
+    context = {
+        "val_rf_kimodel": val_rf_kimodel,
+        "val_rf_clf_kimodel_vollzugsart": val_rf_clf_kimodel_vollzugsart,
+        "val_rf_clf_kimodel_sanktionsart": val_rf_clf_kimodel_sanktionsart,
+        "all_rf_kimodel": all_rf_kimodel,
+        "konformes_urteil": konformes_urteil,
+        "unkonformes_urteil": unkonformes_urteil,
+    }
 
     return render(request, "database/ws_evaluation.html", context)
 

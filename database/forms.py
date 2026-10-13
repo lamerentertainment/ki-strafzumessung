@@ -185,20 +185,6 @@ class BetmUrteilsEckpunkteAbfrageFormular(forms.Form):
     )
 
 
-class CeteribusParibusFormular(ModelForm):
-    class Meta:
-        model = Urteil
-        fields = [
-            "geschlecht",
-            "mehrfach",
-            "gewerbsmaessig",
-            "bandenmaessig",
-            "nebenverurteilungsscore",
-            "vorbestraft",
-            "vorbestraft_einschlaegig",
-        ]
-
-
 class BearbeitenModelForm(ModelForm):
     """Basis der Formulare, mit denen Superuser ein Urteil direkt auf dessen
     Detailansicht bearbeiten koennen.

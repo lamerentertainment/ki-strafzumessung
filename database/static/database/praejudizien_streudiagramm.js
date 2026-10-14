@@ -7,7 +7,7 @@
  * (kombinierte Ansicht, 30 Tagessaetze = 1 Monat) sind identisch zu den
  * Streudiagrammen der Urteilslisten - bei den Vermoegensdelikten
  * ``streudiagrammVM()`` (Deliktssumme), bei den Betm-Delikten
- * ``streudiagramm()`` (Menge einer Substanz, rein und Gemisch
+ * ``streudiagramm()`` (Summe der Mengen der gewaehlten Substanzen, rein und Gemisch
  * zusammengefasst wie in der Liste ohne Wahl der Bemessungsgrundlage). Es gibt
  * hier aber kein Filterpanel - die "Treffermenge" sind die vom View nach
  * KNN-Distanz ausgewaehlten naechsten Nachbarn der Eingabe
@@ -41,7 +41,7 @@ function praejudizienStreudiagramm(datenId) {
       // und Spannen; ein Filterpanel gibt es hier nicht, darum fest gesetzt.
       if (this.achse.typ === "betm") {
         this.spec = { felder: [{ name: "betm" }], gruppen: [] };
-        this.zustand = { betm: [this.achse.substanz], betm_menge: { basis: null } };
+        this.zustand = { betm: this.achse.substanzen, betm_menge: { basis: null } };
         this.spannen = {
           betm_menge: { label: this.achse.label, einheit: this.achse.einheit },
         };

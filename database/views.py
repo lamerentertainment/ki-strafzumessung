@@ -1312,18 +1312,35 @@ def betm_prognose(request):
             nachbar3 = differenzengenerator(nachbar_objs[2], form, nachbarposliste[2])
             nachbar4 = differenzengenerator(nachbar_objs[3], form, nachbarposliste[3])
 
-            # Streudiagramm ähnlicher Präjudizien: x-Achse ist die Menge der
-            # eingegebenen Hauptsubstanz (Betm 1) - Mengen verschiedener
-            # Substanzen lassen sich nicht auf einer Achse vergleichen (siehe
-            # streudiagramm() in filter.js). Darum die nächsten Nachbarn (nach
-            # KNN-Distanz, allfällige Filter berücksichtigt), die diese Substanz
+            # Streudiagramm ähnlicher Präjudizien: x-Achse ist die Summe der Mengen
+            # aller eingegebenen Substanzen (Betm 1-3), bei einer Substanz also deren
+            # Menge. Die Präjudizien werden entsprechend (wie in der Urteilsliste bei
+            # mehreren gewählten Substanzen) mit der Summe ihrer Mengen dieser
+            # Substanzen eingezeichnet. Darum die nächsten Nachbarn (nach KNN-Distanz,
+            # allfällige Filter berücksichtigt), die mindestens eine dieser Substanzen
             # enthalten - unter den strikt nächsten zehn wären es oft nur wenige.
-            # Karten-Präjudizien ohne die Substanz fehlen deshalb im Diagramm.
-            substanz = form.cleaned_data["betm1"].name
+            # Karten-Präjudizien ohne diese Substanzen fehlen deshalb im Diagramm.
+            substanzen = []
+            eingabe_menge_summe = 0
+            for nr in (1, 2, 3):
+                art = form.cleaned_data.get(f"betm{nr}")
+                if art is None:
+                    continue
+                if art.name not in substanzen:
+                    substanzen.append(art.name)
+                eingabe_menge_summe += form.cleaned_data.get(f"betm{nr}_menge") or 0
+            # Bei gemischten Einheiten (z.B. LSD Trips) keine angeben
+            einheiten = {
+                BETM_FILTER_CONFIG["abhaengige_spannen"]["betm_menge"][
+                    "einheiten_je_schluessel"
+                ].get(name, "g")
+                for name in substanzen
+            }
+            einheit = einheiten.pop() if len(einheiten) == 1 else ""
             fall_nrs_mit_substanz = set(
                 BetmUrteil.objects.filter(
                     fall_nr__in=[fall_nr for fall_nr, _, _ in selected_neighbors],
-                    betm__art__name=substanz,
+                    betm__art__name__in=substanzen,
                 ).values_list("fall_nr", flat=True)
             )
             streudiagramm_fall_nrs = [
@@ -1342,13 +1359,11 @@ def betm_prognose(request):
                 {nachbar.pk for nachbar in nachbar_objs},
                 {
                     "typ": "betm",
-                    "substanz": substanz,
-                    "label": f"Menge {substanz}",
-                    "einheit": BETM_FILTER_CONFIG["abhaengige_spannen"]["betm_menge"][
-                        "einheiten_je_schluessel"
-                    ].get(substanz, "g"),
+                    "substanzen": substanzen,
+                    "label": f"Menge {' + '.join(substanzen)}",
+                    "einheit": einheit,
                 },
-                form.cleaned_data["betm1_menge"],
+                eingabe_menge_summe,
                 # Nur bei Freiheits-/Geldstrafe wird ein Strafmass angezeigt (siehe Template)
                 vorhersage_strafmass
                 if vorhersage_hauptsanktion in ("Freiheitsstrafe", "Geldstrafe")

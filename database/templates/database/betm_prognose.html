@@ -189,5 +189,31 @@
     });
 </script>{% endcomment %}
 
+<script>
+    // Filter "gleiche Betäubungsmittelart" bezieht sich nur auf Betm 1. Sobald mehrere
+    // Betäubungsmittelarten gewählt sind, wird er deshalb standardmässig deaktiviert
+    // (bei nur einer Art wieder aktiviert). Eine manuelle Änderung der Checkbox hat Vorrang.
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterCheckbox = document.getElementById('id_gleiche_kategorie_betm1');
+        const betmSelects = ['id_betm1', 'id_betm2', 'id_betm3']
+            .map(id => document.getElementById(id))
+            .filter(el => el !== null);
+        if (!filterCheckbox || betmSelects.length === 0) return;
+
+        let manuellGeaendert = false;
+        filterCheckbox.addEventListener('change', function () {
+            manuellGeaendert = true;
+        });
+
+        betmSelects.forEach(function (select) {
+            select.addEventListener('change', function () {
+                if (manuellGeaendert) return;
+                const anzahlArten = betmSelects.filter(el => el.value !== '').length;
+                filterCheckbox.checked = anzahlArten < 2;
+            });
+        });
+    });
+</script>
+
 
 {% endblock %}

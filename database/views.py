@@ -318,6 +318,12 @@ def _entsprechung_klasse(entspricht):
 # Eingabe ablesen lässt, aber wenige genug, dass nur wirklich ähnliche Fälle
 # erscheinen.
 STREUDIAGRAMM_ANZAHL_PRAEJUDIZIEN = 10
+# Weitere Nachbarn (Rang 11-20), die im Streudiagramm verblasst mitgezeichnet
+# werden, um die Streuung im weiteren Umfeld zu zeigen.
+STREUDIAGRAMM_ANZAHL_VERBLASST = 10
+STREUDIAGRAMM_ANZAHL_GESAMT = (
+    STREUDIAGRAMM_ANZAHL_PRAEJUDIZIEN + STREUDIAGRAMM_ANZAHL_VERBLASST
+)
 
 
 def _praejudizien_streudiagramm_daten(
@@ -333,7 +339,8 @@ def _praejudizien_streudiagramm_daten(
     """Daten für das Streudiagramm ähnlicher Präjudizien auf den Prognoseseiten.
 
     ``urteile_in_rangfolge`` sind die nächsten Nachbarn nach KNN-Distanz
-    (nächster zuerst). Die Datensätze haben dieselbe Form wie jene der
+    (nächster zuerst); jene ab Rang ``STREUDIAGRAMM_ANZAHL_PRAEJUDIZIEN`` + 1
+    werden verblasst gezeichnet (``verblasst``). Die Datensätze haben dieselbe Form wie jene der
     Urteilslisten (``datensaetze_erstellen``), soweit sie das Streudiagramm in
     filter.js liest - die modellspezifischen Felder liefert ``record_erstellen``
     -, ergänzt um den Rang nach KNN-Distanz und ob das Präjudiz als Karte
@@ -357,6 +364,7 @@ def _praejudizien_streudiagramm_daten(
                 "vollzug": urteil.vollzug,
                 "nebenverurteilungsscore": urteil.nebenverurteilungsscore,
                 "angezeigt": urteil.pk in angezeigte_pks,
+                "verblasst": rang > STREUDIAGRAMM_ANZAHL_PRAEJUDIZIEN,
                 "_karte": {**record["_karte"], "rang": rang},
             }
         )
@@ -551,7 +559,7 @@ def prognose(request):
             # pks stammen aus dem pandas-Index (numpy-Integer), darum explizit in int
             streudiagramm_pks = [
                 int(pk)
-                for pk in streudiagramm_kandidaten[:STREUDIAGRAMM_ANZAHL_PRAEJUDIZIEN]
+                for pk in streudiagramm_kandidaten[:STREUDIAGRAMM_ANZAHL_GESAMT]
             ]
             urteile_nach_pk = Urteil.objects.in_bulk(streudiagramm_pks)
             praejudizien_streudiagramm = _praejudizien_streudiagramm_daten(
@@ -1347,7 +1355,7 @@ def betm_prognose(request):
                 fall_nr
                 for fall_nr, _, _ in selected_neighbors
                 if fall_nr in fall_nrs_mit_substanz
-            ][:STREUDIAGRAMM_ANZAHL_PRAEJUDIZIEN]
+            ][:STREUDIAGRAMM_ANZAHL_GESAMT]
             betm_urteile_nach_fall_nr = {
                 urteil.fall_nr: urteil
                 for urteil in BetmUrteil.objects.filter(fall_nr__in=streudiagramm_fall_nrs)

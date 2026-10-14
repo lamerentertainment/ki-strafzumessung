@@ -1006,6 +1006,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           mehrfachBetmFarbe: this.mehrfachBetmFarbe((record.betm || []).length),
           karte: record._karte || {},
           hervorgehoben: this.istHervorgehoben(record),
+          verblasst: record.verblasst === true,
           score: record.nebenverurteilungsscore,
         });
       });
@@ -1082,6 +1083,7 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           vollzug: record.vollzug,
           karte: record._karte || {},
           hervorgehoben: this.istHervorgehoben(record),
+          verblasst: record.verblasst === true,
           score: record.nebenverurteilungsscore,
         });
       });
@@ -1164,7 +1166,9 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
      * Regressionen sind null, wenn die jeweilige Teilmenge weniger als zwei
      * verschiedene x-Werte hat, siehe linearRegression().
      */
-    streudiagrammRegressionen(punkte) {
+    streudiagrammRegressionen(alle) {
+      // Verblasste Punkte (Rang 11-20 auf den Prognoseseiten) gehen nicht in die Regression ein
+      const punkte = alle.filter((p) => !p.verblasst);
       const paare = (liste) =>
         liste.map((p) => ({ x: Math.log10(p.menge), y: p.strafmass }));
       return {
@@ -1532,7 +1536,11 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
     streudiagrammPunkteSvg(daten) {
       const punkte = daten.punkte
         .slice()
-        .sort((a, b) => (a.hervorgehoben ? 1 : 0) - (b.hervorgehoben ? 1 : 0));
+        .sort(
+          (a, b) =>
+            (a.verblasst ? 0 : 1) - (b.verblasst ? 0 : 1) ||
+            (a.hervorgehoben ? 1 : 0) - (b.hervorgehoben ? 1 : 0)
+        );
       return punkte
         .map((punkt) => {
           const href = this.escapeHtml(punkt.karte.url || "#");
@@ -1541,7 +1549,8 @@ function urteilsFilter(spezifikationId, datensaetzeId) {
           );
           const cx = this.streudiagrammX(daten, punkt.menge);
           const cy = this.streudiagrammY(daten, punkt.strafmass);
-          const hervorhebungKlasse = punkt.hervorgehoben ? " hervorgehoben" : "";
+          const hervorhebungKlasse =
+            (punkt.hervorgehoben ? " hervorgehoben" : "") + (punkt.verblasst ? " verblasst" : "");
           const radius = this.streudiagrammRadius(daten, punkt);
           // Graduelle Mehrfach-Betm-Randfarbe nur als Inline-Style und nur,
           // wenn nicht gleichzeitig golden hervorgehoben - Inline-Styles sind

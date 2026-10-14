@@ -83,6 +83,9 @@ function praejudizienStreudiagramm(datenId) {
           ? basis.streudiagramm.call(this)
           : basis.streudiagrammVM.call(this);
       if (daten === null) return null;
+      // Die Zahl der ähnlichsten Präjudizien zählt ohne die verblassten (Rang 11-20)
+      daten.anzahlVerblasst = daten.punkte.filter((p) => p.verblasst).length;
+      daten.anzahl = daten.punkte.length - daten.anzahlVerblasst;
       const menge = this.eingabeMenge();
       if (menge !== null) {
         const mengen = daten.punkte.map((p) => p.menge).concat([menge]);

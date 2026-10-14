@@ -755,6 +755,19 @@ tr[data-pk]:hover td {
 .streudiagramm-punkt.sanktion-1.vollzug-1 { fill: #75b798; }
 .streudiagramm-punkt.sanktion-1.vollzug-0 { fill: #badbcc; }
 
+/* Weiter entfernte Nachbarn (Rang 11-20) im Prognose-Streudiagramm: verblasst,
+   beim Hover wieder deutlicher. */
+.streudiagramm-punkt.verblasst {
+    fill-opacity: 0.3;
+    stroke-opacity: 0.4;
+}
+
+.streudiagramm-punkt.verblasst:hover,
+.streudiagramm-punkt.verblasst:focus-visible {
+    fill-opacity: 0.8;
+    stroke-opacity: 1;
+}
+
 /* Mehrfach-Betm-Randfarbe (Urteile mit mehreren Betm-Arten) wird nicht mehr
    ueber eine Klasse gesetzt, sondern graduell nach Anzahl als Inline-Style,
    siehe mehrfachBetmFarbe() in filter.js. */

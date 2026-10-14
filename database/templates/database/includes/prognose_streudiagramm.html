@@ -34,7 +34,9 @@ der Praejudiz-Karten und ist wie in der Urteilsliste ueber
         <span>
           <span x-text="praejudizienDiagramm().art.label"></span>
           über <span x-text="praejudizienDiagramm().mengeLabel"></span>
-          der <span x-text="praejudizienDiagramm().anzahl"></span> ähnlichsten Präjudizien
+          der <span x-text="praejudizienDiagramm().anzahl"></span> ähnlichsten Präjudizien<span
+            x-show="praejudizienDiagramm().anzahlVerblasst > 0"
+            x-text="` (verblasst: Rang ${praejudizienDiagramm().anzahl + 1}–${praejudizienDiagramm().anzahl + praejudizienDiagramm().anzahlVerblasst})`"></span>
         </span>
         <button type="button" class="btn btn-sm ms-auto"
                 :class="streudiagrammScoreGroesse ? 'btn-dark' : 'btn-outline-secondary'"
@@ -83,6 +85,8 @@ der Praejudiz-Karten und ist wie in der Urteilsliste ueber
         als Karten angezeigten Präjudizien. Die gestrichelte Linie markiert die eingegebene <span x-text="achse.label"></span><span
           x-show="eingabe.strafmass !== null">, der blaue Farbverlauf darauf die Strafmassprognose des
           KI-Modells (kräftigste Färbung beim prognostizierten Strafmass, wie im Verlaufsdiagramm oben)</span>.
+        <span x-show="praejudizienDiagramm().anzahlVerblasst > 0">Verblasste Punkte sind die weniger ähnlichen Präjudizien
+          dahinter; sie zeigen die Streuung im weiteren Umfeld.</span>
         Geldstrafen sind zu 30 Tagessätzen je Monat umgerechnet.
         <span x-show="achse.typ === 'betm'"
               x-text="`Gezeigt sind die ähnlichsten Präjudizien, die mindestens eine der eingegebenen Substanzen (${achse.substanzen.join(', ')}) enthalten; eingezeichnet ist die Summe der Mengen dieser Substanzen, reine Wirkstoff- und Bruttomengen sind zusammengefasst.`"></span>

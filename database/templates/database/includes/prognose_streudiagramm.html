@@ -116,6 +116,8 @@ der Praejudiz-Karten und ist wie in der Urteilsliste ueber
              x-text="streudiagrammPunktKarte.delikt || ''"></div>
         <div class="small mt-1 fw-semibold"
              x-text="[streudiagrammPunktKarte.strafmass, streudiagrammPunktKarte.vollzug].filter(Boolean).join(', ')"></div>
+        <div class="small mt-1 fst-italic" x-show="streudiagrammPunktKarte.ki_bewertung"
+             x-text="streudiagrammPunktKarte.ki_bewertung"></div>
       </div>
       <div class="hovercard-body mt-2" x-text="streudiagrammPunktKarte.sachverhalt"></div>
     </div>

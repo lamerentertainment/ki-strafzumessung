@@ -1,3 +1,4 @@
+import re
 import pandas as pd
 from django.shortcuts import render, redirect
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -386,6 +387,23 @@ def _praejudizien_streudiagramm_daten(
     }
 
 
+def _ki_bewertungen_eintragen(streudiagramm_daten, nachbarn):
+    """Trägt die KI-Sanktionsbewertung der als Karten angezeigten Nachbarn in
+    deren Hover-Karte im Streudiagramm ein (wie im Kasten unten)."""
+    for nachbar in nachbarn:
+        if nachbar is None:
+            continue
+        record = streudiagramm_daten["records"].get(str(nachbar.pk))
+        bewertung = getattr(nachbar, "sanktionsbewertung", "")
+        if record is not None and bewertung:
+            # Im Tooltip gibt es kein «oben» dargestellte Eckwerte
+            record["_karte"]["ki_bewertung"] = re.sub(
+                r"oben\s+dargestellten\s+(?:objektiven\s+|objektriven\s+)?Eckwerten",
+                "bekannten objektiven Eckwerten",
+                bewertung,
+            )
+
+
 def _vm_streudiagramm_record(urteil):
     return {
         "deliktssumme": urteil.deliktssumme,
@@ -744,6 +762,10 @@ def prognose(request):
                     hauptsanktion_estimator=sanktionsart_model,
                     vollzug_estimator=vollzugs_model,
                 )
+
+            _ki_bewertungen_eintragen(
+                praejudizien_streudiagramm, [nachbar, nachbar2, nachbar3, nachbar4]
+            )
 
             return render(
                 request,
@@ -1380,6 +1402,8 @@ def betm_prognose(request):
                 BETM_AUSBLENDUNG_IN_MONATEN,
                 _betm_streudiagramm_record,
             )
+
+            _ki_bewertungen_eintragen(praejudizien_streudiagramm, nachbar_objs)
 
             context = {
                 "form": form,

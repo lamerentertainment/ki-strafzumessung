@@ -8,7 +8,10 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import F
 from django.views.generic import ListView, DetailView
 from django.core.files.base import ContentFile
-from .models import Urteil, BetmUrteil, SexualdeliktUrteil, GewaltdeliktUrteil, BetmArt, KIModelPickleFile
+from .models import (
+    Urteil, BetmUrteil, SexualdeliktUrteil, GewaltdeliktUrteil, KonkursdeliktUrteil, BetmArt,
+    KIModelPickleFile,
+)
 from .forms import (
     UrteilModelForm,
     UrteilsEckpunkteAbfrageFormular,
@@ -17,6 +20,7 @@ from .forms import (
     BetmUrteilBearbeitenForm,
     SexualdeliktUrteilBearbeitenForm,
     GewaltdeliktUrteilBearbeitenForm,
+    KonkursdeliktUrteilBearbeitenForm,
 )
 
 from django.views import generic
@@ -57,6 +61,7 @@ from .filterspec import (
     BETM_FILTER_CONFIG,
     SEXUALDELIKT_FILTER_CONFIG,
     GEWALTDELIKT_FILTER_CONFIG,
+    KONKURSDELIKT_FILTER_CONFIG,
 )
 from .aws_helpers import (
     kimodell_von_pickle_file_aus_aws_bucket_laden,
@@ -73,6 +78,7 @@ def homepage(request):
         "anzahl_betm_urteile_ki": BetmUrteil.objects.filter(in_ki_modell=True).count(),
         "anzahl_sexual_urteile": SexualdeliktUrteil.objects.count(),
         "anzahl_gewalt_urteile": GewaltdeliktUrteil.objects.count(),
+        "anzahl_konkurs_urteile": KonkursdeliktUrteil.objects.count(),
     }
     return render(request, "database/homepage.html", context)
 
@@ -241,6 +247,20 @@ class GewaltdeliktUrteilDetailView(InlineBearbeitbarMixin, DetailView):
     model = GewaltdeliktUrteil
     template_name = "database/gewalturteil_detail.html"
     bearbeiten_form_class = GewaltdeliktUrteilBearbeitenForm
+
+
+class KonkursdeliktUrteilListView(FilterbareListView):
+    model = KonkursdeliktUrteil
+    context_object_name = "konkursdelikt_urteile"
+    template_name = "database/konkursurteil_list.html"
+    filter_config = KONKURSDELIKT_FILTER_CONFIG
+    filter_prefetch = ("konkursdelikte_zusaetzliche", "asperationen__delikt", "besonderheiten")
+
+
+class KonkursdeliktUrteilDetailView(InlineBearbeitbarMixin, DetailView):
+    model = KonkursdeliktUrteil
+    template_name = "database/konkursurteil_detail.html"
+    bearbeiten_form_class = KonkursdeliktUrteilBearbeitenForm
 
 
 # KI-Model Views:

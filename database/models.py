@@ -900,6 +900,16 @@ class GewaltdeliktUrteil(models.Model):
         ordering = ["urteilsdatum"]
 
 
+def _strafe_anzeige(monate, tagessaetze):
+    """Kurzform einer Einsatz-/Einzelstrafe oder eines Zuschlags, z.B. «6 Mt.»
+    oder «20 TS»; leer, wenn nicht beziffert."""
+    if monate is not None:
+        return f"{monate} Mt."
+    if tagessaetze is not None:
+        return f"{tagessaetze} TS"
+    return ""
+
+
 class Konkursdelikt(models.Model):
     """Katalog der Konkurs- und Betreibungsdelikte (Art. 163–169 StGB). Wird von
     KonkursdeliktUrteil sowohl für das Hauptdelikt als auch für die zusätzlichen
@@ -910,6 +920,12 @@ class Konkursdelikt(models.Model):
         help_text="Höchstmass der angedrohten Freiheitsstrafe in Jahren "
         "(5 = Verbrechen, 3 = Vergehen)."
     )
+
+    @property
+    def bezeichnung(self):
+        """«165, Misswirtschaft» → «Misswirtschaft (Art. 165 StGB)»."""
+        artikel, _, titel = self.name.partition(", ")
+        return f"{titel} (Art. {artikel} StGB)" if titel else self.name
 
     def __str__(self):
         return self.name
@@ -1193,6 +1209,17 @@ class KonkursdeliktUrteil(models.Model):
         if fehler:
             raise ValidationError(fehler)
 
+    @property
+    def einsatzdelikt_anzeige(self):
+        """Bezeichnung des Einsatzdelikts, gleich ob Konkursdelikt oder nicht."""
+        if self.hauptdelikt_id:
+            return self.hauptdelikt.bezeichnung
+        return self.einsatzdelikt_uebriges
+
+    @property
+    def einsatzstrafe_anzeige(self):
+        return _strafe_anzeige(self.einsatzstrafe_monate, self.einsatzstrafe_tagessaetze)
+
     def __str__(self):
         return f"{self.gericht}, Urteil vom {datum_deutsch_formatieren(self.urteilsdatum)} ({self.fall_nr})"
 
@@ -1246,9 +1273,17 @@ class KonkursdeliktAsperation(models.Model):
         if fehler:
             raise ValidationError(fehler)
 
+    @property
+    def einzelstrafe_anzeige(self):
+        return _strafe_anzeige(self.einzelstrafe_monate, self.einzelstrafe_tagessaetze)
+
+    @property
+    def zuschlag_anzeige(self):
+        return _strafe_anzeige(self.zuschlag_monate, self.zuschlag_tagessaetze)
+
     def __str__(self):
-        zusatz = f" ({self.bezeichnung})" if self.bezeichnung else ""
-        return f"{self.delikt}{zusatz}"
+        zusatz = f", {self.bezeichnung}" if self.bezeichnung else ""
+        return f"{self.delikt.bezeichnung}{zusatz}"
 
     class Meta:
         verbose_name = "zusätzliches Konkursdelikt"

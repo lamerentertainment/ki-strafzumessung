@@ -1102,3 +1102,171 @@ GEWALTDELIKT_FILTER_CONFIG = {
     },
     "karte": _karte_gewaltdelikt,
 }
+
+
+EINSATZSTRAFE_AUF_CHOICES = [
+    ("Konkursdelikt", "Konkursdelikt"),
+    ("anderes Delikt", "anderes Delikt (Konkursdelikte nur asperiert)"),
+]
+
+
+def _einsatzstrafe_auf(urteil):
+    return "Konkursdelikt" if urteil.hauptdelikt_id else "anderes Delikt"
+
+
+def _asperationen_kurz(urteil):
+    """z.B. «166, Unterlassung der Buchführung (+1 Mt.)» je asperiertem Delikt."""
+    teile = []
+    # .all() statt eigener Query, damit das prefetch_related der ListView greift
+    for asperation in urteil.asperationen.all():
+        zuschlag = f" (+{asperation.zuschlag_anzeige})" if asperation.zuschlag_anzeige else ""
+        teile.append(f"{asperation}{zuschlag}")
+    return "; ".join(teile)
+
+
+def _karte_konkursdelikt(objekt):
+    delikt = _deliktsbezeichnung(
+        objekt.einsatzdelikt_anzeige,
+        [("mehrfach begangen", objekt.hauptdelikt_mehrfach)],
+    )
+    kopf = f"Einsatzdelikt: {delikt}"
+    asperiert = _asperationen_kurz(objekt)
+    if asperiert:
+        kopf = f"{kopf}; asperiert: {asperiert}"
+    return _karte(objekt, "konkursurteil_detail", kopf, objekt.kurzsachverhalt)
+
+
+KONKURSDELIKT_FILTER_CONFIG = {
+    "primaer": ["einsatzstrafe_auf", "hauptdelikt", "konkursdelikte_zusaetzliche"],
+    "abgeleitete_felder": {
+        "einsatzstrafe_auf": {
+            "label": "Einsatzstrafe auf",
+            "hilfetext": "Ob die Einsatzstrafe auf einem Konkursdelikt beruht oder auf einem "
+            "anderen Delikt, zu dem die Konkursdelikte nur asperiert werden.",
+            "choices": EINSATZSTRAFE_AUF_CHOICES,
+            "wert": _einsatzstrafe_auf,
+        },
+    },
+    "gruppen": [
+        ("Fall & Gericht", ["gericht", "kanton", "urteilsdatum", "verfahrensart"]),
+        (
+            "Täter",
+            [
+                "geschlecht",
+                "nationalitaet",
+                "vorbestraft",
+                "vorbestraft_einschlaegig",
+                "taeterstellung",
+                "untergeordnete_rolle",
+            ],
+        ),
+        (
+            "Einsatzdelikt",
+            [
+                "einsatzstrafe_auf",
+                "hauptdelikt",
+                "einsatzdelikt_uebriges",
+                "hauptdelikt_mehrfach",
+                "hauptdelikt_deliktssumme",
+                "hauptdelikt_deliktsdauer_in_monaten",
+                "hauptdelikt_anzahl_tathandlungen",
+                "einsatzstrafe_monate",
+                "einsatzstrafe_tagessaetze",
+                "strafzumessung_quelle",
+            ],
+        ),
+        ("Asperation", ["konkursdelikte_zusaetzliche"]),
+        (
+            "Merkmale",
+            [
+                "vollstreckungsart",
+                "anzahl_gesellschaften",
+                "vorsatzform",
+                "beweggrund",
+                "konstrukt_machenschaften",
+                "notlage_oder_sucht",
+                "buchfuehrung_fehlt_vollstaendig",
+            ],
+        ),
+        (
+            "Weitere Delikte & Besonderheiten",
+            ["deliktsscore_uebrige_delikte", "besonderheiten"],
+        ),
+        (
+            "Sanktion",
+            [
+                "hauptsanktion",
+                "freiheitsstrafe_in_monaten",
+                "anzahl_tagessaetze",
+                "vollzug",
+            ],
+        ),
+    ],
+    "labels": {
+        "gericht": "Gericht",
+        "kanton": "Kanton",
+        "urteilsdatum": "Urteilsdatum",
+        "verfahrensart": "Verfahrensart",
+        "geschlecht": "Geschlecht Täter",
+        "nationalitaet": "Nationalität Täter",
+        "taeterstellung": "Täterstellung",
+        "untergeordnete_rolle": "untergeordnete Rolle",
+        "hauptdelikt": "Hauptdelikt (Konkursdelikt)",
+        "einsatzdelikt_uebriges": "Einsatzdelikt (kein Konkursdelikt)",
+        "hauptdelikt_mehrfach": "Hauptdelikt mehrfach",
+        "hauptdelikt_deliktssumme": "Deliktssumme",
+        "hauptdelikt_deliktsdauer_in_monaten": "Deliktsdauer",
+        "hauptdelikt_anzahl_tathandlungen": "Anzahl Tathandlungen",
+        "einsatzstrafe_monate": "Einsatzstrafe (Freiheitsstrafe)",
+        "einsatzstrafe_tagessaetze": "Einsatzstrafe (Geldstrafe)",
+        "strafzumessung_quelle": "Quelle Einsatz-/Einzelstrafen",
+        "konkursdelikte_zusaetzliche": "Asperierte Konkursdelikte",
+        "vollstreckungsart": "Vollstreckungsart",
+        "anzahl_gesellschaften": "Anzahl Gesellschaften",
+        "vorsatzform": "Vorsatzform",
+        "beweggrund": "Beweggrund",
+        "konstrukt_machenschaften": "Konstrukt/Machenschaften",
+        "notlage_oder_sucht": "Notlage oder Sucht",
+        "buchfuehrung_fehlt_vollstaendig": "Buchhaltung fehlt vollständig",
+        "deliktsscore_uebrige_delikte": "Deliktsscore übrige Delikte",
+        "besonderheiten": "Besonderheiten",
+        "hauptsanktion": "Hauptsanktion",
+        "freiheitsstrafe_in_monaten": "Freiheitsstrafe",
+        "anzahl_tagessaetze": "Geldstrafe",
+        "vollzug": "Vollzug",
+    },
+    "einheiten": {
+        "hauptdelikt_deliktssumme": "CHF",
+        "hauptdelikt_deliktsdauer_in_monaten": "Monate",
+        "hauptdelikt_anzahl_tathandlungen": "Taten",
+        "einsatzstrafe_monate": "Monate",
+        "einsatzstrafe_tagessaetze": "Tagessätze",
+        "anzahl_gesellschaften": "Gesellschaften",
+        "freiheitsstrafe_in_monaten": "Monate",
+        "anzahl_tagessaetze": "Tagessätze",
+    },
+    "volltextfelder": [
+        "fall_nr",
+        "gericht",
+        "hauptdelikt__name",
+        "einsatzdelikt_uebriges",
+        "kurzsachverhalt",
+        "zusammenfassung",
+        "bemerkungen",
+    ],
+    "suchfelder_label": "Fall-Nr., Gericht, Delikt, Kurzsachverhalt, Zusammenfassung, Bemerkungen",
+    "sortierfelder": [
+        {"name": "fall_nr", "label": "Fall-Nr."},
+        {"name": "urteilsdatum", "label": "Urteilsdatum"},
+        {"name": "einsatzdelikt", "label": "Einsatzdelikt"},
+        {"name": "hauptsanktion", "label": "Hauptsanktion"},
+        {"name": "freiheitsstrafe_in_monaten", "label": "Freiheitsstrafe"},
+        {"name": "vollzug", "label": "Vollzug"},
+    ],
+    "berechnete_sortierfelder": {
+        "einsatzdelikt": lambda objekt: objekt.einsatzdelikt_anzeige,
+        "sanktion_sortierschluessel": _sanktion_sortierschluessel,
+        "strafmass_sortierschluessel": _strafmass_sortierschluessel,
+    },
+    "karte": _karte_konkursdelikt,
+}

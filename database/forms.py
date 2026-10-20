@@ -5,6 +5,7 @@ from .models import (
     BetmUrteil,
     BetmArt,
     GewaltdeliktUrteil,
+    KonkursdeliktUrteil,
     Rolle,
     SexualdeliktUrteil,
 )
@@ -364,4 +365,54 @@ class GewaltdeliktUrteilBearbeitenForm(BearbeitenModelForm):
         ),
         ("Sanktion", ("hauptsanktion", "freiheitsstrafe_in_monaten", "anzahl_tagessaetze", "vollzug")),
         ("Weitere Informationen", ("kurzsachverhalt", "zusammenfassung", "bemerkungen", "in_ki_modell")),
+    )
+
+
+class KonkursdeliktUrteilBearbeitenForm(BearbeitenModelForm):
+    """Die asperierten Konkursdelikte (Through-Modell mit Einzelstrafe und
+    Zuschlag) werden nicht hier, sondern im Admin bearbeitet."""
+
+    class Meta(BearbeitenModelForm.Meta):
+        model = KonkursdeliktUrteil
+        fields = None
+        exclude = ["konkursdelikte_zusaetzliche"]
+
+    FELDGRUPPEN = (
+        (
+            "Grunddaten",
+            ("fall_nr", "url_link", "gericht", "urteilsdatum", "kanton", "verfahrensart"),
+        ),
+        ("Person", ("geschlecht", "nationalitaet", "vorbestraft", "vorbestraft_einschlaegig")),
+        (
+            "Einsatzdelikt",
+            (
+                "hauptdelikt",
+                "einsatzdelikt_uebriges",
+                "strafzumessung_quelle",
+                "einsatzstrafe_monate",
+                "einsatzstrafe_tagessaetze",
+                "hauptdelikt_mehrfach",
+                "hauptdelikt_deliktssumme",
+                "hauptdelikt_deliktsdauer_in_monaten",
+                "hauptdelikt_anzahl_tathandlungen",
+            ),
+        ),
+        (
+            "Merkmale der Konkursdelikte",
+            (
+                "vollstreckungsart",
+                "taeterstellung",
+                "untergeordnete_rolle",
+                "anzahl_gesellschaften",
+                "vorsatzform",
+                "beweggrund",
+                "konstrukt_machenschaften",
+                "notlage_oder_sucht",
+                "buchfuehrung_fehlt_vollstaendig",
+                "deliktsscore_uebrige_delikte",
+                "besonderheiten",
+            ),
+        ),
+        ("Sanktion", ("hauptsanktion", "freiheitsstrafe_in_monaten", "anzahl_tagessaetze", "vollzug")),
+        ("Weitere Informationen", ("kurzsachverhalt", "zusammenfassung", "bemerkungen")),
     )

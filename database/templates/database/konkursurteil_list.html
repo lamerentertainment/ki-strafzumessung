@@ -1,0 +1,142 @@
+{% extends './base.html' %}
+{% load static %}
+{% load strafmass_formatierung %}
+
+
+{% block alpine_komponenten %}
+  <script defer src="{% static 'database/filter.js' %}"></script>
+  <script defer src="{% static 'database/kurzsachverhalt_preview.js' %}"></script>
+{% endblock alpine_komponenten %}
+
+{% block body %}
+  <div class="col-12" x-data="urteilsFilter('filter-spec', 'filter-records')">
+    <h1 class="h3">
+      Konkursdelikt-Urteile
+      (<span x-text="trefferPks.length">{{ object_list|length }}</span><span x-cloak
+        x-show="trefferPks.length !== Object.keys(records).length"> von {{ object_list|length }}</span>)
+    </h1>
+    <p class="text-body-secondary small">
+      Art. 163–169 StGB. Erfasst sind auch Urteile, in denen die Einsatzstrafe auf einem anderen Delikt beruht
+      und die Konkursdelikte nur asperiert werden; Einzelstrafen und Zuschläge stehen in der Spalte «Asperiert».
+    </p>
+
+    {% include 'database/includes/filterpanel.html' %}
+
+    {% include 'database/includes/strafmasshistogramm.html' %}
+
+    <div class="table-responsive">
+      <table class="table table-sm table-striped table-hover align-middle">
+        <thead class="table-light">
+          <tr>
+            <th data-sortierbar data-tt="nach Fall-Nr. sortieren" @click="sortieren('fall_nr')">
+              Fall-Nr. <span x-text="sortSymbol('fall_nr')"></span>
+            </th>
+            <th data-sortierbar data-tt="nach Urteilsdatum sortieren" @click="sortieren('urteilsdatum')">
+              Gericht/Urteilsdatum <span x-text="sortSymbol('urteilsdatum')"></span>
+            </th>
+            <th data-sortierbar data-tt="nach Einsatzdelikt sortieren" @click="sortieren('einsatzdelikt')">
+              Einsatzdelikt <span x-text="sortSymbol('einsatzdelikt')"></span>
+            </th>
+            <th data-tt="Asperierte Konkursdelikte: isolierte Einzelstrafe → Zuschlag auf die Einsatzstrafe">
+              Asperiert
+            </th>
+            <th>
+              <span data-sortierbar data-tt="nach Sanktionsart sortieren (Busse, Geldstrafe, Freiheitsstrafe - je Art nach Höhe)" @click="sortieren('sanktion_sortierschluessel')">Sanktion <span x-text="sortSymbol('sanktion_sortierschluessel')"></span></span>
+              &amp;
+              <span data-sortierbar data-tt="nach Vollzug sortieren" @click="sortieren('vollzug')">Vollzug <span x-text="sortSymbol('vollzug')"></span></span>
+            </th>
+            <th data-sortierbar data-tt="nach Strafmass sortieren, sanktionsartübergreifend (30 Tagessätze Geldstrafe = 1 Monat Freiheitsstrafe)" @click="sortieren('strafmass_sortierschluessel')">
+              Dauer/Höhe <span x-text="sortSymbol('strafmass_sortierschluessel')"></span>
+            </th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody data-urteilsliste>
+          {% for urteil in object_list %}
+            <tr data-pk="{{ urteil.pk }}"
+                {% if urteil.kurzsachverhalt %}
+                  data-kurzsachverhalt="{{ urteil.kurzsachverhalt }}"
+                  data-fall-nr="{{ urteil.fall_nr }}"
+                  data-gericht="{{ urteil.gericht }}"
+                  data-urteilsdatum="{{ urteil.urteilsdatum|date:'d.m.Y' }}"
+                  data-hauptdelikt="{{ urteil.einsatzdelikt_anzeige }}"
+                  data-deliktlabel="Einsatzdelikt"
+                  data-mehrfach="{% if urteil.hauptdelikt_mehrfach %}1{% else %}0{% endif %}"
+                  data-versuch="0"
+                {% endif %}>
+              <td>
+                <div class="d-flex flex-column">
+                  <div class="d-flex align-items-center gap-1">
+                    <a href="{% url 'konkursurteil_detail' pk=urteil.pk %}" class="fw-semibold">{{ urteil.fall_nr }}</a>
+                    {% if urteil.kurzsachverhalt %}
+                      <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-1 py-0" style="font-size: 0.65rem;" title="Kurzsachverhalt vorhanden (Hover für Vorschau)">SV</span>
+                    {% endif %}
+                  </div>
+                  {% if urteil.url_link %}
+                    <a href="{{ urteil.url_link }}" target="_blank" rel="noopener" class="link-secondary small">PDF öffnen</a>
+                  {% endif %}
+                </div>
+              </td>
+              <td>
+                <div>Urteil des {{ urteil.gericht }}s</div>
+                <div class="text-body-secondary small">vom {{ urteil.urteilsdatum|date:'d.m.Y' }}</div>
+              </td>
+              <td>
+                {{ urteil.einsatzdelikt_anzeige }}
+                {% if urteil.hauptdelikt_mehrfach %}<span class="badge text-bg-secondary">mehrfach</span>{% endif %}
+                {% if not urteil.hauptdelikt_id %}<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" title="Einsatzstrafe beruht nicht auf einem Konkursdelikt">kein Konkursdelikt</span>{% endif %}
+                {% if urteil.einsatzstrafe_anzeige %}
+                  <div class="text-body-secondary small">Einsatzstrafe {{ urteil.einsatzstrafe_anzeige }}</div>
+                {% endif %}
+              </td>
+              <td class="small">
+                {% for asperation in urteil.asperationen.all %}
+                  <div>
+                    {{ asperation }}{% if asperation.mehrfach %}, mehrfach{% endif %}
+                    {% if asperation.einzelstrafe_anzeige or asperation.zuschlag_anzeige %}
+                      <span class="text-body-secondary">– {{ asperation.einzelstrafe_anzeige|default:'?' }} → +{{ asperation.zuschlag_anzeige|default:'?' }}</span>
+                    {% endif %}
+                  </div>
+                {% empty %}
+                  <span class="text-body-secondary">–</span>
+                {% endfor %}
+              </td>
+              <td>
+                <div class="d-flex flex-wrap gap-1 align-items-center">
+                  {% if urteil.hauptsanktion == '0' %}
+                    <span class="badge text-bg-primary">Freiheitsstrafe</span>
+                  {% elif urteil.hauptsanktion == '1' %}
+                    <span class="badge text-bg-success">Geldstrafe</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary">Busse</span>
+                  {% endif %}
+                  {% if urteil.vollzug == '0' %}
+                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle" title="Vollzug: bedingt">bedingt</span>
+                  {% elif urteil.vollzug == '1' %}
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle" title="Vollzug: teilbedingt">teilbedingt</span>
+                  {% elif urteil.vollzug == '2' %}
+                    <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle" title="Vollzug: unbedingt">unbedingt</span>
+                  {% endif %}
+                </div>
+              </td>
+              {% if urteil.hauptsanktion == '0' %}
+                <td data-tt="{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_monate_tooltip }}">{{ urteil.freiheitsstrafe_in_monaten|freiheitsstrafe_jahre_monate_anzeige }}</td>
+              {% elif urteil.hauptsanktion == '1' %}
+                <td>{{ urteil.anzahl_tagessaetze }} Tagessätze</td>
+              {% else %}
+                <td>–</td>
+              {% endif %}
+              <td>
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'konkursurteil_detail' pk=urteil.pk %}">Details</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7">Keine Konkursdelikt-Urteile gefunden.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

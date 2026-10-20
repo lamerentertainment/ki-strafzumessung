@@ -12,7 +12,7 @@
                   x-text="bearbeitenOffen ? 'Bearbeitung schliessen' : 'Bearbeiten'">Bearbeiten</button>
         {% endif %}
         {% if object.url_link %}
-          <a href="{{ object.url_link }}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">PDF öffnen</a>
+          <a href="{{ object.url_link }}" target="_blank" rel="noopener" class="btn btn-primary btn-sm"><i class="bi bi-file-earmark-pdf me-1"></i>PDF öffnen</a>
         {% endif %}
       </div>
     </div>
@@ -42,6 +42,7 @@
               {% if object.private_geschaedigte != 'unbekannt' %}
                 <div class="col"><strong>Private Geschädigte:</strong> {{ object.get_private_geschaedigte_display|capfirst }}</div>
               {% endif %}
+              <div class="col"><strong>Original-Urteil (PDF):</strong> {% if object.url_link %}<a href="{{ object.url_link }}" target="_blank" rel="noopener" class="fw-semibold">PDF anzeigen <i class="bi bi-box-arrow-up-right"></i></a>{% else %}<span class="text-muted">–</span>{% endif %}</div>
             </div>
 
             {% with besonderheiten=object.besonderheiten.all %}
@@ -108,11 +109,20 @@
       <div class="card-header d-flex justify-content-between align-items-center">
         <span>Urteil (PDF)</span>
         {% if object.url_link %}
-          <a class="btn btn-sm btn-outline-primary" href="{{ object.url_link }}" target="_blank" rel="noopener">In neuem Tab öffnen</a>
+          <a class="btn btn-sm btn-primary" href="{{ object.url_link }}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-1"></i>In neuem Tab öffnen</a>
         {% endif %}
       </div>
       <div class="card-body">
         {% if object.url_link %}
+          <div class="alert alert-light border small text-muted mb-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div>
+              <i class="bi bi-info-circle me-1"></i>
+              Falls die Vorschau nicht geladen wird (einige kantonale Portale blockieren Browser-Einbettungen), öffnen Sie das Urteil direkt:
+            </div>
+            <a href="{{ object.url_link }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary flex-shrink-0">
+              <i class="bi bi-file-earmark-pdf me-1"></i>PDF direkt aufrufen
+            </a>
+          </div>
           <div class="ratio ratio-16x9">
             <iframe src="{{ object.url_link }}" title="Urteil PDF" loading="lazy"></iframe>
           </div>

@@ -120,6 +120,17 @@ Praktisch heisst das:
   Verbindliche Struktur, Mindestumfang und delikt-spezifische Pflichtangaben (auch für
   Vermögensdelikte): Skill `praejudiz-recherche`
   (`.agents/skills/praejudiz-recherche/SKILL.md`), Abschnitt 5.
+- **Verbot französischer Tatbestandsbezeichnungen (Nutzerentscheid 19.10.2026):** In
+  `kurzsachverhalt`, `zusammenfassung` und `bemerkungen` dürfen niemals französische
+  Tatbestands- oder Gesetzesbezeichnungen stehen (weder allein noch in Klammern, z.B. kein
+  «tentative de meurtre», «assassinat», «brigandage», «lésions corporelles», «abus de confiance»,
+  «escroquerie», «dommages à la propriété», «contrainte», «menaces», «rixe», «voies de fait»,
+  «diffamation», «conduite en état d'incapacité», «faux dans les titres», «LStup», «LArm», «LCR»,
+  «LEI»). Bei Urteilen aus der Romandie (GE, VD, FR, NE, VS, JU) ist der offizielle deutsche
+  Name des Tatbestands zwingend über Fedlex (`get_article`/`get_law_text` bzw. `swiss-caselaw` `get_law`,
+  RS 311.0 StGB etc.) zu eruieren und ausschliesslich auf Deutsch zu verwenden (z.B. «versuchte vorsätzliche Tötung»,
+  «Mord», «Raub», «einfache/schwere Körperverletzung», «Veruntreuung», «Betrug», «Sachbeschädigung»,
+  «Nötigung», «Drohung», «Raufhandel», «Tätlichkeiten», «Fahren in fahrunfähigem Zustand», «BetmG», «WG»).
 
 ### 4. Feldlogik / Choices von `database.models.Urteil`
 
@@ -309,6 +320,57 @@ Vorinstanz-Logik (Abschnitt 3). Vor dem Insert immer `fall_nr` auf Duplikate pr�
   `BetmUrteil` (gleiche Berechnungslogik, Abschnitt 4), bezogen auf alle Schuldsprüche
   ausser den Sexualdelikten.
 - Kein separates `deliktssumme`-Feld.
+- **Neues Sexualstrafrecht (Taten ab 1.7.2024, Nutzerentscheid 17.10.2026):** Dafür gibt es eigene
+  Katalogwerte ohne «altrechtlich», nur mit Artikelnummer und dem Titel gemäss Fedlex (z.B.
+  `190, Vergewaltigung`, `189, Sexueller Übergriff und sexuelle Nötigung`,
+  `193, Ausnützung einer Notlage oder Abhängigkeit`) bei `Hauptdelikt` und
+  `ZusaetzlicheSexualdelikte`. Taten bis 30.6.2024 bleiben bei den altrechtlichen Werten. Fehlt ein Wert,
+  den Wortlaut des Titels über Fedlex (`get_law_text`, RS 311.0) prüfen und neu anlegen.
+- **`freiheitsstrafe_in_monaten`/`anzahl_tagessaetze` bei Gesamtstrafen:** Eine Gesamtstrafe nach Art. 49
+  Abs. 1 StGB (Sexual- und Nebendelikte gleichzeitig beurteilt) wird als ausgesprochene Gesamtstrafe
+  erfasst; die Nebendelikte stehen im `deliktsscore_uebrige_delikte`. Wird dagegen die Strafe eines
+  früheren Urteils hinzugezogen (Zusatzstrafe, Art. 49 Abs. 2 StGB), nur die Strafe für die neu beurteilten Taten erfassen.
+- **Nationalität bei Flüchtlingen:** Flüchtlinge sind zwingend ausländischer Herkunft (`nationalitaet='1'`).
+- **`Verletzung Beschleunigungsgebot`:** Nur setzen, wenn die Strafminderung in der erfassten (Vorinstanz-)Strafe
+  enthalten ist. Prüfen, ob das Gericht von einer Verletzung im Rechtsmittelverfahren oder im Verfahren insgesamt
+  (inkl. Untersuchungsverfahren) spricht. Bei Letzterem ist anzunehmen, dass die Minderung schon im Vorverfahren
+  gewährt wurde. Nimmt die Berufungsinstanz erst selbst die Minderung vor, nicht setzen.
+
+### 9. Besonderheiten von `KonkursdeliktUrteil` (Art. 163–169 StGB, kein ML-Modell)
+
+Zweck: die Strafzumessungs- **und Asperationspraxis** zu den Konkursdelikten systematisch erfassen
+(Grundlage der Praxiskommentare `kommentar_*.html`). Gemeinsame Felder und Vorinstanz-Prinzip wie oben;
+kein `in_ki_modell`.
+
+- **Zwei Fallgruppen:**
+  - Konkursdelikt trägt die Einsatzstrafe → `hauptdelikt` (FK zu `Konkursdelikt`) setzen, dazu
+    `hauptdelikt_mehrfach`/`_deliktssumme`/`_deliktsdauer_in_monaten`/`_anzahl_tathandlungen`.
+  - Einsatzstrafe beruht auf einem anderen Delikt (z.B. Art. 158, 146, 251 StGB), Konkursdelikte nur
+    asperiert → `hauptdelikt` leer, `einsatzdelikt_uebriges` mit Bezeichnung und Artikel ausfüllen,
+    `hauptdelikt_*` leer lassen. Mindestens eine `KonkursdeliktAsperation`-Zeile ist Pflicht. Ist das
+    Einsatzdelikt ein Vermögensdelikt aus Abschnitt 4, gehört der Fall **zusätzlich** wie bisher in `Urteil`.
+  - `clean()` erzwingt: genau eines von `hauptdelikt`/`einsatzdelikt_uebriges`.
+- **`KonkursdeliktAsperation`** (Through-Modell von `konkursdelikte_zusaetzliche`): eine Zeile pro weiterem
+  Konkursdelikt-Schuldspruch mit `einzelstrafe_*` (isoliert bemessen) und `zuschlag_*`
+  (Asperationszuschlag), je in Monaten **oder** Tagessätzen. Derselbe Tatbestand darf mehrfach vorkommen
+  (z.B. Misswirtschaft je Gesellschaft, `bezeichnung` = Gesellschaft/Tatkomplex). Anlegen per
+  `KonkursdeliktAsperation.objects.create(urteil=..., delikt=..., ...)` nach `save()` (nicht `.set()`).
+- **`einsatzstrafe_*`:** Einsatzstrafe des Einsatzdelikts (Tatkomponente, vor Asperation/Täterkomponente).
+  Einsatz-, Einzelstrafen und Zuschläge nur übernehmen, wenn sie im Urteil beziffert sind (keine
+  Rückrechnung); `strafzumessung_quelle` hält fest, ob sie aus den Erwägungen der Vorinstanz oder der
+  Berufungsinstanz stammen. Die ausgesprochene Sanktion (`hauptsanktion` usw.) folgt immer Abschnitt 3.
+- **`deliktsscore_uebrige_delikte`:** alle Schuldsprüche ausser den Konkursdelikten (Katalog) und ausser dem
+  Einsatzdelikt gemäss `einsatzdelikt_uebriges`; Berechnung wie Abschnitt 4. Art. 323–325 StGB sind
+  Übertretungen und zählen nicht.
+- **`hauptdelikt_deliktssumme` je Tatbestand:** 163 = dem Zugriff entzogener Wert (nicht die
+  Verlustscheinsumme), 164 = entzogenes Haftungssubstrat, 165 = Verschleppungsschaden, 167 =
+  Bevorzugungsbetrag, 166 = leer. `deliktsdauer`: 165 Verschleppungsdauer, 166 Dauer der Unterlassung.
+- **Merkmale nur setzen, wenn das Urteil sie feststellt:** `beweggrund` (bei 163/164 ist das finanzielle
+  Motiv deliktsimmanent → dort nur `Firmenbestattung`/`fremdnützig`), `konstrukt_machenschaften`,
+  `notlage_oder_sucht`, `untergeordnete_rolle`; `buchfuehrung_fehlt_vollstaendig` nur bei einem
+  Schuldspruch nach Art. 166 StGB, sonst leer.
+- `vorbestraft_einschlaegig` = Vorstrafe wegen Betreibungs- oder Konkursdelikten, auch per Strafbefehl.
+- Duplikat-Check analog Abschnitt 5 mit `KonkursdeliktUrteil`.
 
 ## Repo-Hygiene
 

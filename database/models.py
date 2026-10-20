@@ -900,6 +900,361 @@ class GewaltdeliktUrteil(models.Model):
         ordering = ["urteilsdatum"]
 
 
+class Konkursdelikt(models.Model):
+    """Katalog der Konkurs- und Betreibungsdelikte (Art. 163–169 StGB). Wird von
+    KonkursdeliktUrteil sowohl für das Hauptdelikt als auch für die zusätzlichen
+    (asperierten) Konkursdelikte verwendet."""
+
+    name = models.CharField(max_length=100, unique=True)
+    hoechststrafe_jahre = models.IntegerField(
+        help_text="Höchstmass der angedrohten Freiheitsstrafe in Jahren "
+        "(5 = Verbrechen, 3 = Vergehen)."
+    )
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = "Konkursdelikte"
+        ordering = ["name"]
+
+
+class KonkursdeliktUrteil(models.Model):
+    """Strafzumessungsentscheide zu Konkurs- und Betreibungsdelikten
+    (Art. 163–169 StGB). Aufbau analog zu SexualdeliktUrteil: Hauptdelikt +
+    zusätzliche Konkursdelikte + Score für die übrigen Delikte.
+
+    Erfasst werden auch Urteile, in denen die Einsatzstrafe auf einem anderen
+    Delikt beruht (z.B. ungetreue Geschäftsbesorgung) und die Konkursdelikte nur
+    asperiert werden; dann bleibt `hauptdelikt` leer, `einsatzdelikt_uebriges`
+    nennt das Einsatzdelikt, und die Konkursdelikte stehen samt Einzelstrafe und
+    Asperationszuschlag in KonkursdeliktAsperation. Kein ML-Modell."""
+
+    # Grunddaten
+    fall_nr = models.CharField(
+        max_length=25,
+        unique=True,
+        help_text="Die Verfahrensnummer des Urteils, dem die Informationen entnommen sind.",
+    )
+    url_link = models.URLField(
+        blank=True,
+        help_text="Der URL-Link zum PDF des Urteils, dem die Informationen entnommen sind.",
+    )
+    gericht = models.CharField(
+        max_length=50,
+        help_text="Das Gericht, welches das Urteil gefällt hat.",
+        default="n/a",
+    )
+    urteilsdatum = models.DateField(
+        blank=True,
+        null=True,
+        help_text="Das Datum, an welchem das Gericht das Urteil gefällt hat.",
+    )
+    kanton = models.ForeignKey("Kanton", on_delete=models.CASCADE)
+
+    # Person
+    GESCHLECHT = (("0", "männlich"), ("1", "weiblich"))
+    geschlecht = models.CharField(
+        max_length=2, choices=GESCHLECHT, default="0", help_text="Geschlecht des Täters"
+    )
+    NATIONALITAET = (
+        ("0", "Schweizerin/Schweizer"),
+        ("1", "Ausländer/Ausländerin"),
+        ("2", "unbekannt"),
+    )
+    nationalitaet = models.CharField(
+        max_length=2, choices=NATIONALITAET, default="2", help_text="Nationalität des Täters"
+    )
+    vorbestraft = models.BooleanField(
+        default=False,
+        verbose_name="vorbestraft",
+        help_text="Ob die verurteilte Person vorbestraft ist.",
+    )
+    vorbestraft_einschlaegig = models.BooleanField(
+        default=False,
+        verbose_name="einschlägig vorbestraft",
+        help_text="Ob die verurteilte Person wegen Betreibungs- oder Konkursdelikten "
+        "vorbestraft ist (auch per Strafbefehl).",
+    )
+
+    # Einsatzdelikt
+    hauptdelikt = models.ForeignKey(
+        "Konkursdelikt",
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="konkurs_urteile_hauptdelikt",
+        help_text="Das Konkursdelikt, für welches die Einsatzstrafe gebildet wurde. "
+        "Leer lassen, wenn die Einsatzstrafe auf einem anderen Delikt beruht "
+        "(dann einsatzdelikt_uebriges ausfüllen).",
+    )
+    einsatzdelikt_uebriges = models.CharField(
+        max_length=150,
+        blank=True,
+        verbose_name="Einsatzdelikt (kein Konkursdelikt)",
+        help_text="Nur wenn die Einsatzstrafe nicht auf einem Konkursdelikt beruht, "
+        "z.B. «ungetreue Geschäftsbesorgung (Art. 158 Ziff. 1 Abs. 3 StGB)».",
+    )
+    STRAFZUMESSUNG_QUELLE = (
+        ("Vorinstanz", "Vorinstanz"),
+        ("Berufungsinstanz", "Berufungsinstanz"),
+    )
+    strafzumessung_quelle = models.CharField(
+        max_length=20,
+        choices=STRAFZUMESSUNG_QUELLE,
+        default="Vorinstanz",
+        verbose_name="Quelle der Einsatz-/Einzelstrafen",
+        help_text="Aus wessen Erwägungen Einsatzstrafe, Einzelstrafen und "
+        "Asperationszuschläge stammen (die ausgesprochene Sanktion folgt stets "
+        "dem Vorinstanz-Prinzip).",
+    )
+    einsatzstrafe_monate = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text="Einsatzstrafe für das Einsatzdelikt in Monaten (Tatkomponente, "
+        "vor Asperation und Täterkomponente), soweit im Urteil beziffert.",
+    )
+    einsatzstrafe_tagessaetze = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text="Einsatzstrafe für das Einsatzdelikt in Tagessätzen (bzw. "
+        "Strafeinheiten), soweit im Urteil beziffert.",
+    )
+    hauptdelikt_mehrfach = models.BooleanField(
+        default=False,
+        verbose_name="Hauptdelikt mehrfach",
+        help_text="Nur wenn der Schuldspruch beim Hauptdelikt ausdrücklich auf «mehrfach» lautet.",
+    )
+    hauptdelikt_deliktssumme = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text="163: dem Zugriff entzogener Wert (nicht Verlustscheinsumme); "
+        "164: entzogenes Haftungssubstrat; 165: Verschleppungsschaden; "
+        "167: Bevorzugungsbetrag; 166: leer lassen.",
+    )
+    hauptdelikt_deliktsdauer_in_monaten = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text="165: Verschleppungsdauer; 166: Dauer der Unterlassung; "
+        "163: Deliktszeitraum.",
+    )
+    hauptdelikt_anzahl_tathandlungen = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text="z.B. Zahl der Pfändungsvollzüge (163) oder Entzugshandlungen (164).",
+    )
+
+    # Weitere Delikte
+    konkursdelikte_zusaetzliche = models.ManyToManyField(
+        "Konkursdelikt",
+        through="KonkursdeliktAsperation",
+        related_name="konkurs_urteile_zusaetzlich",
+        blank=True,
+        help_text="Weitere bzw. asperierte Konkursdelikte im Urteilsspruch.",
+    )
+    deliktsscore_uebrige_delikte = models.IntegerField(
+        default=0,
+        help_text="Schuldsprüche neben den Konkursdelikten (ohne ein allfälliges "
+        "Einsatzdelikt gemäss einsatzdelikt_uebriges). + 1 Punkt für jedes weitere "
+        "Vergehen. + 2 Punkt für jedes weitere Verbrechen. + 1 Punkt bei mehrfacher "
+        "Begehung.",
+    )
+
+    # Merkmale der Konkursdelikte
+    VOLLSTRECKUNGSART = (
+        ("unbekannt", "unbekannt"),
+        ("Konkurs", "Konkurs"),
+        ("Pfändung/Verlustschein", "Pfändung/Verlustschein"),
+    )
+    vollstreckungsart = models.CharField(
+        max_length=25,
+        choices=VOLLSTRECKUNGSART,
+        default="unbekannt",
+        help_text="Objektive Strafbarkeitsbedingung: Konkurseröffnung oder "
+        "Verlustschein aus Pfändung.",
+    )
+    TAETERSTELLUNG = (
+        ("unbekannt", "unbekannt"),
+        ("Schuldner", "Schuldner (natürliche Person)"),
+        ("Organ", "Organ (Art. 29 StGB)"),
+        ("faktisches Organ", "faktisches Organ"),
+        ("Dritter", "Dritter (Art. 163/164 Ziff. 2 StGB)"),
+        ("Teilnehmer", "Teilnehmer ohne Sondereigenschaft (Art. 26 StGB)"),
+    )
+    taeterstellung = models.CharField(
+        max_length=20, choices=TAETERSTELLUNG, default="unbekannt"
+    )
+    untergeordnete_rolle = models.BooleanField(
+        default=False,
+        help_text="Nur wenn das Urteil eine untergeordnete/nicht federführende Rolle feststellt.",
+    )
+    anzahl_gesellschaften = models.IntegerField(
+        blank=True,
+        null=True,
+        help_text="Zahl der betroffenen Gesellschaften (v.a. bei 165/166).",
+    )
+    VORSATZFORM = (
+        ("unbekannt", "unbekannt/keine Angabe"),
+        ("eventualvorsatz", "Eventualvorsatz/-absicht"),
+        ("direktvorsatz", "direkter Vorsatz/Absicht"),
+    )
+    vorsatzform = models.CharField(
+        max_length=20, choices=VORSATZFORM, default="unbekannt"
+    )
+    BEWEGGRUND = (
+        ("unbekannt", "unbekannt/keine Angabe"),
+        ("Sanierungsversuch", "Sanierungsversuch"),
+        ("Selbstbegünstigung", "Selbstbegünstigung/Bereicherung"),
+        ("Firmenbestattung", "Firmenbestattung"),
+        ("fremdnützig", "fremdnützig"),
+    )
+    beweggrund = models.CharField(
+        max_length=20,
+        choices=BEWEGGRUND,
+        default="unbekannt",
+        help_text="Bei 163/164 ist das finanzielle Motiv deliktsimmanent; dort nur "
+        "Firmenbestattung oder fremdnützig setzen, sonst «unbekannt».",
+    )
+    konstrukt_machenschaften = models.BooleanField(
+        default=False,
+        verbose_name="Konstrukt/Machenschaften",
+        help_text="Systematisches Vorgehen (Vertragskonstrukt, Kontokorrent, neue "
+        "Konten u.Ä.) statt blosser Falschangabe – nur wenn vom Gericht festgestellt.",
+    )
+    notlage_oder_sucht = models.BooleanField(
+        default=False,
+        verbose_name="Notlage oder Sucht",
+        help_text="Nur wenn das Urteil eine akute finanzielle Notlage oder eine "
+        "Suchterkrankung ausdrücklich verschuldensmindernd berücksichtigt.",
+    )
+    buchfuehrung_fehlt_vollstaendig = models.BooleanField(
+        blank=True,
+        null=True,
+        help_text="Nur bei einem Schuldspruch nach Art. 166 StGB: Ja = Buchhaltung "
+        "fehlt ganz, Nein = nur unvollständig/mangelhaft; sonst leer.",
+    )
+    besonderheiten = models.ManyToManyField(
+        "Besonderheiten",
+        related_name="konkursdelikte",
+        blank=True,
+    )
+
+    # Sanktion
+    HAUPTSANKTION = (("0", "Freiheitsstrafe"), ("1", "Geldstrafe"), ("2", "Busse"))
+    hauptsanktion = models.CharField(max_length=1, choices=HAUPTSANKTION, default="1")
+    freiheitsstrafe_in_monaten = models.IntegerField(
+        default=0, help_text="Die Dauer der ausgesprochenen Sanktion in Monaten."
+    )
+    anzahl_tagessaetze = models.IntegerField(
+        default=0, help_text="Die Zahl der ausgesprochenen Tagessätze der Geldstrafe"
+    )
+    VOLLZUG = (("0", "bedingt"), ("1", "teilbedingt"), ("2", "unbedingt"))
+    vollzug = models.CharField(max_length=20, choices=VOLLZUG, default="0")
+    VERFAHRENSART = (("0", "ordentlich"), ("1", "abgekürzt"))
+    verfahrensart = models.CharField(max_length=2, choices=VERFAHRENSART, default="0")
+
+    # Weitere Informationen
+    kurzsachverhalt = models.TextField(
+        blank=True,
+        default="",
+        help_text="Kurze Zusammenfassung des Sachverhalts (wird beim Hovern in der Urteilsliste angezeigt)",
+    )
+    zusammenfassung = models.TextField(
+        blank=True,
+        help_text="Die Zusammenfassung der massgebenden Erwägungen für die Strafzumessung",
+    )
+    bemerkungen = models.TextField(blank=True, help_text="Besondere Bemerkungen zum Fall")
+    add_time = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    update_time = models.DateTimeField(auto_now=True, null=True, blank=True)
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        fehler = {}
+        if bool(self.hauptdelikt_id) == bool(self.einsatzdelikt_uebriges.strip()):
+            fehler["einsatzdelikt_uebriges"] = (
+                "Genau eines von «Hauptdelikt» und «Einsatzdelikt (kein "
+                "Konkursdelikt)» ausfüllen."
+            )
+        if not self.hauptdelikt_id and (
+            self.hauptdelikt_mehrfach
+            or self.hauptdelikt_deliktssumme is not None
+            or self.hauptdelikt_deliktsdauer_in_monaten is not None
+            or self.hauptdelikt_anzahl_tathandlungen is not None
+        ):
+            fehler["hauptdelikt"] = (
+                "Die hauptdelikt_*-Felder nur ausfüllen, wenn ein Konkursdelikt die "
+                "Einsatzstrafe trägt; sonst gehören die Angaben in die Asperationszeilen."
+            )
+        if self.einsatzstrafe_monate is not None and self.einsatzstrafe_tagessaetze is not None:
+            fehler["einsatzstrafe_tagessaetze"] = "Einsatzstrafe entweder in Monaten oder in Tagessätzen."
+        if self.vorbestraft_einschlaegig and not self.vorbestraft:
+            fehler["vorbestraft_einschlaegig"] = "Einschlägig vorbestraft setzt «vorbestraft» voraus."
+        if fehler:
+            raise ValidationError(fehler)
+
+    def __str__(self):
+        return f"{self.gericht}, Urteil vom {datum_deutsch_formatieren(self.urteilsdatum)} ({self.fall_nr})"
+
+    class Meta:
+        verbose_name = "Konkursdelikt-Urteil"
+        verbose_name_plural = "Konkursdelikt-Urteile"
+        ordering = ["urteilsdatum"]
+
+
+class KonkursdeliktAsperation(models.Model):
+    """Ein zusätzliches (asperiertes) Konkursdelikt eines KonkursdeliktUrteils mit
+    isolierter Einzelstrafe und Asperationszuschlag. Derselbe Tatbestand darf
+    mehrfach vorkommen, z.B. Misswirtschaft je Gesellschaft (Feld `bezeichnung`)."""
+
+    urteil = models.ForeignKey(
+        "KonkursdeliktUrteil", on_delete=models.CASCADE, related_name="asperationen"
+    )
+    delikt = models.ForeignKey("Konkursdelikt", on_delete=models.PROTECT)
+    bezeichnung = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Präzisierung, z.B. betroffene Gesellschaft oder Tatkomplex.",
+    )
+    mehrfach = models.BooleanField(
+        default=False,
+        help_text="Nur wenn der Schuldspruch ausdrücklich auf «mehrfach» lautet.",
+    )
+    deliktssumme = models.IntegerField(blank=True, null=True)
+    deliktsdauer_in_monaten = models.IntegerField(blank=True, null=True)
+    einzelstrafe_monate = models.IntegerField(
+        blank=True, null=True, help_text="Isoliert bemessene Einzelstrafe in Monaten."
+    )
+    einzelstrafe_tagessaetze = models.IntegerField(
+        blank=True, null=True, help_text="Isoliert bemessene Einzelstrafe in Tagessätzen."
+    )
+    zuschlag_monate = models.IntegerField(
+        blank=True, null=True, help_text="Asperationszuschlag auf die Einsatzstrafe in Monaten."
+    )
+    zuschlag_tagessaetze = models.IntegerField(
+        blank=True, null=True, help_text="Asperationszuschlag auf die Einsatzstrafe in Tagessätzen."
+    )
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        fehler = {}
+        if self.einzelstrafe_monate is not None and self.einzelstrafe_tagessaetze is not None:
+            fehler["einzelstrafe_tagessaetze"] = "Einzelstrafe entweder in Monaten oder in Tagessätzen."
+        if self.zuschlag_monate is not None and self.zuschlag_tagessaetze is not None:
+            fehler["zuschlag_tagessaetze"] = "Zuschlag entweder in Monaten oder in Tagessätzen."
+        if fehler:
+            raise ValidationError(fehler)
+
+    def __str__(self):
+        zusatz = f" ({self.bezeichnung})" if self.bezeichnung else ""
+        return f"{self.delikt}{zusatz}"
+
+    class Meta:
+        verbose_name = "zusätzliches Konkursdelikt"
+        verbose_name_plural = "zusätzliche Konkursdelikte (Asperation)"
+
+
 class PraejudizensucheLog(models.Model):
     """Protokolliert jede Anfrage/Antwort des Präjudizensuche-Chats (Anthropic-API,
     öffentlich erreichbar) für Missbrauchs-Monitoring und Fehleranalyse."""

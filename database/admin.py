@@ -7,7 +7,8 @@ from django.utils.decorators import method_decorator
 import json
 from .models import (Urteil, KIModelPickleFile, BetmUrteil, BetmArt, Betm, Rolle, Kanton,
                      SexualdeliktUrteil, Besonderheiten, Hauptdelikt, ZusaetzlicheSexualdelikte, Tatmittel,
-                     GewaltdeliktUrteil, PraejudizensucheLog)
+                     GewaltdeliktUrteil, PraejudizensucheLog, Konkursdelikt, KonkursdeliktUrteil,
+                     KonkursdeliktAsperation)
 from .services.urteil_extractor import (
     extract_urteil_data, validate_extracted_data,
     extract_betm_urteil_data, validate_betm_extracted_data,
@@ -475,6 +476,75 @@ class GewaltdeliktUrteilAdmin(admin.ModelAdmin):
     has_zusammenfassung.short_description = "Zusammenfassung vorhanden"
 
 
+class KonkursdeliktAsperationFormSet(forms.models.BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        zeilen = [
+            f for f in self.forms
+            if f.cleaned_data and not f.cleaned_data.get("DELETE", False)
+        ]
+        if not self.instance.hauptdelikt_id and not zeilen:
+            raise forms.ValidationError(
+                "Ohne Konkursdelikt als Hauptdelikt muss mindestens ein asperiertes "
+                "Konkursdelikt erfasst werden."
+            )
+
+
+class KonkursdeliktAsperationInline(admin.TabularInline):
+    model = KonkursdeliktAsperation
+    formset = KonkursdeliktAsperationFormSet
+    extra = 1
+
+
+@admin.register(KonkursdeliktUrteil)
+class KonkursdeliktUrteilAdmin(admin.ModelAdmin):
+    list_display = ["fall_nr", "update_time", "urteilsdatum", "gericht", "hauptdelikt",
+                    "einsatzdelikt_uebriges", "has_kurzsachverhalt", "has_zusammenfassung"]
+    list_filter = ["hauptdelikt", "kanton"]
+    search_fields = ["fall_nr", "gericht", "einsatzdelikt_uebriges", "kurzsachverhalt",
+                     "zusammenfassung", "bemerkungen"]
+    ordering = ["-update_time"]
+    inlines = [KonkursdeliktAsperationInline]
+
+    fieldsets = (
+        ('Grunddaten', {
+            'fields': ('fall_nr', 'url_link', 'gericht', 'urteilsdatum', 'kanton'),
+        }),
+        ('Person', {
+            'fields': ('geschlecht', 'nationalitaet', 'vorbestraft', 'vorbestraft_einschlaegig'),
+        }),
+        ('Einsatzdelikt', {
+            'fields': ('hauptdelikt', 'einsatzdelikt_uebriges', 'strafzumessung_quelle',
+                       'einsatzstrafe_monate', 'einsatzstrafe_tagessaetze', 'hauptdelikt_mehrfach',
+                       'hauptdelikt_deliktssumme', 'hauptdelikt_deliktsdauer_in_monaten',
+                       'hauptdelikt_anzahl_tathandlungen'),
+        }),
+        ('Merkmale der Konkursdelikte', {
+            'fields': ('vollstreckungsart', 'taeterstellung', 'untergeordnete_rolle',
+                       'anzahl_gesellschaften', 'vorsatzform', 'beweggrund',
+                       'konstrukt_machenschaften', 'notlage_oder_sucht',
+                       'buchfuehrung_fehlt_vollstaendig', 'deliktsscore_uebrige_delikte',
+                       'besonderheiten'),
+        }),
+        ('Sanktion', {
+            'fields': ('hauptsanktion', 'freiheitsstrafe_in_monaten', 'anzahl_tagessaetze', 'vollzug', 'verfahrensart'),
+        }),
+        ('Weitere Informationen', {
+            'fields': ('kurzsachverhalt', 'zusammenfassung', 'bemerkungen'),
+        }),
+    )
+
+    def has_kurzsachverhalt(self, obj):
+        return bool(obj.kurzsachverhalt)
+    has_kurzsachverhalt.boolean = True
+    has_kurzsachverhalt.short_description = "Kurzsachverhalt vorhanden"
+
+    def has_zusammenfassung(self, obj):
+        return bool(obj.zusammenfassung)
+    has_zusammenfassung.boolean = True
+    has_zusammenfassung.short_description = "Zusammenfassung vorhanden"
+
+
 # Register your models here.
 admin.site.register(KIModelPickleFile)
 admin.site.register(BetmArt)
@@ -485,6 +555,7 @@ admin.site.register(Hauptdelikt)
 admin.site.register(Tatmittel)
 admin.site.register(ZusaetzlicheSexualdelikte)
 admin.site.register(Besonderheiten)
+admin.site.register(Konkursdelikt)
 
 
 @admin.register(PraejudizensucheLog)

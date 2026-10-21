@@ -643,10 +643,12 @@ tr[data-pk]:hover td {
 
 /* Beim Hover einer Urteilszeile in der Liste wird der zugehoerige Block
    markiert (siehe kurzsachverhalt_preview.js, Verknuepfung ueber data-pk).
-   Nach der Hervorhebung notiert, damit die blaue Zeilen-Markierung auch bei
-   gleichzeitig aktiver goldener Hervorhebung sichtbar bleibt. */
+   Gelb gefuellt statt nur umrandet, damit sie sich vom goldenen Rand der
+   Hervorhebung unterscheidet; !important, weil die Sanktions-/Vollzugsfarben
+   (drei Klassen) sonst die Fuellung uebersteuern. */
 .histogramm-block.zeilen-hover {
-    outline-color: var(--bs-primary, #0d6efd);
+    background-color: #ffeb3b !important;
+    outline-color: #e0a800;
     outline-width: 3px;
     outline-offset: -3px;
 }
@@ -784,10 +786,15 @@ tr[data-pk]:hover td {
 
 /* Beim Hover einer Urteilszeile in der Liste wird der zugehoerige Punkt
    markiert (siehe kurzsachverhalt_preview.js, Verknuepfung ueber data-pk).
-   Nach der Hervorhebung notiert, damit die blaue Zeilen-Markierung Vorrang
-   vor dem goldenen Rand hat, wenn beide gleichzeitig zutreffen. */
+   Gelb gefuellt statt nur umrandet, damit sie sich vom goldenen Rand der
+   Hervorhebung unterscheidet; !important, weil die Sanktions-/Vollzugsfarben
+   (drei Klassen) und die Mehrfach-Betm-Randfarbe (Inline-Style) sonst
+   Vorrang haetten. Volle Deckkraft auch bei verblassten Punkten. */
 .streudiagramm-punkt.zeilen-hover {
-    stroke: var(--bs-primary, #0d6efd);
+    fill: #ffeb3b !important;
+    fill-opacity: 1 !important;
+    stroke: #e0a800 !important;
+    stroke-opacity: 1 !important;
     stroke-width: 3;
 }
 

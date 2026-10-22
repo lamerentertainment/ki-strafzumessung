@@ -127,7 +127,10 @@ class Urteil(models.Model):
         default=False,
         verbose_name="gewerbsmässig/qualifizierte Begehungsweise",
         help_text="Ob das Delikt, für welches die Einsatzsstrafe gebildet wurde, "
-        "gewerbsmässig bzw. (bei der Veruntreuung) qualifiziert begangen wurde.",
+        "gewerbsmässig bzw. (bei der Veruntreuung und der ungetreuen "
+        "Geschäftsbesorgung) qualifiziert begangen wurde. Bei der ungetreuen "
+        "Geschäftsbesorgung: Schuldspruch nach Art. 158 Ziff. 1 Abs. 3 StGB "
+        "(Bereicherungsabsicht).",
     )
     bandenmaessig = models.BooleanField(
         default=False,

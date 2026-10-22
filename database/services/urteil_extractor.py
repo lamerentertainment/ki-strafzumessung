@@ -43,7 +43,7 @@ class UrteilExtraction(BaseModel):
         description="Ob das Delikt, für welches die Einsatzstrafe gebildet wurde, mehrfach begangen wurde (erkennbar daran, dass der vorinstanzliche Schuldspruch z.B. so lautet: Der Beschuldigte ist schuldig des mehrfachen Diebstahls)."
     )
     gewerbsmaessig: bool = Field(
-        description="Ob das Delikt, für welches die Einsatzstrafe gebildet wurde, gewerbsmässig bzw. (bei der Veruntreuung) qualifiziert begangen wurde."
+        description="Ob das Delikt, für welches die Einsatzstrafe gebildet wurde, gewerbsmässig bzw. (bei der Veruntreuung und der ungetreuen Geschäftsbesorgung) qualifiziert begangen wurde. Bei der ungetreuen Geschäftsbesorgung: Schuldspruch nach Art. 158 Ziff. 1 Abs. 3 StGB (Bereicherungsabsicht)."
     )
     bandenmaessig: bool = Field(
         description="Ob das Delikt, für welches die Einsatzstrafe gebildet wurde, bandenmässig begangen wurde."
@@ -209,7 +209,7 @@ WICHTIGE HINWEISE ZUR EXTRAKTION:
 - Nationalität: der beschuldigten Person ('0' = Schweizerin/Schweizer, '1' = Ausländer/Ausländerin, '2' = unbekannt).
 - Hauptdelikt: Die Deliktsart, für welches die Einsatzstrafe gebildet wurde (z.B. Betrug, ungetreue Geschäftsbesorgung). EXAKTE Werte: 'Betrug', 'Veruntreuung', 'ung. Geschäftsbesorgung', 'betr. Missbrauch DVA', 'Diebstahl', 'Sachbeschädigung'.
 - Mehrfach: Ob das Delikt, für welches die Einsatzstrafe gebildet wurde, mehrfach begangen wurde (erkennbar daran, dass der vorinstanzliche Schuldspruch z.B. so lautet: Der Beschuldigte ist schuldig des mehrfachen Diebstahls).
-- Gewerbsmässig/qualifizierte Begehungsweise: Ob das Delikt, für welches die Einsatzstrafe gebildet wurde, gewerbsmässig bzw. (bei der Veruntreuung) qualifiziert begangen wurde.
+- Gewerbsmässig/qualifizierte Begehungsweise: Ob das Delikt, für welches die Einsatzstrafe gebildet wurde, gewerbsmässig bzw. (bei der Veruntreuung und der ungetreuen Geschäftsbesorgung) qualifiziert begangen wurde. Bei der ungetreuen Geschäftsbesorgung: Schuldspruch nach Art. 158 Ziff. 1 Abs. 3 StGB (Bereicherungsabsicht).
 - Bandenmässig: Ob das Delikt, für welches die Einsatzstrafe gebildet wurde, bandenmässig begangen wurde.
 - Deliktssumme: Die mit dem Delikt, für welches die Einsatzstrafe gebildet wurde, erzielte Deliktssumme. Subsidiär die gesamthaft, mit allen Straftaten, erzielte Deliktssumme.
 - Nebenverurteilungsscore: Anzahl der Schuldsprüche, welche die Vorinstanz neben dem Delikt, für welches die Einsatzstrafe gebildet wurde, ausgesprochen hat. Berechne wie folgt: + 1 Punkt für jedes weitere Vergehen. + 2 Punkte für jedes weitere Verbrechen. + 1 Punkt bei mehrfacher Begehung.

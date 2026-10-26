@@ -368,6 +368,8 @@ def prognoseleistung_dict_ausgeben(instanziertes_kimodel, x, y):
         durchschnittlicher_fehler, 2
     )
     prognoseleistung_dict["standardabweichung"] = round(standardabweichung, 2)
+    # Anzahl Urteile, auf denen die Werte beruhen (zeigt im Dev-Menü, ob sie veraltet sind)
+    prognoseleistung_dict["urteilsbasis"] = len(y)
     prognoseleistung_dict["beste_prognoseleistung"] = round(
         np.min(liste_der_abweichungen), 2
     )

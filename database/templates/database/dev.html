@@ -14,6 +14,7 @@
             Das KI-Modell wurde am {{ val_rf_kimodel.last_updated }} zuletzt aktualisiert. Es ist
             unter {{ val_rf_kimodel.name }} abgespeichert
             und hat den URL Pfad {{ val_rf_kimodel.file.url }}.
+            {% include './dev_urteilsbasis.html' with kimodel=val_rf_kimodel %}
         </section>
         <div class="row">
             <section id="feature-importance-rf-regressor" class="col-4 mb-3">
@@ -53,7 +54,7 @@
                     (Die beste Prognoseleistung dieses KI-Modells
                     lag {{ val_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung }}
                     Monate neben der effektiv ausgefällten Strafe. Dies war beim Urteil
-                    <a href="{{unkonformes_urteil.url_link}}">{{val_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung_urteil }}</a>
+                    <a href="{{konformes_urteil.url_link}}">{{val_rf_kimodel.prognoseleistung_dict.beste_prognoseleistung_urteil }}</a>
                      der Fall)
                 </p>
                 <p>
@@ -116,6 +117,7 @@
             Das KI-Modell wurde am {{ all_rf_kimodel.last_updated }} zuletzt aktualisiert. Es ist
             unter {{ all_rf_kimodel.name }} abgespeichert
             und hat den URL Pfad {{ all_rf_kimodel.file.url }}.
+            {% include './dev_urteilsbasis.html' with kimodel=all_rf_kimodel %}
         </section>
         <div class="row">
             <section id="feature-importance-rf-regressor" class="col-4 mb-3">
@@ -176,6 +178,7 @@
             Das KI-Modell wurde am {{ lr_kimodel.last_updated }} zuletzt aktualisiert. Es ist
             unter {{ lr_kimodel.name }} abgespeichert
             und hat den URL Pfad {{ lr_kimodel.file.url }}.
+            {% include './dev_urteilsbasis.html' with kimodel=lr_kimodel %}
         </section>
         <div class="row">
             <section id="feature-importance-lr-regressor" class="col-6 mb-3">

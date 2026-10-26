@@ -1494,6 +1494,7 @@ def dev(request):
         "koeff_liste": koeffizientenliste,
         "unkonformes_urteil": unkonformes_urteil,
         "konformes_urteil": konformes_urteil,
+        "aktuelle_urteilsbasis": Urteil.objects.filter(in_ki_modell=True).count(),
     }
     return render(request, "database/dev.html", context)
 

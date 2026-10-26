@@ -1,0 +1,12 @@
+<div>
+    {% if kimodel.prognoseleistung_dict.urteilsbasis %}
+        Die Prognosewerte beruhen auf {{ kimodel.prognoseleistung_dict.urteilsbasis }} Urteilen
+        (aktuell {{ aktuelle_urteilsbasis }} Urteile im KI-Modell).
+        {% if kimodel.prognoseleistung_dict.urteilsbasis != aktuelle_urteilsbasis %}
+            <span class="text-danger">Die Werte sind veraltet – KI-Modelle neu kalibrieren.</span>
+        {% endif %}
+    {% else %}
+        <span class="text-danger">Urteilsbasis unbekannt (vor deren Erfassung kalibriert, aktuell
+            {{ aktuelle_urteilsbasis }} Urteile im KI-Modell) – KI-Modelle neu kalibrieren.</span>
+    {% endif %}
+</div>

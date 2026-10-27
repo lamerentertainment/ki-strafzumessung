@@ -17,18 +17,18 @@ Die Deliktszeile je Treffer liefert trefferZeile() der spezifischen Komponente.
   <div class="pf-kennzahlen row g-2 mb-3" x-show="treffer.length">
     <div class="col-6 col-md-3">
       <div class="pf-kennzahl" tabindex="0"
-           :data-tt="`Mittlerer Wert der Freiheitsstrafen der ${treffer.length} angezeigten Urteile (${kennzahlen.anzahlFs} davon mit Freiheitsstrafe).\nGeldstrafen und lebenslängliche Strafen sind nicht eingerechnet.\nDie Hälfte der Urteile liegt darunter, die Hälfte darüber.`">
-        <div class="pf-kennzahl-wert" x-text="kennzahlen.median !== null ? monate(Math.round(kennzahlen.median)).split(' (')[0] : '–'"></div>
-        <div class="pf-kennzahl-label">Median Freiheitsstrafe</div>
+           :data-tt="`Mittlerer Wert der Strafen der ${treffer.length} angezeigten Urteile: Die Hälfte liegt darunter, die Hälfte darüber.\nGeldstrafen sind eingerechnet: 30 Tagessätze = 1 Monat Freiheitsstrafe (Art. 34 i.V.m. Art. 36 StGB)${kennzahlen.anzahlGs ? ` – hier ${kennzahlen.anzahlGs} von ${kennzahlen.anzahlStrafmasse}` : ''}.\nNicht eingerechnet: lebenslängliche Freiheitsstrafen und Bussen.`">
+        <div class="pf-kennzahl-wert" x-text="medianAnzeige(kennzahlen.median)"></div>
+        <div class="pf-kennzahl-label">Median Strafmass<span x-show="kennzahlen.anzahlGs"> (inkl. Geldstrafen)</span></div>
       </div>
     </div>
     <div class="col-6 col-md-3">
       <div class="pf-kennzahl" tabindex="0"
-           :data-tt="`Tiefste und höchste Freiheitsstrafe der ${treffer.length} angezeigten Urteile, in Monaten.\nGeldstrafen und lebenslängliche Strafen sind nicht eingerechnet.`">
+           :data-tt="`Mildeste und strengste Strafe der ${treffer.length} angezeigten Urteile, je in der ausgesprochenen Einheit (Mt. = Monate Freiheitsstrafe, TS = Tagessätze Geldstrafe).\nVerglichen wird nach Strafmass mit 30 Tagessätzen = 1 Monat.\nNicht eingerechnet: lebenslängliche Freiheitsstrafen und Bussen.`">
         <div class="pf-kennzahl-wert">
-          <span x-text="kennzahlen.min ?? '–'"></span>–<span x-text="kennzahlen.max ?? '–'"></span>
+          <span x-text="kennzahlen.min ? kennzahlen.min.anzeige : '–'"></span>–<span x-text="kennzahlen.max ? kennzahlen.max.anzeige : '–'"></span>
         </div>
-        <div class="pf-kennzahl-label">Spanne (Monate)</div>
+        <div class="pf-kennzahl-label">Spanne</div>
       </div>
     </div>
     <div class="col-12 col-md-6">
@@ -39,7 +39,7 @@ Die Deliktszeile je Treffer liefert trefferZeile() der spezifischen Komponente.
             <template x-for="v in ['0', '1', '2']" :key="v">
               <span class="badge" tabindex="0"
                     :class="vollzugKlasse({hauptsanktion: gruppe.code, vollzug: v})"
-                    :data-tt="`${gruppe.anzahl[v]} der angezeigten Urteile: ${gruppe.label}, ${{'0': 'bedingt', '1': 'teilbedingt', '2': 'unbedingt'}[v]}.\n` + vollzugTooltip(v) + (gruppe.code === '1' ? '\nGeldstrafen fliessen nicht in Median und Spanne ein.' : '')"
+                    :data-tt="`${gruppe.anzahl[v]} der angezeigten Urteile: ${gruppe.label}, ${{'0': 'bedingt', '1': 'teilbedingt', '2': 'unbedingt'}[v]}.\n` + vollzugTooltip(v)"
                     x-text="gruppe.anzahl[v] + ' ' + {'0': 'bedingt', '1': 'teilbedingt', '2': 'unbedingt'}[v]"></span>
             </template>
           </div>

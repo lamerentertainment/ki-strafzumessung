@@ -31,6 +31,8 @@
  */
 
 const PF_LEBENSLAENGLICH = 999;
+// Umrechnung Geldstrafe -> Freiheitsstrafe für Median und Spanne
+const PF_TAGESSAETZE_PRO_MONAT = 30;
 
 // Antworten, die die Basis auswertet (gemeinsameKriterien/-Antworten)
 const PF_BASIS_ANTWORTEN = () => ({
@@ -304,14 +306,19 @@ function praejudizfinderBasis(schritteId, urteileId) {
       return this.bewertet.filter((b) => b.aehnlichkeit >= 0.8).length;
     },
 
-    // Kennzahlen der angezeigten Treffer (nur Freiheitsstrafen, ohne lebenslänglich)
+    // Kennzahlen der angezeigten Treffer. Median und Spanne umfassen Freiheits-
+    // und Geldstrafen, umgerechnet mit 30 Tagessätzen = 1 Monat (Art. 34 i.V.m.
+    // Art. 36 StGB: ein Tagessatz entspricht einem Tag Freiheitsstrafe; gleich
+    // wie _strafmass_sortierschluessel in filterspec.py). Nicht eingerechnet
+    // sind lebenslängliche Freiheitsstrafen und Bussen (Höhe nicht erfasst).
     get kennzahlen() {
-      const fs = this.treffer
-        .filter((b) => b.u.hauptsanktion === "0" && b.u.freiheitsstrafe !== PF_LEBENSLAENGLICH)
-        .map((b) => b.u.freiheitsstrafe)
-        .sort((x, y) => x - y);
-      const median = fs.length
-        ? fs.length % 2 ? fs[(fs.length - 1) / 2] : (fs[fs.length / 2 - 1] + fs[fs.length / 2]) / 2
+      const strafmasse = this.treffer
+        .map((b) => this.strafmass(b.u))
+        .filter((x) => x !== null)
+        .sort((x, y) => x.monate - y.monate);
+      const n = strafmasse.length;
+      const median = n
+        ? n % 2 ? strafmasse[(n - 1) / 2].monate : (strafmasse[n / 2 - 1].monate + strafmasse[n / 2].monate) / 2
         : null;
       // Vollzug je Sanktionsart, damit die Badges wie im Strafmasshistogramm
       // und Streudiagramm der Datenbankansicht eingefärbt werden können
@@ -325,10 +332,11 @@ function praejudizfinderBasis(schritteId, urteileId) {
         if (gruppe && b.u.vollzug in gruppe.anzahl) gruppe.anzahl[b.u.vollzug]++;
       });
       return {
-        anzahlFs: fs.length,
+        anzahlStrafmasse: n,
+        anzahlGs: strafmasse.filter((x) => x.geldstrafe).length,
         median,
-        min: fs.length ? fs[0] : null,
-        max: fs.length ? fs[fs.length - 1] : null,
+        min: n ? strafmasse[0] : null,
+        max: n ? strafmasse[n - 1] : null,
         vollzug: vollzug.filter((g) => Object.values(g.anzahl).some((n) => n > 0)),
       };
     },
@@ -367,6 +375,26 @@ function praejudizfinderBasis(schritteId, urteileId) {
       delete rest[u.pk];
       this.zusammenfassungen = rest;
       this.zusammenfassungLaden(u);
+    },
+
+    // Strafmass eines Urteils in Monaten (Geldstrafe umgerechnet) samt
+    // Anzeige in der ursprünglichen Einheit; null, wenn nicht vergleichbar
+    strafmass(u) {
+      if (u.hauptsanktion === "0" && u.freiheitsstrafe !== PF_LEBENSLAENGLICH && u.freiheitsstrafe !== null) {
+        return { monate: u.freiheitsstrafe, geldstrafe: false, anzeige: `${u.freiheitsstrafe} Mt.` };
+      }
+      if (u.hauptsanktion === "1" && u.tagessaetze) {
+        return { monate: u.tagessaetze / PF_TAGESSAETZE_PRO_MONAT, geldstrafe: true, anzeige: `${u.tagessaetze} TS` };
+      }
+      return null;
+    },
+    // Median in Monaten; unter einem Jahr mit einer Nachkommastelle, weil dort
+    // auch kurze Geldstrafen (z.B. 45 TS = 1.5 Mt.) ins Gewicht fallen
+    medianAnzeige(monate) {
+      if (monate === null) return "–";
+      const gerundet = monate < 12 ? Math.round(monate * 10) / 10 : Math.round(monate);
+      const zahl = gerundet.toLocaleString("de-CH");
+      return `${zahl} ${gerundet === 1 ? "Monat" : "Monate"}`;
     },
 
     // --- Anzeige --------------------------------------------------------------

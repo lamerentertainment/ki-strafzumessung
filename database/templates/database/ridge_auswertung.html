@@ -3,12 +3,12 @@
 
 {% block body %}
 {% with a=auswertung %}
-<div class="col-12 sexual-evaluation">
-  <h1 class="h3">Sexualdelikte: Ridge-Regression zur Strafhöhe</h1>
+<div class="col-12 ridge-auswertung">
+  <h1 class="h3">{{ konfig.titel }}: Ridge-Regression zur Strafhöhe</h1>
   <p class="text-body-secondary">
     Dev-Auswertung. Welche erfassten Fallmerkmale hängen in der Praxis mit der Strafhöhe zusammen, und
     passen die von Hand gesetzten Gewichte der Seite
-    <a href="{% url 'praejudizen_finden_sexual' %}">Präjudizen finden</a> dazu? Die Auswertung wird bei
+    <a href="{% url konfig.suche_url %}">Präjudizen finden</a> dazu? Die Auswertung wird bei
     jedem Seitenaufruf frisch auf dem aktuellen Bestand gerechnet ({{ a.n }} Urteile).
   </p>
 
@@ -26,57 +26,8 @@
   {# ============================================================ #}
   <section id="interpretation" class="mb-5">
     <h2 class="h4">Interpretation</h2>
-    <div class="alert alert-light border">
-      <p class="small text-body-secondary mb-2">
-        Stand 27.10.2026, 302 Urteile. Dieser Text ist von Hand geschrieben und wird nicht automatisch
-        nachgeführt; die Zahlen in den folgenden Abschnitten dagegen schon.
-      </p>
-      <ol class="mb-0">
-        <li class="mb-2">
-          <strong>Die erfassten Merkmale erklären rund die Hälfte der Strafhöhe.</strong> Auf ungesehenen
-          Urteilen erreicht das Modell ein R² von etwa 0.52 (Log-Skala). Die mittlere Abweichung sinkt
-          gegenüber einer merkmalslosen Schätzung (immer der Median) von rund 18 auf 12 Monate. Der Rest
-          hängt an Umständen, die nicht als Feld erfasst sind (Intensität, Dauer, Folgen für das Opfer,
-          Täterpersönlichkeit), und an Unterschieden zwischen den Gerichten.
-        </li>
-        <li class="mb-2">
-          <strong>Das Hauptdelikt bleibt das wichtigste Kriterium.</strong> Vergewaltigung liegt bei sonst
-          gleichen Merkmalen rund 140 % über den sexuellen Handlungen mit Kindern; das heutige Gewicht (30)
-          passt.
-        </li>
-        <li class="mb-2">
-          <strong>Mehrfache Begehung, weitere Sexualdelikte und übrige Delikte sind heute untergewichtet.</strong>
-          Mehrfache Begehung allein erhöht die Strafe um rund 44 %; abgeleitet wäre ein Gewicht von etwa 20
-          statt 9 angezeigt, bei den weiteren Sexualdelikten etwa 15 statt 7 und beim Deliktsscore etwa 11
-          statt 6.
-        </li>
-        <li class="mb-2">
-          <strong>Das Tatmittel ist heute deutlich übergewichtet</strong> (15, abgeleitet etwa 3). Das heisst
-          nicht, dass das Tatmittel unerheblich wäre: Es ist weitgehend schon im Hauptdelikt enthalten (siehe
-          <a href="#vorbehalte">Kreuztabelle</a>; «einvernehmlich» kommt praktisch nur bei Art. 187 vor).
-          Bei gleichem Hauptdelikt macht es kaum mehr einen Unterschied.
-        </li>
-        <li class="mb-2">
-          <strong>Bei den Besonderheiten ist das Bild gemischt.</strong> Verminderte Schuldfähigkeit und
-          Verletzung des Beschleunigungsgebots wirken spürbar (je rund −15 %), Geständnisrabatt und
-          jugendliche Täterschaft im Modell kaum. Bei Letzteren ist die Fallzahl (16 bzw. 4) zu klein für ein
-          belastbares Urteil.
-        </li>
-        <li class="mb-2">
-          <strong>Das Opferalter wirkt nicht monoton.</strong> «Unter 16» liegt tiefer als «erwachsen». Auch
-          das ist eine Folge der Überlappung mit dem Hauptdelikt: Bei Kindern ist das Hauptdelikt oft Art. 187,
-          dessen tiefer Wert den Alterseffekt bereits aufnimmt. Der Wert je Altersstufe ist deshalb nur
-          innerhalb desselben Hauptdelikts sinnvoll zu lesen.
-        </li>
-        <li>
-          <strong>Der Kanton wirkt so stark wie ein mittleres Fallmerkmal.</strong> Genf und Zürich urteilen bei
-          sonst gleichen Merkmalen rund 35–50 % strenger als Bern und die Waadt. Der Kanton ist kein
-          Suchkriterium, wurde hier aber mitgeschätzt, damit dieser Unterschied nicht fälschlich einem
-          Fallmerkmal zugeschlagen wird. Ob die Präjudiziensuche Urteile aus dem eigenen Kanton bevorzugen
-          sollte, wäre separat zu entscheiden.
-        </li>
-      </ol>
-    </div>
+    {# Von Hand geschriebene, datierte Interpretation je Deliktsart #}
+    {% include konfig.interpretation %}
   </section>
 
   {# ============================================================ #}
@@ -84,7 +35,7 @@
     <h2 class="h4">Daten &amp; Zielgrösse</h2>
     <ul>
       <li>
-        <strong>{{ a.n }} Urteile</strong> aus der Sexualdelikt-Datenbank{% if a.n_ausgeschlossen %}
+        <strong>{{ a.n }} Urteile</strong> aus der Datenbank der {{ konfig.titel }}{% if a.n_ausgeschlossen %}
         ({{ a.n_ausgeschlossen }} ausgeschlossen: Busse ohne erfasste Höhe oder lebenslängliche Freiheitsstrafe){% endif %}.
       </li>
       <li>
@@ -100,13 +51,8 @@
         Seite angegeben als prozentuale Veränderung.
       </li>
       <li>
-        <strong>Merkmale</strong> ({{ a.n_spalten }} Spalten nach der Codierung): Hauptdelikt (nach Artikel,
-        alt- und neurechtliche Fassung zusammengefasst, weil neurechtliche Urteile noch zu selten sind),
-        Tatmittel, Opferalter, Täter-Opfer-Beziehung, mehrfache Begehung, weitere Sexualdelikte (je Artikel),
-        Deliktsscore der übrigen Delikte, Vorstrafen (drei Stufen), fünf Besonderheiten sowie der Kanton als
-        Kontrollvariable (ZH, GE, VD, FR, BE einzeln, die übrigen zusammengefasst). Nicht verwendet sind die
-        Verfahrensart (alle Urteile ordentlich) und das Geschlecht (fast ausschliesslich männliche Täter),
-        weil sie im Bestand nicht variieren.
+        <strong>Merkmale</strong> ({{ a.n_spalten }} Spalten nach der Codierung): {{ konfig.merkmale_text }}
+        Kantone mit mindestens 20 Urteilen werden einzeln geschätzt, die übrigen zusammengefasst.
       </li>
     </ul>
   </section>
@@ -117,7 +63,7 @@
     <ol>
       <li class="mb-2">
         <strong>One-Hot-Codierung.</strong> Jede Kategorie eines Merkmals wird zu einer eigenen 0/1-Spalte
-        (z.B. «Tatmittel = Gewalt»). Die Regression weist jeder Spalte einen Koeffizienten zu, also jeder
+        (z.B. «Hauptdelikt = Raub»). Die Regression weist jeder Spalte einen Koeffizienten zu, also jeder
         Kategorie ihren eigenen Wert. Das ist die einfache Variante des «Optimal Scaling»: Die Kategorien
         erhalten diejenigen Zahlenwerte, mit denen die Strafen am besten auf einer Geraden liegen.
         Bestimmt sind dabei nur die <em>Abstände</em> zwischen den Kategorien eines Merkmals, nicht deren
@@ -126,7 +72,7 @@
       <li class="mb-2">
         <strong>Ridge-Regression.</strong> Eine lineare Regression mit einem Strafterm, der grosse
         Koeffizienten dämpft. Bei {{ a.n }} Urteilen und {{ a.n_spalten }} Spalten würde eine gewöhnliche
-        Regression seltenen Kategorien (z.B. Art. 188 mit einem einzigen Urteil) extreme Werte zuweisen. Ridge
+        Regression seltenen Kategorien (mit nur einem oder wenigen Urteilen) extreme Werte zuweisen. Ridge
         zieht solche Werte gegen null, je weniger Urteile sie stützen.
       </li>
       <li class="mb-2">
@@ -275,7 +221,7 @@
       «Effekt bei Abweichung» = typischer Unterschied der geschätzten Strafe zwischen zwei Urteilen, die in diesem
       Kriterium nicht übereinstimmen. «Anteil» = Anteil am Total aller Suchkriterien. Das abgeleitete Gewicht
       ist der empirische Anteil, skaliert auf die heutige Gewichtssumme der Präjudiziensuche
-      (<code>PF_GEWICHTE</code> in <code>praejudizfinder_sexual.js</code>).
+      (<code>{{ konfig.suche_konstante }}</code> in <code>{{ konfig.suche_js }}</code>).
     </p>
     <div class="table-responsive">
       <table class="table table-sm align-middle se-tabelle">
@@ -318,19 +264,12 @@
     <h2 class="h4">Vorbehalte</h2>
     <div class="row g-4">
       <div class="col-lg-6">
-        <h3 class="h6">Überlappung von Hauptdelikt und Tatmittel</h3>
-        <p class="small">
-          Die Regression teilt einen gemeinsamen Effekt zweier Merkmale nur dort auf, wo sie unabhängig voneinander
-          variieren. Hauptdelikt und Tatmittel hängen eng zusammen: «einvernehmlich» kommt praktisch nur bei Art. 187
-          vor, «Widerstandsunfähigkeit» vor allem bei der Schändung. Der Effekt wird darum überwiegend dem Hauptdelikt
-          zugeschlagen; der kleine Tatmitteleffekt gilt <em>bei gleichem Hauptdelikt</em>. Für die Präjudiziensuche
-          ist das die richtige Lesart, weil dort das Hauptdelikt bereits gewichtet ist. Dasselbe gilt für Opferalter
-          und Art. 187.
-        </p>
+        <h3 class="h6">{{ a.kreuztabelle.titel }}</h3>
+        {% include konfig.kreuztabelle_text %}
         <table class="table table-sm small se-tabelle">
           <thead class="table-light">
             <tr>
-              <th>Hauptdelikt \ Tatmittel</th>
+              <th>{{ konfig.kreuztabelle.kopf }}</th>
               {% for s in a.kreuztabelle.spalten %}<th class="text-end">{{ s }}</th>{% endfor %}
             </tr>
           </thead>
@@ -347,13 +286,13 @@
       <div class="col-lg-6">
         <h3 class="h6">Weitere Einschränkungen</h3>
         <ul class="small">
-          <li><strong>Kleine Fallzahlen:</strong> Kategorien mit wenigen Urteilen (Art. 188, Opfer unter 6 Jahren,
-            jugendliche Täterschaft) sind durch Ridge zwar gedämpft, aber kaum belastbar.</li>
+          <li><strong>Kleine Fallzahlen:</strong> Kategorien mit wenigen Urteilen (siehe Spalte «Urteile») sind
+            durch Ridge zwar gedämpft, aber kaum belastbar.</li>
           <li><strong>Nicht erfasste Faktoren:</strong> Tatintensität, Dauer, Folgen für das Opfer, Reue und
             Persönlichkeit stehen nicht in den Feldern. Das Modell kann nur zwischen den erfassten Merkmalen
             gewichten.</li>
-          <li><strong>Lineares Modell:</strong> Wechselwirkungen (z.B. dass mehrfache Begehung bei Kindern anders
-            wirkt als bei Erwachsenen) sind nicht modelliert.</li>
+          <li><strong>Lineares Modell:</strong> Wechselwirkungen (z.B. dass ein Merkmal je nach Hauptdelikt
+            unterschiedlich stark wirkt) sind nicht modelliert.</li>
           <li><strong>Praxis, nicht Norm:</strong> Die Werte beschreiben, wie die erfassten Gerichte urteilen,
             inklusive ihrer Unterschiede und Inkonsistenzen. Für eine Präjudiziensuche ist das gewollt; als Massstab
             für «richtige» Strafen taugen sie nicht.</li>
@@ -369,7 +308,8 @@
     <h2 class="h4">Ausreisser</h2>
     <p class="text-body-secondary">
       Die zehn Urteile, die das Modell am schlechtesten erklärt (Kreuzvalidierung). Sie lohnen eine Kontrolle:
-      Entweder fehlt im Datensatz ein strafrelevantes Merkmal, oder ein Feldwert ist falsch erfasst.
+      Entweder fehlt im Datensatz ein strafrelevantes Merkmal, oder ein Feldwert ist falsch erfasst. Auf der
+      Log-Skala fallen kurze Strafen besonders ins Gewicht: 3 statt 54 Tagessätze sind ein Faktor 18.
     </p>
     <table class="table table-sm align-middle se-tabelle">
       <thead class="table-light">
@@ -385,11 +325,11 @@
       <tbody>
         {% for r in a.ausreisser %}
           <tr>
-            <td><a href="{% url 'sexualurteil_detail' pk=r.urteil.pk %}">{{ r.urteil.fall_nr }}</a></td>
+            <td><a href="{{ r.url }}">{{ r.urteil.fall_nr }}</a></td>
             <td class="small">{{ r.urteil.gericht }}</td>
-            <td class="small">{{ r.urteil.hauptdelikt }}{% if r.urteil.hauptdelikt_mehrfachbegehung %}, mehrfach{% endif %}</td>
-            <td class="text-end">{{ r.tatsaechlich|floatformat:0 }} Mt.</td>
-            <td class="text-end">{{ r.prognose|floatformat:0 }} Mt.</td>
+            <td class="small">{{ r.delikt }}</td>
+            <td class="text-end">{{ r.strafe }}</td>
+            <td class="text-end">{% if r.prognose < 10 %}{{ r.prognose|floatformat:1 }}{% else %}{{ r.prognose|floatformat:0 }}{% endif %} Mt.</td>
             <td class="text-end">{% if r.faktor >= 1 %}× {{ r.faktor|floatformat:1 }} höher{% else %}× {{ r.faktor|floatformat:2 }} tiefer{% endif %}</td>
           </tr>
         {% endfor %}
@@ -400,10 +340,9 @@
   <section class="mb-4">
     <h2 class="h4">Nächste Schritte</h2>
     <ol class="mb-0">
-      <li>Abgeleitete Gewichte in <code>PF_GEWICHTE</code> übernehmen, wo die Abweichung gross und belastbar ist
-        (Tatmittel, mehrfache Begehung, weitere Sexualdelikte, übrige Delikte).</li>
-      <li>Teilpunkte innerhalb eines Kriteriums aus den gelernten Abständen ableiten statt pauschal (z.B.
-        Gewalt/psychischer Druck heute 50 %).</li>
+      <li>Abgeleitete Gewichte in <code>{{ konfig.suche_konstante }}</code> übernehmen, wo die Abweichung gross
+        und belastbar ist (siehe Interpretation).</li>
+      <li>Teilpunkte innerhalb eines Kriteriums aus den gelernten Abständen ableiten statt pauschal.</li>
       <li>Prüfen, ob die angepassten Gewichte die Strafe eines Falls über seine ähnlichsten Urteile besser
         vorhersagen (Leave-one-out mit den nächsten Nachbarn).</li>
     </ol>

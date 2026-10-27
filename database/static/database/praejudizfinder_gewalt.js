@@ -8,8 +8,9 @@
  * "pf-urteile".
  */
 
-// Gewichte der Kriterien, vorerst nach Ermessen (noch nicht empirisch
-// überprüft, vgl. die Ridge-Auswertung der Sexualdelikte). Hauptdelikt,
+// Gewichte der Kriterien, vorerst nach Ermessen; empirischer Vergleich auf der
+// Dev-Seite ridge_auswertung/gewalt. Bei einer Änderung dort auch
+// GEWALT_KONFIG["suchkriterien"] in ridge_auswertung.py nachführen. Hauptdelikt,
 // Versuch und Verletzungsfolge bestimmen Strafrahmen und Erfolgsunrecht und
 // wiegen darum am schwersten. Übrige Delikte, Vorstrafen und Besonderheiten:
 // PF_BASIS_GEWICHTE.

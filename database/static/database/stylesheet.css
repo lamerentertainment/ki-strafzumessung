@@ -972,52 +972,52 @@ tr[data-pk]:hover td {
 .pf-vollzug.sanktion-2 { background-color: var(--bs-secondary-color, #6c757d); color: #fff; }
 
 /* ============================================================
-   Dev-Auswertung Sexualdelikte (sexual_evaluation.html)
+   Dev-Ridge-Auswertung je Deliktsart (ridge_auswertung.html)
    ============================================================ */
-.sexual-evaluation .se-kennzahl {
+.ridge-auswertung .se-kennzahl {
     background: var(--bs-tertiary-bg);
     border-radius: .5rem;
     padding: .7rem;
     text-align: center;
     height: 100%;
 }
-.sexual-evaluation .se-kennzahl-wert {
+.ridge-auswertung .se-kennzahl-wert {
     font-size: 1.5rem;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
-.sexual-evaluation .se-kennzahl-label {
+.ridge-auswertung .se-kennzahl-label {
     font-size: .75rem;
     color: var(--bs-secondary-color);
 }
-.sexual-evaluation [data-tt]:not([data-tt=""])::after {
+.ridge-auswertung [data-tt]:not([data-tt=""])::after {
     white-space: normal;
     width: max-content;
     max-width: 20rem;
 }
-.sexual-evaluation .se-tabelle td,
-.sexual-evaluation .se-tabelle th { font-variant-numeric: tabular-nums; }
-.sexual-evaluation .se-diagonale {
+.ridge-auswertung .se-tabelle td,
+.ridge-auswertung .se-tabelle th { font-variant-numeric: tabular-nums; }
+.ridge-auswertung .se-diagonale {
     stroke: var(--bs-body-color);
     stroke-width: 1;
     opacity: .6;
 }
-.sexual-evaluation .se-band {
+.ridge-auswertung .se-band {
     stroke: var(--bs-secondary-color);
     stroke-width: 1;
     stroke-dasharray: 4 3;
     opacity: .6;
 }
 /* Balkenpaar heute/empirisch; 2px Abstand zwischen den Balken */
-.sexual-evaluation .se-balken {
+.ridge-auswertung .se-balken {
     height: 6px;
     border-radius: 0 3px 3px 0;
     margin-bottom: 2px;
     min-width: 2px;
 }
-.sexual-evaluation .se-heute { background: var(--bs-secondary-color); opacity: .45; }
-.sexual-evaluation .se-empirisch { background: #0d6efd; }
-.sexual-evaluation .se-balken-legende {
+.ridge-auswertung .se-heute { background: var(--bs-secondary-color); opacity: .45; }
+.ridge-auswertung .se-empirisch { background: #0d6efd; }
+.ridge-auswertung .se-balken-legende {
     display: inline-block;
     width: .75rem;
     height: .5rem;

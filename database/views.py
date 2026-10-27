@@ -70,7 +70,7 @@ from .praejudizfinder import (
     sexual_schritte_erstellen,
     sexual_urteile_erstellen,
 )
-from .sexual_evaluation import auswertung_erstellen
+from .ridge_auswertung import KONFIGURATIONEN as RIDGE_KONFIGURATIONEN, auswertung_erstellen
 from .aws_helpers import (
     kimodell_von_pickle_file_aus_aws_bucket_laden,
     ki_modell_als_pickle_file_speichern,
@@ -2442,10 +2442,15 @@ logger = logging.getLogger(__name__)
 
 
 @require_GET
-def sexual_evaluation(request):
-    """Dev-Seite: Ridge-Regression auf den Sexualdelikt-Urteilen, siehe database/sexual_evaluation.py."""
+def ridge_auswertung(request, art):
+    """Dev-Seite: Ridge-Regression auf die Strafhöhe je Deliktsart, siehe database/ridge_auswertung.py."""
+    konfig = RIDGE_KONFIGURATIONEN.get(art)
+    if konfig is None:
+        raise Http404
     return render(
-        request, "database/sexual_evaluation.html", {"auswertung": auswertung_erstellen()}
+        request,
+        "database/ridge_auswertung.html",
+        {"auswertung": auswertung_erstellen(konfig), "konfig": konfig},
     )
 
 

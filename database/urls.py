@@ -18,7 +18,7 @@ urlpatterns = [
     ),
     path("ws_evaluation", views.ws_evaluation, name="ws_evaluation"),
     path("betm_evaluation", views.betm_evaluation, name="betm_evaluation"),
-    path("sexual_evaluation", views.sexual_evaluation, name="sexual_evaluation"),
+    path("ridge_auswertung/<str:art>", views.ridge_auswertung, name="ridge_auswertung"),
     path("database", views.UrteilListView.as_view(), name="database"),
     # alte Methode
     # path('model/reset', views.kimodel_reset, name='kimodel_reset'),

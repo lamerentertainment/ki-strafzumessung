@@ -8,7 +8,7 @@
  */
 
 // Gewichte der Kriterien (nach Ermessen; empirischer Vergleich auf der
-// Dev-Seite sexual_evaluation). Übrige Delikte, Vorstrafen und Besonderheiten:
+// Dev-Seite ridge_auswertung/sexual). Übrige Delikte, Vorstrafen und Besonderheiten:
 // PF_BASIS_GEWICHTE.
 const PF_GEWICHTE = {
   hauptdelikt: 30,

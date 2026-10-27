@@ -1,0 +1,56 @@
+{% comment %}
+Interpretation der Ridge-Auswertung der Sexualdelikte (ridge_auswertung.html).
+Von Hand geschrieben und datiert; die Zahlen auf der Seite selbst werden bei
+jedem Aufruf neu gerechnet.
+{% endcomment %}
+<div class="alert alert-light border">
+  <p class="small text-body-secondary mb-2">
+    Stand 27.10.2026, 302 Urteile. Dieser Text ist von Hand geschrieben und wird nicht automatisch
+    nachgeführt; die Zahlen in den folgenden Abschnitten dagegen schon.
+  </p>
+  <ol class="mb-0">
+    <li class="mb-2">
+      <strong>Die erfassten Merkmale erklären rund die Hälfte der Strafhöhe.</strong> Auf ungesehenen
+      Urteilen erreicht das Modell ein R² von etwa 0.52 (Log-Skala). Die mittlere Abweichung sinkt
+      gegenüber einer merkmalslosen Schätzung (immer der Median) von rund 18 auf 12 Monate. Der Rest
+      hängt an Umständen, die nicht als Feld erfasst sind (Intensität, Dauer, Folgen für das Opfer,
+      Täterpersönlichkeit), und an Unterschieden zwischen den Gerichten.
+    </li>
+    <li class="mb-2">
+      <strong>Das Hauptdelikt bleibt das wichtigste Kriterium.</strong> Vergewaltigung liegt bei sonst
+      gleichen Merkmalen rund 140 % über den sexuellen Handlungen mit Kindern; das heutige Gewicht (30)
+      passt.
+    </li>
+    <li class="mb-2">
+      <strong>Mehrfache Begehung, weitere Sexualdelikte und übrige Delikte sind heute untergewichtet.</strong>
+      Mehrfache Begehung allein erhöht die Strafe um rund 44 %; abgeleitet wäre ein Gewicht von etwa 20
+      statt 9 angezeigt, bei den weiteren Sexualdelikten etwa 15 statt 7 und beim Deliktsscore etwa 11
+      statt 6.
+    </li>
+    <li class="mb-2">
+      <strong>Das Tatmittel ist heute deutlich übergewichtet</strong> (15, abgeleitet etwa 3). Das heisst
+      nicht, dass das Tatmittel unerheblich wäre: Es ist weitgehend schon im Hauptdelikt enthalten (siehe
+      <a href="#vorbehalte">Kreuztabelle</a>; «einvernehmlich» kommt praktisch nur bei Art. 187 vor).
+      Bei gleichem Hauptdelikt macht es kaum mehr einen Unterschied.
+    </li>
+    <li class="mb-2">
+      <strong>Bei den Besonderheiten ist das Bild gemischt.</strong> Verminderte Schuldfähigkeit und
+      Verletzung des Beschleunigungsgebots wirken spürbar (je rund −15 %), Geständnisrabatt und
+      jugendliche Täterschaft im Modell kaum. Bei Letzteren ist die Fallzahl (16 bzw. 4) zu klein für ein
+      belastbares Urteil.
+    </li>
+    <li class="mb-2">
+      <strong>Das Opferalter wirkt nicht monoton.</strong> «Unter 16» liegt tiefer als «erwachsen». Auch
+      das ist eine Folge der Überlappung mit dem Hauptdelikt: Bei Kindern ist das Hauptdelikt oft Art. 187,
+      dessen tiefer Wert den Alterseffekt bereits aufnimmt. Der Wert je Altersstufe ist deshalb nur
+      innerhalb desselben Hauptdelikts sinnvoll zu lesen.
+    </li>
+    <li>
+      <strong>Der Kanton wirkt so stark wie ein mittleres Fallmerkmal.</strong> Genf und Zürich urteilen bei
+      sonst gleichen Merkmalen rund 35–50 % strenger als Bern und die Waadt. Der Kanton ist kein
+      Suchkriterium, wurde hier aber mitgeschätzt, damit dieser Unterschied nicht fälschlich einem
+      Fallmerkmal zugeschlagen wird. Ob die Präjudiziensuche Urteile aus dem eigenen Kanton bevorzugen
+      sollte, wäre separat zu entscheiden.
+    </li>
+  </ol>
+</div>

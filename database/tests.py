@@ -1098,7 +1098,7 @@ class PraejudizenFindenSexualTest(TestCase):
     }
 )
 class SexualEvaluationTest(TestCase):
-    """Ridge-Auswertung der Sexualdelikte (database/sexual_evaluation.py)."""
+    """Ridge-Auswertung der Sexualdelikte (database/ridge_auswertung.py)."""
 
     def setUp(self):
         kanton = Kanton.objects.create(abk="ZH")
@@ -1133,15 +1133,15 @@ class SexualEvaluationTest(TestCase):
         )
 
     def test_strafe_in_monaten(self):
-        from .sexual_evaluation import strafe_in_monaten
+        from .ridge_auswertung import strafe_in_monaten
 
         self.assertEqual(strafe_in_monaten(SexualdeliktUrteil.objects.get(fall_nr="GS1")), 6)
         self.assertIsNone(strafe_in_monaten(SexualdeliktUrteil.objects.get(fall_nr="LL1")))
 
     def test_auswertung_erkennt_bekanntes_muster(self):
-        from .sexual_evaluation import auswertung_erstellen
+        from .ridge_auswertung import SEXUAL_KONFIG, auswertung_erstellen
 
-        a = auswertung_erstellen()
+        a = auswertung_erstellen(SEXUAL_KONFIG)
         self.assertEqual(a["n"], 41)
         self.assertEqual(a["n_ausgeschlossen"], 1)
         self.assertGreater(a["r2_mittel"], 0.8)
@@ -1161,7 +1161,7 @@ class SexualEvaluationTest(TestCase):
     def test_effekt_bei_abweichung(self):
         import numpy as np
 
-        from .sexual_evaluation import effekt_bei_abweichung
+        from .ridge_auswertung import effekt_bei_abweichung
 
         X = np.array([[1.0], [0.0], [1.0], [0.0]])
         effekt, anteil = effekt_bei_abweichung(X, np.array([0.5]), [0])
@@ -1169,7 +1169,7 @@ class SexualEvaluationTest(TestCase):
         self.assertAlmostEqual(anteil, 0.5)
 
     def test_ansicht(self):
-        antwort = self.client.get(reverse("sexual_evaluation"))
+        antwort = self.client.get(reverse("ridge_auswertung", args=["sexual"]))
         self.assertEqual(antwort.status_code, 200)
         self.assertContains(antwort, "Ridge-Regression")
         self.assertContains(antwort, 'class="streudiagramm-punkt')
@@ -1249,3 +1249,57 @@ class PraejudizenFindenGewaltTest(TestCase):
         self.assertEqual(antwort.status_code, 200)
         self.assertContains(antwort, "praejudizfinder_basis.js")
         self.assertContains(antwort, reverse("praejudizen_finden_gewalt"))  # Menüpunkt
+
+
+@override_settings(
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+)
+class GewaltRidgeAuswertungTest(TestCase):
+    """Ridge-Auswertung der Gewaltdelikte (GEWALT_KONFIG in database/ridge_auswertung.py)."""
+
+    def setUp(self):
+        kanton = Kanton.objects.create(abk="ZH")
+        # Synthetischer Bestand: Raub doppelt so hohe Strafe wie einfache
+        # Körperverletzung, mehrfache Begehung +50 %; ein Teil als Geldstrafe.
+        for i in range(40):
+            raub = i % 2 == 1
+            mehrfach = i % 4 in (0, 1)
+            monate = 6 * (2 if raub else 1) * (1.5 if mehrfach else 1)
+            GewaltdeliktUrteil.objects.create(
+                fall_nr=f"G{i:03d}",
+                kanton=kanton,
+                hauptdelikt="Raub" if raub else "einfache Körperverletzung",
+                mehrfach=mehrfach,
+                tatmittel="körperliche Gewalt" if i % 3 else "Messer/Stichwaffe",
+                verletzungsfolge="leicht",
+                deliktssumme=1000 if raub else None,
+                hauptsanktion="0" if i % 5 else "1",
+                freiheitsstrafe_in_monaten=round(monate),
+                anzahl_tagessaetze=round(monate * 30),
+            )
+
+    def test_auswertung_erkennt_bekanntes_muster(self):
+        from .ridge_auswertung import GEWALT_KONFIG, auswertung_erstellen
+
+        a = auswertung_erstellen(GEWALT_KONFIG)
+        self.assertEqual(a["n"], 40)
+        self.assertGreater(a["r2_mittel"], 0.8)
+        gruppen = {g["key"]: g for g in a["gruppen"]}
+        hd = {e["label"]: e for e in gruppen["hauptdelikt"]["eintraege"]}
+        self.assertGreater(hd["Raub (Art. 140 StGB)"]["relativ"], 50)
+        self.assertGreater(gruppen["mehrfach"]["eintraege"][0]["prozent"], 25)
+        titel = {v["titel"] for v in a["vergleich"]}
+        self.assertIn("Versuch", titel)
+        self.assertIn("Beute (nur Raub)", titel)
+        self.assertEqual(a["kreuztabelle"]["titel"], "Überlappung von Hauptdelikt und Verletzungsfolge")
+
+    def test_ansicht(self):
+        antwort = self.client.get(reverse("ridge_auswertung", args=["gewalt"]))
+        self.assertEqual(antwort.status_code, 200)
+        self.assertContains(antwort, "Gewaltdelikte: Ridge-Regression")
+        self.assertContains(antwort, "PF_GEWALT_GEWICHTE")
+        self.assertContains(antwort, reverse("praejudizen_finden_gewalt"))
+        self.assertEqual(self.client.get("/ridge_auswertung/vermoegen").status_code, 404)

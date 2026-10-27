@@ -117,6 +117,11 @@ urlpatterns = [
         views.praejudizen_finden_sexual,
         name="praejudizen_finden_sexual",
     ),
+    path(
+        "praejudizen_finden/gewaltdelikte",
+        views.praejudizen_finden_gewalt,
+        name="praejudizen_finden_gewalt",
+    ),
     path("praejudizensuche", views.praejudizensuche, name="praejudizensuche"),
     path(
         "praejudizensuche/nachricht",

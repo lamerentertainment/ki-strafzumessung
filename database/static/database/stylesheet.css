@@ -1024,3 +1024,59 @@ tr[data-pk]:hover td {
     border-radius: 2px;
     vertical-align: .05em;
 }
+/* Hervorgehobene Versuchsfrage (praejudizen_finden_gewalt.html) */
+.praejudizfinder .pf-versuch {
+    border: 1px solid var(--bs-warning-border-subtle);
+    background: var(--bs-warning-bg-subtle);
+    border-left: 4px solid var(--bs-warning);
+    border-radius: .5rem;
+    padding: .9rem 1rem;
+}
+.praejudizfinder .pf-versuch-beantwortet {
+    border-color: var(--bs-border-color);
+    border-left-color: var(--bs-primary);
+    background: var(--bs-tertiary-bg);
+}
+/* Geordnete Stufen (Verletzungsfolge) mit Schweregrad-Balken */
+.praejudizfinder .pf-stufen {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+}
+.praejudizfinder .pf-stufe-balken {
+    display: inline-flex;
+    gap: 2px;
+    flex-shrink: 0;
+}
+.praejudizfinder .pf-stufe-balken span {
+    width: 6px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--bs-secondary-bg);
+}
+.praejudizfinder .pf-stufe-balken span.aktiv {
+    background: var(--bs-danger);
+    opacity: .75;
+}
+/* Gewichtung und Punktevergabe bei der Frage (praejudizfinder_gewichtung.html) */
+.praejudizfinder .pf-gewichtung {
+    font-size: .8rem;
+    border: 1px dashed var(--bs-border-color);
+    border-radius: .4rem;
+    padding: .4rem .7rem;
+    margin: .25rem 0 .9rem;
+    max-width: 52rem;
+    background: var(--bs-body-bg);
+}
+.praejudizfinder .pf-gewichtung ul {
+    margin: .2rem 0 0;
+    padding-left: 1.1rem;
+    color: var(--bs-secondary-color);
+}
+/* Tooltips der Schrittleiste nach unten öffnen (oben liegt die Navigation) */
+.praejudizfinder .pf-tt-unten [data-tt]::after {
+    bottom: auto;
+    top: 100%;
+    margin-bottom: 0;
+    margin-top: .3rem;
+}

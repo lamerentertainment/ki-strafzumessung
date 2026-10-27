@@ -63,7 +63,12 @@ from .filterspec import (
     GEWALTDELIKT_FILTER_CONFIG,
     KONKURSDELIKT_FILTER_CONFIG,
 )
-from .praejudizfinder import schritte_erstellen, urteile_erstellen
+from .praejudizfinder import (
+    gewalt_schritte_erstellen,
+    gewalt_urteile_erstellen,
+    sexual_schritte_erstellen,
+    sexual_urteile_erstellen,
+)
 from .sexual_evaluation import auswertung_erstellen
 from .aws_helpers import (
     kimodell_von_pickle_file_aus_aws_bucket_laden,
@@ -2446,10 +2451,19 @@ def sexual_evaluation(request):
 def praejudizen_finden_sexual(request):
     """Geführte Präjudiziensuche für Sexualdelikte, siehe database/praejudizfinder.py."""
     context = {
-        "schritte": schritte_erstellen(),
-        "urteile": urteile_erstellen(),
+        "schritte": sexual_schritte_erstellen(),
+        "urteile": sexual_urteile_erstellen(),
     }
     return render(request, "database/praejudizen_finden_sexual.html", context)
+
+
+def praejudizen_finden_gewalt(request):
+    """Geführte Präjudiziensuche für Gewaltdelikte, siehe database/praejudizfinder.py."""
+    context = {
+        "schritte": gewalt_schritte_erstellen(),
+        "urteile": gewalt_urteile_erstellen(),
+    }
+    return render(request, "database/praejudizen_finden_gewalt.html", context)
 
 
 def praejudizensuche(request):

@@ -1,0 +1,35 @@
+{% comment %}
+Schritt «Täter & Verfahren»: Vorstrafen und die im Schritt "taeter" gefragten Besonderheiten.
+Parameter: einschlaegig (was als einschlägige Vorstrafe gilt).
+{% endcomment %}
+{# ================= 7. Täter & Verfahren ================= #}
+<section x-show="aktuellerKey === 'taeter'" x-cloak>
+  <h2 class="h5">Ist der Täter vorbestraft?</h2>
+  <p class="pf-hinweis">
+    Vorstrafen wirken bei der Täterkomponente straferhöhend, besonders wenn sie
+    <strong>einschlägig</strong> sind, d.h. {{ einschlaegig }}.
+  </p>
+  {% include 'database/includes/praejudizfinder_gewichtung.html' with k="'vorstrafen'" %}
+  <div class="d-flex flex-wrap gap-2 mb-4">
+    <button type="button" class="btn" :class="a.vorstrafen === 'keine' ? 'btn-primary' : 'btn-outline-primary'"
+            @click="waehlen('vorstrafen', 'keine')">keine Vorstrafen</button>
+    <button type="button" class="btn" :class="a.vorstrafen === 'nicht_einschlaegig' ? 'btn-primary' : 'btn-outline-primary'"
+            @click="waehlen('vorstrafen', 'nicht_einschlaegig')">vorbestraft, nicht einschlägig</button>
+    <button type="button" class="btn" :class="a.vorstrafen === 'einschlaegig' ? 'btn-primary' : 'btn-outline-primary'"
+            @click="waehlen('vorstrafen', 'einschlaegig')">einschlägig vorbestraft</button>
+  </div>
+
+  <template x-for="b in besonderheitenImSchritt('taeter')" :key="b.value">
+    <div class="mb-3">
+      <h2 class="h6" x-text="b.frage"></h2>
+      <p class="pf-hinweis small" x-text="b.text"></p>
+      {% include 'database/includes/praejudizfinder_gewichtung.html' with k="'besonderheit'" %}
+      <div class="d-flex gap-2">
+        <button type="button" class="btn btn-sm" :class="a.besonderheiten[b.value] === 'ja' ? 'btn-primary' : 'btn-outline-primary'"
+                @click="besonderheitWaehlen(b.value, 'ja')">ja</button>
+        <button type="button" class="btn btn-sm" :class="a.besonderheiten[b.value] === 'nein' ? 'btn-primary' : 'btn-outline-primary'"
+                @click="besonderheitWaehlen(b.value, 'nein')">nein</button>
+      </div>
+    </div>
+  </template>
+</section>

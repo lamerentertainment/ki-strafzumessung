@@ -1,0 +1,21 @@
+{% comment %}
+Gewichtung und Punktevergabe eines Kriteriums, direkt bei der Frage.
+Parameter: k = JS-Ausdruck für den Kriteriumsschlüssel, z.B. k="'hauptdelikt'"
+oder k="q.value" in einer x-for-Schleife. Die Werte stammen aus regeln der
+Komponente (praejudizfinder_basis.js), d.h. aus denselben Konstanten wie die
+Bewertung.
+{% endcomment %}
+<template x-if="gewichtung({{ k }})">
+  <div class="pf-gewichtung">
+    <div class="pf-gewichtung-kopf">
+      <i class="bi bi-sliders" aria-hidden="true"></i>
+      <strong x-text="gewichtung({{ k }}).gewicht + ' von ' + gesamtPunkte + ' Vergleichspunkten'"></strong>
+      <span class="text-body-secondary">· Gewichtung nach Ermessen</span>
+    </div>
+    <ul>
+      <template x-for="zeile in gewichtung({{ k }}).vergabe" :key="zeile">
+        <li x-text="zeile"></li>
+      </template>
+    </ul>
+  </div>
+</template>

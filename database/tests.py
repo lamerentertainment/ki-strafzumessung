@@ -1064,9 +1064,9 @@ class PraejudizenFindenSexualTest(TestCase):
         self.assertEqual(artikel_aus_name(""), "")
 
     def test_schritte(self):
-        from .praejudizfinder import schritte_erstellen
+        from .praejudizfinder import sexual_schritte_erstellen
 
-        schritte = schritte_erstellen()
+        schritte = sexual_schritte_erstellen()
         hauptdelikte = {d["value"]: d for d in schritte["hauptdelikte"]}
         self.assertEqual(hauptdelikte[self.alt.name]["anzahl"], 1)
         self.assertEqual(hauptdelikte[self.neu.name]["anzahl"], 0)
@@ -1173,3 +1173,63 @@ class SexualEvaluationTest(TestCase):
         self.assertEqual(antwort.status_code, 200)
         self.assertContains(antwort, "Ridge-Regression")
         self.assertContains(antwort, 'class="streudiagramm-punkt')
+
+
+@override_settings(
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+)
+class PraejudizenFindenGewaltTest(TestCase):
+    def setUp(self):
+        kanton = Kanton.objects.create(abk="ZH")
+        self.urteil = GewaltdeliktUrteil.objects.create(
+            fall_nr="DG250001",
+            gericht="Bezirksgericht Zürich",
+            urteilsdatum=date(2025, 3, 1),
+            kanton=kanton,
+            hauptdelikt="vorsätzliche Tötung",
+            versuch=True,
+            vorsatzform="eventualvorsatz",
+            tatmittel="Messer/Stichwaffe",
+            verletzungsfolge="lebensgefährlich",
+            freiheitsstrafe_in_monaten=60,
+        )
+        self.urteil.besonderheiten.set(
+            [Besonderheiten.objects.create(name="Versuch"), Besonderheiten.objects.create(name="Geständnisrabatt")]
+        )
+        GewaltdeliktUrteil.objects.create(
+            fall_nr="DG250002", kanton=kanton, hauptdelikt="Raub", deliktssumme=500,
+        )
+
+    def test_schritte(self):
+        from .praejudizfinder import gewalt_schritte_erstellen
+
+        schritte = gewalt_schritte_erstellen()
+        # Nur im Bestand vorkommende Hauptdelikte, mit Gruppe und Erläuterung
+        hauptdelikte = {d["value"]: d for d in schritte["hauptdelikte"]}
+        self.assertEqual(set(hauptdelikte), {"vorsätzliche Tötung", "Raub"})
+        self.assertEqual(hauptdelikte["vorsätzliche Tötung"]["gruppe"], "toetung")
+        self.assertIn("nicht unter 5 Jahren", hauptdelikte["vorsätzliche Tötung"]["strafrahmen"])
+        self.assertEqual([g["key"] for g in schritte["hauptdelikt_gruppen"]], ["toetung", "raub"])
+        # Versuch ist ein eigenes Feld und wird nicht als Besonderheit gefragt
+        self.assertEqual([b["value"] for b in schritte["besonderheiten"]], ["Geständnisrabatt"])
+        self.assertEqual([v["value"] for v in schritte["verletzungsfolgen"]][0], "keine")
+
+    def test_ansicht(self):
+        antwort = self.client.get(reverse("praejudizen_finden_gewalt"))
+        self.assertEqual(antwort.status_code, 200)
+        self.assertContains(antwort, "praejudizfinder_basis.js")
+        self.assertContains(antwort, "praejudizfinder_gewalt.js")
+        urteile = {u["fall_nr"]: u for u in antwort.context["urteile"]}
+        self.assertTrue(urteile["DG250001"]["versuch"])
+        self.assertEqual(urteile["DG250001"]["verletzungsfolge_label"], "lebensgefährliche Verletzung")
+        self.assertEqual(urteile["DG250002"]["deliktssumme"], 500)
+        self.assertEqual(urteile["DG250001"]["url"], reverse("gewalturteil_detail", args=[self.urteil.pk]))
+
+    def test_sexualseite_nutzt_basis(self):
+        antwort = self.client.get(reverse("praejudizen_finden_sexual"))
+        self.assertEqual(antwort.status_code, 200)
+        self.assertContains(antwort, "praejudizfinder_basis.js")
+        self.assertContains(antwort, reverse("praejudizen_finden_gewalt"))  # Menüpunkt

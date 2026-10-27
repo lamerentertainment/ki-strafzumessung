@@ -1,0 +1,289 @@
+{% extends './base.html' %}
+{% load static %}
+
+{% block alpine_komponenten %}
+  <script defer src="{% static 'database/praejudizfinder_basis.js' %}"></script>
+  <script defer src="{% static 'database/praejudizfinder_gewalt.js' %}"></script>
+{% endblock alpine_komponenten %}
+
+{% block body %}
+  {{ schritte|json_script:"pf-schritte" }}
+  {{ urteile|json_script:"pf-urteile" }}
+
+  <div class="col-12 praejudizfinder" x-data="praejudizfinder('pf-schritte', 'pf-urteile')">
+    <h1 class="h3">Präjudizen finden – Gewaltdelikte</h1>
+    <p class="text-body-secondary mb-3">
+      Beantworten Sie Schritt für Schritt die Fragen zu Ihrem Fall. Jede Frage lässt sich mit
+      <em>weiss nicht / nicht relevant</em> überspringen. Am Schluss erhalten Sie die ähnlichsten
+      Urteile aus der Datenbank ({{ urteile|length }} Gewaltdelikt-Urteile).
+    
+      Jede Frage trägt eine Anzahl <strong>Vergleichspunkte</strong>, die nach Ermessen festgelegt ist
+      (insgesamt <span x-text="gesamtPunkte"></span> Punkte); bei jeder Frage steht, wie die Punkte
+      vergeben werden. Die Ähnlichkeit eines Urteils ist der Anteil der erreichten an den möglichen
+      Punkten der beantworteten Fragen.
+    </p>
+
+    {% include 'database/includes/praejudizfinder_schrittleiste.html' %}
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+
+        {# ================= 1. Hauptdelikt ================= #}
+        <section x-show="aktuellerKey === 'hauptdelikt'">
+          {% comment %}Versuch vorne und hervorgehoben: Er verändert die Strafe stark und
+             ginge unter der langen Liste der Hauptdelikte leicht vergessen.{% endcomment %}
+          <div class="pf-versuch mb-4" data-pf-hinweis-ziel :class="a.versuch && 'pf-versuch-beantwortet'">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+              <div>
+                <h2 class="h5 mb-1">Vollendet oder versucht?</h2>
+                <p class="small mb-0 text-body-secondary">Blieb das Hauptdelikt im Versuchsstadium (Art. 22 StGB)?</p>
+              </div>
+              <div class="btn-group" role="group" aria-label="Versuch">
+                <button type="button" class="btn" :class="a.versuch === 'nein' ? 'btn-primary' : 'btn-outline-primary'"
+                        @click="waehlen('versuch', 'nein')">vollendet</button>
+                <button type="button" class="btn" :class="a.versuch === 'ja' ? 'btn-primary' : 'btn-outline-primary'"
+                        @click="waehlen('versuch', 'ja')">versucht</button>
+              </div>
+            </div>
+            <details class="pf-erlaeuterung mt-2">
+              <summary class="small">Warum ist das wichtig?</summary>
+              <p class="small mb-0" x-text="s.versuch_text"></p>
+            </details>
+            <div class="mt-2">{% include 'database/includes/praejudizfinder_gewichtung.html' with k="'versuch'" %}</div>
+          </div>
+
+          <h2 class="h5">Welches Delikt trägt die Einsatzstrafe?</h2>
+          <p class="pf-hinweis">
+            Das <strong>Hauptdelikt</strong> ist das schwerste Delikt, für das das Gericht die
+            Einsatzstrafe bildet; alle übrigen Schuldsprüche werden dazu asperiert (Art. 49 StGB).
+            Es legt den Strafrahmen fest. Verwandte Delikte (z.B. vorsätzliche Tötung und Mord)
+            gelten bei der Suche als teilweise übereinstimmend.
+          </p>
+          {% include 'database/includes/praejudizfinder_gewichtung.html' with k="'hauptdelikt'" %}
+
+          <template x-for="gruppe in s.hauptdelikt_gruppen" :key="gruppe.key">
+            <div class="mb-3">
+              <h3 class="h6 text-uppercase text-body-secondary mt-3" x-text="gruppe.titel"></h3>
+              <div class="row g-2">
+                <template x-for="d in hauptdelikteInGruppe(gruppe.key)" :key="d.value">
+                  <div class="col-md-6">
+                    <button type="button" class="pf-karte w-100 text-start h-100"
+                            :class="a.hauptdelikt === d.value && 'pf-karte-aktiv'"
+                            @click="waehlen('hauptdelikt', d.value)">
+                      <div class="d-flex justify-content-between align-items-start gap-2">
+                        <span class="fw-semibold"><span x-text="'Art. ' + d.artikel"></span> – <span x-text="d.titel"></span></span>
+                        <span class="badge rounded-pill text-bg-light border flex-shrink-0"
+                              x-text="d.anzahl + (d.anzahl === 1 ? ' Urteil' : ' Urteile')"></span>
+                      </div>
+                      <div class="small mt-1" x-text="d.text"></div>
+                      <div class="small text-body-secondary mt-1" x-show="d.strafrahmen">
+                        <i class="bi bi-bar-chart-steps"></i> <span x-text="d.strafrahmen"></span>
+                      </div>
+                    </button>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+
+        </section>
+
+        {# ================= 2. Tatbegehung ================= #}
+        <section x-show="aktuellerKey === 'tat'" x-cloak>
+          <template x-if="istFahrlaessig">
+            <div class="alert alert-light border small mb-4">
+              <i class="bi bi-info-circle"></i>
+              Die Frage nach der Vorsatzform entfällt: Das gewählte Hauptdelikt ist ein
+              Fahrlässigkeitsdelikt, die Fahrlässigkeit steckt also bereits im Hauptdelikt.
+            </div>
+          </template>
+          <div x-show="!istFahrlaessig">
+            <h2 class="h5">Mit welcher Vorsatzform handelte der Täter?</h2>
+            <p class="pf-hinweis">
+              Massgebend ist die Vorsatzform bezüglich des Erfolgs des Hauptdelikts, bei einer versuchten
+              Tötung also bezüglich des Todes. Bei einem vorsätzlichen Hauptdelikt kommt Fahrlässigkeit
+              nicht in Frage; zur Wahl stehen darum nur die beiden Vorsatzformen.
+            </p>
+            {% include 'database/includes/praejudizfinder_gewichtung.html' with k="'vorsatzform'" %}
+            <div class="row g-2 mb-4">
+              <template x-for="v in vorsatzformenErlaubt" :key="v.value">
+                <div class="col-md-6">
+                  <button type="button" class="pf-karte w-100 text-start h-100"
+                          :class="a.vorsatzform === v.value && 'pf-karte-aktiv'"
+                          @click="waehlen('vorsatzform', v.value)">
+                    <div class="fw-semibold" x-text="v.label"></div>
+                    <div class="small" x-text="v.text"></div>
+                  </button>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <h2 class="h5">Wurde das Hauptdelikt einmal oder mehrfach begangen?</h2>
+          <p class="pf-hinweis">
+            «Mehrfach» bedeutet, dass der Täter wegen mehrfacher Begehung des Hauptdelikts verurteilt
+            wurde, z.B. mehrere Raubüberfälle oder wiederholte Körperverletzungen.
+          </p>
+          {% include 'database/includes/praejudizfinder_gewichtung.html' with k="'mehrfach'" %}
+          <div class="d-flex flex-wrap gap-2 mb-4">
+            <button type="button" class="btn" :class="a.mehrfach === 'nein' ? 'btn-primary' : 'btn-outline-primary'"
+                    @click="waehlen('mehrfach', 'nein')">einmalig</button>
+            <button type="button" class="btn" :class="a.mehrfach === 'ja' ? 'btn-primary' : 'btn-outline-primary'"
+                    @click="waehlen('mehrfach', 'ja')">mehrfach</button>
+          </div>
+
+          <h2 class="h5">Wie viele Opfer waren vom Hauptdelikt betroffen?</h2>
+          {% include 'database/includes/praejudizfinder_gewichtung.html' with k="'opferzahl'" %}
+          <div class="mb-4">
+            <input id="pf-opferzahl" type="number" min="1" class="form-control" style="max-width: 10rem"
+                   x-model="a.opferzahl" placeholder="z.B. 1" aria-label="Anzahl Opfer">
+          </div>
+
+          <div x-show="istRaub" x-collapse>
+            <h2 class="h5">Wie hoch war die Beute?</h2>
+            <p class="pf-hinweis" x-text="s.deliktssumme_text"></p>
+            {% include 'database/includes/praejudizfinder_gewichtung.html' with k="'deliktssumme'" %}
+            <div class="input-group" style="max-width: 14rem">
+              <span class="input-group-text">CHF</span>
+              <input id="pf-deliktssumme" type="number" min="0" class="form-control"
+                     x-model="a.deliktssumme" placeholder="z.B. 2000" aria-label="Beute in Franken">
+            </div>
+          </div>
+        </section>
+
+        {# ================= 3. Tatmittel & Qualifikationen ================= #}
+        <section x-show="aktuellerKey === 'tatmittel'" x-cloak>
+          <h2 class="h5">Womit wurde das Hauptdelikt begangen?</h2>
+          <p class="pf-hinweis">
+            Das Tatmittel zeigt, wie gefährlich der Angriff war. Ähnliche Tatmittel (z.B. Messer und
+            Schlagwerkzeug, Faustschläge und Würgen) gelten bei der Suche als teilweise übereinstimmend.
+          </p>
+          {% include 'database/includes/praejudizfinder_gewichtung.html' with k="'tatmittel'" %}
+          <div class="row g-2 mb-4">
+            <template x-for="t in s.tatmittel" :key="t.value">
+              <div class="col-md-6">
+                <button type="button" class="pf-karte w-100 text-start h-100"
+                        :class="a.tatmittel === t.value && 'pf-karte-aktiv'"
+                        @click="waehlen('tatmittel', t.value)">
+                  <div class="fw-semibold" x-text="t.label"></div>
+                  <div class="small" x-text="t.text"></div>
+                </button>
+              </div>
+            </template>
+          </div>
+
+          <h2 class="h5">Qualifizierende Umstände</h2>
+          <p class="pf-hinweis">
+            Umstände, die das Gericht ausdrücklich bejaht hat und die das Tatverschulden erhöhen,
+            teilweise auch den Strafrahmen (z.B. beim Raub).
+          </p>
+          <template x-for="q in s.qualifikationen" :key="q.value">
+            <div class="mb-3">
+              <h3 class="h6" x-text="q.frage"></h3>
+              <p class="pf-hinweis small" x-text="q.text"></p>
+              {% include 'database/includes/praejudizfinder_gewichtung.html' with k="q.value" %}
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm" :class="a.qualifikationen[q.value] === 'ja' ? 'btn-primary' : 'btn-outline-primary'"
+                        @click="qualifikationWaehlen(q.value, 'ja')">ja</button>
+                <button type="button" class="btn btn-sm" :class="a.qualifikationen[q.value] === 'nein' ? 'btn-primary' : 'btn-outline-primary'"
+                        @click="qualifikationWaehlen(q.value, 'nein')">nein</button>
+              </div>
+            </div>
+          </template>
+        </section>
+
+        {# ================= 4. Opfer & Folgen ================= #}
+        <section x-show="aktuellerKey === 'opfer'" x-cloak>
+          <h2 class="h5">Welche Verletzung hat das Opfer erlitten?</h2>
+          <p class="pf-hinweis" x-text="s.verletzungsfolge_text"></p>
+          <div class="alert alert-warning small py-2" x-show="a.versuch === 'ja'" x-cloak>
+            <i class="bi bi-exclamation-triangle"></i>
+            Sie haben einen <strong>Versuch</strong> angegeben. Wählen Sie die Verletzung, die tatsächlich
+            eingetreten ist, nicht die, die der Täter gewollt oder in Kauf genommen hat. Blieb das Opfer
+            unverletzt, ist das «keine».
+          </div>
+          {% include 'database/includes/praejudizfinder_gewichtung.html' with k="'verletzungsfolge'" %}
+          <div class="pf-stufen mb-3" role="radiogroup" aria-label="Verletzungsfolge">
+            <template x-for="v in s.verletzungsfolgen" :key="v.value">
+              <button type="button" class="pf-karte pf-stufe w-100 text-start" role="radio"
+                      :aria-checked="a.verletzungsfolge === v.value"
+                      :class="a.verletzungsfolge === v.value && 'pf-karte-aktiv'"
+                      @click="waehlen('verletzungsfolge', v.value)">
+                <div class="d-flex align-items-center gap-3">
+                  {# Schweregrad als Balken: 0 = keine bis 6 = Tod #}
+                  <span class="pf-stufe-balken" aria-hidden="true">
+                    <template x-for="i in 6" :key="i">
+                      <span :class="i <= v.stufe && 'aktiv'"></span>
+                    </template>
+                  </span>
+                  <span class="fw-semibold flex-grow-1" x-text="v.label"></span>
+                  <span class="badge rounded-pill text-bg-light border"
+                        x-text="v.anzahl + (v.anzahl === 1 ? ' Urteil' : ' Urteile')"></span>
+                </div>
+                <div class="small mt-1" x-html="v.text"></div>
+                <div class="small text-body-secondary mt-1" x-show="v.beispiele.length">
+                  z.B. <span x-text="v.beispiele.join('; ')"></span>
+                </div>
+              </button>
+            </template>
+          </div>
+          <div class="alert alert-info small mb-4" x-html="s.verletzungsfolge_abgrenzung"></div>
+
+          <h2 class="h5">Gegen welche Körperregion richtete sich der Angriff?</h2>
+          <p class="pf-hinweis" x-text="s.koerperteil_text"></p>
+          {% include 'database/includes/praejudizfinder_gewichtung.html' with k="'koerperteil'" %}
+          <div class="d-flex flex-wrap gap-2 mb-4">
+            <template x-for="v in s.koerperteile" :key="v.value">
+              <button type="button" class="btn"
+                      :class="a.koerperteil === v.value ? 'btn-primary' : 'btn-outline-primary'"
+                      @click="waehlen('koerperteil', v.value)" x-text="v.label"></button>
+            </template>
+          </div>
+
+          <h2 class="h5">In welcher Beziehung standen Täter und Opfer?</h2>
+          <p class="pf-hinweis">
+            Gewalt in einer Paarbeziehung oder Familie (häusliche Gewalt) wird häufig wiederholt
+            und unter Ausnützung eines Vertrauensverhältnisses verübt; Angriffe auf Unbekannte
+            zeugen oft von besonderer Rücksichtslosigkeit. Ähnliche Beziehungen gelten bei der Suche
+            als teilweise übereinstimmend.
+          </p>
+          {% include 'database/includes/praejudizfinder_gewichtung.html' with k="'beziehung'" %}
+          <div class="row g-2">
+            <template x-for="b in s.beziehungen" :key="b.value">
+              <div class="col-md-6">
+                <button type="button" class="pf-karte w-100 text-start h-100"
+                        :class="a.beziehung === b.value && 'pf-karte-aktiv'"
+                        @click="waehlen('beziehung', b.value)">
+                  <div class="fw-semibold" x-text="b.label"></div>
+                  <div class="small" x-text="b.text"></div>
+                </button>
+              </div>
+            </template>
+          </div>
+        </section>
+
+        {% include 'database/includes/praejudizfinder_uebrige.html' with frage="Wurde der Täter auch wegen anderer Delikte verurteilt?" %}
+
+        <section x-show="aktuellerKey === 'taeter'" x-cloak>
+          <h2 class="h5">Stand der Täter unter Alkohol- oder Drogeneinfluss?</h2>
+          <p class="pf-hinweis" x-text="s.substanz_text"></p>
+          {% include 'database/includes/praejudizfinder_gewichtung.html' with k="'substanzeinfluss'" %}
+          <div class="d-flex flex-wrap gap-2 mb-4">
+            <template x-for="v in s.substanzen" :key="v.value">
+              <button type="button" class="btn"
+                      :class="a.substanzeinfluss === v.value ? 'btn-primary' : 'btn-outline-primary'"
+                      @click="waehlen('substanzeinfluss', v.value)" x-text="v.label"></button>
+            </template>
+          </div>
+        </section>
+        {% include 'database/includes/praejudizfinder_taeter.html' with einschlaegig="ebenfalls ein Gewaltdelikt betreffen" %}
+
+        {% include 'database/includes/praejudizfinder_ergebnis.html' with gewichtung="Hauptdelikt, Versuch und Verletzungsfolge wiegen am schwersten." %}
+
+        {% include 'database/includes/praejudizfinder_navigation.html' %}
+      </div>
+
+      {% include 'database/includes/praejudizfinder_seitenleiste.html' %}
+    </div>
+  </div>
+{% endblock body %}

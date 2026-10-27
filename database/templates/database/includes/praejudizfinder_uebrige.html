@@ -1,0 +1,32 @@
+{% comment %}
+Schritt «Übrige Delikte» der geführten Präjudiziensuche. Parameter: frage.
+{% endcomment %}
+{# ================= 6. Übrige Delikte ================= #}
+<section x-show="aktuellerKey === 'uebrige'" x-cloak>
+  <h2 class="h5">{{ frage }}</h2>
+  <p class="pf-hinweis" x-text="s.uebrige_delikte_text"></p>
+  {% include 'database/includes/praejudizfinder_gewichtung.html' with k="'uebrige'" %}
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <button type="button" class="btn" :class="a.uebrigeFrage === 'nein' ? 'btn-primary' : 'btn-outline-primary'"
+            @click="waehlen('uebrigeFrage', 'nein')">nein</button>
+    <button type="button" class="btn" :class="a.uebrigeFrage === 'ja' ? 'btn-primary' : 'btn-outline-primary'"
+            @click="waehlen('uebrigeFrage', 'ja')">ja</button>
+  </div>
+  <div x-show="a.uebrigeFrage === 'ja'" x-collapse>
+    <div class="row g-3" style="max-width: 36rem">
+      <div class="col-sm-4">
+        <label class="form-label small" for="pf-verbrechen">Anzahl Verbrechen</label>
+        <input id="pf-verbrechen" type="number" min="0" class="form-control" x-model="a.verbrechen">
+      </div>
+      <div class="col-sm-4">
+        <label class="form-label small" for="pf-vergehen">Anzahl Vergehen</label>
+        <input id="pf-vergehen" type="number" min="0" class="form-control" x-model="a.vergehen">
+      </div>
+      <div class="col-sm-4">
+        <label class="form-label small" for="pf-mehrfach-uebrige">davon mehrfach begangen</label>
+        <input id="pf-mehrfach-uebrige" type="number" min="0" class="form-control" x-model="a.mehrfachUebrige">
+      </div>
+    </div>
+    <p class="mt-2 mb-0">Deliktsscore: <strong x-text="deliktsscore"></strong></p>
+  </div>
+</section>

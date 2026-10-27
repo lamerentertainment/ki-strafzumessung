@@ -1,0 +1,88 @@
+{% comment %}
+Ergebnisseite der geführten Präjudiziensuche: Kennzahlen und Trefferliste mit Tooltips.
+Parameter: gewichtung (Hinweis, welche Kriterien am schwersten wiegen).
+Die Deliktszeile je Treffer liefert trefferZeile() der spezifischen Komponente.
+{% endcomment %}
+{# ================= 8. Ergebnis ================= #}
+<section x-show="aktuellerKey === 'ergebnis'" x-cloak>
+  <h2 class="h5">Die ähnlichsten Urteile</h2>
+  <p class="pf-hinweis">
+    Die Ähnlichkeit gibt an, wie weit ein Urteil mit Ihren Antworten übereinstimmt; nicht
+    beantwortete Fragen fliessen nicht ein. {{ gewichtung }}
+    Fahren Sie mit der Maus über die Badges, um zu sehen, wie sie zustande kommen.
+    Die Liste ersetzt keine eigene Würdigung: Lesen Sie die Urteile nach, bevor Sie sich
+    darauf stützen.
+  </p>
+
+  <div class="pf-kennzahlen row g-2 mb-3" x-show="treffer.length">
+    <div class="col-6 col-md-3">
+      <div class="pf-kennzahl" tabindex="0"
+           :data-tt="`Mittlerer Wert der Freiheitsstrafen der ${treffer.length} angezeigten Urteile (${kennzahlen.anzahlFs} davon mit Freiheitsstrafe).\nGeldstrafen und lebenslängliche Strafen sind nicht eingerechnet.\nDie Hälfte der Urteile liegt darunter, die Hälfte darüber.`">
+        <div class="pf-kennzahl-wert" x-text="kennzahlen.median !== null ? monate(Math.round(kennzahlen.median)).split(' (')[0] : '–'"></div>
+        <div class="pf-kennzahl-label">Median Freiheitsstrafe</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="pf-kennzahl" tabindex="0"
+           :data-tt="`Tiefste und höchste Freiheitsstrafe der ${treffer.length} angezeigten Urteile, in Monaten.\nGeldstrafen und lebenslängliche Strafen sind nicht eingerechnet.`">
+        <div class="pf-kennzahl-wert">
+          <span x-text="kennzahlen.min ?? '–'"></span>–<span x-text="kennzahlen.max ?? '–'"></span>
+        </div>
+        <div class="pf-kennzahl-label">Spanne (Monate)</div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6">
+      <div class="pf-kennzahl">
+        <template x-for="gruppe in kennzahlen.vollzug" :key="gruppe.code">
+          <div class="d-flex gap-1 flex-wrap justify-content-center align-items-center mb-1">
+            <span class="small text-body-secondary" x-text="gruppe.label + ':'"></span>
+            <template x-for="v in ['0', '1', '2']" :key="v">
+              <span class="badge" tabindex="0"
+                    :class="vollzugKlasse({hauptsanktion: gruppe.code, vollzug: v})"
+                    :data-tt="`${gruppe.anzahl[v]} der angezeigten Urteile: ${gruppe.label}, ${{'0': 'bedingt', '1': 'teilbedingt', '2': 'unbedingt'}[v]}.\n` + vollzugTooltip(v) + (gruppe.code === '1' ? '\nGeldstrafen fliessen nicht in Median und Spanne ein.' : '')"
+                    x-text="gruppe.anzahl[v] + ' ' + {'0': 'bedingt', '1': 'teilbedingt', '2': 'unbedingt'}[v]"></span>
+            </template>
+          </div>
+        </template>
+        <div class="pf-kennzahl-label">Vollzug der <span x-text="treffer.length"></span> angezeigten Urteile – Farben wie im Strafmasshistogramm der Datenbank</div>
+      </div>
+    </div>
+  </div>
+
+  <template x-for="(b, index) in treffer" :key="b.u.pk">
+    <article class="pf-treffer">
+      <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+        <div>
+          <span class="text-body-secondary small" x-text="(index + 1) + '.'"></span>
+          <a :href="b.u.url" class="fw-semibold" x-text="b.u.fall_nr"></a>
+          <span class="text-body-secondary small">
+            · <span x-text="b.u.gericht"></span>, <span x-text="b.u.datum"></span>
+          </span>
+          <a x-show="b.u.pdf" :href="b.u.pdf" target="_blank" rel="noopener" class="link-secondary small ms-1">PDF</a>
+        </div>
+        <span class="badge fs-6 pf-tt-links" tabindex="0" :class="aehnlichkeitsKlasse(b.aehnlichkeit)"
+              :data-tt="aehnlichkeitTooltip(b)"
+              x-text="prozent(b.aehnlichkeit) + ' ähnlich'"></span>
+      </div>
+      <div class="mt-1" x-text="trefferZeile(b.u)"></div>
+      <div class="mt-1 fw-semibold">
+        <span x-text="sanktion(b.u)"></span>
+        <span class="badge ms-1" tabindex="0" :class="vollzugKlasse(b.u)" :data-tt="vollzugTooltip(b.u.vollzug)" x-text="b.u.vollzug_label"></span>
+      </div>
+      <p class="small mt-2 mb-2" x-show="b.u.kurzsachverhalt" x-text="b.u.kurzsachverhalt"></p>
+      <div class="d-flex flex-wrap gap-1">
+        <template x-for="k in b.k" :key="k.name">
+          <span class="pf-krit" tabindex="0" :class="kriteriumKlasse(k.wert)" :data-tt="kriteriumTooltip(k, b.k)">
+            <i class="bi" :class="kriteriumSymbol(k.wert)"></i> <span x-text="k.label"></span>
+          </span>
+        </template>
+      </div>
+    </article>
+  </template>
+
+  <div class="d-flex gap-2 mt-3">
+    <button type="button" class="btn btn-outline-primary" x-show="anzahlTreffer < urteile.length"
+            @click="anzahlTreffer += 10">10 weitere anzeigen</button>
+    <button type="button" class="btn btn-outline-secondary" @click="neuStarten()">Neue Suche</button>
+  </div>
+</section>

@@ -1,0 +1,26 @@
+{% comment %}
+Seitenleiste «Ihr Fall» der geführten Präjudiziensuche.
+{% endcomment %}
+{# --- Seitenleiste: bisherige Antworten --- #}
+<aside class="col-lg-4">
+  <div class="pf-seitenleiste">
+    <h2 class="h6 text-uppercase text-body-secondary">Ihr Fall</h2>
+    <template x-if="!antworten.length">
+      <p class="small text-body-secondary mb-0">Noch keine Angaben.</p>
+    </template>
+    <dl class="small mb-0">
+      <template x-for="zeile in antworten" :key="zeile[0]">
+        <div class="pf-antwort">
+          <dt x-text="zeile[0]"></dt>
+          <dd x-text="zeile[1]"></dd>
+        </div>
+      </template>
+    </dl>
+    <div class="border-top mt-3 pt-3 small" x-show="a.hauptdelikt">
+      <div><strong x-text="passendesHauptdelikt"></strong> <span x-text="passendLabel"></span></div>
+      <div><strong x-text="sehrAehnlich"></strong> Urteile mit mind. 80 % Ähnlichkeit</div>
+      <button type="button" class="btn btn-sm btn-success mt-2" x-show="aktuellerKey !== 'ergebnis'"
+              @click="zumErgebnis()">Ergebnis anzeigen</button>
+    </div>
+  </div>
+</aside>

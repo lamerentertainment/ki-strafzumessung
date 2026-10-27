@@ -1,0 +1,17 @@
+{% comment %}
+Schrittleiste der geführten Präjudiziensuche (praejudizfinder_basis.js).
+{% endcomment %}
+{# --- Schrittleiste --- #}
+<ol class="pf-schrittleiste pf-tt-unten list-unstyled d-flex flex-wrap gap-1 mb-4">
+  <template x-for="(eintrag, index) in schritte" :key="eintrag.key">
+    {# Tooltip am <li>: deaktivierte Bootstrap-Buttons empfangen keine Maus-Ereignisse #}
+    <li :data-tt="schrittTooltip(eintrag)" tabindex="0">
+      <button type="button" class="btn btn-sm"
+              :class="index === schritt ? 'btn-primary' : (index < schritt ? 'btn-outline-primary' : 'btn-outline-secondary')"
+              :disabled="index > 0 && !a.hauptdelikt"
+              @click="springen(index)">
+        <span x-text="index + 1"></span>. <span x-text="eintrag.titel"></span>
+      </button>
+    </li>
+  </template>
+</ol>

@@ -18,6 +18,7 @@ urlpatterns = [
     ),
     path("ws_evaluation", views.ws_evaluation, name="ws_evaluation"),
     path("betm_evaluation", views.betm_evaluation, name="betm_evaluation"),
+    path("sexual_evaluation", views.sexual_evaluation, name="sexual_evaluation"),
     path("database", views.UrteilListView.as_view(), name="database"),
     # alte Methode
     # path('model/reset', views.kimodel_reset, name='kimodel_reset'),
@@ -110,6 +111,11 @@ urlpatterns = [
         "vmurteil/<int:pk>",
         views.VMUrteilDetailView.as_view(),
         name="vmurteil_detail",
+    ),
+    path(
+        "praejudizen_finden/sexualdelikte",
+        views.praejudizen_finden_sexual,
+        name="praejudizen_finden_sexual",
     ),
     path("praejudizensuche", views.praejudizensuche, name="praejudizensuche"),
     path(

@@ -63,6 +63,8 @@ from .filterspec import (
     GEWALTDELIKT_FILTER_CONFIG,
     KONKURSDELIKT_FILTER_CONFIG,
 )
+from .praejudizfinder import schritte_erstellen, urteile_erstellen
+from .sexual_evaluation import auswertung_erstellen
 from .aws_helpers import (
     kimodell_von_pickle_file_aus_aws_bucket_laden,
     ki_modell_als_pickle_file_speichern,
@@ -2434,6 +2436,22 @@ logger = logging.getLogger(__name__)
 
 
 @require_GET
+def sexual_evaluation(request):
+    """Dev-Seite: Ridge-Regression auf den Sexualdelikt-Urteilen, siehe database/sexual_evaluation.py."""
+    return render(
+        request, "database/sexual_evaluation.html", {"auswertung": auswertung_erstellen()}
+    )
+
+
+def praejudizen_finden_sexual(request):
+    """Geführte Präjudiziensuche für Sexualdelikte, siehe database/praejudizfinder.py."""
+    context = {
+        "schritte": schritte_erstellen(),
+        "urteile": urteile_erstellen(),
+    }
+    return render(request, "database/praejudizen_finden_sexual.html", context)
+
+
 def praejudizensuche(request):
     """Rendert die leere Chat-Seite der Präjudizensuche. Kein Server-Session-State - die
     Nachrichten-History lebt im Browser (JS) und wird bei jeder Anfrage mitgeschickt."""

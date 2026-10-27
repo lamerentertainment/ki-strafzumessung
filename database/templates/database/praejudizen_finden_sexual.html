@@ -1,0 +1,392 @@
+{% extends './base.html' %}
+{% load static %}
+
+{% block alpine_komponenten %}
+  <script defer src="{% static 'database/praejudizfinder_sexual.js' %}"></script>
+{% endblock alpine_komponenten %}
+
+{% block body %}
+  {{ schritte|json_script:"pf-schritte" }}
+  {{ urteile|json_script:"pf-urteile" }}
+
+  <div class="col-12 praejudizfinder" x-data="praejudizfinder('pf-schritte', 'pf-urteile')">
+    <h1 class="h3">Präjudizen finden – Sexualdelikte</h1>
+    <p class="text-body-secondary mb-3">
+      Beantworten Sie Schritt für Schritt die Fragen zu Ihrem Fall. Jede Frage lässt sich mit
+      <em>weiss nicht / nicht relevant</em> überspringen. Am Schluss erhalten Sie die ähnlichsten
+      Urteile aus der Datenbank ({{ urteile|length }} Sexualdelikt-Urteile).
+    </p>
+
+    {# --- Schrittleiste --- #}
+    <ol class="pf-schrittleiste list-unstyled d-flex flex-wrap gap-1 mb-4">
+      <template x-for="(eintrag, index) in schritte" :key="eintrag.key">
+        <li>
+          <button type="button" class="btn btn-sm"
+                  :class="index === schritt ? 'btn-primary' : (index < schritt ? 'btn-outline-primary' : 'btn-outline-secondary')"
+                  :disabled="index > 0 && !a.hauptdelikt"
+                  @click="springen(index)">
+            <span x-text="index + 1"></span>. <span x-text="eintrag.titel"></span>
+          </button>
+        </li>
+      </template>
+    </ol>
+
+    <div class="row g-4">
+      <div class="col-lg-8">
+
+        {# ================= 1. Hauptdelikt ================= #}
+        <section x-show="aktuellerKey === 'hauptdelikt'">
+          <h2 class="h5">Welches Sexualdelikt trägt die Einsatzstrafe?</h2>
+          <p class="pf-hinweis">
+            Das <strong>Hauptdelikt</strong> ist das schwerste Delikt, für das das Gericht die
+            Einsatzstrafe bildet; alle übrigen Schuldsprüche werden dazu asperiert (Art. 49 StGB).
+            Am 1. Juli 2024 ist das revidierte Sexualstrafrecht in Kraft getreten. Für Taten bis
+            30. Juni 2024 gilt grundsätzlich das alte Recht (ausser das neue sei milder, Art. 2 Abs. 2 StGB).
+            Die Suche berücksichtigt Urteile nach altem und neuem Recht zum selben Artikel als nah verwandt.
+          </p>
+
+          <template x-for="gruppe in [{titel: 'Altes Recht (Taten bis 30. Juni 2024)', alt: true}, {titel: 'Neues Recht (Taten ab 1. Juli 2024)', alt: false}]">
+            <div class="mb-3">
+              <h3 class="h6 text-uppercase text-body-secondary mt-3" x-text="gruppe.titel"></h3>
+              <div class="row g-2">
+                <template x-for="d in hauptdelikteNach(gruppe.alt)" :key="d.value">
+                  <div class="col-md-6">
+                    <button type="button" class="pf-karte w-100 text-start"
+                            :class="a.hauptdelikt === d.value && 'pf-karte-aktiv'"
+                            @click="waehlen('hauptdelikt', d.value)">
+                      <div class="d-flex justify-content-between align-items-start gap-2">
+                        <span class="fw-semibold"><span x-text="'Art. ' + d.artikel"></span> – <span x-text="d.titel"></span></span>
+                        <span class="badge rounded-pill text-bg-light border flex-shrink-0"
+                              x-text="d.anzahl + (d.anzahl === 1 ? ' Urteil' : ' Urteile')"></span>
+                      </div>
+                      <div class="small mt-1" x-text="d.text"></div>
+                      <div class="small text-body-secondary mt-1" x-show="d.strafrahmen">
+                        <i class="bi bi-bar-chart-steps"></i> <span x-text="d.strafrahmen"></span>
+                      </div>
+                    </button>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </section>
+
+        {# ================= 2. Tatmittel ================= #}
+        <section x-show="aktuellerKey === 'tatmittel'" x-cloak>
+          <h2 class="h5">Mit welchem Mittel wurde das Hauptdelikt begangen?</h2>
+          <p class="pf-hinweis">
+            Das Tatmittel beschreibt, <em>wie</em> der Täter das Opfer zur sexuellen Handlung brachte.
+            Es prägt das objektive Tatverschulden stark: Wer Gewalt anwendet, handelt in der Regel
+            verwerflicher als wer eine bestehende Widerstandsunfähigkeit ausnützt.
+          </p>
+          <div class="row g-2">
+            <template x-for="t in s.tatmittel" :key="t.value">
+              <div class="col-md-6">
+                <button type="button" class="pf-karte w-100 text-start h-100"
+                        :class="a.tatmittel === t.value && 'pf-karte-aktiv'"
+                        @click="waehlen('tatmittel', t.value)">
+                  <div class="fw-semibold text-capitalize" x-text="t.value"></div>
+                  <div class="small" x-text="t.kurz"></div>
+                </button>
+              </div>
+            </template>
+          </div>
+          <template x-for="t in s.tatmittel" :key="'e' + t.value">
+            <details class="pf-erlaeuterung mt-2" :open="a.tatmittel === t.value">
+              <summary>Was bedeutet «<span x-text="t.value"></span>»?</summary>
+              <p class="mb-1" x-text="t.text"></p>
+              <template x-if="t.beispiele.length">
+                <ul class="small mb-0">
+                  <template x-for="b in t.beispiele"><li x-text="b"></li></template>
+                </ul>
+              </template>
+            </details>
+          </template>
+        </section>
+
+        {# ================= 3. Opfer ================= #}
+        <section x-show="aktuellerKey === 'opfer'" x-cloak>
+          <h2 class="h5">Wie alt war das Opfer?</h2>
+          <p class="pf-hinweis" x-text="s.opferalter_text"></p>
+          <div class="d-flex flex-wrap gap-2 mb-4">
+            <template x-for="o in s.opferalter" :key="o.value">
+              <button type="button" class="btn"
+                      :class="a.opferalter === o.value ? 'btn-primary' : 'btn-outline-primary'"
+                      @click="waehlen('opferalter', o.value)" x-text="o.label"></button>
+            </template>
+          </div>
+
+          <h2 class="h5">In welcher Beziehung standen Täter und Opfer?</h2>
+          <p class="pf-hinweis">
+            Ein Vertrauens- oder Abhängigkeitsverhältnis (Familie, Partnerschaft) kann das
+            Verschulden erhöhen, weil der Täter das Vertrauen des Opfers missbraucht. Ähnliche
+            Beziehungen (z.B. Bekannte und flüchtig Bekannte) werden bei der Suche als teilweise
+            übereinstimmend gewertet.
+          </p>
+          <div class="row g-2">
+            <template x-for="b in s.beziehungen" :key="b.value">
+              <div class="col-md-6">
+                <button type="button" class="pf-karte w-100 text-start h-100"
+                        :class="a.beziehung === b.value && 'pf-karte-aktiv'"
+                        @click="waehlen('beziehung', b.value)">
+                  <div class="fw-semibold" x-text="b.label"></div>
+                  <div class="small" x-text="b.text"></div>
+                </button>
+              </div>
+            </template>
+          </div>
+        </section>
+
+        {# ================= 4. Tatbegehung ================= #}
+        <section x-show="aktuellerKey === 'tat'" x-cloak>
+          <h2 class="h5">Wurde das Hauptdelikt einmal oder mehrfach begangen?</h2>
+          <p class="pf-hinweis">
+            «Mehrfach» bedeutet, dass der Täter wegen mehrfacher Begehung des Hauptdelikts
+            verurteilt wurde – etwa wiederholte Übergriffe auf dasselbe Kind über Monate oder Taten
+            zum Nachteil mehrerer Opfer. Die Zahl der Taten und die Deliktsperiode beeinflussen die
+            Strafe erheblich.
+          </p>
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <button type="button" class="btn" :class="a.mehrfach === 'nein' ? 'btn-primary' : 'btn-outline-primary'"
+                    @click="waehlen('mehrfach', 'nein')">einmalig</button>
+            <button type="button" class="btn" :class="a.mehrfach === 'ja' ? 'btn-primary' : 'btn-outline-primary'"
+                    @click="waehlen('mehrfach', 'ja')">mehrfach</button>
+          </div>
+          <div class="mb-4" x-show="a.mehrfach === 'ja'" x-collapse>
+            <label class="form-label small" for="pf-anzahl">Ungefähre Anzahl Taten (optional)</label>
+            <input id="pf-anzahl" type="number" min="2" class="form-control" style="max-width: 10rem"
+                   x-model="a.anzahl" placeholder="z.B. 10">
+          </div>
+
+          <template x-for="b in besonderheitenImSchritt('tat')" :key="b.value">
+            <div class="mb-3">
+              <h2 class="h5" x-text="b.frage"></h2>
+              <p class="pf-hinweis" x-text="b.text"></p>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn" :class="a.besonderheiten[b.value] === 'ja' ? 'btn-primary' : 'btn-outline-primary'"
+                        @click="besonderheitWaehlen(b.value, 'ja')">ja</button>
+                <button type="button" class="btn" :class="a.besonderheiten[b.value] === 'nein' ? 'btn-primary' : 'btn-outline-primary'"
+                        @click="besonderheitWaehlen(b.value, 'nein')">nein</button>
+              </div>
+            </div>
+          </template>
+        </section>
+
+        {# ================= 5. Weitere Sexualdelikte ================= #}
+        <section x-show="aktuellerKey === 'weitere'" x-cloak>
+          <h2 class="h5">Wurde der Täter wegen weiterer Sexualdelikte verurteilt?</h2>
+          <p class="pf-hinweis">
+            Neben dem Hauptdelikt enthält das Urteil oft weitere Schuldsprüche aus dem
+            Sexualstrafrecht, etwa sexuelle Handlungen mit Kindern neben einer Vergewaltigung oder
+            Pornografie (Art. 197 StGB). Sie erhöhen die Einsatzstrafe im Rahmen der Asperation.
+          </p>
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <button type="button" class="btn" :class="a.weitereFrage === 'nein' ? 'btn-primary' : 'btn-outline-primary'"
+                    @click="waehlen('weitereFrage', 'nein')">nein, nur das Hauptdelikt</button>
+            <button type="button" class="btn" :class="a.weitereFrage === 'ja' ? 'btn-primary' : 'btn-outline-primary'"
+                    @click="waehlen('weitereFrage', 'ja')">ja</button>
+          </div>
+          <div x-show="a.weitereFrage === 'ja'" x-collapse>
+            <p class="small text-body-secondary mb-2">Welche? (Mehrfachauswahl; ohne Auswahl zählt jedes weitere Sexualdelikt)</p>
+            <div class="d-flex flex-wrap gap-2">
+              <template x-for="w in s.weitere_sexualdelikte" :key="w.value">
+                <button type="button" class="btn btn-sm"
+                        :class="a.weitere.includes(w.value) ? 'btn-primary' : 'btn-outline-secondary'"
+                        @click="weitereUmschalten(w.value)" x-text="w.label"></button>
+              </template>
+            </div>
+          </div>
+        </section>
+
+        {# ================= 6. Übrige Delikte ================= #}
+        <section x-show="aktuellerKey === 'uebrige'" x-cloak>
+          <h2 class="h5">Wurde der Täter auch wegen anderer (nicht sexueller) Delikte verurteilt?</h2>
+          <p class="pf-hinweis" x-text="s.uebrige_delikte_text"></p>
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <button type="button" class="btn" :class="a.uebrigeFrage === 'nein' ? 'btn-primary' : 'btn-outline-primary'"
+                    @click="waehlen('uebrigeFrage', 'nein')">nein</button>
+            <button type="button" class="btn" :class="a.uebrigeFrage === 'ja' ? 'btn-primary' : 'btn-outline-primary'"
+                    @click="waehlen('uebrigeFrage', 'ja')">ja</button>
+          </div>
+          <div x-show="a.uebrigeFrage === 'ja'" x-collapse>
+            <div class="row g-3" style="max-width: 36rem">
+              <div class="col-sm-4">
+                <label class="form-label small" for="pf-verbrechen">Anzahl Verbrechen</label>
+                <input id="pf-verbrechen" type="number" min="0" class="form-control" x-model="a.verbrechen">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label small" for="pf-vergehen">Anzahl Vergehen</label>
+                <input id="pf-vergehen" type="number" min="0" class="form-control" x-model="a.vergehen">
+              </div>
+              <div class="col-sm-4">
+                <label class="form-label small" for="pf-mehrfach-uebrige">davon mehrfach begangen</label>
+                <input id="pf-mehrfach-uebrige" type="number" min="0" class="form-control" x-model="a.mehrfachUebrige">
+              </div>
+            </div>
+            <p class="mt-2 mb-0">Deliktsscore: <strong x-text="deliktsscore"></strong></p>
+          </div>
+        </section>
+
+        {# ================= 7. Täter & Verfahren ================= #}
+        <section x-show="aktuellerKey === 'taeter'" x-cloak>
+          <h2 class="h5">Ist der Täter vorbestraft?</h2>
+          <p class="pf-hinweis">
+            Vorstrafen wirken bei der Täterkomponente straferhöhend, besonders wenn sie
+            <strong>einschlägig</strong> sind, d.h. ebenfalls ein Sexualdelikt (oder ein
+            vergleichbares Delikt gegen die körperliche oder sexuelle Integrität) betreffen.
+          </p>
+          <div class="d-flex flex-wrap gap-2 mb-4">
+            <button type="button" class="btn" :class="a.vorstrafen === 'keine' ? 'btn-primary' : 'btn-outline-primary'"
+                    @click="waehlen('vorstrafen', 'keine')">keine Vorstrafen</button>
+            <button type="button" class="btn" :class="a.vorstrafen === 'nicht_einschlaegig' ? 'btn-primary' : 'btn-outline-primary'"
+                    @click="waehlen('vorstrafen', 'nicht_einschlaegig')">vorbestraft, nicht einschlägig</button>
+            <button type="button" class="btn" :class="a.vorstrafen === 'einschlaegig' ? 'btn-primary' : 'btn-outline-primary'"
+                    @click="waehlen('vorstrafen', 'einschlaegig')">einschlägig vorbestraft</button>
+          </div>
+
+          <template x-for="b in besonderheitenImSchritt('taeter')" :key="b.value">
+            <div class="mb-3">
+              <h2 class="h6" x-text="b.frage"></h2>
+              <p class="pf-hinweis small" x-text="b.text"></p>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm" :class="a.besonderheiten[b.value] === 'ja' ? 'btn-primary' : 'btn-outline-primary'"
+                        @click="besonderheitWaehlen(b.value, 'ja')">ja</button>
+                <button type="button" class="btn btn-sm" :class="a.besonderheiten[b.value] === 'nein' ? 'btn-primary' : 'btn-outline-primary'"
+                        @click="besonderheitWaehlen(b.value, 'nein')">nein</button>
+              </div>
+            </div>
+          </template>
+        </section>
+
+        {# ================= 8. Ergebnis ================= #}
+        <section x-show="aktuellerKey === 'ergebnis'" x-cloak>
+          <h2 class="h5">Die ähnlichsten Urteile</h2>
+          <p class="pf-hinweis">
+            Die Ähnlichkeit gibt an, wie weit ein Urteil mit Ihren Antworten übereinstimmt; nicht
+            beantwortete Fragen fliessen nicht ein. Hauptdelikt und Tatmittel wiegen am schwersten.
+            Fahren Sie mit der Maus über die Badges, um zu sehen, wie sie zustande kommen.
+            Die Liste ersetzt keine eigene Würdigung: Lesen Sie die Urteile nach, bevor Sie sich
+            darauf stützen.
+          </p>
+
+          <div class="pf-kennzahlen row g-2 mb-3" x-show="treffer.length">
+            <div class="col-6 col-md-3">
+              <div class="pf-kennzahl" tabindex="0"
+                   :data-tt="`Mittlerer Wert der Freiheitsstrafen der ${treffer.length} angezeigten Urteile (${kennzahlen.anzahlFs} davon mit Freiheitsstrafe).\nGeldstrafen und lebenslängliche Strafen sind nicht eingerechnet.\nDie Hälfte der Urteile liegt darunter, die Hälfte darüber.`">
+                <div class="pf-kennzahl-wert" x-text="kennzahlen.median !== null ? monate(Math.round(kennzahlen.median)).split(' (')[0] : '–'"></div>
+                <div class="pf-kennzahl-label">Median Freiheitsstrafe</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="pf-kennzahl" tabindex="0"
+                   :data-tt="`Tiefste und höchste Freiheitsstrafe der ${treffer.length} angezeigten Urteile, in Monaten.\nGeldstrafen und lebenslängliche Strafen sind nicht eingerechnet.`">
+                <div class="pf-kennzahl-wert">
+                  <span x-text="kennzahlen.min ?? '–'"></span>–<span x-text="kennzahlen.max ?? '–'"></span>
+                </div>
+                <div class="pf-kennzahl-label">Spanne (Monate)</div>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="pf-kennzahl">
+                <template x-for="gruppe in kennzahlen.vollzug" :key="gruppe.code">
+                  <div class="d-flex gap-1 flex-wrap justify-content-center align-items-center mb-1">
+                    <span class="small text-body-secondary" x-text="gruppe.label + ':'"></span>
+                    <template x-for="v in ['0', '1', '2']" :key="v">
+                      <span class="badge" tabindex="0"
+                            :class="vollzugKlasse({hauptsanktion: gruppe.code, vollzug: v})"
+                            :data-tt="`${gruppe.anzahl[v]} der angezeigten Urteile: ${gruppe.label}, ${{'0': 'bedingt', '1': 'teilbedingt', '2': 'unbedingt'}[v]}.\n` + vollzugTooltip(v) + (gruppe.code === '1' ? '\nGeldstrafen fliessen nicht in Median und Spanne ein.' : '')"
+                            x-text="gruppe.anzahl[v] + ' ' + {'0': 'bedingt', '1': 'teilbedingt', '2': 'unbedingt'}[v]"></span>
+                    </template>
+                  </div>
+                </template>
+                <div class="pf-kennzahl-label">Vollzug der <span x-text="treffer.length"></span> angezeigten Urteile – Farben wie im Strafmasshistogramm der Datenbank</div>
+              </div>
+            </div>
+          </div>
+
+          <template x-for="(b, index) in treffer" :key="b.u.pk">
+            <article class="pf-treffer">
+              <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                <div>
+                  <span class="text-body-secondary small" x-text="(index + 1) + '.'"></span>
+                  <a :href="b.u.url" class="fw-semibold" x-text="b.u.fall_nr"></a>
+                  <span class="text-body-secondary small">
+                    · <span x-text="b.u.gericht"></span>, <span x-text="b.u.datum"></span>
+                  </span>
+                  <a x-show="b.u.pdf" :href="b.u.pdf" target="_blank" rel="noopener" class="link-secondary small ms-1">PDF</a>
+                </div>
+                <span class="badge fs-6 pf-tt-links" tabindex="0" :class="aehnlichkeitsKlasse(b.aehnlichkeit)"
+                      :data-tt="aehnlichkeitTooltip(b)"
+                      x-text="prozent(b.aehnlichkeit) + ' ähnlich'"></span>
+              </div>
+              <div class="mt-1">
+                <span x-text="b.u.hauptdelikt"></span><span x-show="b.u.mehrfach">, mehrfach</span>
+                · <span x-text="b.u.tatmittel"></span>
+                · Opfer <span x-text="b.u.opferalter_label.toLowerCase()"></span>
+              </div>
+              <div class="mt-1 fw-semibold">
+                <span x-text="sanktion(b.u)"></span>
+                <span class="badge ms-1" tabindex="0" :class="vollzugKlasse(b.u)" :data-tt="vollzugTooltip(b.u.vollzug)" x-text="b.u.vollzug_label"></span>
+              </div>
+              <p class="small mt-2 mb-2" x-show="b.u.kurzsachverhalt" x-text="b.u.kurzsachverhalt"></p>
+              <div class="d-flex flex-wrap gap-1">
+                <template x-for="k in b.k" :key="k.name">
+                  <span class="pf-krit" tabindex="0" :class="kriteriumKlasse(k.wert)" :data-tt="kriteriumTooltip(k, b.k)">
+                    <i class="bi" :class="kriteriumSymbol(k.wert)"></i> <span x-text="k.label"></span>
+                  </span>
+                </template>
+              </div>
+            </article>
+          </template>
+
+          <div class="d-flex gap-2 mt-3">
+            <button type="button" class="btn btn-outline-primary" x-show="anzahlTreffer < urteile.length"
+                    @click="anzahlTreffer += 10">10 weitere anzeigen</button>
+            <button type="button" class="btn btn-outline-secondary" @click="neuStarten()">Neue Suche</button>
+          </div>
+        </section>
+
+        {# --- Navigation --- #}
+        <div class="d-flex justify-content-between mt-4 pt-3 border-top" x-show="aktuellerKey !== 'ergebnis'">
+          <button type="button" class="btn btn-outline-secondary" x-show="schritt > 0" @click="zurueck()">
+            <i class="bi bi-arrow-left"></i> zurück
+          </button>
+          <span x-show="schritt === 0"></span>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-link" x-show="schritt > 0" @click="schritt = schritte.length - 1">
+              direkt zum Ergebnis
+            </button>
+            <button type="button" class="btn btn-primary" :disabled="!a.hauptdelikt" @click="weiter()">
+              <span x-text="schritt === 0 && !a.hauptdelikt ? 'Bitte Hauptdelikt wählen' : 'weiter'"></span>
+              <i class="bi bi-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {# --- Seitenleiste: bisherige Antworten --- #}
+      <aside class="col-lg-4">
+        <div class="pf-seitenleiste">
+          <h2 class="h6 text-uppercase text-body-secondary">Ihr Fall</h2>
+          <template x-if="!antworten.length">
+            <p class="small text-body-secondary mb-0">Noch keine Angaben.</p>
+          </template>
+          <dl class="small mb-0">
+            <template x-for="zeile in antworten" :key="zeile[0]">
+              <div class="pf-antwort">
+                <dt x-text="zeile[0]"></dt>
+                <dd x-text="zeile[1]"></dd>
+              </div>
+            </template>
+          </dl>
+          <div class="border-top mt-3 pt-3 small" x-show="a.hauptdelikt">
+            <div><strong x-text="passendesHauptdelikt"></strong> Urteile zum selben Artikel</div>
+            <div><strong x-text="sehrAehnlich"></strong> Urteile mit mind. 80 % Ähnlichkeit</div>
+            <button type="button" class="btn btn-sm btn-success mt-2" x-show="aktuellerKey !== 'ergebnis'"
+                    @click="schritt = schritte.length - 1">Ergebnis anzeigen</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+{% endblock body %}

@@ -22,6 +22,17 @@
         </li>
 
         <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownPraejudizen" role="button"
+            data-bs-toggle="dropdown" aria-expanded="false">
+            Präjudizen <br>
+            finden
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdownPraejudizen">
+            <li><a class="dropdown-item" href="{% url 'praejudizen_finden_sexual' %}">bei Sexualdelikt</a></li>
+          </ul>
+        </li>
+
+        <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown"
             aria-expanded="false">
             Datenbanken
@@ -90,6 +101,7 @@
           <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
             <li><a class="dropdown-item" href="{% url 'dev' %}">betr. Vermögensdelikte</a></li>
             <li><a class="dropdown-item" href="{% url 'betm_dev' %}">betr. Betm-Delikte</a></li>
+            <li><a class="dropdown-item" href="{% url 'sexual_evaluation' %}">betr. Sexualdelikte (Ridge-Auswertung)</a></li>
             <li><a class="dropdown-item" href="{% url 'praejudizensuche' %}">Präjudizensuche (Claude Chat)</a></li>
           </ul>
         </li>

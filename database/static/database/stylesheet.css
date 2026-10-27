@@ -847,3 +847,180 @@ tr[data-pk]:hover td {
     opacity: 0.6;
     pointer-events: none;
 }
+
+/* ============================================================
+   Präjudizen finden (geführte Suche, praejudizen_finden_sexual.html)
+   ============================================================ */
+
+.praejudizfinder .pf-hinweis {
+    color: var(--bs-secondary-color);
+    max-width: 52rem;
+}
+.praejudizfinder .pf-karte {
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    padding: .75rem .9rem;
+    transition: border-color .15s, box-shadow .15s;
+}
+.praejudizfinder .pf-karte:hover {
+    border-color: var(--bs-primary);
+}
+.praejudizfinder .pf-karte-aktiv {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 .2rem rgba(var(--bs-primary-rgb), .2);
+    background: var(--bs-primary-bg-subtle);
+}
+.praejudizfinder .pf-erlaeuterung {
+    border-left: 3px solid var(--bs-primary-border-subtle);
+    padding: .25rem .75rem;
+}
+.praejudizfinder .pf-erlaeuterung summary {
+    cursor: pointer;
+    font-weight: 500;
+}
+.praejudizfinder .pf-seitenleiste {
+    position: sticky;
+    top: 1rem;
+    background: var(--bs-tertiary-bg);
+    border-radius: .5rem;
+    padding: 1rem;
+}
+.praejudizfinder .pf-antwort {
+    display: flex;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .2rem 0;
+    border-bottom: 1px dashed var(--bs-border-color);
+}
+.praejudizfinder .pf-antwort dt {
+    font-weight: 400;
+    color: var(--bs-secondary-color);
+}
+.praejudizfinder .pf-antwort dd {
+    margin: 0;
+    text-align: right;
+}
+.praejudizfinder .pf-kennzahl {
+    background: var(--bs-tertiary-bg);
+    border-radius: .5rem;
+    padding: .6rem;
+    text-align: center;
+    height: 100%;
+}
+.praejudizfinder .pf-kennzahl-wert {
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+.praejudizfinder .pf-kennzahl-label {
+    font-size: .75rem;
+    color: var(--bs-secondary-color);
+}
+.praejudizfinder .pf-treffer {
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    padding: .8rem 1rem;
+    margin-bottom: .6rem;
+}
+.praejudizfinder .pf-krit {
+    font-size: .72rem;
+    border-radius: 1rem;
+    padding: .1rem .55rem;
+    border: 1px solid transparent;
+}
+.praejudizfinder .pf-krit-ja {
+    background: var(--bs-success-bg-subtle);
+    color: var(--bs-success-text-emphasis);
+    border-color: var(--bs-success-border-subtle);
+}
+.praejudizfinder .pf-krit-teil {
+    background: var(--bs-warning-bg-subtle);
+    color: var(--bs-warning-text-emphasis);
+    border-color: var(--bs-warning-border-subtle);
+}
+.praejudizfinder .pf-krit-nein {
+    background: var(--bs-secondary-bg);
+    color: var(--bs-secondary-color);
+    text-decoration: line-through;
+}
+/* Mehrzeilige Erklär-Tooltips auf den Badges der Ergebnisseite */
+.praejudizfinder [data-tt]:not([data-tt=""])::after {
+    white-space: pre-line;
+    width: max-content;
+    max-width: 22rem;
+    text-align: left;
+    line-height: 1.35;
+    padding: .4rem .6rem;
+}
+/* Rechtsbündige Badges: Tooltip nach links öffnen, sonst ragt er aus dem Bild */
+.praejudizfinder .pf-tt-links[data-tt]::after {
+    left: auto;
+    right: 0;
+    transform: none;
+}
+/* Vollzugs-Badges der Präjudiziensuche in denselben Farben wie
+   Strafmasshistogramm und Streudiagramm (.histogramm-block bzw.
+   .streudiagramm-punkt): Farbton = Sanktionsart, Helligkeit = Vollzug.
+   Auf den hellen Tints dunkle Schrift, damit der Kontrast reicht. */
+.pf-vollzug { border: 1px solid rgba(0, 0, 0, 0.1); }
+.pf-vollzug.sanktion-0.vollzug-2 { background-color: #0d6efd; color: #fff; }
+.pf-vollzug.sanktion-0.vollzug-1 { background-color: #6ea8fe; color: #052c65; }
+.pf-vollzug.sanktion-0.vollzug-0 { background-color: #b6d4fe; color: #052c65; }
+.pf-vollzug.sanktion-1.vollzug-2 { background-color: #198754; color: #fff; }
+.pf-vollzug.sanktion-1.vollzug-1 { background-color: #75b798; color: #0a3622; }
+.pf-vollzug.sanktion-1.vollzug-0 { background-color: #badbcc; color: #0a3622; }
+.pf-vollzug.sanktion-2 { background-color: var(--bs-secondary-color, #6c757d); color: #fff; }
+
+/* ============================================================
+   Dev-Auswertung Sexualdelikte (sexual_evaluation.html)
+   ============================================================ */
+.sexual-evaluation .se-kennzahl {
+    background: var(--bs-tertiary-bg);
+    border-radius: .5rem;
+    padding: .7rem;
+    text-align: center;
+    height: 100%;
+}
+.sexual-evaluation .se-kennzahl-wert {
+    font-size: 1.5rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.sexual-evaluation .se-kennzahl-label {
+    font-size: .75rem;
+    color: var(--bs-secondary-color);
+}
+.sexual-evaluation [data-tt]:not([data-tt=""])::after {
+    white-space: normal;
+    width: max-content;
+    max-width: 20rem;
+}
+.sexual-evaluation .se-tabelle td,
+.sexual-evaluation .se-tabelle th { font-variant-numeric: tabular-nums; }
+.sexual-evaluation .se-diagonale {
+    stroke: var(--bs-body-color);
+    stroke-width: 1;
+    opacity: .6;
+}
+.sexual-evaluation .se-band {
+    stroke: var(--bs-secondary-color);
+    stroke-width: 1;
+    stroke-dasharray: 4 3;
+    opacity: .6;
+}
+/* Balkenpaar heute/empirisch; 2px Abstand zwischen den Balken */
+.sexual-evaluation .se-balken {
+    height: 6px;
+    border-radius: 0 3px 3px 0;
+    margin-bottom: 2px;
+    min-width: 2px;
+}
+.sexual-evaluation .se-heute { background: var(--bs-secondary-color); opacity: .45; }
+.sexual-evaluation .se-empirisch { background: #0d6efd; }
+.sexual-evaluation .se-balken-legende {
+    display: inline-block;
+    width: .75rem;
+    height: .5rem;
+    border-radius: 2px;
+    vertical-align: .05em;
+}

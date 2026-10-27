@@ -1,0 +1,413 @@
+{% extends './base.html' %}
+{% load strafmass_formatierung %}
+
+{% block body %}
+{% with a=auswertung %}
+<div class="col-12 sexual-evaluation">
+  <h1 class="h3">Sexualdelikte: Ridge-Regression zur Strafhöhe</h1>
+  <p class="text-body-secondary">
+    Dev-Auswertung. Welche erfassten Fallmerkmale hängen in der Praxis mit der Strafhöhe zusammen, und
+    passen die von Hand gesetzten Gewichte der Seite
+    <a href="{% url 'praejudizen_finden_sexual' %}">Präjudizen finden</a> dazu? Die Auswertung wird bei
+    jedem Seitenaufruf frisch auf dem aktuellen Bestand gerechnet ({{ a.n }} Urteile).
+  </p>
+
+  <nav class="mb-4 small">
+    <a href="#interpretation">Interpretation</a> ·
+    <a href="#daten">Daten &amp; Zielgrösse</a> ·
+    <a href="#methode">Methode</a> ·
+    <a href="#leistung">Prognoseleistung</a> ·
+    <a href="#werte">Gelernte Werte</a> ·
+    <a href="#vergleich">Vergleich mit den Suchgewichten</a> ·
+    <a href="#vorbehalte">Vorbehalte</a> ·
+    <a href="#ausreisser">Ausreisser</a>
+  </nav>
+
+  {# ============================================================ #}
+  <section id="interpretation" class="mb-5">
+    <h2 class="h4">Interpretation</h2>
+    <div class="alert alert-light border">
+      <p class="small text-body-secondary mb-2">
+        Stand 27.10.2026, 302 Urteile. Dieser Text ist von Hand geschrieben und wird nicht automatisch
+        nachgeführt; die Zahlen in den folgenden Abschnitten dagegen schon.
+      </p>
+      <ol class="mb-0">
+        <li class="mb-2">
+          <strong>Die erfassten Merkmale erklären rund die Hälfte der Strafhöhe.</strong> Auf ungesehenen
+          Urteilen erreicht das Modell ein R² von etwa 0.52 (Log-Skala). Die mittlere Abweichung sinkt
+          gegenüber einer merkmalslosen Schätzung (immer der Median) von rund 18 auf 12 Monate. Der Rest
+          hängt an Umständen, die nicht als Feld erfasst sind (Intensität, Dauer, Folgen für das Opfer,
+          Täterpersönlichkeit), und an Unterschieden zwischen den Gerichten.
+        </li>
+        <li class="mb-2">
+          <strong>Das Hauptdelikt bleibt das wichtigste Kriterium.</strong> Vergewaltigung liegt bei sonst
+          gleichen Merkmalen rund 140 % über den sexuellen Handlungen mit Kindern; das heutige Gewicht (30)
+          passt.
+        </li>
+        <li class="mb-2">
+          <strong>Mehrfache Begehung, weitere Sexualdelikte und übrige Delikte sind heute untergewichtet.</strong>
+          Mehrfache Begehung allein erhöht die Strafe um rund 44 %; abgeleitet wäre ein Gewicht von etwa 20
+          statt 9 angezeigt, bei den weiteren Sexualdelikten etwa 15 statt 7 und beim Deliktsscore etwa 11
+          statt 6.
+        </li>
+        <li class="mb-2">
+          <strong>Das Tatmittel ist heute deutlich übergewichtet</strong> (15, abgeleitet etwa 3). Das heisst
+          nicht, dass das Tatmittel unerheblich wäre: Es ist weitgehend schon im Hauptdelikt enthalten (siehe
+          <a href="#vorbehalte">Kreuztabelle</a>; «einvernehmlich» kommt praktisch nur bei Art. 187 vor).
+          Bei gleichem Hauptdelikt macht es kaum mehr einen Unterschied.
+        </li>
+        <li class="mb-2">
+          <strong>Bei den Besonderheiten ist das Bild gemischt.</strong> Verminderte Schuldfähigkeit und
+          Verletzung des Beschleunigungsgebots wirken spürbar (je rund −15 %), Geständnisrabatt und
+          jugendliche Täterschaft im Modell kaum. Bei Letzteren ist die Fallzahl (16 bzw. 4) zu klein für ein
+          belastbares Urteil.
+        </li>
+        <li class="mb-2">
+          <strong>Das Opferalter wirkt nicht monoton.</strong> «Unter 16» liegt tiefer als «erwachsen». Auch
+          das ist eine Folge der Überlappung mit dem Hauptdelikt: Bei Kindern ist das Hauptdelikt oft Art. 187,
+          dessen tiefer Wert den Alterseffekt bereits aufnimmt. Der Wert je Altersstufe ist deshalb nur
+          innerhalb desselben Hauptdelikts sinnvoll zu lesen.
+        </li>
+        <li>
+          <strong>Der Kanton wirkt so stark wie ein mittleres Fallmerkmal.</strong> Genf und Zürich urteilen bei
+          sonst gleichen Merkmalen rund 35–50 % strenger als Bern und die Waadt. Der Kanton ist kein
+          Suchkriterium, wurde hier aber mitgeschätzt, damit dieser Unterschied nicht fälschlich einem
+          Fallmerkmal zugeschlagen wird. Ob die Präjudiziensuche Urteile aus dem eigenen Kanton bevorzugen
+          sollte, wäre separat zu entscheiden.
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  {# ============================================================ #}
+  <section id="daten" class="mb-5">
+    <h2 class="h4">Daten &amp; Zielgrösse</h2>
+    <ul>
+      <li>
+        <strong>{{ a.n }} Urteile</strong> aus der Sexualdelikt-Datenbank{% if a.n_ausgeschlossen %}
+        ({{ a.n_ausgeschlossen }} ausgeschlossen: Busse ohne erfasste Höhe oder lebenslängliche Freiheitsstrafe){% endif %}.
+      </li>
+      <li>
+        <strong>Zielgrösse:</strong> natürlicher Logarithmus der Strafe in Monaten. {{ a.n_geldstrafen }}
+        Geldstrafen sind mit 30 Tagessätzen = 1 Monat umgerechnet (Art. 34 Abs. 1 i.V.m. Art. 36 Abs. 1 StGB:
+        ein Tagessatz entspricht einem Tag Freiheitsstrafe). Der Vollzug ist nicht Gegenstand dieser Auswertung.
+      </li>
+      <li>
+        <strong>Warum der Logarithmus?</strong> Strafen sind rechtsschief verteilt (Median {{ a.median_strafe|floatformat:0 }}
+        Monate, einzelne Urteile über 10 Jahre), und Merkmale wirken eher verhältnismässig als in festen
+        Monaten: Eine mehrfache Begehung erhöht eine Strafe von 12 Monaten nicht um gleich viele Monate wie
+        eine von 60 Monaten. Auf der Log-Skala wird ein Koeffizient b zu einem Faktor e<sup>b</sup>, auf der
+        Seite angegeben als prozentuale Veränderung.
+      </li>
+      <li>
+        <strong>Merkmale</strong> ({{ a.n_spalten }} Spalten nach der Codierung): Hauptdelikt (nach Artikel,
+        alt- und neurechtliche Fassung zusammengefasst, weil neurechtliche Urteile noch zu selten sind),
+        Tatmittel, Opferalter, Täter-Opfer-Beziehung, mehrfache Begehung, weitere Sexualdelikte (je Artikel),
+        Deliktsscore der übrigen Delikte, Vorstrafen (drei Stufen), fünf Besonderheiten sowie der Kanton als
+        Kontrollvariable (ZH, GE, VD, FR, BE einzeln, die übrigen zusammengefasst). Nicht verwendet sind die
+        Verfahrensart (alle Urteile ordentlich) und das Geschlecht (fast ausschliesslich männliche Täter),
+        weil sie im Bestand nicht variieren.
+      </li>
+    </ul>
+  </section>
+
+  {# ============================================================ #}
+  <section id="methode" class="mb-5">
+    <h2 class="h4">Methode</h2>
+    <ol>
+      <li class="mb-2">
+        <strong>One-Hot-Codierung.</strong> Jede Kategorie eines Merkmals wird zu einer eigenen 0/1-Spalte
+        (z.B. «Tatmittel = Gewalt»). Die Regression weist jeder Spalte einen Koeffizienten zu, also jeder
+        Kategorie ihren eigenen Wert. Das ist die einfache Variante des «Optimal Scaling»: Die Kategorien
+        erhalten diejenigen Zahlenwerte, mit denen die Strafen am besten auf einer Geraden liegen.
+        Bestimmt sind dabei nur die <em>Abstände</em> zwischen den Kategorien eines Merkmals, nicht deren
+        absolutes Niveau; die Tabellen zeigen die Werte deshalb relativ zur mildesten Kategorie.
+      </li>
+      <li class="mb-2">
+        <strong>Ridge-Regression.</strong> Eine lineare Regression mit einem Strafterm, der grosse
+        Koeffizienten dämpft. Bei {{ a.n }} Urteilen und {{ a.n_spalten }} Spalten würde eine gewöhnliche
+        Regression seltenen Kategorien (z.B. Art. 188 mit einem einzigen Urteil) extreme Werte zuweisen. Ridge
+        zieht solche Werte gegen null, je weniger Urteile sie stützen.
+      </li>
+      <li class="mb-2">
+        <strong>Wahl der Dämpfung.</strong> Die Stärke alpha wird per Kreuzvalidierung (Leave-one-out) aus
+        30 Werten zwischen 0.01 und 1000 gewählt: <strong>alpha = {{ a.alpha|floatformat:2 }}</strong>.
+      </li>
+      <li class="mb-2">
+        <strong>Prognoseleistung.</strong> 5-fache Kreuzvalidierung, 10-mal mit neuer Zufallsaufteilung
+        wiederholt: Das Modell wird jeweils auf 80 % der Urteile geschätzt und auf den übrigen 20 % geprüft.
+        Jedes Urteil wird so nur von einem Modell prognostiziert, das es nicht kannte.
+      </li>
+      <li class="mb-2">
+        <strong>Unsicherheit.</strong> Bootstrap mit {{ a.bootstrap_wiederholungen }} Wiederholungen: Die
+        Urteile werden mit Zurücklegen neu gezogen und das Modell jedes Mal neu geschätzt. Die Spanne vom 5. bis
+        95. Perzentil ergibt das 90-%-Intervall je Koeffizient. Liegt es ganz auf einer Seite von null, ist der
+        Effekt mit <span class="badge text-bg-dark">gesichert</span> markiert.
+      </li>
+      <li>
+        <strong>Effekt bei Abweichung.</strong> Für den Vergleich mit den Suchgewichten zählt nicht, wie stark ein
+        Merkmal im Bestand streut, sondern: Um wie viel unterscheidet sich die geschätzte Strafe typischerweise
+        zwischen zwei Urteilen, die in diesem Kriterium <em>nicht</em> übereinstimmen? Gerechnet wird über alle
+        Paare von Urteilen mit unterschiedlicher Ausprägung: Mittelwert von |Beitrag A − Beitrag B|. So erhält
+        auch ein seltenes, aber starkes Merkmal sein volles Gewicht. Die Effekte werden anschliessend auf die
+        heutige Gewichtssumme skaliert («abgeleitetes Gewicht»).
+      </li>
+    </ol>
+  </section>
+
+  {# ============================================================ #}
+  <section id="leistung" class="mb-5">
+    <h2 class="h4">Prognoseleistung</h2>
+    <div class="row g-2 mb-3">
+      <div class="col-6 col-lg-3">
+        <div class="se-kennzahl" data-tt="Anteil der Streuung der Log-Strafe, den das Modell auf ungesehenen Urteilen erklärt. 0 = nicht besser als der Mittelwert, 1 = perfekt.">
+          <div class="se-kennzahl-wert">{{ a.r2_mittel|floatformat:2 }}</div>
+          <div class="se-kennzahl-label">R² Kreuzvalidierung<br>(Spanne {{ a.r2_min|floatformat:2 }}–{{ a.r2_max|floatformat:2 }})</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="se-kennzahl" data-tt="R² auf denselben Urteilen, mit denen das Modell geschätzt wurde. Der Abstand zum Kreuzvalidierungs-R² zeigt die Überanpassung.">
+          <div class="se-kennzahl-wert">{{ a.r2_training|floatformat:2 }}</div>
+          <div class="se-kennzahl-label">R² Training<br>(zum Vergleich)</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="se-kennzahl" data-tt="Mittlere absolute Abweichung der Prognose von der tatsächlichen Strafe, in Monaten. Zum Vergleich die Abweichung, wenn man immer den Median aller Strafen schätzt.">
+          <div class="se-kennzahl-wert">{{ a.mae_monate|floatformat:1 }} Mt.</div>
+          <div class="se-kennzahl-label">mittlere Abweichung<br>(ohne Merkmale: {{ a.mae_basis_monate|floatformat:1 }} Mt.)</div>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="se-kennzahl" data-tt="Bei der Hälfte der Urteile liegt die Prognose höchstens um diesen Faktor neben der tatsächlichen Strafe (nach oben oder unten).">
+          <div class="se-kennzahl-wert">× {{ a.median_faktor|floatformat:2 }}</div>
+          <div class="se-kennzahl-label">typischer Faktor (Median)<br>{% widthratio a.anteil_innert_faktor_1_5 1 100 %} % innert Faktor 1.5</div>
+        </div>
+      </div>
+    </div>
+
+    {% with d=a.streudiagramm %}
+    <figure class="se-diagramm">
+      <figcaption class="small text-body-secondary mb-1">
+        Prognose aus der Kreuzvalidierung (x) gegen die tatsächliche Strafe (y), beide in Monaten,
+        logarithmisch. Punkte auf der Diagonale sind exakt getroffen; zwischen den gestrichelten Linien liegt
+        die Prognose höchstens um Faktor 1.5 daneben. Farbe wie im Strafmasshistogramm der Datenbank. Klick
+        öffnet das Urteil.
+      </figcaption>
+      <svg viewBox="0 0 {{ d.breite }} {{ d.hoehe }}" class="w-100" style="max-width: {{ d.breite }}px" role="img"
+           aria-label="Streudiagramm Prognose gegen tatsächliche Strafe">
+        {% for t in d.ticks %}
+          <line class="streudiagramm-gitter" x1="{{ d.links }}" x2="{{ d.rechts_x }}" y1="{{ t.y }}" y2="{{ t.y }}"></line>
+          <line class="streudiagramm-gitter" x1="{{ t.x }}" x2="{{ t.x }}" y1="{{ d.oben }}" y2="{{ d.unten_y }}"></line>
+          <text class="streudiagramm-tick" x="{{ d.links|add:'-6' }}" y="{{ t.y }}" text-anchor="end" dominant-baseline="middle">{{ t.wert }}</text>
+          <text class="streudiagramm-tick" x="{{ t.x }}" y="{{ d.unten_y|add:'14' }}" text-anchor="middle">{{ t.wert }}</text>
+        {% endfor %}
+        <line class="se-band" x1="{{ d.band_oben.x1 }}" y1="{{ d.band_oben.y1 }}" x2="{{ d.band_oben.x2 }}" y2="{{ d.band_oben.y2 }}"></line>
+        <line class="se-band" x1="{{ d.band_unten.x1 }}" y1="{{ d.band_unten.y1 }}" x2="{{ d.band_unten.x2 }}" y2="{{ d.band_unten.y2 }}"></line>
+        <line class="se-diagonale" x1="{{ d.diagonale.x1 }}" y1="{{ d.diagonale.y1 }}" x2="{{ d.diagonale.x2 }}" y2="{{ d.diagonale.y2 }}"></line>
+        {% for p in d.punkte %}
+          <a href="{{ p.url }}"><circle class="streudiagramm-punkt {{ p.klasse }}" cx="{{ p.cx }}" cy="{{ p.cy }}" r="4.5"><title>{{ p.titel }}</title></circle></a>
+        {% endfor %}
+        <text class="streudiagramm-tick" x="{{ d.links }}" y="{{ d.hoehe|add:'-6' }}">Prognose (Monate) →</text>
+        <text class="streudiagramm-tick" x="12" y="{{ d.oben }}" transform="rotate(-90 12 {{ d.oben }})" text-anchor="end">tatsächliche Strafe (Monate) →</text>
+      </svg>
+      <div class="d-flex flex-wrap gap-3 small text-body-secondary mt-1">
+        <span>Freiheitsstrafe:
+          <span class="histogramm-legende sanktion-0 vollzug-0"></span> bedingt
+          <span class="histogramm-legende sanktion-0 vollzug-1"></span> teilbedingt
+          <span class="histogramm-legende sanktion-0 vollzug-2"></span> unbedingt
+        </span>
+        <span>Geldstrafe:
+          <span class="histogramm-legende sanktion-1 vollzug-0"></span> bedingt
+        </span>
+      </div>
+    </figure>
+    {% endwith %}
+  </section>
+
+  {# ============================================================ #}
+  <section id="werte" class="mb-5">
+    <h2 class="h4">Gelernte Werte je Merkmal</h2>
+    <p class="text-body-secondary">
+      «Wirkung» = Veränderung der Strafe bei sonst gleichen Merkmalen. Bei Merkmalen mit mehreren Kategorien
+      gegenüber der mildesten Kategorie (in der Tabelle zuoberst), bei Ja/Nein-Merkmalen gegenüber «nein», beim
+      Deliktsscore je zusätzlichem Punkt. Die Spalte «90-%-Intervall» bezieht sich auf den Rohkoeffizienten
+      (gegenüber dem Durchschnitt), nicht auf den Abstand zur mildesten Kategorie. Basiswert (Achsenabschnitt):
+      {{ a.achsenabschnitt_monate|floatformat:0 }} Monate.
+    </p>
+    <div class="row g-4">
+      {% for g in a.gruppen %}
+        <div class="col-lg-6">
+          <h3 class="h6">{{ g.titel }}</h3>
+          <table class="table table-sm align-middle se-tabelle">
+            <thead class="table-light">
+              <tr>
+                <th>Kategorie</th>
+                <th class="text-end">Urteile</th>
+                <th class="text-end">Wirkung</th>
+                <th class="text-end">90-%-Intervall</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for e in g.eintraege %}
+                <tr>
+                  <td>{{ e.label }}</td>
+                  <td class="text-end">{{ e.anzahl }}</td>
+                  <td class="text-end fw-semibold">
+                    {% if e.relativ is not None %}{{ e.relativ|positives_vorzeichen }}{{ e.relativ|floatformat:0 }} %{% else %}{{ e.prozent|positives_vorzeichen }}{{ e.prozent|floatformat:0 }} %{% endif %}
+                  </td>
+                  <td class="text-end small text-body-secondary">
+                    {{ e.prozent_unten|positives_vorzeichen }}{{ e.prozent_unten|floatformat:0 }} bis {{ e.prozent_oben|positives_vorzeichen }}{{ e.prozent_oben|floatformat:0 }} %
+                    {% if e.gesichert %}<span class="badge text-bg-dark ms-1">gesichert</span>{% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  {# ============================================================ #}
+  <section id="vergleich" class="mb-5">
+    <h2 class="h4">Vergleich mit den Suchgewichten</h2>
+    <p class="text-body-secondary">
+      «Effekt bei Abweichung» = typischer Unterschied der geschätzten Strafe zwischen zwei Urteilen, die in diesem
+      Kriterium nicht übereinstimmen. «Anteil» = Anteil am Total aller Suchkriterien. Das abgeleitete Gewicht
+      ist der empirische Anteil, skaliert auf die heutige Gewichtssumme der Präjudiziensuche
+      (<code>PF_GEWICHTE</code> in <code>praejudizfinder_sexual.js</code>).
+    </p>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle se-tabelle">
+        <thead class="table-light">
+          <tr>
+            <th>Kriterium</th>
+            <th class="text-end">Effekt bei Abweichung</th>
+            <th class="text-end">abweichende Paare</th>
+            <th style="min-width: 14rem">Anteil heute <span class="se-balken-legende se-heute"></span> / empirisch <span class="se-balken-legende se-empirisch"></span></th>
+            <th class="text-end">Gewicht heute</th>
+            <th class="text-end">abgeleitet</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in a.vergleich %}
+            <tr {% if v.gewicht is None %}class="text-body-secondary"{% endif %}>
+              <td>{{ v.titel }}</td>
+              <td class="text-end">± {{ v.effekt_prozent|floatformat:0 }} %</td>
+              <td class="text-end" data-tt="Anteil aller Urteilspaare, die sich in diesem Kriterium unterscheiden">{% widthratio v.anteil_paare 1 100 %} %</td>
+              <td>
+                {% if v.gewicht is not None %}
+                  <div class="se-balken se-heute" style="width: {{ v.breite_heute }}%" data-tt="heute {{ v.anteil_heute|floatformat:1 }} %"></div>
+                {% endif %}
+                <div class="se-balken se-empirisch" style="width: {{ v.breite_empirisch }}%" data-tt="empirisch {{ v.anteil_empirisch|floatformat:1 }} %"></div>
+                <span class="small text-body-secondary">
+                  {% if v.gewicht is not None %}{{ v.anteil_heute|floatformat:1 }} % / {% endif %}{{ v.anteil_empirisch|floatformat:1 }} %
+                </span>
+              </td>
+              <td class="text-end">{{ v.gewicht|default_if_none:"–" }}</td>
+              <td class="text-end fw-semibold">{{ v.gewicht_abgeleitet|default_if_none:"–" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {# ============================================================ #}
+  <section id="vorbehalte" class="mb-5">
+    <h2 class="h4">Vorbehalte</h2>
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <h3 class="h6">Überlappung von Hauptdelikt und Tatmittel</h3>
+        <p class="small">
+          Die Regression teilt einen gemeinsamen Effekt zweier Merkmale nur dort auf, wo sie unabhängig voneinander
+          variieren. Hauptdelikt und Tatmittel hängen eng zusammen: «einvernehmlich» kommt praktisch nur bei Art. 187
+          vor, «Widerstandsunfähigkeit» vor allem bei der Schändung. Der Effekt wird darum überwiegend dem Hauptdelikt
+          zugeschlagen; der kleine Tatmitteleffekt gilt <em>bei gleichem Hauptdelikt</em>. Für die Präjudiziensuche
+          ist das die richtige Lesart, weil dort das Hauptdelikt bereits gewichtet ist. Dasselbe gilt für Opferalter
+          und Art. 187.
+        </p>
+        <table class="table table-sm small se-tabelle">
+          <thead class="table-light">
+            <tr>
+              <th>Hauptdelikt \ Tatmittel</th>
+              {% for s in a.kreuztabelle.spalten %}<th class="text-end">{{ s }}</th>{% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for z in a.kreuztabelle.zeilen %}
+              <tr>
+                <td>{{ z.label }}</td>
+                {% for w in z.werte %}<td class="text-end {% if not w %}text-body-tertiary{% endif %}">{{ w }}</td>{% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="col-lg-6">
+        <h3 class="h6">Weitere Einschränkungen</h3>
+        <ul class="small">
+          <li><strong>Kleine Fallzahlen:</strong> Kategorien mit wenigen Urteilen (Art. 188, Opfer unter 6 Jahren,
+            jugendliche Täterschaft) sind durch Ridge zwar gedämpft, aber kaum belastbar.</li>
+          <li><strong>Nicht erfasste Faktoren:</strong> Tatintensität, Dauer, Folgen für das Opfer, Reue und
+            Persönlichkeit stehen nicht in den Feldern. Das Modell kann nur zwischen den erfassten Merkmalen
+            gewichten.</li>
+          <li><strong>Lineares Modell:</strong> Wechselwirkungen (z.B. dass mehrfache Begehung bei Kindern anders
+            wirkt als bei Erwachsenen) sind nicht modelliert.</li>
+          <li><strong>Praxis, nicht Norm:</strong> Die Werte beschreiben, wie die erfassten Gerichte urteilen,
+            inklusive ihrer Unterschiede und Inkonsistenzen. Für eine Präjudiziensuche ist das gewollt; als Massstab
+            für «richtige» Strafen taugen sie nicht.</li>
+          <li><strong>Gesamtstrafen:</strong> Die Strafe umfasst bei Nebenverurteilungen auch deren Anteil
+            (Art. 49 Abs. 1 StGB); dieser wird über den Deliktsscore nur grob erfasst.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  {# ============================================================ #}
+  <section id="ausreisser" class="mb-5">
+    <h2 class="h4">Ausreisser</h2>
+    <p class="text-body-secondary">
+      Die zehn Urteile, die das Modell am schlechtesten erklärt (Kreuzvalidierung). Sie lohnen eine Kontrolle:
+      Entweder fehlt im Datensatz ein strafrelevantes Merkmal, oder ein Feldwert ist falsch erfasst.
+    </p>
+    <table class="table table-sm align-middle se-tabelle">
+      <thead class="table-light">
+        <tr>
+          <th>Fall-Nr.</th>
+          <th>Gericht</th>
+          <th>Hauptdelikt</th>
+          <th class="text-end">tatsächlich</th>
+          <th class="text-end">Prognose</th>
+          <th class="text-end">Faktor</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in a.ausreisser %}
+          <tr>
+            <td><a href="{% url 'sexualurteil_detail' pk=r.urteil.pk %}">{{ r.urteil.fall_nr }}</a></td>
+            <td class="small">{{ r.urteil.gericht }}</td>
+            <td class="small">{{ r.urteil.hauptdelikt }}{% if r.urteil.hauptdelikt_mehrfachbegehung %}, mehrfach{% endif %}</td>
+            <td class="text-end">{{ r.tatsaechlich|floatformat:0 }} Mt.</td>
+            <td class="text-end">{{ r.prognose|floatformat:0 }} Mt.</td>
+            <td class="text-end">{% if r.faktor >= 1 %}× {{ r.faktor|floatformat:1 }} höher{% else %}× {{ r.faktor|floatformat:2 }} tiefer{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="mb-4">
+    <h2 class="h4">Nächste Schritte</h2>
+    <ol class="mb-0">
+      <li>Abgeleitete Gewichte in <code>PF_GEWICHTE</code> übernehmen, wo die Abweichung gross und belastbar ist
+        (Tatmittel, mehrfache Begehung, weitere Sexualdelikte, übrige Delikte).</li>
+      <li>Teilpunkte innerhalb eines Kriteriums aus den gelernten Abständen ableiten statt pauschal (z.B.
+        Gewalt/psychischer Druck heute 50 %).</li>
+      <li>Prüfen, ob die angepassten Gewichte die Strafe eines Falls über seine ähnlichsten Urteile besser
+        vorhersagen (Leave-one-out mit den nächsten Nachbarn).</li>
+    </ol>
+  </section>
+</div>
+{% endwith %}
+{% endblock body %}

@@ -1026,3 +1026,150 @@ class StrafmassFormatierungTest(SimpleTestCase):
         self.assertEqual(freiheitsstrafe_anzeige(18, "Monaten"), "18 Monaten")
         self.assertEqual(freiheitsstrafe_anzeige(999), "lebenslänglich")
         self.assertEqual(freiheitsstrafe_anzeige(1), "1 Monat")
+
+
+@override_settings(
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+)
+class PraejudizenFindenSexualTest(TestCase):
+    def setUp(self):
+        self.kanton = Kanton.objects.create(abk="ZH")
+        self.alt = Hauptdelikt.objects.create(name="a190, Vergewaltigung, altrechtlich")
+        self.neu = Hauptdelikt.objects.create(name="190, Vergewaltigung")
+        self.gewalt = Tatmittel.objects.create(name="Gewalt")
+        Tatmittel.objects.create(name="psychischer Druck")
+        self.urteil = SexualdeliktUrteil.objects.create(
+            fall_nr="DG240001",
+            gericht="Bezirksgericht Zürich",
+            urteilsdatum=date(2024, 3, 1),
+            kanton=self.kanton,
+            hauptdelikt=self.alt,
+            hauptdelikt_tatmittel=self.gewalt,
+            freiheitsstrafe_in_monaten=36,
+            vollzug="1",
+        )
+        self.urteil.sexualdelikte_zusaetzliche.set(
+            [ZusaetzlicheSexualdelikte.objects.create(name="a189, sexuelle Nötigung, altrechtlich, mehrfach")]
+        )
+        self.urteil.besonderheiten.set([Besonderheiten.objects.create(name="Versuch")])
+
+    def test_artikel_aus_name(self):
+        from .praejudizfinder import artikel_aus_name
+
+        self.assertEqual(artikel_aus_name("a190, Vergewaltigung, altrechtlich"), "190")
+        self.assertEqual(artikel_aus_name("187, Sexuelle Handlungen mit Kindern"), "187")
+        self.assertEqual(artikel_aus_name(""), "")
+
+    def test_schritte(self):
+        from .praejudizfinder import schritte_erstellen
+
+        schritte = schritte_erstellen()
+        hauptdelikte = {d["value"]: d for d in schritte["hauptdelikte"]}
+        self.assertEqual(hauptdelikte[self.alt.name]["anzahl"], 1)
+        self.assertEqual(hauptdelikte[self.neu.name]["anzahl"], 0)
+        self.assertTrue(hauptdelikte[self.alt.name]["altrechtlich"])
+        self.assertIn("weiblichen Geschlechts", hauptdelikte[self.alt.name]["text"])
+        # Nur im Bestand vorkommende Tatmittel und Besonderheiten werden angeboten
+        self.assertEqual([t["value"] for t in schritte["tatmittel"]], ["Gewalt"])
+        self.assertEqual([b["value"] for b in schritte["besonderheiten"]], ["Versuch"])
+        self.assertEqual(schritte["weitere_sexualdelikte"][0]["value"], "189")
+        self.assertNotIn("nicht bekannt", [o["value"] for o in schritte["opferalter"]])
+
+    def test_ansicht(self):
+        antwort = self.client.get(reverse("praejudizen_finden_sexual"))
+        self.assertEqual(antwort.status_code, 200)
+        self.assertContains(antwort, 'id="pf-schritte"')
+        self.assertContains(antwort, 'id="pf-urteile"')
+        urteile = antwort.context["urteile"]
+        self.assertEqual(urteile[0]["fall_nr"], "DG240001")
+        self.assertEqual(urteile[0]["hauptdelikt_artikel"], "190")
+        self.assertEqual(urteile[0]["weitere_artikel"], ["189"])
+        self.assertEqual(urteile[0]["besonderheiten"], ["Versuch"])
+        self.assertContains(antwort, reverse("praejudizen_finden_sexual"))  # Menüpunkt
+
+
+@override_settings(
+    STORAGES={
+        "default": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+)
+class SexualEvaluationTest(TestCase):
+    """Ridge-Auswertung der Sexualdelikte (database/sexual_evaluation.py)."""
+
+    def setUp(self):
+        kanton = Kanton.objects.create(abk="ZH")
+        nötigung = Hauptdelikt.objects.create(name="a189, sexuelle Nötigung, altrechtlich")
+        vergewaltigung = Hauptdelikt.objects.create(name="a190, Vergewaltigung, altrechtlich")
+        gewalt = Tatmittel.objects.create(name="Gewalt")
+        druck = Tatmittel.objects.create(name="psychischer Druck")
+        # Synthetischer Bestand mit bekanntem Muster: Vergewaltigung doppelt so
+        # hohe Strafe wie sexuelle Nötigung, mehrfache Begehung +50 %.
+        for i in range(40):
+            hd = vergewaltigung if i % 2 else nötigung
+            mehrfach = i % 4 in (0, 1)
+            monate = 12 * (2 if hd == vergewaltigung else 1) * (1.5 if mehrfach else 1)
+            SexualdeliktUrteil.objects.create(
+                fall_nr=f"T{i:03d}",
+                kanton=kanton,
+                hauptdelikt=hd,
+                hauptdelikt_tatmittel=gewalt if i % 3 else druck,
+                hauptdelikt_mehrfachbegehung=mehrfach,
+                hauptsanktion="0",
+                freiheitsstrafe_in_monaten=round(monate),
+                deliktsscore_uebrige_delikte=0,
+            )
+        # Geldstrafe wird umgerechnet, lebenslänglich ausgeschlossen
+        SexualdeliktUrteil.objects.create(
+            fall_nr="GS1", kanton=kanton, hauptdelikt=nötigung, hauptdelikt_tatmittel=gewalt,
+            hauptsanktion="1", anzahl_tagessaetze=180, deliktsscore_uebrige_delikte=0,
+        )
+        SexualdeliktUrteil.objects.create(
+            fall_nr="LL1", kanton=kanton, hauptdelikt=vergewaltigung, hauptdelikt_tatmittel=gewalt,
+            hauptsanktion="0", freiheitsstrafe_in_monaten=999, deliktsscore_uebrige_delikte=0,
+        )
+
+    def test_strafe_in_monaten(self):
+        from .sexual_evaluation import strafe_in_monaten
+
+        self.assertEqual(strafe_in_monaten(SexualdeliktUrteil.objects.get(fall_nr="GS1")), 6)
+        self.assertIsNone(strafe_in_monaten(SexualdeliktUrteil.objects.get(fall_nr="LL1")))
+
+    def test_auswertung_erkennt_bekanntes_muster(self):
+        from .sexual_evaluation import auswertung_erstellen
+
+        a = auswertung_erstellen()
+        self.assertEqual(a["n"], 41)
+        self.assertEqual(a["n_ausgeschlossen"], 1)
+        self.assertGreater(a["r2_mittel"], 0.8)
+        gruppen = {g["key"]: g for g in a["gruppen"]}
+        hd = {e["label"]: e for e in gruppen["hauptdelikt"]["eintraege"]}
+        # Ridge dämpft, die Richtung und Grössenordnung müssen aber stimmen
+        self.assertGreater(hd["Art. 190 Vergewaltigung"]["relativ"], 60)
+        self.assertEqual(hd["Art. 189 Sexuelle Nötigung"]["relativ"], 0)
+        mehrfach = gruppen["mehrfach"]["eintraege"][0]
+        self.assertGreater(mehrfach["prozent"], 25)
+        self.assertIsNone(mehrfach["relativ"])
+        vergleich = {v["titel"]: v for v in a["vergleich"]}
+        self.assertGreater(vergleich["Hauptdelikt"]["effekt"], vergleich["Tatmittel"]["effekt"])
+        self.assertEqual(len(a["streudiagramm"]["punkte"]), 41)
+        self.assertNotIn(",", a["streudiagramm"]["punkte"][0]["cx"])
+
+    def test_effekt_bei_abweichung(self):
+        import numpy as np
+
+        from .sexual_evaluation import effekt_bei_abweichung
+
+        X = np.array([[1.0], [0.0], [1.0], [0.0]])
+        effekt, anteil = effekt_bei_abweichung(X, np.array([0.5]), [0])
+        self.assertAlmostEqual(effekt, 0.5)
+        self.assertAlmostEqual(anteil, 0.5)
+
+    def test_ansicht(self):
+        antwort = self.client.get(reverse("sexual_evaluation"))
+        self.assertEqual(antwort.status_code, 200)
+        self.assertContains(antwort, "Ridge-Regression")
+        self.assertContains(antwort, 'class="streudiagramm-punkt')

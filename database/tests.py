@@ -1228,6 +1228,22 @@ class PraejudizenFindenGewaltTest(TestCase):
         self.assertEqual(urteile["DG250002"]["deliktssumme"], 500)
         self.assertEqual(urteile["DG250001"]["url"], reverse("gewalturteil_detail", args=[self.urteil.pk]))
 
+    def test_zusammenfassung_wird_nachgeladen(self):
+        self.urteil.zusammenfassung = "Zusammenfassung der Strafzumessung"
+        self.urteil.save()
+        url = reverse("praejudiz_zusammenfassung", args=["gewalt", self.urteil.pk])
+        antwort = self.client.get(url)
+        self.assertEqual(antwort.status_code, 200)
+        self.assertEqual(antwort.json(), {"zusammenfassung": "Zusammenfassung der Strafzumessung"})
+        # Die Datensätze der Seite führen die URL, nicht den Text selbst
+        seite = self.client.get(reverse("praejudizen_finden_gewalt"))
+        datensatz = next(u for u in seite.context["urteile"] if u["pk"] == self.urteil.pk)
+        self.assertEqual(datensatz["zusammenfassung_url"], url)
+        self.assertNotIn("zusammenfassung", datensatz)
+        # Unbekannte Deliktsart oder unbekanntes Urteil
+        self.assertEqual(self.client.get(f"/praejudizen_finden/vermoegen/{self.urteil.pk}/zusammenfassung").status_code, 404)
+        self.assertEqual(self.client.get(reverse("praejudiz_zusammenfassung", args=["sexual", 999999])).status_code, 404)
+
     def test_sexualseite_nutzt_basis(self):
         antwort = self.client.get(reverse("praejudizen_finden_sexual"))
         self.assertEqual(antwort.status_code, 200)

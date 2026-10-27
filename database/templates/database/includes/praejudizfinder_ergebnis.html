@@ -50,7 +50,9 @@ Die Deliktszeile je Treffer liefert trefferZeile() der spezifischen Komponente.
   </div>
 
   <template x-for="(b, index) in treffer" :key="b.u.pk">
-    <article class="pf-treffer">
+    {# Klick auf die Karte (ausser auf Links/Schaltflächen) klappt die Zusammenfassung auf #}
+    <article class="pf-treffer" :class="offeneKarten[b.u.pk] && 'pf-treffer-offen'"
+             @click="karteKlick(b.u, $event)">
       <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
         <div>
           <span class="text-body-secondary small" x-text="(index + 1) + '.'"></span>
@@ -75,6 +77,31 @@ Die Deliktszeile je Treffer liefert trefferZeile() der spezifischen Komponente.
           <span class="pf-krit" tabindex="0" :class="kriteriumKlasse(k.wert)" :data-tt="kriteriumTooltip(k, b.k)">
             <i class="bi" :class="kriteriumSymbol(k.wert)"></i> <span x-text="k.label"></span>
           </span>
+        </template>
+      </div>
+      {# Zugängliche Schaltfläche für Tastatur und Screenreader; die ganze Karte ist zusätzlich klickbar #}
+      <button type="button" class="btn btn-link btn-sm px-0 mt-1 pf-zusammenfassung-schalter"
+              :aria-expanded="offeneKarten[b.u.pk] ? 'true' : 'false'"
+              @click="karteUmschalten(b.u)">
+        <i class="bi" :class="offeneKarten[b.u.pk] ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+        <span x-text="offeneKarten[b.u.pk] ? 'Zusammenfassung ausblenden' : 'Zusammenfassung anzeigen'"></span>
+      </button>
+      <div class="pf-zusammenfassung" x-show="offeneKarten[b.u.pk]" x-collapse>
+        <template x-if="zusammenfassungen[b.u.pk]?.laedt">
+          <p class="small text-body-secondary mb-0"><span class="spinner-border spinner-border-sm"></span> Zusammenfassung wird geladen …</p>
+        </template>
+        <template x-if="zusammenfassungen[b.u.pk]?.fehler">
+          <p class="small text-danger mb-0">
+            Die Zusammenfassung konnte nicht geladen werden.
+            <button type="button" class="btn btn-link btn-sm p-0 align-baseline" @click="zusammenfassungErneutLaden(b.u)">Erneut versuchen</button>
+          </p>
+        </template>
+        <template x-if="zusammenfassungen[b.u.pk] && 'text' in zusammenfassungen[b.u.pk]">
+          <div>
+            <h3 class="h6 mb-1">Zusammenfassung</h3>
+            <p class="small mb-0 pf-zusammenfassung-text"
+               x-text="zusammenfassungen[b.u.pk].text || 'Keine Zusammenfassung erfasst.'"></p>
+          </div>
         </template>
       </div>
     </article>

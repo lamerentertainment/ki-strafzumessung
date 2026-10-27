@@ -1,6 +1,7 @@
 import re
 import pandas as pd
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import Http404, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -2464,6 +2465,27 @@ def praejudizen_finden_gewalt(request):
         "urteile": gewalt_urteile_erstellen(),
     }
     return render(request, "database/praejudizen_finden_gewalt.html", context)
+
+
+# Deliktsarten der geführten Präjudiziensuche, deren Zusammenfassung beim
+# Aufklappen einer Ergebniskarte nachgeladen werden kann
+PRAEJUDIZFINDER_MODELLE = {
+    "sexual": SexualdeliktUrteil,
+    "gewalt": GewaltdeliktUrteil,
+}
+
+
+def praejudiz_zusammenfassung(request, art, pk):
+    """
+    Liefert die Zusammenfassung eines Urteils als JSON. Sie wird erst beim
+    Aufklappen einer Ergebniskarte geladen, weil alle Zusammenfassungen
+    zusammen rund 1 MB pro Seite ausmachen würden.
+    """
+    modell = PRAEJUDIZFINDER_MODELLE.get(art)
+    if modell is None:
+        raise Http404
+    urteil = get_object_or_404(modell.objects.only("zusammenfassung"), pk=pk)
+    return JsonResponse({"zusammenfassung": urteil.zusammenfassung})
 
 
 def praejudizensuche(request):

@@ -122,6 +122,11 @@ urlpatterns = [
         views.praejudizen_finden_gewalt,
         name="praejudizen_finden_gewalt",
     ),
+    path(
+        "praejudizen_finden/<str:art>/<int:pk>/zusammenfassung",
+        views.praejudiz_zusammenfassung,
+        name="praejudiz_zusammenfassung",
+    ),
     path("praejudizensuche", views.praejudizensuche, name="praejudizensuche"),
     path(
         "praejudizensuche/nachricht",

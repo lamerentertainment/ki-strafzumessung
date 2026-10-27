@@ -74,6 +74,9 @@ function praejudizfinderBasis(schritteId, urteileId) {
     // bewertet und die darum nicht nochmals in gemeinsameKriterien zählen
     besonderheitenSeparat: [],
     regeln: {},
+    // Aufgeklappte Ergebniskarten und nachgeladene Zusammenfassungen, je pk
+    offeneKarten: {},
+    zusammenfassungen: {},
 
     // --- Navigation -----------------------------------------------------------
 
@@ -328,6 +331,42 @@ function praejudizfinderBasis(schritteId, urteileId) {
         max: fs.length ? fs[fs.length - 1] : null,
         vollzug: vollzug.filter((g) => Object.values(g.anzahl).some((n) => n > 0)),
       };
+    },
+
+    // --- Zusammenfassung in der Ergebniskarte -------------------------------
+
+    // Klick auf die Karte klappt die Zusammenfassung auf. Ausgenommen sind
+    // Klicks auf Links und Schaltflächen, in die geöffnete Zusammenfassung
+    // sowie das Markieren von Text, damit sich z.B. der Kurzsachverhalt
+    // kopieren lässt, ohne die Karte zu öffnen oder zu schliessen.
+    karteKlick(u, event) {
+      if (event.target.closest("a, button, .pf-zusammenfassung")) return;
+      if (String(window.getSelection())) return;
+      this.karteUmschalten(u);
+    },
+    karteUmschalten(u) {
+      const offen = !this.offeneKarten[u.pk];
+      this.offeneKarten = { ...this.offeneKarten, [u.pk]: offen };
+      if (offen && !(u.pk in this.zusammenfassungen)) this.zusammenfassungLaden(u);
+    },
+    async zusammenfassungLaden(u) {
+      this.zusammenfassungen = { ...this.zusammenfassungen, [u.pk]: { laedt: true } };
+      let eintrag;
+      try {
+        const antwort = await fetch(u.zusammenfassung_url, { headers: { Accept: "application/json" } });
+        if (!antwort.ok) throw new Error(antwort.status);
+        const daten = await antwort.json();
+        eintrag = { text: daten.zusammenfassung || "" };
+      } catch (fehler) {
+        eintrag = { fehler: true };
+      }
+      this.zusammenfassungen = { ...this.zusammenfassungen, [u.pk]: eintrag };
+    },
+    zusammenfassungErneutLaden(u) {
+      const rest = { ...this.zusammenfassungen };
+      delete rest[u.pk];
+      this.zusammenfassungen = rest;
+      this.zusammenfassungLaden(u);
     },
 
     // --- Anzeige --------------------------------------------------------------

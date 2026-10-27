@@ -279,11 +279,16 @@ def _besonderheiten_fragen(vorhandene, ausser=()):
     ]
 
 
-def _grundfelder(urteil, detail_urlname):
-    """Felder, die die Basis-Komponente (praejudizfinder_basis.js) bei jedem Urteil erwartet."""
+def _grundfelder(urteil, detail_urlname, art):
+    """
+    Felder, die die Basis-Komponente (praejudizfinder_basis.js) bei jedem Urteil
+    erwartet. ``art`` ist der Schlüssel in views.PRAEJUDIZFINDER_MODELLE, über den
+    die Zusammenfassung beim Aufklappen der Ergebniskarte nachgeladen wird.
+    """
     return {
         "pk": urteil.pk,
         "url": reverse(detail_urlname, args=[urteil.pk]),
+        "zusammenfassung_url": reverse("praejudiz_zusammenfassung", args=[art, urteil.pk]),
         "pdf": urteil.url_link,
         "fall_nr": urteil.fall_nr,
         "gericht": urteil.gericht,
@@ -386,7 +391,7 @@ def sexual_urteile_erstellen():
         weitere = [d.name for d in urteil.sexualdelikte_zusaetzliche.all()]
         datensaetze.append(
             {
-                **_grundfelder(urteil, "sexualurteil_detail"),
+                **_grundfelder(urteil, "sexualurteil_detail", "sexual"),
                 "hauptdelikt": urteil.hauptdelikt.name,
                 "hauptdelikt_artikel": artikel_aus_name(urteil.hauptdelikt.name),
                 "tatmittel": urteil.hauptdelikt_tatmittel.name,
@@ -788,7 +793,7 @@ def gewalt_urteile_erstellen():
     urteile = GewaltdeliktUrteil.objects.prefetch_related("besonderheiten").order_by("-urteilsdatum", "-pk")
     return [
         {
-            **_grundfelder(urteil, "gewalturteil_detail"),
+            **_grundfelder(urteil, "gewalturteil_detail", "gewalt"),
             "hauptdelikt": urteil.hauptdelikt,
             "hauptdelikt_label": urteil.get_hauptdelikt_display(),
             "versuch": urteil.versuch,

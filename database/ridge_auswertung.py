@@ -72,12 +72,30 @@ BESONDERHEITEN_KRITERIEN = [
     {"titel": "jugendliche Täterschaft", "gewicht": 5, "spalten": ("besonderheiten", "jugendlicheR TäterIn")},
     {"titel": "Verletzung Beschleunigungsgebot", "gewicht": 5, "spalten": ("besonderheiten", "Verletzung Beschleunigungsgebot")},
 ]
-# Nur zur Einordnung, kein Suchkriterium
-KONTROLLE = {"titel": "Kanton (Kontrollvariable, kein Suchkriterium)", "gewicht": None, "spalten": ("kanton", None)}
+# Kontrollvariablen: nur zur Einordnung, keine Suchkriterien. Nationalität und
+# Geschlecht dürfen die Strafe rechtlich nicht beeinflussen (Art. 8 Abs. 2 BV);
+# gerade deshalb stehen sie im Modell. Ein Unterschied bei sonst gleichen
+# Merkmalen wäre ein Hinweis auf Ungleichbehandlung, und ohne sie könnte ein
+# solcher Unterschied fälschlich verbundenen Merkmalen (Kanton, Vorstrafen)
+# zugeschlagen werden.
+KONTROLLE_KANTON = {"titel": "Kanton (Kontrollvariable, kein Suchkriterium)", "gewicht": None, "spalten": ("kanton", None)}
+KONTROLLE_NATIONALITAET = {
+    "titel": "Nationalität (Kontrollvariable, kein Suchkriterium)", "gewicht": None, "spalten": ("nationalitaet", None),
+}
+KONTROLLE_GESCHLECHT = {
+    "titel": "Geschlecht (Kontrollvariable, kein Suchkriterium)", "gewicht": None, "spalten": ("geschlecht", None),
+}
+NATIONALITAET_LABEL = {"0": "Schweiz", "1": "Ausland", "2": "unbekannt"}
+GESCHLECHT_LABEL = {"0": "männlich", "1": "weiblich"}
 
 
 def _gemeinsame_merkmale(urteil, m, besonderheiten, kantone_einzeln):
-    """Übrige Delikte, Vorstrafen, Besonderheiten und Kanton - bei allen Deliktsarten gleich."""
+    """
+    Übrige Delikte, Vorstrafen, Besonderheiten und die Kontrollvariablen Kanton
+    und Nationalität - bei allen Deliktsarten gleich. «unbekannt» ist eine
+    eigene Kategorie: Die Nationalität wird nicht zufällig erwähnt (etwa bei der
+    Prüfung einer Landesverweisung), darum wird sie nicht gedeutet.
+    """
     m[("uebrige", "Deliktsscore (je Punkt)")] = urteil.deliktsscore_uebrige_delikte or 0
     if urteil.vorbestraft_einschlaegig:
         m[("vorstrafen", "einschlägig vorbestraft")] = 1
@@ -90,6 +108,7 @@ def _gemeinsame_merkmale(urteil, m, besonderheiten, kantone_einzeln):
         m[("besonderheiten", name)] = int(name in namen)
     kanton = urteil.kanton.abk if urteil.kanton.abk in kantone_einzeln else "übrige Kantone"
     m[("kanton", kanton)] = 1
+    m[("nationalitaet", NATIONALITAET_LABEL[urteil.nationalitaet])] = 1
     return m
 
 
@@ -148,7 +167,9 @@ SEXUAL_KONFIG = {
         {"key": "vorstrafen", "titel": "Vorstrafen"},
         {"key": "besonderheiten", "titel": "Besonderheiten"},
         {"key": "kanton", "titel": "Kanton (Kontrollvariable)"},
+        {"key": "nationalitaet", "titel": "Nationalität (Kontrollvariable)"},
     ],
+    "kontrollen": [KONTROLLE_KANTON, KONTROLLE_NATIONALITAET],
     # Gruppen aus unabhängigen Ja/Nein- bzw. Zahlenmerkmalen: Wirkung gegenüber
     # «nein» bzw. je Einheit statt relativ zur mildesten Kategorie
     "nicht_kategorial": ("uebrige", "mehrfach", "besonderheiten", "weitere"),
@@ -174,9 +195,9 @@ SEXUAL_KONFIG = {
     "merkmale_text": "Hauptdelikt (nach Artikel, alt- und neurechtliche Fassung zusammengefasst, weil "
     "neurechtliche Urteile noch zu selten sind), Tatmittel, Opferalter, Täter-Opfer-Beziehung, mehrfache "
     "Begehung, weitere Sexualdelikte (je Artikel), Deliktsscore der übrigen Delikte, Vorstrafen (drei "
-    "Stufen), fünf Besonderheiten (inkl. Versuch) sowie der Kanton als Kontrollvariable. Nicht verwendet "
-    "sind die Verfahrensart (alle Urteile ordentlich) und das Geschlecht (fast ausschliesslich männliche "
-    "Täter), weil sie im Bestand nicht variieren.",
+    "Stufen), fünf Besonderheiten (inkl. Versuch) sowie Kanton und Nationalität als Kontrollvariablen. "
+    "Nicht verwendet sind die Verfahrensart (alle Urteile ordentlich) und das Geschlecht (fast ausschliesslich "
+    "männliche Täter), weil sie im Bestand nicht variieren.",
     "interpretation": "database/includes/ridge_interpretation_sexual.html",
 }
 
@@ -217,6 +238,7 @@ def _gewalt_merkmale(urteil, kantone_einzeln):
     m[("koerperteil", urteil.get_angegriffenes_koerperteil_display())] = 1
     m[("beziehung", urteil.get_taeter_opfer_beziehung_display())] = 1
     m[("substanzeinfluss", urteil.get_substanzeinfluss_display())] = 1
+    m[("geschlecht", GESCHLECHT_LABEL[urteil.geschlecht])] = 1
     return _gemeinsame_merkmale(urteil, m, GEWALT_BESONDERHEITEN, kantone_einzeln)
 
 
@@ -249,7 +271,10 @@ GEWALT_KONFIG = {
         {"key": "vorstrafen", "titel": "Vorstrafen"},
         {"key": "besonderheiten", "titel": "Besonderheiten"},
         {"key": "kanton", "titel": "Kanton (Kontrollvariable)"},
+        {"key": "nationalitaet", "titel": "Nationalität (Kontrollvariable)"},
+        {"key": "geschlecht", "titel": "Geschlecht (Kontrollvariable)"},
     ],
+    "kontrollen": [KONTROLLE_KANTON, KONTROLLE_NATIONALITAET, KONTROLLE_GESCHLECHT],
     "nicht_kategorial": ("versuch", "qualifikationen", "mehrfach", "opferzahl", "beute", "uebrige", "besonderheiten"),
     "zentrieren": [("beute", BEUTE_SPALTE)],
     "suchkriterien": [
@@ -282,7 +307,7 @@ GEWALT_KONFIG = {
     "qualifizierende Umstände (Waffe/gefährlicher Gegenstand, besondere Gefährlichkeit, Lebensgefahr), "
     "mehrfache Begehung, Anzahl Opfer, Beute (nur Raub, als Zehnerlogarithmus, zentriert auf die typische Beute), angegriffenes Körperteil, "
     "Täter-Opfer-Beziehung, Substanzeinfluss, Deliktsscore der übrigen Delikte, Vorstrafen (drei Stufen), "
-    "vier Besonderheiten sowie der Kanton als Kontrollvariable. Nicht verwendet sind die Verfahrensart (alle "
+    "vier Besonderheiten sowie Kanton, Nationalität und Geschlecht als Kontrollvariablen. Nicht verwendet sind die Verfahrensart (alle "
     "Urteile ordentlich), die Bandenmässigkeit (4 Urteile) und die Besonderheit «Verbindungsbusse», die keine "
     "Eigenschaft der Tat, sondern Teil der Sanktion ist.",
     "interpretation": "database/includes/ridge_interpretation_gewalt.html",
@@ -442,7 +467,7 @@ def auswertung_erstellen(konfig):
     # Abgeleitetes Gewicht = empirischer Anteil, auf die heutige Gewichtssumme
     # skaliert, damit die Zahlen direkt neben PF_GEWICHTE gelesen werden können.
     vergleich = []
-    for kriterium in konfig["suchkriterien"] + [KONTROLLE]:
+    for kriterium in konfig["suchkriterien"] + konfig["kontrollen"]:
         effekt, anteil_paare = effekt_bei_abweichung(
             X, modell.coef_, _spaltenindizes(spalten, kriterium["spalten"])
         )

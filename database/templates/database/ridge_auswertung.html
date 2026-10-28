@@ -6,7 +6,7 @@
 <div class="col-12 ridge-auswertung">
   <h1 class="h3">{{ konfig.titel }}: Ridge-Regression zur Strafhöhe</h1>
   <p class="text-body-secondary">
-    Dev-Auswertung. Welche erfassten Fallmerkmale hängen in der Praxis mit der Strafhöhe zusammen, und
+    Welche erfassten Fallmerkmale hängen in der Praxis mit der Strafhöhe zusammen, und
     passen die von Hand gesetzten Gewichte der Seite
     <a href="{% url konfig.suche_url %}">Präjudizen finden</a> dazu? Die Auswertung wird bei
     jedem Seitenaufruf frisch auf dem aktuellen Bestand gerechnet ({{ a.n }} Urteile).
@@ -15,7 +15,7 @@
   <nav class="mb-4 small">
     <a href="#interpretation">Interpretation</a> ·
     <a href="#daten">Daten &amp; Zielgrösse</a> ·
-    <a href="#methode">Methode</a> ·
+    <a href="#methode">Wie die Auswertung funktioniert</a> ·
     <a href="#leistung">Prognoseleistung</a> ·
     <a href="#werte">Gelernte Werte</a> ·
     <a href="#vergleich">Vergleich mit den Suchgewichten</a> ·
@@ -44,11 +44,9 @@
         ein Tagessatz entspricht einem Tag Freiheitsstrafe). Der Vollzug ist nicht Gegenstand dieser Auswertung.
       </li>
       <li>
-        <strong>Warum der Logarithmus?</strong> Strafen sind rechtsschief verteilt (Median {{ a.median_strafe|floatformat:0 }}
-        Monate, einzelne Urteile über 10 Jahre), und Merkmale wirken eher verhältnismässig als in festen
-        Monaten: Eine mehrfache Begehung erhöht eine Strafe von 12 Monaten nicht um gleich viele Monate wie
-        eine von 60 Monaten. Auf der Log-Skala wird ein Koeffizient b zu einem Faktor e<sup>b</sup>, auf der
-        Seite angegeben als prozentuale Veränderung.
+        <strong>Warum der Logarithmus?</strong> Merkmale wirken eher verhältnismässig als in festen Monaten
+        (siehe <a href="#methode">Wie die Auswertung funktioniert</a>, c.). Zudem sind Strafen ungleich verteilt:
+        Der Median liegt bei {{ a.median_strafe|floatformat:0 }} Monaten, einzelne Urteile liegen über 10 Jahren.
       </li>
       <li>
         <strong>Merkmale</strong> ({{ a.n_spalten }} Spalten nach der Codierung): {{ konfig.merkmale_text }}
@@ -58,47 +56,283 @@
   </section>
 
   {# ============================================================ #}
-  <section id="methode" class="mb-5">
-    <h2 class="h4">Methode</h2>
-    <ol>
-      <li class="mb-2">
-        <strong>One-Hot-Codierung.</strong> Jede Kategorie eines Merkmals wird zu einer eigenen 0/1-Spalte
-        (z.B. «Hauptdelikt = Raub»). Die Regression weist jeder Spalte einen Koeffizienten zu, also jeder
-        Kategorie ihren eigenen Wert. Das ist die einfache Variante des «Optimal Scaling»: Die Kategorien
-        erhalten diejenigen Zahlenwerte, mit denen die Strafen am besten auf einer Geraden liegen.
-        Bestimmt sind dabei nur die <em>Abstände</em> zwischen den Kategorien eines Merkmals, nicht deren
-        absolutes Niveau; die Tabellen zeigen die Werte deshalb relativ zur mildesten Kategorie.
-      </li>
-      <li class="mb-2">
-        <strong>Ridge-Regression.</strong> Eine lineare Regression mit einem Strafterm, der grosse
-        Koeffizienten dämpft. Bei {{ a.n }} Urteilen und {{ a.n_spalten }} Spalten würde eine gewöhnliche
-        Regression seltenen Kategorien (mit nur einem oder wenigen Urteilen) extreme Werte zuweisen. Ridge
-        zieht solche Werte gegen null, je weniger Urteile sie stützen.
-      </li>
-      <li class="mb-2">
-        <strong>Wahl der Dämpfung.</strong> Die Stärke alpha wird per Kreuzvalidierung (Leave-one-out) aus
-        30 Werten zwischen 0.01 und 1000 gewählt: <strong>alpha = {{ a.alpha|floatformat:2 }}</strong>.
-      </li>
-      <li class="mb-2">
-        <strong>Prognoseleistung.</strong> 5-fache Kreuzvalidierung, 10-mal mit neuer Zufallsaufteilung
-        wiederholt: Das Modell wird jeweils auf 80 % der Urteile geschätzt und auf den übrigen 20 % geprüft.
-        Jedes Urteil wird so nur von einem Modell prognostiziert, das es nicht kannte.
-      </li>
-      <li class="mb-2">
-        <strong>Unsicherheit.</strong> Bootstrap mit {{ a.bootstrap_wiederholungen }} Wiederholungen: Die
-        Urteile werden mit Zurücklegen neu gezogen und das Modell jedes Mal neu geschätzt. Die Spanne vom 5. bis
-        95. Perzentil ergibt das 90-%-Intervall je Koeffizient. Liegt es ganz auf einer Seite von null, ist der
-        Effekt mit <span class="badge text-bg-dark">gesichert</span> markiert.
+  {# Erklärung im Stil des Beitrags «Wie die vorliegend eingesetzten KI-Systeme
+     funktionieren» (funktionsweise.html). Die Zahlen des Gedankenbeispiels sind
+     fiktiv, aber mit derselben Methode (sklearn Ridge, alpha 0.5) nachgerechnet. #}
+  <section id="methode" class="mb-5 ridge-erklaerung">
+    <h2 class="h4">Wie die Auswertung funktioniert</h2>
+
+    <h3 class="h5 mt-3">a. Ausgangslage/Gedankenbeispiel</h3>
+    <p>
+      Der Beitrag <a href="{% url 'text_funktionsweise' %}">«Wie die vorliegend eingesetzten KI-Systeme
+      funktionieren»</a> zeigt an einem Betrugsbeispiel, wie eine lineare Regression eine Gerade so in die
+      Urteils-Datenpunkte legt, dass der Abstand zu den Urteilen möglichst klein wird, und wie man an der
+      resultierenden Formel ablesen kann, welches Gewicht das Modell einem Merkmal beimisst (z.B. «liegt
+      Gewerbsmässigkeit vor, erhöht sich das Strafmass um gut 10 Monate»). Die vorliegende Auswertung beruht
+      auf demselben Gedanken. Ihr Zweck ist allerdings ein anderer: Sie soll nicht die Strafe eines neuen
+      Falls vorhersagen, sondern messen, wie stark jedes erfasste Sachverhaltsmerkmal in der Praxis mit der
+      Strafhöhe zusammenhängt. Damit lässt sich überprüfen, ob die von Hand gesetzten Gewichte der Seite
+      <a href="{% url konfig.suche_url %}">Präjudizen finden</a> zur Praxis passen.
+    </p>
+    <p>
+      Zur Veranschaulichung wird wiederum ein fiktives, bewusst einfach gehaltenes Gedankenbeispiel
+      verwendet. Angenommen, eine Erhebung habe neun Urteile wegen Gewaltdelikten ergeben, bei denen lediglich
+      zwei Merkmale erfasst wurden: das Hauptdelikt und die Frage, ob es mehrfach begangen wurde.
+    </p>
+    <div class="col-12 col-xl-8 mx-auto">
+      <div class="rounded border m-3">
+        <table class="table table-sm mb-0">
+          <thead>
+            <tr><th>Nr.</th><th>Hauptdelikt</th><th>mehrfach</th><th class="text-end">Zielwert = Freiheitsstrafe</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>einfache Körperverletzung</td><td>Nein</td><td class="text-end">4 Monate</td></tr>
+            <tr><td>2</td><td>einfache Körperverletzung</td><td>Nein</td><td class="text-end">6 Monate</td></tr>
+            <tr><td>3</td><td>einfache Körperverletzung</td><td>Ja</td><td class="text-end">8 Monate</td></tr>
+            <tr><td>4</td><td>einfache Körperverletzung</td><td>Ja</td><td class="text-end">10 Monate</td></tr>
+            <tr><td>5</td><td>Raub</td><td>Nein</td><td class="text-end">18 Monate</td></tr>
+            <tr><td>6</td><td>Raub</td><td>Nein</td><td class="text-end">24 Monate</td></tr>
+            <tr><td>7</td><td>Raub</td><td>Ja</td><td class="text-end">30 Monate</td></tr>
+            <tr><td>8</td><td>Raub</td><td>Ja</td><td class="text-end">40 Monate</td></tr>
+            <tr><td>9</td><td>Angriff</td><td>Nein</td><td class="text-end">36 Monate</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <h3 class="h5 mt-4">b. Kategorien als «Schalter»</h3>
+    <p>
+      Im Betrugsbeispiel war die Deliktssumme bereits eine Zahl, die man in die Formel einsetzen konnte. Das
+      Hauptdelikt ist dagegen keine Zahl. Man könnte versucht sein, den Delikten von Hand eine Rangfolge
+      zuzuweisen (einfache Körperverletzung = 1, Angriff = 2, Raub = 3), doch damit würde man dem Modell
+      bereits vorgeben, dass die Abstände zwischen den Delikten gleich gross sind, was gerade zu prüfen wäre.
+      Stattdessen wird jede Kategorie wie die Gewerbsmässigkeit im Betrugsbeispiel als eigener
+      Ja/Nein-«Schalter» behandelt:<sup><a href="#fn-r1" id="ref-r1">1</a></sup>
+    </p>
+    <div class="col-12 col-xl-8 mx-auto">
+      <div class="rounded border m-3">
+        <table class="table table-sm mb-0 text-center">
+          <thead>
+            <tr><th>Nr.</th><th>einfache KV</th><th>Raub</th><th>Angriff</th><th>mehrfach</th><th class="text-end">Zielwert</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td><td class="text-end">4 Monate</td></tr>
+            <tr><td>5</td><td>0</td><td>1</td><td>0</td><td>0</td><td class="text-end">18 Monate</td></tr>
+            <tr><td>9</td><td>0</td><td>0</td><td>1</td><td>0</td><td class="text-end">36 Monate</td></tr>
+            <tr><td colspan="6" class="text-body-secondary small">usw. für alle neun Urteile</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p>
+      Die Regression ermittelt nun für jeden Schalter einen eigenen Wert. Jede Kategorie erhält damit genau den
+      Zahlenwert, mit dem sich die Strafen der Urteile am besten erklären lassen. Weil bei jedem Urteil genau
+      ein Hauptdelikt-Schalter auf 1 steht, sind dabei nur die <em>Abstände</em> zwischen den Delikten
+      bestimmt, nicht ihr absolutes Niveau. Die Tabellen unten zeigen die Werte deshalb im Verhältnis zur
+      mildesten Kategorie eines Merkmals. In der realen Auswertung entstehen auf diese Weise aus den erfassten
+      Merkmalen {{ a.n_spalten }} Schalter bzw. Spalten.
+    </p>
+
+    <h3 class="h5 mt-4">c. Faktoren statt Monate</h3>
+    <p>
+      Das lineare Modell im Betrugsbeispiel rechnete mit festen Zuschlägen: Gewerbsmässigkeit bedeutete immer
+      rund 10 Monate mehr, gleichgültig, ob die Strafe sonst bei 6 oder bei 60 Monaten gelegen hätte. Das
+      entspricht nicht der Strafzumessungspraxis. Eine mehrfache Begehung wirkt sich bei einer Strafe von 60
+      Monaten in absoluten Zahlen stärker aus als bei einer Strafe von 6 Monaten. Die Merkmale wirken also eher
+      verhältnismässig (+50 %) als in festen Monaten (+3 Monate). Die Auswertung rechnet deshalb mit dem
+      Logarithmus der Strafe.<sup><a href="#fn-r2" id="ref-r2">2</a></sup> Für den Leser hat das eine einfache
+      Folge: Aus den Zuschlägen werden Faktoren. Für das Gedankenbeispiel lautet die errechnete Formel (zur
+      Dämpfung siehe sogleich):
+    </p>
+    <p class="rounded border col-12 col-lg-10 my-3 mx-auto text-center bg-body-tertiary p-3">
+      Strafmass in Monaten = 6.1 × <span class="text-nowrap">3.47 (falls Raub)</span> ×
+      <span class="text-nowrap">4.42 (falls Angriff)</span> × <span class="text-nowrap">1.47 (falls mehrfach)</span>
+    </p>
+    <p>
+      Eine einfache Körperverletzung ohne mehrfache Begehung ergibt demnach 6.1 Monate, ein mehrfacher Raub
+      6.1 × 3.47 × 1.47 = 31 Monate. Die mehrfache Begehung erhöht die Strafe um 47 %, beim Raub also um
+      rund 10 Monate, bei der einfachen Körperverletzung nur um rund 3 Monate. Auf der Seite werden die Faktoren als
+      prozentuale Veränderung angegeben (Faktor 1.47 = +47 %). Geldstrafen werden für die Auswertung in
+      Monate umgerechnet, wobei 30 Tagessätze einem Monat Freiheitsstrafe entsprechen (Art. 34 Abs. 1 i.V.m.
+      Art. 36 Abs. 1 StGB).
+    </p>
+
+    <h3 class="h5 mt-4">d. Dämpfung seltener Kategorien (Ridge-Regression)</h3>
+    <p>
+      Im Gedankenbeispiel gibt es nur ein einziges Urteil wegen Angriffs, und dieses ist mit 36 Monaten
+      vergleichsweise streng ausgefallen. Eine gewöhnliche lineare Regression würde den Wert des Angriffs so
+      wählen, dass sie dieses eine Urteil exakt trifft. Sie hielte den Angriff damit für fast doppelt so schwer
+      wie den Raub, obwohl sich das auf ein einziges Urteil stützt, dessen Strafe auch an Umständen liegen
+      kann, die nicht erfasst sind. Es ist dasselbe Problem der Überanpassung, das der Beitrag beim
+      Entscheidungsbaum beschreibt: Das Modell passt sich den vorhandenen Urteilen perfekt an und taugt
+      gerade deshalb schlecht für Aussagen über andere Fälle.
+    </p>
+    <p>
+      Die Ridge-Regression<sup><a href="#fn-r3" id="ref-r3">3</a></sup> begegnet dem, indem sie bei der
+      Berechnung nicht nur den Abstand zu den Urteilen minimiert, sondern zusätzlich jeden grossen Wert mit
+      einem «Preis» belegt. Ein Merkmal erhält einen grossen Wert nur dann, wenn ihn genügend Urteile
+      rechtfertigen. Juristisch gesprochen: Ein einzelnes Präjudiz wird vorsichtiger verallgemeinert als eine
+      durch mehrere Urteile gefestigte Praxis. Im Gedankenbeispiel wirkt sich das wie folgt aus:
+    </p>
+    <div class="col-12 col-xl-8 mx-auto">
+      <div class="rounded border m-3">
+        <table class="table table-sm mb-0">
+          <thead>
+            <tr><th>Merkmal (gegenüber einfacher KV)</th><th class="text-end">gestützt auf</th><th class="text-end">ohne Dämpfung</th><th class="text-end">mit Dämpfung</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Raub</td><td class="text-end">4 Urteile</td><td class="text-end">× 4.05</td><td class="text-end">× 3.47</td></tr>
+            <tr><td>Angriff</td><td class="text-end">1 Urteil</td><td class="text-end">× 7.18</td><td class="text-end">× 4.42</td></tr>
+            <tr><td>mehrfach</td><td class="text-end">4 Urteile</td><td class="text-end">× 1.74</td><td class="text-end">× 1.47</td></tr>
+            <tr class="text-body-secondary"><td>Prognose für Urteil 9 (tatsächlich 36 Monate)</td><td></td><td class="text-end">36.0 Monate</td><td class="text-end">27.0 Monate</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p>
+      Alle Werte werden zur Mitte hin gezogen, der nur auf ein Urteil gestützte Angriff aber deutlich stärker
+      (von × 7.18 auf × 4.42) als der durch vier Urteile gestützte Raub (von × 4.05 auf × 3.47). Das Modell trifft
+      Urteil 9 nun nicht mehr exakt, behandelt es aber als das, was es ist: ein einzelner Hinweis, kein
+      gesicherter Befund. In der realen Auswertung ist diese Dämpfung besonders wichtig, weil {{ a.n }} Urteile
+      auf {{ a.n_spalten }} Spalten verteilt sind und manche Kategorien nur eine Handvoll Urteile aufweisen.
+    </p>
+
+    <h3 class="h5 mt-4">e. Wie stark gedämpft wird</h3>
+    <p>
+      Wie hoch der «Preis» für grosse Werte sein soll, legt nicht der Mensch fest, sondern wird mit der im
+      Beitrag beschriebenen «leave one out»-Methode ermittelt: Für verschiedene Dämpfungsstärken wird jedes
+      Urteil einmal weggelassen, das Modell mit den übrigen Urteilen gebildet und die Strafe des weggelassenen
+      Urteils vorhergesagt. Gewählt wird die Stärke, bei der diese Vorhersagen am besten ausfallen. Im
+      Gedankenbeispiel:
+    </p>
+    <div class="col-12 col-xl-6 mx-auto">
+      <div class="rounded border m-3">
+        <table class="table table-sm mb-0">
+          <thead>
+            <tr><th>Dämpfung</th><th class="text-end">durchschnittlicher Prognosefehler<br><span class="fw-normal small">(Urteil jeweils weggelassen)</span></th></tr>
+          </thead>
+          <tbody>
+            <tr><td>keine (gewöhnliche Regression)</td><td class="text-end">6.4 Monate</td></tr>
+            <tr class="fw-semibold"><td>mässig (Stärke 0.5)</td><td class="text-end">6.1 Monate</td></tr>
+            <tr><td>stark (Stärke 2)</td><td class="text-end">7.7 Monate</td></tr>
+            <tr><td>sehr stark (Stärke 5)</td><td class="text-end">9.4 Monate</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p>
+      Zu wenig Dämpfung führt zur Überanpassung an einzelne Urteile, zu viel Dämpfung ebnet echte
+      Unterschiede ein (bei sehr starker Dämpfung erhielten alle Fälle fast dieselbe Strafe). In der realen
+      Auswertung werden 30 Stärken zwischen 0.01 und 1000 geprüft; gewählt wurde
+      <strong>{{ a.alpha|floatformat:2 }}</strong>.<sup><a href="#fn-r4" id="ref-r4">4</a></sup>
+    </p>
+
+    <h3 class="h5 mt-4">f. Wie gut das Modell die Strafen erklärt</h3>
+    <p>
+      Wie im Beitrag dargelegt, ist die Treffsicherheit an Urteilen zu messen, die das Modell bei seiner
+      Bildung nicht kannte. Die Auswertung teilt die Urteile dazu zufällig in fünf Gruppen, bildet das Modell
+      jeweils mit vier Gruppen und sagt die Strafen der fünften vorher. Das wird mit zehn verschiedenen
+      Zufallsaufteilungen wiederholt.<sup><a href="#fn-r5" id="ref-r5">5</a></sup> Ausgewiesen werden im
+      Abschnitt <a href="#leistung">Prognoseleistung</a> vor allem zwei Kennzahlen:
+    </p>
+    <ul>
+      <li>
+        <strong>R²</strong> gibt an, welcher Anteil der Unterschiede zwischen den Strafen sich mit den erfassten
+        Merkmalen erklären lässt. 0 bedeutet, dass das Modell nicht besser ist, als für jeden Fall die
+        Durchschnittsstrafe vorherzusagen; 1 bedeutet, dass es jede Strafe exakt trifft. Ein R² von
+        {{ a.r2_mittel|floatformat:2 }} heisst also, dass rund {% widthratio a.r2_mittel 1 100 %} % der
+        Unterschiede auf die erfassten Merkmale zurückgehen. Der Rest liegt an Umständen, die nicht als Feld
+        erfasst sind (etwa Intensität und Dauer der Tat, Folgen für das Opfer, Täterpersönlichkeit), und an
+        Unterschieden zwischen den Gerichten.
       </li>
       <li>
-        <strong>Effekt bei Abweichung.</strong> Für den Vergleich mit den Suchgewichten zählt nicht, wie stark ein
-        Merkmal im Bestand streut, sondern: Um wie viel unterscheidet sich die geschätzte Strafe typischerweise
-        zwischen zwei Urteilen, die in diesem Kriterium <em>nicht</em> übereinstimmen? Gerechnet wird über alle
-        Paare von Urteilen mit unterschiedlicher Ausprägung: Mittelwert von |Beitrag A − Beitrag B|. So erhält
-        auch ein seltenes, aber starkes Merkmal sein volles Gewicht. Die Effekte werden anschliessend auf die
-        heutige Gewichtssumme skaliert («abgeleitetes Gewicht»).
+        <strong>Der typische Faktor</strong> gibt an, um wie viel die Vorhersage bei der Hälfte der Urteile
+        höchstens daneben liegt (nach oben oder unten).
       </li>
-    </ol>
+    </ul>
+
+    <h3 class="h5 mt-4">g. Wie sicher die einzelnen Werte sind</h3>
+    <p>
+      Die Werte beruhen auf den Urteilen, die zufällig erfasst wurden. Wären es andere Urteile, fielen auch die
+      Werte etwas anders aus. Um abzuschätzen, wie stark, wird ein in der Statistik bewährtes Verfahren
+      verwendet, das sog. Bootstrapping:<sup><a href="#fn-r6" id="ref-r6">6</a></sup> Aus den vorhandenen
+      Urteilen wird {{ a.bootstrap_wiederholungen }}-mal eine neue, gleich grosse Auswahl zufällig gezogen,
+      wobei einzelne Urteile mehrfach und andere gar nicht vorkommen können. Für jede dieser Auswahlen wird das
+      Modell neu gebildet. Die mittleren 90 % der so erhaltenen Werte ergeben das «90-%-Intervall». Liegt es
+      ganz im positiven oder ganz im negativen Bereich, ist die Richtung des Zusammenhangs trotz des Zufalls der
+      Auswahl verlässlich; der Wert ist dann mit <span class="badge text-bg-dark">gesichert</span> markiert.
+      Ein nicht gesicherter Wert ist nicht falsch, aber die vorhandenen Urteile reichen nicht aus, um ihn von
+      einem Zufallsbefund zu unterscheiden.
+    </p>
+
+    <h3 class="h5 mt-4">h. Vom gelernten Wert zum Suchgewicht</h3>
+    <p>
+      Die Seite <a href="{% url konfig.suche_url %}">Präjudizen finden</a> vergibt für jedes übereinstimmende
+      Merkmal Vergleichbarkeitspunkte. Ob diese Punkte richtig verteilt sind, lässt sich mit folgender Frage
+      prüfen: Um wie viel unterscheiden sich die Strafen typischerweise zwischen zwei Urteilen, die in einem
+      Merkmal <em>nicht</em> übereinstimmen? Im Gedankenbeispiel unterscheiden sich zwei Urteile mit
+      verschiedenem Hauptdelikt um durchschnittlich den Faktor 3.1 (+206 %), zwei Urteile, von denen nur eines
+      mehrfach begangen wurde, um den Faktor 1.5 (+47 %). Gemessen auf der Logarithmus-Skala entfallen damit
+      rund 74 % des Unterschieds auf das Hauptdelikt und 26 % auf die mehrfache Begehung. Würde die Suche
+      heute beiden Merkmalen je 50 Punkte geben, ergäbe sich daraus ein «abgeleitetes Gewicht» von 74 bzw. 26
+      Punkten.
+    </p>
+    <p>
+      Gerechnet wird über alle Paare von Urteilen. Dadurch erhält auch ein seltenes, aber starkes Merkmal (etwa
+      der Versuch) sein volles Gewicht: Es kommt nicht darauf an, wie oft es vorkommt, sondern wie stark es die
+      Strafe verändert, wenn es vorkommt. Die Tabelle im Abschnitt
+      <a href="#vergleich">Vergleich mit den Suchgewichten</a> stellt die heutigen und die abgeleiteten Gewichte
+      einander gegenüber.
+    </p>
+
+    <h3 class="h5 mt-4">i. Kontrollvariablen</h3>
+    <p>
+      Neben den Suchkriterien enthält das Modell den Kanton, die Nationalität und (wo es genügend Täterinnen
+      gibt) das Geschlecht. Sie dienen nicht der Präjudiziensuche: Die Nationalität und das Geschlecht dürfen
+      die Strafe rechtlich nicht beeinflussen (Art. 8 Abs. 2 BV), und ob Urteile aus dem eigenen Kanton
+      bevorzugt werden sollen, ist eine eigene Frage. Gerade deshalb werden sie aber mitgerechnet. Erstens zeigt
+      sich so, ob bei sonst gleichen Merkmalen ein Unterschied besteht. Ein solcher wäre ein Hinweis, aber
+      kein Beweis für eine Ungleichbehandlung, weil er über nicht erfasste Umstände laufen kann. Zweitens würde
+      ein solcher Unterschied ohne die Kontrollvariablen fälschlich anderen Merkmalen zugeschlagen. Urteilt
+      etwa ein Kanton strenger und kommen dort mehr Raubfälle vor, erschiene sonst der Raub schwerer, als er
+      ist. Kantone mit weniger als 20 Urteilen werden zusammengefasst; Urteile ohne Angabe zur Nationalität
+      bilden eine eigene Kategorie «unbekannt», die nicht gedeutet wird.
+    </p>
+
+    <details class="mt-4 small">
+      <summary class="fw-semibold">In Kürze (technische Angaben)</summary>
+      <ul class="mt-2">
+        <li>Zielgrösse: natürlicher Logarithmus der Strafe in Monaten; Geldstrafen mit 30 Tagessätzen = 1 Monat.</li>
+        <li>Merkmale: One-Hot-Codierung kategorialer Merkmale ({{ a.n_spalten }} Spalten), Zahlenmerkmale unverändert
+          bzw. zentriert.</li>
+        <li>Modell: Ridge-Regression (scikit-learn), alpha per Leave-one-out-Kreuzvalidierung aus 30 Werten
+          zwischen 0.01 und 1000 (logarithmisch verteilt): alpha = {{ a.alpha|floatformat:2 }}.</li>
+        <li>Prognoseleistung: 5-fache Kreuzvalidierung, 10 Wiederholungen.</li>
+        <li>Unsicherheit: Bootstrap mit {{ a.bootstrap_wiederholungen }} Wiederholungen, 5. bis 95. Perzentil.</li>
+        <li>Effekt bei Abweichung: Mittelwert von |Beitrag A − Beitrag B| auf der Log-Skala über alle Urteilspaare
+          mit unterschiedlicher Ausprägung, skaliert auf die heutige Gewichtssumme.</li>
+      </ul>
+    </details>
+
+    <div class="small text-body-secondary border-top pt-2 mt-4">
+      <p id="fn-r1" class="mb-1"><sup>1</sup> Fachbegriff: «One-Hot-Codierung». Das Zuweisen von Zahlenwerten an
+        Kategorien, mit denen die Zielgrösse am besten erklärt wird, ist eine einfache Form des sog. «Optimal
+        Scaling». <a href="#ref-r1">↩</a></p>
+      <p id="fn-r2" class="mb-1"><sup>2</sup> Der Logarithmus verwandelt Multiplikationen in Additionen. Das Modell
+        bleibt dadurch eine lineare Regression wie im Beitrag, rechnet aber mit dem Logarithmus der Strafe statt mit
+        Monaten. Ein Nebeneffekt: Die wenigen sehr langen Strafen (über 10 Jahre) erhalten nicht mehr ein
+        übermässiges Gewicht. <a href="#ref-r2">↩</a></p>
+      <p id="fn-r3" class="mb-1"><sup>3</sup> Auch «Tikhonov-Regularisierung» genannt. Der «Preis» entspricht der
+        Summe der quadrierten Werte aller Merkmale, multipliziert mit der Dämpfungsstärke (alpha). <a href="#ref-r3">↩</a></p>
+      <p id="fn-r4" class="mb-1"><sup>4</sup> Zur Vereinfachung ist der Prognosefehler im Gedankenbeispiel in Monaten
+        angegeben. Die reale Auswertung misst ihn auf der Logarithmus-Skala, also als Faktor (siehe c.). <a href="#ref-r4">↩</a></p>
+      <p id="fn-r5" class="mb-1"><sup>5</sup> Sog. «5-fache Kreuzvalidierung». Gegenüber der «leave one out»-Methode
+        ist sie bei mehreren hundert Urteilen weniger rechenintensiv; die Wiederholung gleicht den Zufall der
+        Aufteilung aus. <a href="#ref-r5">↩</a></p>
+      <p id="fn-r6" class="mb-0"><sup>6</sup> Ziehen «mit Zurücklegen». Der Name geht auf die englische Redewendung
+        zurück, sich an den eigenen Stiefelschlaufen (bootstraps) aus dem Sumpf zu ziehen: Die Unsicherheit wird aus
+        den vorhandenen Daten selbst geschätzt, ohne zusätzliche Urteile. <a href="#ref-r6">↩</a></p>
+    </div>
   </section>
 
   {# ============================================================ #}
@@ -220,8 +454,8 @@
     <p class="text-body-secondary">
       «Effekt bei Abweichung» = typischer Unterschied der geschätzten Strafe zwischen zwei Urteilen, die in diesem
       Kriterium nicht übereinstimmen. «Anteil» = Anteil am Total aller Suchkriterien. Das abgeleitete Gewicht
-      ist der empirische Anteil, skaliert auf die heutige Gewichtssumme der Präjudiziensuche
-      (<code>{{ konfig.suche_konstante }}</code> in <code>{{ konfig.suche_js }}</code>).
+      ist der empirische Anteil, skaliert auf die heutige Gewichtssumme der Präjudiziensuche (siehe
+      <a href="#methode">Wie die Auswertung funktioniert</a>, h.).
     </p>
     <div class="table-responsive">
       <table class="table table-sm align-middle se-tabelle">
@@ -340,7 +574,7 @@
   <section class="mb-4">
     <h2 class="h4">Nächste Schritte</h2>
     <ol class="mb-0">
-      <li>Abgeleitete Gewichte in <code>{{ konfig.suche_konstante }}</code> übernehmen, wo die Abweichung gross
+      <li>Abgeleitete Gewichte in die Präjudiziensuche übernehmen, wo die Abweichung gross
         und belastbar ist (siehe Interpretation).</li>
       <li>Teilpunkte innerhalb eines Kriteriums aus den gelernten Abständen ableiten statt pauschal.</li>
       <li>Prüfen, ob die angepassten Gewichte die Strafe eines Falls über seine ähnlichsten Urteile besser
